@@ -18,6 +18,7 @@ protocol PostCellDelegate:class {
 class PostCellNode:ASCellNode {
     var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 22.0, imageShadowRadius: 6.0)
     var titleNode = ASTextNode()
+    var subnameNode = ASTextNode()
     var subtitleNode = ASTextNode()
     var postTextNode = ASTextNode()
     var actionsNode = ASDisplayNode()
@@ -48,6 +49,15 @@ class PostCellNode:ASCellNode {
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: UIColor.gray
             ])
+        
+        subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 11.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white
+            ])
+        subnameNode.textContainerInset = UIEdgeInsets(top: 1.0, left: 6.0, bottom: 0, right: 6.0)
+        subnameNode.backgroundColor = post.anon.color
+        subnameNode.isHidden = true
+        
         subtitleNode.attributedText = NSAttributedString(string: "General · \(post.createdAt.timeSinceNow())", attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
             NSAttributedStringKey.foregroundColor: UIColor.gray
@@ -96,7 +106,8 @@ class PostCellNode:ASCellNode {
     
     override func didLoad() {
         super.didLoad()
-        
+        subnameNode.layer.cornerRadius = 8
+        subnameNode.clipsToBounds = true
         selectionStyle = .none
     }
     
@@ -112,8 +123,16 @@ class PostCellNode:ASCellNode {
         
         dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
         
+        
+        subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
+        
+        let subnameCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
+        let nameStack = ASStackLayoutSpec.horizontal()
+        nameStack.children = [titleNode,subnameCenterY]
+        nameStack.spacing = 4.0
+        
         let titleStack = ASStackLayoutSpec.vertical()
-        titleStack.children = [titleNode, subtitleNode]
+        titleStack.children = [nameStack, subtitleNode]
         titleStack.spacing = 2.0
         
         
@@ -210,6 +229,7 @@ class PostCellNode:ASCellNode {
     }
     var postRefListener:ListenerRegistration?
     var likedRefListener:ListenerRegistration?
+    var lexiconRefListener:ListenerRegistration?
     
     func listenToPost() {
         guard let post = self.post else { return }
@@ -217,6 +237,7 @@ class PostCellNode:ASCellNode {
         print("listenToPost")
         let postRef = firestore.collection("posts").document(post.key)
         let likedRef = postRef.collection("likes").document(uid)
+        let lexiconRef = postRef.collection("lexicon").document(uid)
         likedRefListener = likedRef.addSnapshotListener({ snapshot, error in
             self.setLiked(snapshot?.exists ?? false, post)
         })
@@ -237,7 +258,34 @@ class PostCellNode:ASCellNode {
                // setReplies(count: updatedPost.replies)
                 //self.updatePost(updatedPost)
             }
+        }
+        
+        lexiconRefListener = lexiconRef.addSnapshotListener { lexiconSnapshot, error in
+            guard let document = lexiconSnapshot else { return }
             
+            if let data = document.data(),
+                let anon = Anon.parse(data) {
+                self.assignAnonymous(anon)
+            } else {
+                self.assignAnonymous(nil)
+            }
+        }
+    }
+    
+    
+    func assignAnonymous(_ anon:Anon?) {
+        
+        if let post = post,
+            let anon = anon,
+            anon.key == post.anon.key {
+            print("DID NOT MATCH")
+                subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
+                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 11.0),
+                    NSAttributedStringKey.foregroundColor: UIColor.white
+                ])
+                subnameNode.isHidden = false
+        } else {
+            subnameNode.isHidden = true
         }
     }
     
@@ -245,6 +293,7 @@ class PostCellNode:ASCellNode {
         print("stopListeningToPost")
         likedRefListener?.remove()
         postRefListener?.remove()
+        lexiconRefListener?.remove()
     }
     
     func updatePost(_ post:Post) {

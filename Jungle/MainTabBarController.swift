@@ -30,7 +30,8 @@ class MainTabBarController:UITabBarController {
         postButton.addTarget(self, action: #selector(openNewPostVC), for: .touchUpInside)
         
         postButtonContainer.addSubview(postButton)
-        
+        tabBar.shadowImage = UIImage()
+        tabBar.backgroundImage = UIImage()
     }
     
     @objc func openNewPostVC() {

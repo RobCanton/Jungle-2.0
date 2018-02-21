@@ -90,7 +90,7 @@ class HomeViewController: UIViewController, NewPostsButtonDelegate {
         let gradient = CAGradientLayer()
         gradient.frame = gradientView.bounds
         gradient.colors = [
-            UIColor(white: 0.0, alpha: 0.02).cgColor,
+            UIColor(white: 0.0, alpha: 0.015).cgColor,
             UIColor(white: 0.0, alpha: 0.0).cgColor
         ]
         gradient.locations = [0.0, 1.0]
@@ -98,8 +98,30 @@ class HomeViewController: UIViewController, NewPostsButtonDelegate {
         gradient.endPoint = CGPoint(x: 0, y: 1)
         gradientView.layer.insertSublayer(gradient, at: 0)
         
+        let bottomGradientView = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
+        bottomGradientView.backgroundColor = nil
+        view.addSubview(bottomGradientView)
+        bottomGradientView.translatesAutoresizingMaskIntoConstraints = false
+        bottomGradientView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        bottomGradientView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        bottomGradientView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        bottomGradientView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
+        
+        let bottomGradient = CAGradientLayer()
+        bottomGradient.frame = bottomGradientView.bounds
+        bottomGradient.colors = [
+            UIColor(white: 0.0, alpha: 0.0).cgColor,
+            UIColor(white: 0.0, alpha: 0.015).cgColor
+        ]
+        bottomGradient.locations = [0.0, 1.0]
+        bottomGradient.startPoint = CGPoint(x: 0, y: 0)
+        bottomGradient.endPoint = CGPoint(x: 0, y: 1)
+        bottomGradientView.layer.insertSublayer(bottomGradient, at: 0)
+        
         
     }
+    
+    
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)

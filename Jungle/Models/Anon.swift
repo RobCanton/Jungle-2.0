@@ -30,6 +30,11 @@ class Anon {
             let hex = anon["color"] as? String {
             
             return Anon(key: key, adjective: adjective, animal: animal, color: hexColor(from: hex))
+        } else if let key = data["key"] as? String,
+            let adjective = data["adjective"] as? String,
+            let animal = data["animal"] as? String,
+            let hex = data["color"] as? String {
+            return Anon(key: key, adjective: adjective, animal: animal, color: hexColor(from: hex))
         } else {
             return nil
         }
