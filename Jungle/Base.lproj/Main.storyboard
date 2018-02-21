@@ -335,7 +335,14 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <viewLayoutGuide key="safeArea" id="dMn-Bt-0xe"/>
                     </view>
-                    <navigationItem key="navigationItem" id="Wfd-pU-H8T"/>
+                    <navigationItem key="navigationItem" id="Wfd-pU-H8T">
+                        <barButtonItem key="leftBarButtonItem" title="Item" id="q16-gO-4BZ">
+                            <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" title="Item" id="N3c-sY-z9J">
+                            <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        </barButtonItem>
+                    </navigationItem>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="nBm-pB-GNb" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

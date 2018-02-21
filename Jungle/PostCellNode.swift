@@ -187,7 +187,6 @@ class PostCellNode:ASCellNode {
             ])
         
         likeButton.setAttributedTitle(str, for: .normal)
-        print("SET LIKES: \(count)")
     }
     
     func setReplies(count:Int) {
@@ -278,7 +277,6 @@ class PostCellNode:ASCellNode {
         if let post = post,
             let anon = anon,
             anon.key == post.anon.key {
-            print("DID NOT MATCH")
                 subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
                     NSAttributedStringKey.font: Fonts.semiBold(ofSize: 11.0),
                     NSAttributedStringKey.foregroundColor: UIColor.white

@@ -12,6 +12,9 @@
 		B0058C70203BDACF00510EEC /* NewPostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0058C6F203BDACF00510EEC /* NewPostsView.swift */; };
 		B0058C72203BDB1300510EEC /* NewPostsView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B0058C71203BDB1300510EEC /* NewPostsView.xib */; };
 		B01E2A54203D0D0A006C8C2D /* UploadingPostMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */; };
+		B01E2A56203D4B4F006C8C2D /* PostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */; };
+		B01E2A58203D520D006C8C2D /* HomeTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A57203D520D006C8C2D /* HomeTitleView.swift */; };
+		B01E2A5A203D5352006C8C2D /* HomeTitleView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B01E2A59203D5352006C8C2D /* HomeTitleView.xib */; };
 		B0B29DD92037408900FBE5FF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DD82037408900FBE5FF /* AppDelegate.swift */; };
 		B0B29DDB2037408900FBE5FF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DDA2037408900FBE5FF /* ViewController.swift */; };
 		B0B29DDE2037408900FBE5FF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B0B29DDC2037408900FBE5FF /* Main.storyboard */; };
@@ -50,6 +53,9 @@
 		B0058C6F203BDACF00510EEC /* NewPostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostsView.swift; sourceTree = "<group>"; };
 		B0058C71203BDB1300510EEC /* NewPostsView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NewPostsView.xib; sourceTree = "<group>"; };
 		B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UploadingPostMessage.xib; sourceTree = "<group>"; };
+		B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsTableViewController.swift; sourceTree = "<group>"; };
+		B01E2A57203D520D006C8C2D /* HomeTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTitleView.swift; sourceTree = "<group>"; };
+		B01E2A59203D5352006C8C2D /* HomeTitleView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = HomeTitleView.xib; sourceTree = "<group>"; };
 		B0B29DD52037408900FBE5FF /* Jungle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jungle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0B29DD82037408900FBE5FF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B0B29DDA2037408900FBE5FF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -141,6 +147,9 @@
 				B0B29DF32037607600FBE5FF /* NewPostViewController.swift */,
 				B0E11B77203A13A000EF0814 /* AttachmentsView.swift */,
 				B0B29DF52037663D00FBE5FF /* HomeViewController.swift */,
+				B01E2A57203D520D006C8C2D /* HomeTitleView.swift */,
+				B01E2A59203D5352006C8C2D /* HomeTitleView.xib */,
+				B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */,
 				B0B29DF7203768A700FBE5FF /* PostCellNode.swift */,
 				B0058C6F203BDACF00510EEC /* NewPostsView.swift */,
 				B0058C71203BDB1300510EEC /* NewPostsView.xib */,
@@ -270,6 +279,7 @@
 				B0058C72203BDB1300510EEC /* NewPostsView.xib in Resources */,
 				B0B29E012037703600FBE5FF /* Montserrat-SemiBold.otf in Resources */,
 				B0B29DFF2037703600FBE5FF /* Montserrat-Medium.otf in Resources */,
+				B01E2A5A203D5352006C8C2D /* HomeTitleView.xib in Resources */,
 				B0F50ECE20377B3400037343 /* GoogleService-Info.plist in Resources */,
 				B0F50EDD2038060E00037343 /* CommentBar.xib in Resources */,
 				B0B29DE32037408900FBE5FF /* Assets.xcassets in Resources */,
@@ -379,6 +389,7 @@
 				B0F50ED02037838400037343 /* InitialViewController.swift in Sources */,
 				B0F50ED52037A6BA00037343 /* Post.swift in Sources */,
 				B0B29DF62037663D00FBE5FF /* HomeViewController.swift in Sources */,
+				B01E2A56203D4B4F006C8C2D /* PostsTableViewController.swift in Sources */,
 				B0E11B7A203A904500EF0814 /* UploadService.swift in Sources */,
 				B0B29DF42037607600FBE5FF /* NewPostViewController.swift in Sources */,
 				B0B29E032037717500FBE5FF /* Constants.swift in Sources */,
@@ -390,6 +401,7 @@
 				B0F50EDF203809F900037343 /* NewReplyViewController.swift in Sources */,
 				B0B29DF020374BC800FBE5FF /* LoginViewController.swift in Sources */,
 				B0058C6E203BCD7200510EEC /* LoadingCellNode.swift in Sources */,
+				B01E2A58203D520D006C8C2D /* HomeTitleView.swift in Sources */,
 				B0F50ED72037A6E100037343 /* Anon.swift in Sources */,
 				B0B29DEE2037454200FBE5FF /* Extensions.swift in Sources */,
 				B0B29DF8203768A700FBE5FF /* PostCellNode.swift in Sources */,
