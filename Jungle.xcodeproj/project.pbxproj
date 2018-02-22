@@ -15,6 +15,8 @@
 		B01E2A56203D4B4F006C8C2D /* PostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */; };
 		B01E2A58203D520D006C8C2D /* HomeTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A57203D520D006C8C2D /* HomeTitleView.swift */; };
 		B01E2A5A203D5352006C8C2D /* HomeTitleView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B01E2A59203D5352006C8C2D /* HomeTitleView.xib */; };
+		B01E2A5C203D6C97006C8C2D /* TitleCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */; };
+		B01E2A5F203E0E66006C8C2D /* CommentBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A5E203E0E66006C8C2D /* CommentBar.swift */; };
 		B0B29DD92037408900FBE5FF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DD82037408900FBE5FF /* AppDelegate.swift */; };
 		B0B29DDB2037408900FBE5FF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DDA2037408900FBE5FF /* ViewController.swift */; };
 		B0B29DDE2037408900FBE5FF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B0B29DDC2037408900FBE5FF /* Main.storyboard */; };
@@ -56,6 +58,8 @@
 		B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsTableViewController.swift; sourceTree = "<group>"; };
 		B01E2A57203D520D006C8C2D /* HomeTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTitleView.swift; sourceTree = "<group>"; };
 		B01E2A59203D5352006C8C2D /* HomeTitleView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = HomeTitleView.xib; sourceTree = "<group>"; };
+		B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleCellNode.swift; sourceTree = "<group>"; };
+		B01E2A5E203E0E66006C8C2D /* CommentBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentBar.swift; sourceTree = "<group>"; };
 		B0B29DD52037408900FBE5FF /* Jungle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jungle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0B29DD82037408900FBE5FF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B0B29DDA2037408900FBE5FF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -119,6 +123,14 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
+		B01E2A5D203E0B59006C8C2D /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				B0E11B79203A904500EF0814 /* UploadService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 		B0B29DCC2037408900FBE5FF = {
 			isa = PBXGroup;
 			children = (
@@ -156,11 +168,12 @@
 				B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */,
 				B0F50EDA2037DF6600037343 /* CommentCellNode.swift */,
 				B0F50EDC2038060E00037343 /* CommentBar.xib */,
+				B01E2A5E203E0E66006C8C2D /* CommentBar.swift */,
 				B0F50ED82037CAB300037343 /* SinglePostViewController.swift */,
 				B0F50EDE203809F900037343 /* NewReplyViewController.swift */,
 				B0B29DDC2037408900FBE5FF /* Main.storyboard */,
 				B0F50ECF2037838400037343 /* InitialViewController.swift */,
-				B0E11B79203A904500EF0814 /* UploadService.swift */,
+				B01E2A5D203E0B59006C8C2D /* Services */,
 				B0F50ED32037A6AC00037343 /* Models */,
 				B0F50ED1203784F600037343 /* UI Elements */,
 				B0B29DF920376FF100FBE5FF /* Fonts */,
@@ -190,6 +203,7 @@
 			children = (
 				B0F50ECB203775E900037343 /* ASRoundShadowedImage.swift */,
 				B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */,
+				B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */,
 			);
 			path = "UI Elements";
 			sourceTree = "<group>";
@@ -384,8 +398,10 @@
 				B0F50EE12038233900037343 /* Reply.swift in Sources */,
 				B0F50ED92037CAB300037343 /* SinglePostViewController.swift in Sources */,
 				B0B29DDB2037408900FBE5FF /* ViewController.swift in Sources */,
+				B01E2A5F203E0E66006C8C2D /* CommentBar.swift in Sources */,
 				B0B29DE12037408900FBE5FF /* Jungle.xcdatamodeld in Sources */,
 				B0B29DF220375AD500FBE5FF /* MainTabBarController.swift in Sources */,
+				B01E2A5C203D6C97006C8C2D /* TitleCellNode.swift in Sources */,
 				B0F50ED02037838400037343 /* InitialViewController.swift in Sources */,
 				B0F50ED52037A6BA00037343 /* Post.swift in Sources */,
 				B0B29DF62037663D00FBE5FF /* HomeViewController.swift in Sources */,

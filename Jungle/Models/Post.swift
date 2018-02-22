@@ -19,6 +19,7 @@ class Post {
     private(set) var attachments:Attachments?
     
     var liked = false
+    var isYou = false
     
     init(key:String, anon:Anon, text:String, createdAt:Date, likes:Int, replies:Int, attachments:Attachments?=nil) {
         self.key = key

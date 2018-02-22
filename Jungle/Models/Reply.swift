@@ -21,4 +21,14 @@ class Reply {
         self.text = text
         self.createdAt = createdAt
     }
+    
+    static func parse(id:String,_ data:[String:Any]) -> Reply? {
+        if let anon = Anon.parse(data),
+            let text = data["text"] as? String,
+            let createdAt = data["createdAt"] as? Double {
+            let reply = Reply(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000))
+            return reply
+        }
+        return nil
+    }
 }

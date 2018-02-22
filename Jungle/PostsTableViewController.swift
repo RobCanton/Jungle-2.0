@@ -266,9 +266,9 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         
         var queryRef:Query!
         if let lastPostID = lastPostID {
-            queryRef = postsRef.start(after: [lastPostID]).limit(to: 5)
+            queryRef = postsRef.start(after: [lastPostID]).limit(to: 15)
         } else{
-            queryRef = postsRef.limit(to: 5)
+            queryRef = postsRef.limit(to: 15)
         }
         
         queryRef.getDocuments() { (querySnapshot, err) in
@@ -456,39 +456,46 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
 extension PostsTableViewController: PostCellDelegate {
     func postOptions(_ post: Post) {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-            self.newPostsListener?.remove()
-            UploadService.userHTTPHeaders { _ , headers in
-                if let headers = headers {
-                    UploadService.deletePost(headers, post: post) { success in
-                        print("Post deleted: \(success)")
-                        if success {
-                            for i in 0..<self.state.posts.count {
-                                let arrayPost = self.state.posts[i]
-                                if arrayPost.key == post.key {
-                                    self.state = PostsTableViewController.handleAction(.removePost(at: i), fromState: self.state)
-                                    
-                                    
-                                    if !self.state.isFirstLoad {
-                                        self.listenForNewPosts()
+        
+        if post.isYou {
+            alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+                self.newPostsListener?.remove()
+                UploadService.userHTTPHeaders { _ , headers in
+                    if let headers = headers {
+                        UploadService.deletePost(headers, post: post) { success in
+                            print("Post deleted: \(success)")
+                            if success {
+                                for i in 0..<self.state.posts.count {
+                                    let arrayPost = self.state.posts[i]
+                                    if arrayPost.key == post.key {
+                                        self.state = PostsTableViewController.handleAction(.removePost(at: i), fromState: self.state)
+                                        
+                                        
+                                        if !self.state.isFirstLoad {
+                                            self.listenForNewPosts()
+                                        }
+                                        
+                                        self.tableNode.performBatchUpdates({
+                                            let indexPath = IndexPath(row: i, section: 0)
+                                            self.tableNode.deleteRows(at: [indexPath], with: .automatic)
+                                        }, completion: { _ in
+                                        })
+                                        
+                                        break
                                     }
-                                    
-                                    self.tableNode.performBatchUpdates({
-                                        let indexPath = IndexPath(row: i, section: 0)
-                                        self.tableNode.deleteRows(at: [indexPath], with: .automatic)
-                                    }, completion: { _ in
-                                    })
-                                    
-                                    break
                                 }
                             }
                         }
+                    } else {
+                        
                     }
-                } else {
-                    
                 }
-            }
-        }))
+            }))
+        } else {
+            alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { _ in
+                print("Report!")
+            }))
+        }
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         

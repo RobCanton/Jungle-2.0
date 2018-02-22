@@ -13,12 +13,19 @@ import UIKit
 class CommentCellNode:ASCellNode {
 
     
-    static let mainInsets = UIEdgeInsets(top: 0, left: 16.0, bottom: 16.0, right: 16.0)
+    static let mainInsets = UIEdgeInsets(top: 0, left: 16.0, bottom: 10.0, right: 16.0)
     
-    var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 18, imageShadowRadius: 6.0)
+    var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 18, imageShadowRadius: 0.0)
     
     var commentBubbleNode = CommentBubbleNode()
     var isFirst = false
+    
+    let likeButtonNode = ASButtonNode()
+    let shareButtonNode = ASButtonNode()
+    let moreButtonNode = ASButtonNode()
+    
+    let timeNode = ASTextNode()
+    
     required init(withReply reply:Reply, isFirst:Bool?=nil) {
         super.init()
         self.isFirst = isFirst ?? false
@@ -27,6 +34,15 @@ class CommentCellNode:ASCellNode {
         
         commentBubbleNode.set(reply: reply)
         imageNode.imageNode.backgroundColor = reply.anon.color
+        
+        likeButtonNode.setImage(UIImage(named:"heart"), for: .normal)
+        shareButtonNode.setImage(UIImage(named:"reply"), for: .normal)
+        moreButtonNode.setImage(UIImage(named:"more"), for: .normal)
+    
+        timeNode.attributedText = NSAttributedString(string: reply.createdAt.timeSinceNow(), attributes: [
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: UIColor.gray
+            ])
     }
     
     override func didLoad() {
@@ -42,17 +58,20 @@ class CommentCellNode:ASCellNode {
         imageNode.style.layoutPosition = CGPoint(x: 8.0, y: 0)
         //commentBubbleNode.style.height = ASDimension(unit: .points, value: 90.0)
 
+        let centerTime = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: timeNode)
+        let leftActions = ASStackLayoutSpec.horizontal()
+        leftActions.children = [centerTime, likeButtonNode, shareButtonNode]
+        leftActions.spacing = 10.0
+        
+        let insetActions = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12.0, 0.0, 0.0), child: leftActions)
+        
         let mainVerticalStack = ASStackLayoutSpec.vertical()
-        mainVerticalStack.children = [commentBubbleNode]
+        mainVerticalStack.children = [commentBubbleNode, insetActions]
         mainVerticalStack.spacing = 0.0
         mainVerticalStack.style.layoutPosition = CGPoint(x: 44.0 + 12.0, y: 0)
         
         let abs = ASAbsoluteLayoutSpec(children: [imageNode, mainVerticalStack])
         
-        if isFirst {
-            let insets = UIEdgeInsets(top: 16.0, left: 16.0, bottom: 16.0, right: 16.0)
-            return ASInsetLayoutSpec(insets: insets, child: abs)
-        }
         return ASInsetLayoutSpec(insets: CommentCellNode.mainInsets, child: abs)
     }
     
@@ -93,20 +112,16 @@ class ContentBubbleNode:ASDisplayNode {
     let titleNode = ASTextNode()
     let timeNode = ASTextNode()
     let postTextNode = ASTextNode()
-    
-    let likeButtonNode = ASButtonNode()
-    let shareButtonNode = ASButtonNode()
-    let moreButtonNode = ASButtonNode()
+
     
     func set(reply:Reply) {
-        
         titleNode.attributedText = NSAttributedString(string: reply.anon.displayName , attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: UIColor.gray
             ])
         
         postTextNode.attributedText = NSAttributedString(string: reply.text, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: UIColor.gray
             ])
         
@@ -123,9 +138,7 @@ class ContentBubbleNode:ASDisplayNode {
         postTextNode.maximumNumberOfLines = 0
         postTextNode.truncationMode = .byWordWrapping
         
-        likeButtonNode.setImage(UIImage(named:"like"), for: .normal)
-        shareButtonNode.setImage(UIImage(named:"reply"), for: .normal)
-        moreButtonNode.setImage(UIImage(named:"more"), for: .normal)
+        
     }
     
     
@@ -140,28 +153,13 @@ class ContentBubbleNode:ASDisplayNode {
         
         let textStack = ASStackLayoutSpec.vertical()
         textStack.children = [ titleRow, postTextNode ]
-        textStack.spacing = 6.0
-        let insetText = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(6.0, 6.0, 0.0, 6.0), child: textStack)
-        
-        let leftActions = ASStackLayoutSpec.horizontal()
-        leftActions.children = [ likeButtonNode, shareButtonNode]
-        leftActions.spacing = 8.0
-        leftActions.style.flexGrow = 1.0
-        
-        let rightActions = ASStackLayoutSpec.horizontal()
-        rightActions.children = [ moreButtonNode ]
-        rightActions.spacing = 8.0
-        
-        let actionsRow = ASStackLayoutSpec.horizontal()
-        actionsRow.children = [ leftActions, rightActions]
-        actionsRow.spacing = 8.0
-        
-        let verticalStack = ASStackLayoutSpec.vertical()
-        verticalStack.children = [ insetText, actionsRow ]
-        verticalStack.spacing = 2.0
+        textStack.spacing = 2.0
+//        let verticalStack = ASStackLayoutSpec.vertical()
+//        verticalStack.children = [ insetText, actionsRow ]
+//        verticalStack.spacing = 2.0
         
         
-        let insets = UIEdgeInsetsMake(4.0, 6.0, 4.0, 6.0)
-        return ASInsetLayoutSpec(insets: insets, child: verticalStack)
+        let insets = UIEdgeInsetsMake(8.0, 12.0, 8.0, 12.0)
+        return ASInsetLayoutSpec(insets: insets, child: textStack)
     }
 }

@@ -85,14 +85,16 @@ class PostCellNode:ASCellNode {
         
         dividerNode.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
         
-        likeButton.setImage(UIImage(named: "like"), for: .normal)
+        likeButton.setImage(UIImage(named: "heart"), for: .normal)
         likeButton.laysOutHorizontally = true
-        likeButton.contentSpacing = 0.0
+        likeButton.contentSpacing = 6.0
         likeButton.contentHorizontalAlignment = .left
         likeButton.contentEdgeInsets = .zero
-        commentButton.setImage(UIImage(named: "comment"), for: .normal)
+        likeButton.tintColor = UIColor.gray
+        likeButton.tintColorDidChange()
+        commentButton.setImage(UIImage(named: "comment2"), for: .normal)
         commentButton.laysOutHorizontally = true
-        commentButton.contentSpacing = 0.0
+        commentButton.contentSpacing = 6.0
         commentButton.contentHorizontalAlignment = .left
         setLikes(count: post.likes)
         setReplies(count: post.replies)
@@ -223,7 +225,7 @@ class PostCellNode:ASCellNode {
         if liked {
             likeButton.setImage(UIImage(named:"liked"), for: .normal)
         } else{
-            likeButton.setImage(UIImage(named:"like"), for: .normal)
+            likeButton.setImage(UIImage(named:"heart"), for: .normal)
         }
     }
     var postRefListener:ListenerRegistration?
@@ -254,8 +256,7 @@ class PostCellNode:ASCellNode {
                     self.setLikes(count: post.likes)
                 }
                 self.setLikes(count: updatedPost.likes)
-               // setReplies(count: updatedPost.replies)
-                //self.updatePost(updatedPost)
+                self.setReplies(count: updatedPost.replies)
             }
         }
         
@@ -277,12 +278,14 @@ class PostCellNode:ASCellNode {
         if let post = post,
             let anon = anon,
             anon.key == post.anon.key {
+                self.post?.isYou = true
                 subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
                     NSAttributedStringKey.font: Fonts.semiBold(ofSize: 11.0),
                     NSAttributedStringKey.foregroundColor: UIColor.white
                 ])
                 subnameNode.isHidden = false
         } else {
+            self.post?.isYou = false
             subnameNode.isHidden = true
         }
     }
