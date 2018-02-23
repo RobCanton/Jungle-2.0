@@ -21,6 +21,8 @@ var storage:StorageReference {
 let API_ENDPOINT = "https://us-central1-jungle-anonymous.cloudfunctions.net/app"
 
 let accentColor = hexColor(from: "#77E179")
+let redColor = hexColor(from: "FF6B6B")
+let grayColor = UIColor(white: 0.65, alpha: 1.0)
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {

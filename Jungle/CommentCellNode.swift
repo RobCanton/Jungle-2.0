@@ -9,6 +9,7 @@
 import Foundation
 import AsyncDisplayKit
 import UIKit
+import Firebase
 
 class CommentCellNode:ASCellNode {
 
@@ -16,7 +17,7 @@ class CommentCellNode:ASCellNode {
     static let mainInsets = UIEdgeInsets(top: 0, left: 16.0, bottom: 10.0, right: 16.0)
     
     var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 18, imageShadowRadius: 0.0)
-    
+    let subnameNode = ASTextNode()
     var commentBubbleNode = CommentBubbleNode()
     var isFirst = false
     
@@ -26,13 +27,20 @@ class CommentCellNode:ASCellNode {
     
     let timeNode = ASTextNode()
     
-    required init(withReply reply:Reply, isFirst:Bool?=nil) {
+    var lexiconRefListener:ListenerRegistration?
+    
+    weak var reply:Reply?
+    weak var post:Post?
+    
+    required init(withReply reply:Reply, toPost post:Post, isFirst:Bool?=nil) {
         super.init()
+        self.reply = reply
+        self.post = post
         self.isFirst = isFirst ?? false
         automaticallyManagesSubnodes = true
         backgroundColor = UIColor(white: 1.0, alpha: 1.0)
         
-        commentBubbleNode.set(reply: reply)
+        commentBubbleNode.set(reply: reply, toPost: post)
         imageNode.imageNode.backgroundColor = reply.anon.color
         
         likeButtonNode.setImage(UIImage(named:"heart"), for: .normal)
@@ -43,21 +51,36 @@ class CommentCellNode:ASCellNode {
             NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: UIColor.gray
             ])
+        
+        subnameNode.textContainerInset = UIEdgeInsets(top: 1.0, left: 6.0, bottom: 0, right: 6.0)
+        
+        
+       /// assignAnonymous(reply: reply, toPost: post)
+        
     }
+    
     
     override func didLoad() {
         super.didLoad()
-        
+        subnameNode.layer.cornerRadius = 8
+        subnameNode.clipsToBounds = true
         selectionStyle = .none
     }
-    
+
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
         imageNode.style.width = ASDimension(unit: .points, value: 36)
         imageNode.style.height = ASDimension(unit: .points, value: 36)
-        imageNode.style.layoutPosition = CGPoint(x: 8.0, y: 0)
         //commentBubbleNode.style.height = ASDimension(unit: .points, value: 90.0)
+        
+        subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
 
+        let subnameCenterX = ASCenterLayoutSpec(centeringOptions: .X, sizingOptions: .minimumX, child: subnameNode)
+        let imageStack = ASStackLayoutSpec.vertical()
+        imageStack.children = [imageNode, subnameCenterX]
+        imageStack.spacing = 6.0
+        imageStack.style.layoutPosition = CGPoint(x: 0, y: 0)
+        
         let centerTime = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: timeNode)
         let leftActions = ASStackLayoutSpec.horizontal()
         leftActions.children = [centerTime, likeButtonNode, shareButtonNode]
@@ -70,11 +93,63 @@ class CommentCellNode:ASCellNode {
         mainVerticalStack.spacing = 0.0
         mainVerticalStack.style.layoutPosition = CGPoint(x: 44.0 + 12.0, y: 0)
         
-        let abs = ASAbsoluteLayoutSpec(children: [imageNode, mainVerticalStack])
+        let abs = ASAbsoluteLayoutSpec(children: [imageStack, mainVerticalStack])
         
         return ASInsetLayoutSpec(insets: CommentCellNode.mainInsets, child: abs)
     }
     
+    func setSubname(title:String, color:UIColor) {
+        subnameNode.attributedText = NSAttributedString(string: title, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 11.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white
+            ])
+        subnameNode.backgroundColor = color
+    }
+    
+    override func didEnterVisibleState() {
+        super.didEnterVisibleState()
+        if let reply = reply, let post = post {
+            listenTo(reply: reply, toPost: post)
+        }
+    }
+    
+    override func didExitVisibleState() {
+        super.didExitVisibleState()
+        stopListeningToPost()
+    }
+    
+    func listenTo(reply:Reply, toPost post:Post) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let postRef = firestore.collection("posts").document(post.key)
+        let lexiconRef = postRef.collection("lexicon").document(uid)
+        
+        lexiconRefListener = lexiconRef.addSnapshotListener { lexiconSnapshot, error in
+            guard let document = lexiconSnapshot else { return }
+            
+            if let data = document.data(),
+                let anon = Anon.parse(data) {
+                self.assignAnonymous(replyAnon: reply.anon, postAnon: post.anon, myAnon: anon)
+            } else {
+                self.assignAnonymous(replyAnon: reply.anon, postAnon: post.anon, myAnon:nil)
+            }
+        }
+    }
+    
+    func stopListeningToPost() {
+        lexiconRefListener?.remove()
+    }
+    
+    func assignAnonymous(replyAnon:Anon, postAnon:Anon, myAnon:Anon?) {
+        if let myAnon = myAnon, myAnon.key == replyAnon.key {
+                setSubname(title: "YOU", color: replyAnon.color)
+                subnameNode.isHidden = false
+        } else if replyAnon.key == postAnon.key {
+            setSubname(title: "OP", color: replyAnon.color)
+            subnameNode.isHidden = false
+        } else {
+            subnameNode.isHidden = true
+        }
+    }
 }
 
 class CommentBubbleNode:ASDisplayNode {
@@ -89,8 +164,8 @@ class CommentBubbleNode:ASDisplayNode {
         self.clipsToBounds = false
     }
     
-    func set(reply:Reply) {
-        bubbleNode.set(reply: reply)
+    func set(reply:Reply, toPost post:Post) {
+        bubbleNode.set(reply: reply, toPost: post)
     }
     
     override func didLoad() {
@@ -114,11 +189,14 @@ class ContentBubbleNode:ASDisplayNode {
     let postTextNode = ASTextNode()
 
     
-    func set(reply:Reply) {
+    func set(reply:Reply, toPost post:Post) {
         titleNode.attributedText = NSAttributedString(string: reply.anon.displayName , attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: UIColor.gray
             ])
+        
+    
+        //subnameNode.isHidden = true
         
         postTextNode.attributedText = NSAttributedString(string: reply.text, attributes: [
             NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
@@ -129,7 +207,9 @@ class ContentBubbleNode:ASDisplayNode {
             NSAttributedStringKey.font: Fonts.regular(ofSize: 12.0),
             NSAttributedStringKey.foregroundColor: UIColor.gray
             ])
+    
     }
+    
     
     override init() {
         super.init()
@@ -138,21 +218,13 @@ class ContentBubbleNode:ASDisplayNode {
         postTextNode.maximumNumberOfLines = 0
         postTextNode.truncationMode = .byWordWrapping
         
-        
     }
-    
     
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
-        titleNode.style.flexGrow = 1.0
-
-        let titleRow = ASStackLayoutSpec.horizontal()
-        titleRow.children = [ titleNode]
-        titleRow.spacing = 8.0
-        
         let textStack = ASStackLayoutSpec.vertical()
-        textStack.children = [ titleRow, postTextNode ]
+        textStack.children = [ titleNode, postTextNode ]
         textStack.spacing = 2.0
 //        let verticalStack = ASStackLayoutSpec.vertical()
 //        verticalStack.children = [ insetText, actionsRow ]

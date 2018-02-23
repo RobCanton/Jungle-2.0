@@ -27,7 +27,7 @@ class CommentBar:UIView, UITextViewDelegate {
     
     var sendButton:UIButton!
     
-    static let topHeight:CGFloat = 32.0
+    static let topHeight:CGFloat = 22.0
     static let botHeight:CGFloat = 44.0
     static let textMarginHeight:CGFloat = 8.0
     
@@ -36,7 +36,7 @@ class CommentBar:UIView, UITextViewDelegate {
     
     weak var delegate:CommentBarDelegate?
     
-    var replyLabel:ASTextNode!
+    var replyLabel:ASActiveTextNode!
     
 
     
@@ -67,17 +67,14 @@ class CommentBar:UIView, UITextViewDelegate {
         
         let topLayoutGuide = topView.safeAreaLayoutGuide
         
-        replyLabel = ASTextNode()
+        replyLabel = ASActiveTextNode()
         topView.addSubview(replyLabel.view)
         replyLabel.view.translatesAutoresizingMaskIntoConstraints = false
-        replyLabel.view.leadingAnchor.constraint(equalTo: topLayoutGuide.leadingAnchor, constant: 12.0).isActive = true
-        replyLabel.view.topAnchor.constraint(equalTo: topLayoutGuide.topAnchor, constant: 8.0).isActive = true
+        replyLabel.view.leadingAnchor.constraint(equalTo: topLayoutGuide.leadingAnchor, constant: 24.0).isActive = true
+        replyLabel.view.topAnchor.constraint(equalTo: topLayoutGuide.topAnchor, constant: 5.0).isActive = true
         replyLabel.view.trailingAnchor.constraint(equalTo: topLayoutGuide.trailingAnchor).isActive = true
         replyLabel.view.bottomAnchor.constraint(equalTo: topLayoutGuide.bottomAnchor).isActive = true
-        replyLabel.attributedText = NSAttributedString(string: "Replying to @Drizzy", attributes: [
-            NSAttributedStringKey.font: Fonts.regular(ofSize: 12.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
-            ])
+        replyLabel.setText(text: "Replying to @Drizzy", withFont: Fonts.medium(ofSize: 12.0), normalColor: UIColor.gray, activeColor: accentColor)
         
         midView = UIView(frame: CGRect(x: 0, y: 0, width: stackView.bounds.width, height: stackView.bounds.height - CommentBar.topHeight - CommentBar.botHeight))
         midView.backgroundColor = UIColor.white

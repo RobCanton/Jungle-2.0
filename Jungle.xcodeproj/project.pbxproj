@@ -11,6 +11,7 @@
 		B0058C6E203BCD7200510EEC /* LoadingCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */; };
 		B0058C70203BDACF00510EEC /* NewPostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0058C6F203BDACF00510EEC /* NewPostsView.swift */; };
 		B0058C72203BDB1300510EEC /* NewPostsView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B0058C71203BDB1300510EEC /* NewPostsView.xib */; };
+		B00F66AA203F3475002FCDA0 /* ActiveTextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */; };
 		B01E2A54203D0D0A006C8C2D /* UploadingPostMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */; };
 		B01E2A56203D4B4F006C8C2D /* PostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */; };
 		B01E2A58203D520D006C8C2D /* HomeTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A57203D520D006C8C2D /* HomeTitleView.swift */; };
@@ -54,6 +55,7 @@
 		B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingCellNode.swift; sourceTree = "<group>"; };
 		B0058C6F203BDACF00510EEC /* NewPostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostsView.swift; sourceTree = "<group>"; };
 		B0058C71203BDB1300510EEC /* NewPostsView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NewPostsView.xib; sourceTree = "<group>"; };
+		B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTextNode.swift; sourceTree = "<group>"; };
 		B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UploadingPostMessage.xib; sourceTree = "<group>"; };
 		B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsTableViewController.swift; sourceTree = "<group>"; };
 		B01E2A57203D520D006C8C2D /* HomeTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTitleView.swift; sourceTree = "<group>"; };
@@ -204,6 +206,7 @@
 				B0F50ECB203775E900037343 /* ASRoundShadowedImage.swift */,
 				B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */,
 				B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */,
+				B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */,
 			);
 			path = "UI Elements";
 			sourceTree = "<group>";
@@ -411,6 +414,7 @@
 				B0B29E032037717500FBE5FF /* Constants.swift in Sources */,
 				B0F50EDB2037DF6600037343 /* CommentCellNode.swift in Sources */,
 				B0E11B78203A13A000EF0814 /* AttachmentsView.swift in Sources */,
+				B00F66AA203F3475002FCDA0 /* ActiveTextNode.swift in Sources */,
 				B0F50ECC203775E900037343 /* ASRoundShadowedImage.swift in Sources */,
 				B0B29DD92037408900FBE5FF /* AppDelegate.swift in Sources */,
 				B0058C70203BDACF00510EEC /* NewPostsView.swift in Sources */,

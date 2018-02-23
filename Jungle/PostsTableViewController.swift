@@ -110,7 +110,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         bottomGradientView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
         bottomGradientView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
         bottomGradientView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
-        
+        bottomGradientView.isUserInteractionEnabled = false
         let bottomGradient = CAGradientLayer()
         bottomGradient.frame = bottomGradientView.bounds
         bottomGradient.colors = [

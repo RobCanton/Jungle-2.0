@@ -9,24 +9,28 @@
 import Foundation
 import UIKit
 
+enum Vote {
+    case upvoted, downvoted, notvoted
+}
+
 class Post {
     private(set) var key:String
     private(set) var anon:Anon
     private(set) var text:String
     private(set) var createdAt:Date
-    var likes:Int
+    var votes:Int
     var replies:Int
     private(set) var attachments:Attachments?
     
-    var liked = false
+    var vote = Vote.notvoted
     var isYou = false
     
-    init(key:String, anon:Anon, text:String, createdAt:Date, likes:Int, replies:Int, attachments:Attachments?=nil) {
+    init(key:String, anon:Anon, text:String, createdAt:Date, votes:Int, replies:Int, attachments:Attachments?=nil) {
         self.key = key
         self.anon = anon
         self.text = text
         self.createdAt = createdAt
-        self.likes = likes
+        self.votes = votes
         self.replies = replies
         self.attachments = attachments
     }
@@ -36,12 +40,12 @@ class Post {
         if let anon = Anon.parse(data),
             let text = data["text"] as? String,
             let createdAt = data["createdAt"] as? Double,
-            let likes = data["likes"] as? Int,
+            let votes = data["votes"] as? Int,
             let replies = data["replies"] as? Int {
             
             let attachments = Attachments.parse(data)
             
-            post = Post(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), likes: likes, replies: replies, attachments: attachments)
+            post = Post(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), votes: votes, replies: replies, attachments: attachments)
         }
         return post
     }
