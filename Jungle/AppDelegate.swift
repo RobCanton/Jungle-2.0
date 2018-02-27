@@ -18,6 +18,8 @@ var storage:StorageReference {
     return Storage.storage().reference()
 }
 
+var gpsService = GPSService()
+
 let API_ENDPOINT = "https://us-central1-jungle-anonymous.cloudfunctions.net/app"
 
 let accentColor = hexColor(from: "#77E179")

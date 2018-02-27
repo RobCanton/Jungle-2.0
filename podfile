@@ -15,4 +15,5 @@ target 'Jungle' do
   pod 'Firebase/Firestore' 
   pod 'Texture'
   pod 'SwiftMessages'
+  pod 'ScrollableGraphView', :git => 'https://github.com/barnaclejive/ScrollableGraphView', :branch => 'master'
 end

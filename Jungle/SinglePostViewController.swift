@@ -98,6 +98,26 @@ class SinglePostViewController: UIViewController {
         commentBar.setComposeMode(false)
         self.commentBarHeightAnchor?.constant = commentBar.textHeight + CommentBar.textMarginHeight + 4
         self.view.layoutIfNeeded()
+        
+        let gradientView = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
+        gradientView.backgroundColor = nil
+        view.addSubview(gradientView)
+        gradientView.translatesAutoresizingMaskIntoConstraints = false
+        gradientView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        gradientView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        gradientView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        gradientView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
+        gradientView.isUserInteractionEnabled = false
+        let gradient = CAGradientLayer()
+        gradient.frame = gradientView.bounds
+        gradient.colors = [
+            UIColor(white: 0.0, alpha: 0.015).cgColor,
+            UIColor(white: 0.0, alpha: 0.0).cgColor
+        ]
+        gradient.locations = [0.0, 1.0]
+        gradient.startPoint = CGPoint(x: 0, y: 0)
+        gradient.endPoint = CGPoint(x: 0, y: 1)
+        gradientView.layer.insertSublayer(gradient, at: 0)
     }
     
     @objc func openReplyVC() {
@@ -275,7 +295,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
         switch indexPath.section {
         case 0:
-            let cell = PostCellNode(withPost: post)
+            let cell = PostCellNode(withPost: post, type: .newest)
             cell.selectionStyle = .none
             return cell
         case 1:

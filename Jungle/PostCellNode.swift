@@ -16,13 +16,19 @@ protocol PostCellDelegate:class {
 }
 
 class PostCellNode:ASCellNode {
-    var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 22.0, imageShadowRadius: 6.0)
+    
+    let backNode = ASDisplayNode()
+    let gradientColorTop = accentColor
+    let gradientColorBot = hexColor(from: "#22D29F")
+    
+    var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 22.0, imageShadowRadius: 0.0)
     var titleNode = ASTextNode()
     var subnameNode = ASTextNode()
     var subtitleNode = ASTextNode()
     var postTextNode = ASTextNode()
     var actionsNode = ASDisplayNode()
     var dividerNode = ASDisplayNode()
+    var rankButton = ASButtonNode()
     
     let likeButton = ASButtonNode()
     let dislikeButton = ASButtonNode()
@@ -40,16 +46,50 @@ class PostCellNode:ASCellNode {
     
     weak var post:Post?
 
-    required init(withPost post:Post) {
+    private(set) var bgColor = UIColor.white
+    private(set) var textColor = UIColor.gray
+    private(set) var buttonColor = grayColor
+    private(set) var upvoteImage:UIImage!
+    private(set) var upvotedImage:UIImage!
+    private(set) var downvoteImage:UIImage!
+    private(set) var downvotedImage:UIImage!
+    private(set) var commentImage:UIImage!
+    private(set) var moreImage:UIImage!
+    
+    var isKing = false
+    
+    required init(withPost post:Post, type: PostsTableType) {
         super.init()
         self.post = post
         automaticallyManagesSubnodes = true
-        backgroundColor = UIColor.white
+        
+        upvoteImage = UIImage(named:"upvote")
+        upvotedImage = UIImage(named:"upvoted")
+        downvoteImage = UIImage(named:"downvote")
+        downvotedImage = UIImage(named:"downvoted")
+        commentImage = UIImage(named:"comment2")
+        moreImage = UIImage(named:"more")
+        isKing = type == .popular && post.rank != nil && post.rank == 1
+        
+//        if isKing {
+//            textColor = UIColor.white
+//            buttonColor = UIColor.white
+//            upvoteImage = UIImage(named:"upvote_white")
+//            upvotedImage = UIImage(named:"upvoted_white")
+//            downvoteImage = UIImage(named:"downvote_white")
+//            downvotedImage = UIImage(named:"downvoted_white")
+//            commentImage = UIImage(named:"comment_white")
+//            moreImage = UIImage(named:"more_white")
+//        }
+        
+        
+        backNode.backgroundColor = UIColor.blue
+        backgroundColor = bgColor
         
         imageNode.imageNode.backgroundColor = post.anon.color
         titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
+            NSAttributedStringKey.foregroundColor: textColor
             ])
         
         subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
@@ -60,23 +100,30 @@ class PostCellNode:ASCellNode {
         subnameNode.backgroundColor = post.anon.color
         subnameNode.isHidden = true
         
-        subtitleNode.attributedText = NSAttributedString(string: "General · \(post.createdAt.timeSinceNow())", attributes: [
+        var locationStr = ""
+        if let location = post.location {
+            locationStr = " · \(location.locationStr)"
+        }
+        
+        let subtitleStr = "\(post.createdAt.timeSinceNow())\(locationStr)"
+        
+        subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
+            NSAttributedStringKey.foregroundColor: textColor
             ])
         
         postTextNode.maximumNumberOfLines = 0
         postTextNode.truncationMode = .byWordWrapping
         postTextNode.attributedText = NSAttributedString(string: post.text, attributes: [
             NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
+            NSAttributedStringKey.foregroundColor: textColor
             ])
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         countLabel.attributedText = NSAttributedString(string: "-", attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: grayColor,
+            NSAttributedStringKey.foregroundColor: buttonColor,
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
         
@@ -84,34 +131,36 @@ class PostCellNode:ASCellNode {
         if let attachments = post.attachments {
             if attachments.images.count > 0 {
                 let image = attachments.images[0]
+                let color =  hexColor(from: image.colorHex)
+                postImageNode.imageNode.backgroundColor = color
                 postImageNode.imageNode.url = image.url
                 postImageNode.style.height = ASDimension(unit: .points, value: 192)
-                postImageNode.applyShadow(withColor: hexColor(from: image.colorHex), opacity: 0.5)
+                postImageNode.applyShadow(withColor: color, opacity: 0.5)
             }
         } else {
             postImageNode.style.height = ASDimension(unit: .points, value: 0.0)
         }
-        
+
         
         dividerNode.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
         
-        likeButton.setImage(UIImage(named: "upvote"), for: .normal)
+        likeButton.setImage(upvoteImage, for: .normal)
         likeButton.laysOutHorizontally = true
         likeButton.contentSpacing = 6.0
         likeButton.contentHorizontalAlignment = .middle
         likeButton.contentEdgeInsets = .zero
-        likeButton.tintColor = grayColor
+        likeButton.tintColor = buttonColor
         likeButton.tintColorDidChange()
         
-        dislikeButton.setImage(UIImage(named: "downvote"), for: .normal)
+        dislikeButton.setImage(downvoteImage, for: .normal)
         dislikeButton.laysOutHorizontally = true
         dislikeButton.contentSpacing = 6.0
         dislikeButton.contentHorizontalAlignment = .middle
         dislikeButton.contentEdgeInsets = .zero
-        dislikeButton.tintColor = grayColor
+        dislikeButton.tintColor = buttonColor
         dislikeButton.tintColorDidChange()
         
-        commentButton.setImage(UIImage(named: "comment2"), for: .normal)
+        commentButton.setImage(commentImage, for: .normal)
         commentButton.laysOutHorizontally = true
         commentButton.contentSpacing = 8.0
         commentButton.contentHorizontalAlignment = .middle
@@ -119,8 +168,32 @@ class PostCellNode:ASCellNode {
         likeButton.addTarget(self, action: #selector(handleUpvote), forControlEvents: .touchUpInside)
         dislikeButton.addTarget(self, action: #selector(handleDownvote), forControlEvents: .touchUpInside)
         
-        moreButtonNode.setImage(UIImage(named:"more"), for: .normal)
+        moreButtonNode.setImage(moreImage, for: .normal)
         moreButtonNode.addTarget(self, action: #selector(handleMoreButton), forControlEvents: .touchUpInside)
+        moreButtonNode.contentHorizontalAlignment = .right
+        
+        if isKing {
+            rankButton.setImage(UIImage(named:"crown_king"), for: .normal)
+            rankButton.setAttributedTitle(nil, for: .normal)
+            rankButton.isHidden = false
+            backgroundColor = hexColor(from: "#FFFAE6")
+            rankButton.backgroundColor = nil
+            rankButton.clipsToBounds = false
+        } else {
+            backgroundColor = UIColor.white
+            let rankText = NSAttributedString(string: "\(post.rank ?? 999)", attributes: [
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
+                NSAttributedStringKey.foregroundColor: UIColor.white,
+                NSAttributedStringKey.paragraphStyle: paragraph
+                ])
+            rankButton.setAttributedTitle(rankText, for: .normal)
+            rankButton.isHidden = type != .popular
+            rankButton.backgroundColor = post.anon.color
+            rankButton.layer.cornerRadius = 13.0
+            rankButton.clipsToBounds = true
+        }
+        
+        
     }
     
     override func didLoad() {
@@ -128,7 +201,26 @@ class PostCellNode:ASCellNode {
         subnameNode.layer.cornerRadius = 8
         subnameNode.clipsToBounds = true
         selectionStyle = .none
+        
+//        let layoutGuide = view.safeAreaLayoutGuide
+//        gradientView = UIImageView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
+//        gradientView.backgroundColor = UIColor.red.withAlphaComponent(0.25)
+//
+//        if isKing {
+//            view.insertSubview(gradientView, at: 0)
+//            gradientView.translatesAutoresizingMaskIntoConstraints = false
+//            gradientView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+//            gradientView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+//            gradientView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+//            gradientView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+//            view.sendSubview(toBack: gradientView)
+//            gradientView.contentMode = .scaleAspectFill
+//            gradientView.image = UIImage(named:"BoxGradient")
+//        }
+//        gradientView.isHidden = !isKing
     }
+    
+    var gradientView:UIImageView!
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
@@ -160,6 +252,19 @@ class PostCellNode:ASCellNode {
         let titleStack = ASStackLayoutSpec.vertical()
         titleStack.children = [nameStack, subtitleNode]
         titleStack.spacing = 2.0
+        
+        //let rankCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: rankButton)
+        rankButton.style.flexShrink = 1.0
+        if isKing {
+            rankButton.style.minWidth = ASDimension(unit: .points, value: 32.0)
+            rankButton.style.height = ASDimension(unit: .points, value: 32.0)
+        } else {
+            rankButton.style.minWidth = ASDimension(unit: .points, value: 26.0)
+            rankButton.style.height = ASDimension(unit: .points, value: 26.0)
+        }
+        let titleRow = ASStackLayoutSpec.horizontal()
+        titleStack.style.flexGrow = 1.0
+        titleRow.children = [ titleStack, rankButton]
         
         
         
@@ -193,7 +298,7 @@ class PostCellNode:ASCellNode {
         actionsRow.spacing = 8.0
         
         let contentStack = ASStackLayoutSpec.vertical()
-        contentStack.children = [titleStack]
+        contentStack.children = [titleRow]
         contentStack.spacing = 10.0
         
         if let text = post?.text, !text.isEmpty {
@@ -206,7 +311,8 @@ class PostCellNode:ASCellNode {
             }
         }
         
-        contentStack.children?.append(actionsRow)
+        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 16.0), child: actionsRow)
+        contentStack.children?.append(actionsInset)
         
         let mainVerticalStack = ASStackLayoutSpec.vertical()
         mainVerticalStack.children = [contentStack, dividerNode]
@@ -215,22 +321,15 @@ class PostCellNode:ASCellNode {
         mainVerticalStack.style.layoutPosition = CGPoint(x: 44 + 10.0, y: 0)
         
         let abs = ASAbsoluteLayoutSpec(children: [imageStack, mainVerticalStack])
-        return ASInsetLayoutSpec(insets: PostCellNode.mainInsets, child: abs)
+        let mainInset = ASInsetLayoutSpec(insets: PostCellNode.mainInsets, child: abs)
+        let overlay = ASOverlayLayoutSpec(child: backNode, overlay: mainInset)
+        return mainInset
     }
-    
-    func setLikes(count:Int) {
-        let str = NSAttributedString(string: "\(count)", attributes: [
-            NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
-            ])
-        
-        //likeButton.setAttributedTitle(str, for: .normal)
-    }
-    
+
     func setReplies(count:Int) {
         let str = NSAttributedString(string: "\(count)", attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: grayColor
+            NSAttributedStringKey.foregroundColor: buttonColor
             ])
         
         commentButton.setAttributedTitle(str, for: .normal)
@@ -240,39 +339,64 @@ class PostCellNode:ASCellNode {
     @objc func handleUpvote() {
         guard let post = post else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        
+        var countChange = 0
         if post.vote == .upvoted {
             post.vote = .notvoted
+            countChange -= 1
             let postRef = firestore.collection("posts").document(post.key).collection("votes").document(uid)
             postRef.delete() { error in
             }
         } else {
+            if post.vote == .downvoted {
+                countChange += 1
+            }
+            
+            countChange += 1
             post.vote = .upvoted
             let postRef = firestore.collection("posts").document(post.key).collection("votes").document(uid)
-            postRef.setData(["val": true], completion: { error in
+            postRef.setData([
+                "uid": uid,
+                "val": true
+                ], completion: { error in
                 
             })
         }
         setVote(post.vote, animated: true)
+        post.votes += countChange
+        setNumVotes(post.votes)
     }
     
     @objc func handleDownvote() {
         guard let post = post else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
+        var countChange = 0
         if post.vote == .downvoted {
+            countChange += 1
             post.vote = .notvoted
             let postRef = firestore.collection("posts").document(post.key).collection("votes").document(uid)
             postRef.delete() { error in
             }
         } else {
+            
+            if post.vote == .upvoted {
+                countChange -= 1
+            }
+            
+            countChange -= 1
+            
             post.vote = .downvoted
             let postRef = firestore.collection("posts").document(post.key).collection("votes").document(uid)
-            postRef.setData(["val": false], completion: { error in
+            postRef.setData([
+                "uid": uid,
+                "val": false
+                ], completion: { error in
                 
             })
         }
         setVote(post.vote, animated: true)
+        post.votes += countChange
+        setNumVotes(post.votes)
     }
     
     func setVote(_ vote:Vote, animated:Bool) {
@@ -294,8 +418,8 @@ class PostCellNode:ASCellNode {
                     })
                 })
             }
-            likeButton.setImage(UIImage(named:"upvoted"), for: .normal)
-            dislikeButton.setImage(UIImage(named:"downvote"), for: .normal)
+            likeButton.setImage(upvotedImage, for: .normal)
+            dislikeButton.setImage(downvoteImage, for: .normal)
             break
         case .downvoted:
             if animated {
@@ -314,21 +438,17 @@ class PostCellNode:ASCellNode {
                     })
                 })
             }
-            likeButton.setImage(UIImage(named:"upvote"), for: .normal)
-            dislikeButton.setImage(UIImage(named:"downvoted"), for: .normal)
+            likeButton.setImage(upvoteImage, for: .normal)
+            dislikeButton.setImage(downvotedImage, for: .normal)
             break
         case .notvoted:
-            likeButton.setImage(UIImage(named:"upvote"), for: .normal)
-            dislikeButton.setImage(UIImage(named:"downvote"), for: .normal)
+            likeButton.setImage(upvoteImage, for: .normal)
+            dislikeButton.setImage(downvoteImage, for: .normal)
             break
         }
     }
     
-    @objc func setDisliked() {
-        dislikeButton.setImage(UIImage(named:"downvoted"), for: .normal)
-        
-    }
-    var postRefListener:ListenerRegistration?
+    var metaRefListener:ListenerRegistration?
     var likedRefListener:ListenerRegistration?
     var lexiconRefListener:ListenerRegistration?
     
@@ -337,6 +457,7 @@ class PostCellNode:ASCellNode {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         print("listenToPost")
         let postRef = firestore.collection("posts").document(post.key)
+        let metaVotesRef = firestore.collection("postMeta").document(post.key)
         let voteRef = postRef.collection("votes").document(uid)
         let lexiconRef = postRef.collection("lexicon").document(uid)
         likedRefListener = voteRef.addSnapshotListener({ snapshot, error in
@@ -350,21 +471,16 @@ class PostCellNode:ASCellNode {
             self.setVote(post.vote, animated: false)
         })
         
-        postRefListener = postRef.addSnapshotListener { documentSnapshot, error in
+        metaRefListener = metaVotesRef.addSnapshotListener { documentSnapshot, error in
             guard let document = documentSnapshot else {
                 print("Error fetching document: \(error!)")
                 return
             }
-            let id = document.documentID
-            if let data = document.data(),
-                let updatedPost = Post.parse(id: id, data) {
-                if let post = self.post, post.key == updatedPost.key {
-                    post.votes = updatedPost.votes
-                    self.setNumVotes(post.votes)
-
-                }
-                //self.setLikes(count: updatedPost.likes)
-                self.setReplies(count: updatedPost.replies)
+            if let data = document.data() {
+                post.votes = data["votesSum"] as? Int ?? 0
+                post.replies = data["comments"] as? Int ?? 0
+                self.setNumVotes(post.votes)
+                self.setReplies(count: post.replies)
             }
         }
         
@@ -385,7 +501,7 @@ class PostCellNode:ASCellNode {
         paragraph.alignment = .center
         countLabel.attributedText = NSAttributedString(string: "\(votes)", attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: grayColor,
+            NSAttributedStringKey.foregroundColor: buttonColor,
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
     }
@@ -410,7 +526,7 @@ class PostCellNode:ASCellNode {
     func stopListeningToPost() {
         print("stopListeningToPost")
         likedRefListener?.remove()
-        postRefListener?.remove()
+        metaRefListener?.remove()
         lexiconRefListener?.remove()
     }
     
@@ -430,6 +546,10 @@ class PostCellNode:ASCellNode {
     override func didEnterVisibleState() {
         super.didEnterVisibleState()
         listenToPost()
+//        if isKing {
+//            view.sendSubview(toBack: gradientView)
+//        }
+        
     }
     
     override func didExitVisibleState() {

@@ -20,19 +20,23 @@ class Post {
     private(set) var createdAt:Date
     var votes:Int
     var replies:Int
+    var rank:Int?
     private(set) var attachments:Attachments?
+    private(set) var location:LocationPair?
     
     var vote = Vote.notvoted
     var isYou = false
     
-    init(key:String, anon:Anon, text:String, createdAt:Date, votes:Int, replies:Int, attachments:Attachments?=nil) {
+    init(key:String, anon:Anon, text:String, createdAt:Date, votes:Int, replies:Int,rank:Int?, attachments:Attachments?=nil, location:LocationPair?) {
         self.key = key
         self.anon = anon
         self.text = text
         self.createdAt = createdAt
         self.votes = votes
         self.replies = replies
+        self.rank = rank
         self.attachments = attachments
+        self.location = location
     }
     
     static func parse(id:String, _ data:[String:Any]) -> Post? {
@@ -43,9 +47,11 @@ class Post {
             let votes = data["votes"] as? Int,
             let replies = data["replies"] as? Int {
             
+            let rank = data["rank"] as? Int
             let attachments = Attachments.parse(data)
+            let location = LocationPair.parse(data)
             
-            post = Post(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), votes: votes, replies: replies, attachments: attachments)
+            post = Post(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), votes: votes, replies: replies, rank: rank,attachments: attachments, location:location)
         }
         return post
     }
@@ -69,16 +75,44 @@ class Attachments {
     }
 }
 
+class LocationPair {
+    var city:String
+    var country:String
+    
+    init(city:String, country:String) {
+        self.city = city
+        self.country = country
+    }
+    
+    static func parse(_ data:[String:Any]) -> LocationPair? {
+        if let location = data["location"] as? [String:Any],
+            let city = location["city"] as? String,
+            let country = location["countryCode"] as? String {
+            return LocationPair(city: city, country: country)
+        } else {
+            return nil
+        }
+    }
+    
+    var locationStr:String {
+        get {
+            return "\(city), \(country)"
+        }
+    }
+}
+
 class ImageAttachment {
     var url:URL
     var order:Int
     var source:String
+    var type:String
     var colorHex:String
     
-    init(url:URL, order:Int, source:String, colorHex:String) {
+    init(url:URL, order:Int, source:String, type:String, colorHex:String) {
         self.url = url
         self.order = order
         self.source = source
+        self.type = type
         self.colorHex = colorHex
     }
     
@@ -87,8 +121,9 @@ class ImageAttachment {
             let url = URL(string: urlStr),
             let order = dict["order"] as? Int,
             let source = dict["source"] as? String,
+            let type = dict["type"] as? String,
             let color = dict["color"] as? String {
-            return ImageAttachment(url: url, order: order, source: source, colorHex: color)
+                return ImageAttachment(url: url, order: order, source: source, type: type, colorHex: color)
         }
         return nil
     }

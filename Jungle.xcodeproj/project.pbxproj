@@ -18,6 +18,11 @@
 		B01E2A5A203D5352006C8C2D /* HomeTitleView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B01E2A59203D5352006C8C2D /* HomeTitleView.xib */; };
 		B01E2A5C203D6C97006C8C2D /* TitleCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */; };
 		B01E2A5F203E0E66006C8C2D /* CommentBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A5E203E0E66006C8C2D /* CommentBar.swift */; };
+		B07F61052043C7A4005010B7 /* UploadProgressPopupView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B07F61042043C7A4005010B7 /* UploadProgressPopupView.xib */; };
+		B07F61072043D05A005010B7 /* AlertService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F61062043D05A005010B7 /* AlertService.swift */; };
+		B07F61092044983E005010B7 /* ComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F61082044983E005010B7 /* ComposerView.swift */; };
+		B07F610B20449AE0005010B7 /* TopicsBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F610A20449AE0005010B7 /* TopicsBarView.swift */; };
+		B07F610D2044C93B005010B7 /* GPSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F610C2044C93B005010B7 /* GPSService.swift */; };
 		B0B29DD92037408900FBE5FF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DD82037408900FBE5FF /* AppDelegate.swift */; };
 		B0B29DDB2037408900FBE5FF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DDA2037408900FBE5FF /* ViewController.swift */; };
 		B0B29DDE2037408900FBE5FF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B0B29DDC2037408900FBE5FF /* Main.storyboard */; };
@@ -62,6 +67,11 @@
 		B01E2A59203D5352006C8C2D /* HomeTitleView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = HomeTitleView.xib; sourceTree = "<group>"; };
 		B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleCellNode.swift; sourceTree = "<group>"; };
 		B01E2A5E203E0E66006C8C2D /* CommentBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentBar.swift; sourceTree = "<group>"; };
+		B07F61042043C7A4005010B7 /* UploadProgressPopupView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UploadProgressPopupView.xib; sourceTree = "<group>"; };
+		B07F61062043D05A005010B7 /* AlertService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertService.swift; sourceTree = "<group>"; };
+		B07F61082044983E005010B7 /* ComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerView.swift; sourceTree = "<group>"; };
+		B07F610A20449AE0005010B7 /* TopicsBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsBarView.swift; sourceTree = "<group>"; };
+		B07F610C2044C93B005010B7 /* GPSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSService.swift; sourceTree = "<group>"; };
 		B0B29DD52037408900FBE5FF /* Jungle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jungle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0B29DD82037408900FBE5FF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B0B29DDA2037408900FBE5FF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -129,6 +139,8 @@
 			isa = PBXGroup;
 			children = (
 				B0E11B79203A904500EF0814 /* UploadService.swift */,
+				B07F61062043D05A005010B7 /* AlertService.swift */,
+				B07F610C2044C93B005010B7 /* GPSService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -159,8 +171,11 @@
 				B0B29DEF20374BC800FBE5FF /* LoginViewController.swift */,
 				B0B29DF120375AD500FBE5FF /* MainTabBarController.swift */,
 				B0B29DF32037607600FBE5FF /* NewPostViewController.swift */,
+				B07F61082044983E005010B7 /* ComposerView.swift */,
+				B07F610A20449AE0005010B7 /* TopicsBarView.swift */,
 				B0E11B77203A13A000EF0814 /* AttachmentsView.swift */,
 				B0B29DF52037663D00FBE5FF /* HomeViewController.swift */,
+				B07F61042043C7A4005010B7 /* UploadProgressPopupView.xib */,
 				B01E2A57203D520D006C8C2D /* HomeTitleView.swift */,
 				B01E2A59203D5352006C8C2D /* HomeTitleView.xib */,
 				B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */,
@@ -303,6 +318,7 @@
 				B0B29DDE2037408900FBE5FF /* Main.storyboard in Resources */,
 				B0B29DFB2037702800FBE5FF /* Montserrat-Light.otf in Resources */,
 				B0B29E002037703600FBE5FF /* Montserrat-Regular.otf in Resources */,
+				B07F61052043C7A4005010B7 /* UploadProgressPopupView.xib in Resources */,
 				B01E2A54203D0D0A006C8C2D /* UploadingPostMessage.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -340,6 +356,7 @@
 				"${BUILT_PRODUCTS_DIR}/PINOperation/PINOperation.framework",
 				"${BUILT_PRODUCTS_DIR}/PINRemoteImage/PINRemoteImage.framework",
 				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
+				"${BUILT_PRODUCTS_DIR}/ScrollableGraphView/ScrollableGraphView.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftMessages/SwiftMessages.framework",
 				"${BUILT_PRODUCTS_DIR}/Texture/AsyncDisplayKit.framework",
 				"${BUILT_PRODUCTS_DIR}/gRPC/GRPCClient.framework",
@@ -359,6 +376,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINOperation.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINRemoteImage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ScrollableGraphView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftMessages.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AsyncDisplayKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GRPCClient.framework",
@@ -400,6 +418,8 @@
 			files = (
 				B0F50EE12038233900037343 /* Reply.swift in Sources */,
 				B0F50ED92037CAB300037343 /* SinglePostViewController.swift in Sources */,
+				B07F61072043D05A005010B7 /* AlertService.swift in Sources */,
+				B07F610D2044C93B005010B7 /* GPSService.swift in Sources */,
 				B0B29DDB2037408900FBE5FF /* ViewController.swift in Sources */,
 				B01E2A5F203E0E66006C8C2D /* CommentBar.swift in Sources */,
 				B0B29DE12037408900FBE5FF /* Jungle.xcdatamodeld in Sources */,
@@ -409,6 +429,7 @@
 				B0F50ED52037A6BA00037343 /* Post.swift in Sources */,
 				B0B29DF62037663D00FBE5FF /* HomeViewController.swift in Sources */,
 				B01E2A56203D4B4F006C8C2D /* PostsTableViewController.swift in Sources */,
+				B07F610B20449AE0005010B7 /* TopicsBarView.swift in Sources */,
 				B0E11B7A203A904500EF0814 /* UploadService.swift in Sources */,
 				B0B29DF42037607600FBE5FF /* NewPostViewController.swift in Sources */,
 				B0B29E032037717500FBE5FF /* Constants.swift in Sources */,
@@ -423,6 +444,7 @@
 				B0058C6E203BCD7200510EEC /* LoadingCellNode.swift in Sources */,
 				B01E2A58203D520D006C8C2D /* HomeTitleView.swift in Sources */,
 				B0F50ED72037A6E100037343 /* Anon.swift in Sources */,
+				B07F61092044983E005010B7 /* ComposerView.swift in Sources */,
 				B0B29DEE2037454200FBE5FF /* Extensions.swift in Sources */,
 				B0B29DF8203768A700FBE5FF /* PostCellNode.swift in Sources */,
 			);

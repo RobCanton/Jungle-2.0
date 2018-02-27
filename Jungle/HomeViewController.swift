@@ -10,12 +10,16 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import Firebase
-
+import SwiftMessages
 
 class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, HomeTitleDelegate {
     
     var pagerNode:ASPagerNode!
     var titleView:HomeTitleView!
+    
+    var sm = SwiftMessages()
+    
+    var messageWrapper = SwiftMessages()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,6 +52,17 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         navigationController?.setNavigationBarHidden(true, animated: animated)
         navigationController?.navigationBar.tintColor = UIColor.gray
         navigationItem.backBarButtonItem = UIBarButtonItem(image: UIImage(named:"Back"), style: .plain, target: nil, action: nil)
+        
+        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if gpsService.isAuthorized() {
+            gpsService.startUpdatingLocation()
+        } else {
+            authorizeGPS()
+        }
     }
     
     func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
@@ -104,6 +119,61 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
             break
         case .nearby:
             pagerNode.scrollToPage(at: 2, animated: true)
+            break
+        }
+    }
+    
+    func authorizeGPS() {
+        let messageView: MessageView = MessageView.viewFromNib(layout: .centeredView)
+        messageView.configureBackgroundView(width: 250)
+        messageView.configureContent(title: "Enable location services", body: "Your location will be used to show you nearby posts and let you share posts with people near you.", iconImage: nil, iconText: "🌎", buttonImage: nil, buttonTitle: "Enable Location") { _ in
+            self.enableLocationTapped()
+            self.messageWrapper.hide()
+        }
+        messageView.titleLabel?.font = Fonts.semiBold(ofSize: 16.0)
+        messageView.bodyLabel?.font = Fonts.medium(ofSize: 14.0)
+        
+        
+        let button = messageView.button!
+        button.backgroundColor = accentColor
+        button.titleLabel!.font = Fonts.semiBold(ofSize: 16.0)
+        button.setTitleColor(UIColor.white, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 12.0, left: 16.0, bottom: 12.0, right: 16.0)
+        button.sizeToFit()
+        button.layer.cornerRadius = messageView.button!.bounds.height / 2
+        button.clipsToBounds = true
+        
+        messageView.backgroundView.backgroundColor = UIColor.init(white: 0.97, alpha: 1)
+        messageView.backgroundView.layer.cornerRadius = 12
+        var config = SwiftMessages.defaultConfig
+        config.presentationStyle = .center
+        config.duration = .forever
+        config.dimMode = .color(color: UIColor(white: 0.25, alpha: 1.0), interactive: true)
+        self.messageWrapper.show(config: config, view: messageView)
+    }
+    
+    func enableLocationTapped() {
+        
+        let status = gpsService.authorizationStatus()
+        switch status {
+        case .authorizedAlways:
+            break
+        case .authorizedWhenInUse:
+            break
+        case .denied:
+            if #available(iOS 10.0, *) {
+                let settingsUrl = NSURL(string:UIApplicationOpenSettingsURLString)! as URL
+                UIApplication.shared.open(settingsUrl, options: [:], completionHandler: nil)
+            } else {
+                let alert = UIAlertController(title: "Go to Settings", message: "Please minimize Jungle and go to your settings to enable location services.", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Okay", style: .default, handler: nil))
+                self.present(alert, animated: true, completion: nil)
+            }
+            break
+        case .notDetermined:
+            gpsService.requestAuthorization()
+            break
+        case .restricted:
             break
         }
     }

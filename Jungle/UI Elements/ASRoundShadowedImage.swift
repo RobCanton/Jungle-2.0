@@ -21,7 +21,7 @@ class ASRoundShadowedImageNode:ASDisplayNode {
         self.imageCornerRadius = imageCornerRadius
         self.imageShadowRadius = imageShadowRadius
         automaticallyManagesSubnodes = true
-        imageNode.backgroundColor = UIColor.gray
+        imageNode.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
         imageNode.contentMode = .scaleAspectFill
         imageNode.isUserInteractionEnabled = false
         self.clipsToBounds = false

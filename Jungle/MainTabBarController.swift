@@ -8,11 +8,20 @@
 
 import Foundation
 import UIKit
+import SwiftMessages
+import Alamofire
 
-class MainTabBarController:UITabBarController {
+protocol UploadProgressDelegate {
+    func uploadedDidComplete()
+}
+
+class MainTabBarController:UITabBarController, UploadProgressDelegate {
     
+    var messageWrapper = SwiftMessages()
     var postButtonContainer:UIView!
     var postButton:UIButton!
+    
+    var popupBottomAnchor:NSLayoutConstraint?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,10 +41,23 @@ class MainTabBarController:UITabBarController {
         postButtonContainer.addSubview(postButton)
         tabBar.shadowImage = UIImage()
         tabBar.backgroundImage = UIImage()
+        
     }
     
     @objc func openNewPostVC() {
         let controller = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "NewPostNavController")
         self.present(controller, animated: true, completion: nil)
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        uploadedDidComplete()
+        
+    }
+
+    
+    func uploadedDidComplete() {
+
+    }
+    
 }

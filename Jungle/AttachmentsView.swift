@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 import Photos
+import MobileCoreServices
 
 protocol AttachmentsDelegate:class {
     func attachments(didSelect images: [SelectedImage])
@@ -18,7 +19,7 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
     
     var collectionView:UICollectionView!
     
-    var latestPhotoAssetsFetched: PHFetchResult<PHAsset>? = nil {
+    var libraryAssets = [SelectedImage]() {
         didSet {
             collectionView.reloadData()
         }
@@ -60,9 +61,29 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         collectionView.dataSource = self
         collectionView.reloadData()
         
+        let collectionLayoutGuide = collectionView.safeAreaLayoutGuide
         
-        self.latestPhotoAssetsFetched = self.fetchLatestPhotos(forCount: 12)
+//        let bar = TopicsBarView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 40.0))
+//        addSubview(bar)
+//        bar.translatesAutoresizingMaskIntoConstraints = false
+//        bar.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+//        bar.topAnchor.constraint(equalTo: collectionLayoutGuide.bottomAnchor, constant: 8.0).isActive = true
+//        bar.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+//        bar.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+//        bar.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
         
+        let fetchedAssets = self.fetchLatestPhotos(forCount: 16)
+    
+        var assets = [SelectedImage]()
+        for i in 0..<fetchedAssets.count {
+            let fetchedAsset = fetchedAssets[i]
+            let id = fetchedAsset.localIdentifier
+            
+            let asset = SelectedImage(id: id, asset: fetchedAsset, sourceType: .library)
+            assets.append(asset)
+        }
+        self.libraryAssets = assets
+        self.collectionView.reloadData()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -81,6 +102,8 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: false)
         options.sortDescriptors = [sortDescriptor]
         
+        print("COOOOOL")
+        
         // Fetch the photos.
         return PHAsset.fetchAssets(with: .image, options: options)
         
@@ -92,9 +115,9 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if section == 0 {
-            return 2
+            return 0
         }
-        return latestPhotoAssetsFetched?.count ?? 0
+        return libraryAssets.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -103,26 +126,9 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         cell.backgroundColor = nil
         cell.imageView.image = nil
         if indexPath.section == 1 {
-            // Get the asset. If nothing, return the cell.
-            guard let asset = self.latestPhotoAssetsFetched?[indexPath.item] else {
-                return cell
-            }
-            
-            // Here we bind the asset with the cell.
-            cell.representedAssetIdentifier = asset.localIdentifier
-            // Request the image.
-            PHImageManager.default().requestImage(for: asset,
-                                                  targetSize: UIScreen.main.bounds.size,
-                                                  contentMode: .aspectFill,
-                                                  options: nil) { (image, _) in
-                                                    // By the time the image is returned, the cell may has been recycled.
-                                                    // We update the UI only when it is still on the screen.
-                                                    if cell.representedAssetIdentifier == asset.localIdentifier {
-                                                        cell.imageView.image = image
-                                                    }
-            }
+            let asset = libraryAssets[indexPath.row]
+            cell.setAsset(asset)
         }
-        
         
         return cell
     }
@@ -133,11 +139,8 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if indexPath.section == 1 {
-            guard let cell = collectionView.cellForItem(at: indexPath) as? AttachmentCollectionCell else { return }
-            guard let image = cell.imageView.image else { return }
-            let label = cell.representedAssetIdentifier
-            let selectedImage = SelectedImage(id: label, image: image, type: .library)
-            delegate?.attachments(didSelect: [selectedImage])
+            let asset = libraryAssets[indexPath.row]
+            delegate?.attachments(didSelect: [asset])
         }
     }
     
@@ -149,7 +152,11 @@ class AttachmentCollectionCell: UICollectionViewCell {
     
     var imageView:UIImageView!
     
+    var asset:PHAsset?
     var representedAssetIdentifier = ""
+    
+    var gifView:UIView!
+    var gifLabel:UILabel!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -170,14 +177,62 @@ class AttachmentCollectionCell: UICollectionViewCell {
         imageView.layer.cornerRadius = 16.0
         imageView.clipsToBounds = true
         
-        imageView.layer.borderColor = UIColor.green.cgColor
+        imageView.layer.borderColor = accentColor.cgColor
         imageView.layer.borderWidth = 0.0
         self.applyShadow(radius: 8.0, opacity: 0.15, offset: CGSize(width: 0, height: 6.0), color: UIColor.black, shouldRasterize: false)
         self.clipsToBounds = false
+        
+        gifView = UIView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 25.0))
+        gifView.backgroundColor = UIColor(white: 0.0, alpha: 0.6)
+        addSubview(gifView)
+        gifView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor, constant: 6.0).isActive = true
+        gifView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -6.0).isActive = true
+        gifView.translatesAutoresizingMaskIntoConstraints = false
+    
+        
+        let gifViewLayoutGuide = gifView.safeAreaLayoutGuide
+        gifLabel = UILabel(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 25.0))
+        gifView.addSubview(gifLabel)
+        gifLabel.text = "GIF"
+        gifLabel.font = Fonts.semiBold(ofSize: 9.0)
+        gifLabel.textColor = UIColor(white: 1.0, alpha: 0.8)
+        gifLabel.textAlignment = .center
+        gifLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        gifLabel.leadingAnchor.constraint(equalTo: gifViewLayoutGuide.leadingAnchor, constant: 4.0).isActive = true
+        gifLabel.topAnchor.constraint(equalTo: gifViewLayoutGuide.topAnchor).isActive = true
+        gifLabel.trailingAnchor.constraint(equalTo: gifViewLayoutGuide.trailingAnchor, constant: -4.0).isActive = true
+        gifLabel.bottomAnchor.constraint(equalTo: gifViewLayoutGuide.bottomAnchor).isActive = true
+        gifLabel.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        gifView.isHidden = false
+        
+        gifView.layer.cornerRadius = gifView.bounds.height / 2
+        gifView.clipsToBounds = true
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    func setAsset(_ asset: SelectedImage) {
+        
+        // Here we bind the asset with the cell.
+        representedAssetIdentifier = asset.asset.localIdentifier
+        // Request the image.
+        
+        gifView.isHidden = asset.assetType != .gif
+        
+        PHImageManager.default().requestImage(for: asset.asset,
+                                              targetSize: UIScreen.main.bounds.size,
+                                              contentMode: .aspectFill,
+                                              options: nil) { (image, _) in
+                                                // By the time the image is returned, the cell may has been recycled.
+                                                // We update the UI only when it is still on the screen.
+                                                if self.representedAssetIdentifier == asset.asset.localIdentifier {
+                                                    asset.image = image
+                                                    self.imageView.image = image
+                                                }
+        }
     }
     
     

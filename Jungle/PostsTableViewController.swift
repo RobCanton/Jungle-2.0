@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import Firebase
+import Alamofire
 
 enum PostsTableType {
     case newest, popular, nearby
@@ -28,9 +29,10 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         var postKeys:[String:Bool]
         var fetchingMore: Bool
         var lastPostTimestamp:Double?
+        var lastRank:Int?
         var endReached:Bool
         var isFirstLoad:Bool
-        static let empty = State(posts: [], postKeys: [:], fetchingMore: false, lastPostTimestamp: nil, endReached: false, isFirstLoad: true)
+        static let empty = State(posts: [], postKeys: [:], fetchingMore: false, lastPostTimestamp: nil, lastRank:nil, endReached: false, isFirstLoad: true)
     }
     
     var state = State.empty
@@ -49,6 +51,10 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     init(type:PostsTableType) {
         super.init(node: ASDisplayNode())
         self.type = type
+        
+        if type == .nearby {
+            NotificationCenter.default.addObserver(self, selector: #selector(handleLocationUpdate), name: GPSService.locationUpdatedNotification, object: nil)
+        }
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -151,6 +157,29 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         }
     }
     
+    @objc func handleLocationUpdate() {
+        guard let location = gpsService.getLastLocation() else { return }
+        print("handleLocationUpdate")
+        UploadService.userHTTPHeaders { uid, headers in
+            let parameters = [
+                "lat": location.coordinate.latitude,
+                "lon": location.coordinate.longitude,
+                "limit": 15,
+                "radius": 1000
+            ] as [String:Any]
+            Alamofire.request("\(API_ENDPOINT)/posts/nearby", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
+                DispatchQueue.main.async {
+                    if let dict = response.result.value as? [String:Any], let success = dict["success"] as? Bool, success {
+                        print("NEARBY POSTS UPDATE SUCCESS")
+                        print("RESULTS: \(dict)")
+                    } else {
+                        print("NEARBY POSTS UPDATE FAILED")
+                    }
+                }
+            }
+        }
+    }
+    
     var seeNewPostsTopAnchor:NSLayoutConstraint?
     
     func showSeeNewPosts(_ show:Bool) {
@@ -196,9 +225,22 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         self.showSeeNewPosts(false)
         
         if type == .popular {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-                self.refreshControl.endRefreshing()
+            
+            context?.cancelBatchFetching()
+            let indexPaths = (0..<state.posts.count).map { index in
+                IndexPath(row: index, section: 0)
+            }
+            state = .empty
+            tableNode.performBatch(animated: false, updates: {
+                tableNode.deleteRows(at: indexPaths, with: .none)
+            }, completion: { complete in
+                if complete {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
+                        self.refreshControl.endRefreshing()
+                    })
+                }
             })
+            
             return
         }
         let postsRef = firestore.collection("posts").whereField("status", isEqualTo: "active").order(by: "createdAt", descending: false)
@@ -248,28 +290,42 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     }
     
     
-    static func fetchData(state:State, type:PostsTableType, lastPostID: Double?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
+    static func fetchData(state:State, type:PostsTableType, lastPostID: Double?, lastRank:Int?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
         
         let rootPostRef = firestore.collection("posts").whereField("status", isEqualTo: "active")
         var postsRef:Query!
+        var queryRef:Query!
         switch type {
         case .newest:
             postsRef = rootPostRef.order(by: "createdAt", descending: true)
+            if let lastPostID = lastPostID {
+                queryRef = postsRef.start(after: [lastPostID]).limit(to: 15)
+            } else{
+                queryRef = postsRef.limit(to: 15)
+            }
             break
         case .popular:
-            postsRef = rootPostRef.order(by: "likes", descending: true)
+            postsRef = rootPostRef.order(by: "rank", descending: false)
+            if let lastRank = lastRank {
+                queryRef = postsRef.start(after: [lastRank]).limit(to: 15)
+            } else{
+                queryRef = postsRef.limit(to: 15)
+            }
             break
         case .nearby:
             postsRef = rootPostRef.order(by: "createdAt", descending: true)
+            if let lastPostID = lastPostID {
+                queryRef = postsRef.start(after: [lastPostID]).limit(to: 15)
+            } else{
+                queryRef = postsRef.limit(to: 15)
+            }
             break
         }
         
-        var queryRef:Query!
-        if let lastPostID = lastPostID {
-            queryRef = postsRef.start(after: [lastPostID]).limit(to: 15)
-        } else{
-            queryRef = postsRef.limit(to: 15)
-        }
+        
+        
+        
+        
         
         queryRef.getDocuments() { (querySnapshot, err) in
             var _posts = [Post]()
@@ -281,7 +337,9 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
                 
                 let documents = querySnapshot!.documents
                 
+                print("RXC: DOCS: \(documents)")
                 if documents.count == 0 {
+                    print("END REACHED")
                     endReached = true
                 }
                 
@@ -300,6 +358,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         
     }
     
+    var context:ASBatchContext?
 }
 
 extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
@@ -308,14 +367,14 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         /// This call will come in on a background thread. Switch to main
         /// to add our spinner, then fire off our fetch.
         guard !state.endReached else { return }
-        
+        self.context = context
         DispatchQueue.main.async {
             let oldState = self.state
             self.state = PostsTableViewController.handleAction(.beginBatchFetch, fromState: oldState)
             self.renderDiff(oldState)
         }
         
-        PostsTableViewController.fetchData(state: state, type: type, lastPostID: state.lastPostTimestamp) { posts, endReached in
+        PostsTableViewController.fetchData(state: state, type: type, lastPostID: state.lastPostTimestamp, lastRank: state.lastRank) { posts, endReached in
             
             if endReached {
                 let oldState = self.state
@@ -326,7 +385,6 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             self.state = PostsTableViewController.handleAction(action, fromState: oldState)
             self.renderDiff(oldState)
             context.completeBatchFetching(true)
-            
             if self.state.isFirstLoad {
                 let oldState = self.state
                 self.state = PostsTableViewController.handleAction(.firstLoadComplete(), fromState: oldState)
@@ -378,8 +436,10 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             if state.posts.count > 0 {
                 let lastPost = state.posts[state.posts.count - 1]
                 state.lastPostTimestamp = lastPost.createdAt.timeIntervalSince1970 * 1000
+                state.lastRank = lastPost.rank
             } else {
                 state.lastPostTimestamp = nil
+                state.lastRank = nil
             }
             
             state.postKeys = [:]
@@ -401,8 +461,10 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             if state.posts.count > 0 {
                 let lastPost = state.posts[state.posts.count - 1]
                 state.lastPostTimestamp = lastPost.createdAt.timeIntervalSince1970 * 1000
+                state.lastRank = lastPost.rank
             } else {
                 state.lastPostTimestamp = nil
+                state.lastRank = nil
             }
             
             
@@ -438,7 +500,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             return node;
         }
         
-        let cell = PostCellNode(withPost: state.posts[indexPath.row])
+        let cell = PostCellNode(withPost: state.posts[indexPath.row], type: type)
         cell.selectionStyle = .none
         cell.delegate = self
         return cell
@@ -474,10 +536,11 @@ extension PostsTableViewController: PostCellDelegate {
                                         if !self.state.isFirstLoad {
                                             self.listenForNewPosts()
                                         }
-                                        
+                                        let indexPath = IndexPath(row: i, section: 0)
+                                        let cell = self.tableNode.nodeForRow(at: indexPath) as? PostCellNode
+                                        cell?.stopListeningToPost()
                                         self.tableNode.performBatchUpdates({
-                                            let indexPath = IndexPath(row: i, section: 0)
-                                            self.tableNode.deleteRows(at: [indexPath], with: .automatic)
+                                            self.tableNode.deleteRows(at: [indexPath], with: .top)
                                         }, completion: { _ in
                                         })
                                         

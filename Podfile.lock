@@ -100,6 +100,7 @@ PODS:
     - PINCache (= 3.0.1-beta.6)
     - PINRemoteImage/Core
   - Protobuf (3.5.0)
+  - ScrollableGraphView (4.0.4)
   - SwiftMessages (4.1.0)
   - Texture (2.6):
     - Texture/PINRemoteImage (= 2.6)
@@ -116,8 +117,19 @@ DEPENDENCIES:
   - Firebase/Database
   - Firebase/Firestore
   - Firebase/Storage
+  - ScrollableGraphView (from `https://github.com/barnaclejive/ScrollableGraphView`, branch `master`)
   - SwiftMessages
   - Texture
+
+EXTERNAL SOURCES:
+  ScrollableGraphView:
+    :branch: master
+    :git: https://github.com/barnaclejive/ScrollableGraphView
+
+CHECKOUT OPTIONS:
+  ScrollableGraphView:
+    :commit: b13c6c43b0bd313269e14fb4f4665c4d3115a863
+    :git: https://github.com/barnaclejive/ScrollableGraphView
 
 SPEC CHECKSUMS:
   Alamofire: f41a599bd63041760b26d393ec1069d9d7b917f4
@@ -142,9 +154,10 @@ SPEC CHECKSUMS:
   PINOperation: 7f042fa6df5b606deb4bd5997654cf7033d5be1d
   PINRemoteImage: d6d51c5d2adda55f1ce30c96e850b6c4ebd2856a
   Protobuf: 8a9838fba8dae3389230e1b7f8c104aa32389c03
+  ScrollableGraphView: abac54d3493a5a198ade4baf4879967183af8a2c
   SwiftMessages: 1bacc783c8f10bdfdc57c14860cae8a1f1fa6591
   Texture: 7249074582daf75e524e59df5428b66b8e8db0e4
 
-PODFILE CHECKSUM: 0ed2df135c2ebb30842df069b36bab9cb55cd139
+PODFILE CHECKSUM: 003ea9f08eba4f30b0fc1e24375b969a7c8cef6e
 
 COCOAPODS: 1.4.0

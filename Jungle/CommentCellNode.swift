@@ -25,8 +25,6 @@ class CommentCellNode:ASCellNode {
     let shareButtonNode = ASButtonNode()
     let moreButtonNode = ASButtonNode()
     
-    let timeNode = ASTextNode()
-    
     var lexiconRefListener:ListenerRegistration?
     
     weak var reply:Reply?
@@ -47,10 +45,6 @@ class CommentCellNode:ASCellNode {
         shareButtonNode.setImage(UIImage(named:"reply"), for: .normal)
         moreButtonNode.setImage(UIImage(named:"more"), for: .normal)
     
-        timeNode.attributedText = NSAttributedString(string: reply.createdAt.timeSinceNow(), attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
-            ])
         
         subnameNode.textContainerInset = UIEdgeInsets(top: 1.0, left: 6.0, bottom: 0, right: 6.0)
         
@@ -81,9 +75,8 @@ class CommentCellNode:ASCellNode {
         imageStack.spacing = 6.0
         imageStack.style.layoutPosition = CGPoint(x: 0, y: 0)
         
-        let centerTime = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: timeNode)
         let leftActions = ASStackLayoutSpec.horizontal()
-        leftActions.children = [centerTime, likeButtonNode, shareButtonNode]
+        leftActions.children = [likeButtonNode, shareButtonNode]
         leftActions.spacing = 10.0
         
         let insetActions = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12.0, 0.0, 0.0), child: leftActions)
@@ -91,7 +84,7 @@ class CommentCellNode:ASCellNode {
         let mainVerticalStack = ASStackLayoutSpec.vertical()
         mainVerticalStack.children = [commentBubbleNode, insetActions]
         mainVerticalStack.spacing = 0.0
-        mainVerticalStack.style.layoutPosition = CGPoint(x: 44.0 + 12.0, y: 0)
+        mainVerticalStack.style.layoutPosition = CGPoint(x: 44.0 + 10.0, y: 0)
         
         let abs = ASAbsoluteLayoutSpec(children: [imageStack, mainVerticalStack])
         
@@ -203,7 +196,7 @@ class ContentBubbleNode:ASDisplayNode {
             NSAttributedStringKey.foregroundColor: UIColor.gray
             ])
         
-        timeNode.attributedText = NSAttributedString(string: reply.createdAt.timeSinceNow(), attributes: [
+        timeNode.attributedText = NSAttributedString(string: " · \(reply.createdAt.timeSinceNow())", attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 12.0),
             NSAttributedStringKey.foregroundColor: UIColor.gray
             ])
@@ -223,12 +216,13 @@ class ContentBubbleNode:ASDisplayNode {
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
+        let timeInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(1.5, 0, 0, 0), child: timeNode)
+        let titleStack = ASStackLayoutSpec.horizontal()
+        titleStack.children = [titleNode, timeInset]
+        
         let textStack = ASStackLayoutSpec.vertical()
-        textStack.children = [ titleNode, postTextNode ]
+        textStack.children = [ titleStack, postTextNode ]
         textStack.spacing = 2.0
-//        let verticalStack = ASStackLayoutSpec.vertical()
-//        verticalStack.children = [ insetText, actionsRow ]
-//        verticalStack.spacing = 2.0
         
         
         let insets = UIEdgeInsetsMake(8.0, 12.0, 8.0, 12.0)
