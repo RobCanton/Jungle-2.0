@@ -36,7 +36,7 @@ class CommentBar:UIView, UITextViewDelegate {
     
     weak var delegate:CommentBarDelegate?
     
-    var replyLabel:ASActiveTextNode!
+    var replyLabel:ActiveTextNode!
     
 
     
@@ -67,7 +67,7 @@ class CommentBar:UIView, UITextViewDelegate {
         
         let topLayoutGuide = topView.safeAreaLayoutGuide
         
-        replyLabel = ASActiveTextNode()
+        replyLabel = ActiveTextNode()
         topView.addSubview(replyLabel.view)
         replyLabel.view.translatesAutoresizingMaskIntoConstraints = false
         replyLabel.view.leadingAnchor.constraint(equalTo: topLayoutGuide.leadingAnchor, constant: 24.0).isActive = true

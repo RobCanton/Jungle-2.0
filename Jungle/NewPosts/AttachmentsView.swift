@@ -72,7 +72,7 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
 //        bar.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
 //        bar.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
         
-        let fetchedAssets = self.fetchLatestPhotos(forCount: 16)
+        let fetchedAssets = self.fetchLatestPhotos(forCount: 32)
     
         var assets = [SelectedImage]()
         for i in 0..<fetchedAssets.count {
@@ -127,7 +127,7 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         cell.imageView.image = nil
         if indexPath.section == 1 {
             let asset = libraryAssets[indexPath.row]
-            cell.setAsset(asset)
+            cell.setAsset(asset, hideGIFTag: false)
         }
         
         return cell
@@ -214,13 +214,13 @@ class AttachmentCollectionCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setAsset(_ asset: SelectedImage) {
+    func setAsset(_ asset: SelectedImage, hideGIFTag:Bool) {
         
         // Here we bind the asset with the cell.
         representedAssetIdentifier = asset.asset.localIdentifier
         // Request the image.
         
-        gifView.isHidden = asset.assetType != .gif
+        gifView.isHidden = asset.assetType != .gif || hideGIFTag
         
         PHImageManager.default().requestImage(for: asset.asset,
                                               targetSize: UIScreen.main.bounds.size,

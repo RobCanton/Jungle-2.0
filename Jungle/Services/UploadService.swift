@@ -197,8 +197,6 @@ class UploadService {
                     ]
                 }
                 
-                print("UPLOAD PARAMETERS: \(parameters)")
-                
                 getNewPostID(headers) { postID in
                     if let postID = postID {
                         pendingPostKey = postID

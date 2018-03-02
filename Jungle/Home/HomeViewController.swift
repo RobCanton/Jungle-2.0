@@ -46,6 +46,7 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         
     }
     
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.navigationBar.shadowImage = UIImage()

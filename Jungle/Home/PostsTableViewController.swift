@@ -24,6 +24,8 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     var type:PostsTableType!
     var refreshControl:UIRefreshControl!
     
+    var transitionManager = LightboxViewerTransitionManager()
+    
     struct State {
         var posts: [Post]
         var postKeys:[String:Bool]
@@ -158,26 +160,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     }
     
     @objc func handleLocationUpdate() {
-        guard let location = gpsService.getLastLocation() else { return }
-        print("handleLocationUpdate")
-        UploadService.userHTTPHeaders { uid, headers in
-            let parameters = [
-                "lat": location.coordinate.latitude,
-                "lon": location.coordinate.longitude,
-                "limit": 15,
-                "radius": 1000
-            ] as [String:Any]
-            Alamofire.request("\(API_ENDPOINT)/posts/nearby", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
-                DispatchQueue.main.async {
-                    if let dict = response.result.value as? [String:Any], let success = dict["success"] as? Bool, success {
-                        print("NEARBY POSTS UPDATE SUCCESS")
-                        print("RESULTS: \(dict)")
-                    } else {
-                        print("NEARBY POSTS UPDATE FAILED")
-                    }
-                }
-            }
-        }
+       tableNode.reloadData()
     }
     
     var seeNewPostsTopAnchor:NSLayoutConstraint?
@@ -192,7 +175,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     
     
     func listenForNewPosts() {
-        if type == .popular {
+        if type == .popular || type == .nearby {
             return
         }
         
@@ -243,119 +226,67 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
             
             return
         }
-        let postsRef = firestore.collection("posts").whereField("status", isEqualTo: "active").order(by: "createdAt", descending: false)
         
-        
-        var queryRef:Query!
+        var firstTimestamp:Double?
         if state.posts.count > 0 {
-            let firstPost = state.posts[0]
-            queryRef = postsRef.start(after: [firstPost.createdAt.timeIntervalSince1970 * 1000]).limit(to: 12)
-        } else {
-            queryRef = postsRef.limit(to: 12)
+            firstTimestamp = state.posts[0].createdAt.timeIntervalSince1970 * 1000
         }
-        queryRef.getDocuments() { (querySnapshot, err) in
-            var _posts = [Post]()
-            
-            if let err = err {
-                print("Error getting documents: \(err)")
-            } else {
-                for document in querySnapshot!.documents {
-                    let data = document.data()
-                    if let post = Post.parse(id: document.documentID, data) {
-                        if self.state.postKeys[post.key] == nil {
-                            _posts.insert(post, at: 0)
-                        }
+        
+        if type == .nearby {
+            PostsService.getNearbyPosts(existingKeys: state.postKeys, lastTimestamp: firstTimestamp, isRefresh: true) { _posts, _ in
+                self.refreshControl.endRefreshing()
+                
+                let action = Action.insertNewBatch(posts: _posts)
+                let oldState = self.state
+                self.state = PostsTableViewController.handleAction(action, fromState: oldState)
+                
+                self.tableNode.performBatchUpdates({
+                    let indexPaths = (0..<_posts.count).map { index in
+                        IndexPath(row: index, section: 0)
                     }
-                }
+                    self.tableNode.insertRows(at: indexPaths, with: .none)
+                }, completion: { _ in
+                    if self.state.posts.count > 0 {
+                        self.tableNode.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+                    }
+                })
             }
-            
-            self.refreshControl.endRefreshing()
-            
-            let action = Action.insertNewBatch(posts: _posts)
-            let oldState = self.state
-            self.state = PostsTableViewController.handleAction(action, fromState: oldState)
-            
-            self.tableNode.performBatchUpdates({
-                let indexPaths = (0..<_posts.count).map { index in
-                    IndexPath(row: index, section: 0)
-                }
-                self.tableNode.insertRows(at: indexPaths, with: .none)
-            }, completion: { _ in
-                if self.state.posts.count > 0 {
-                    self.tableNode.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
-                }
-            })
-            
+        } else {
+            PostsService.refreshNewPosts(existingKeys: state.postKeys, startAfter: firstTimestamp) { _posts in
+                self.refreshControl.endRefreshing()
+                
+                let action = Action.insertNewBatch(posts: _posts)
+                let oldState = self.state
+                self.state = PostsTableViewController.handleAction(action, fromState: oldState)
+                
+                self.tableNode.performBatchUpdates({
+                    let indexPaths = (0..<_posts.count).map { index in
+                        IndexPath(row: index, section: 0)
+                    }
+                    self.tableNode.insertRows(at: indexPaths, with: .none)
+                }, completion: { _ in
+                    if self.state.posts.count > 0 {
+                        self.tableNode.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+                    }
+                })
+            }
         }
     }
     
     
     static func fetchData(state:State, type:PostsTableType, lastPostID: Double?, lastRank:Int?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
         
-        let rootPostRef = firestore.collection("posts").whereField("status", isEqualTo: "active")
-        var postsRef:Query!
-        var queryRef:Query!
         switch type {
         case .newest:
-            postsRef = rootPostRef.order(by: "createdAt", descending: true)
-            if let lastPostID = lastPostID {
-                queryRef = postsRef.start(after: [lastPostID]).limit(to: 15)
-            } else{
-                queryRef = postsRef.limit(to: 15)
-            }
-            break
+            PostsService.getNewPosts(existingKeys: state.postKeys, lastPostID: lastPostID, completion: completion)
+            return
         case .popular:
-            postsRef = rootPostRef.order(by: "rank", descending: false)
-            if let lastRank = lastRank {
-                queryRef = postsRef.start(after: [lastRank]).limit(to: 15)
-            } else{
-                queryRef = postsRef.limit(to: 15)
-            }
-            break
+            PostsService.getPopularPosts(existingKeys: state.postKeys, lastRank: lastRank, completion: completion)
+            return
         case .nearby:
-            postsRef = rootPostRef.order(by: "createdAt", descending: true)
-            if let lastPostID = lastPostID {
-                queryRef = postsRef.start(after: [lastPostID]).limit(to: 15)
-            } else{
-                queryRef = postsRef.limit(to: 15)
-            }
-            break
+            PostsService.getNearbyPosts(existingKeys: state.postKeys, lastTimestamp: lastPostID, isRefresh: false, completion: completion)
         }
-        
-        
-        
-        
-        
-        
-        queryRef.getDocuments() { (querySnapshot, err) in
-            var _posts = [Post]()
-            var endReached = false
-            
-            if let err = err {
-                print("Error getting documents: \(err)")
-            } else {
-                
-                let documents = querySnapshot!.documents
-                
-                print("RXC: DOCS: \(documents)")
-                if documents.count == 0 {
-                    print("END REACHED")
-                    endReached = true
-                }
-                
-                for document in documents {
-                    let data = document.data()
-                    if let post = Post.parse(id: document.documentID, data) {
-                        if state.postKeys[post.key] == nil {
-                            _posts.append(post)
-                        }
-                    }
-                }
-            }
-            
-            completion(_posts, endReached)
-        }
-        
+
     }
     
     var context:ASBatchContext?
@@ -513,9 +444,23 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         self.navigationController?.pushViewController(controller, animated: true)
     }
     
+    
+    
 }
 
 extension PostsTableViewController: PostCellDelegate {
+    
+    func postParentVC() -> UIViewController {
+        return self
+    }
+    
+    func postOpen(tag: String) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "SearchViewController") as! SearchViewController
+        vc.initialSearch = tag
+        self.navigationController?.pushViewController(vc, animated: true)
+    }
+    
     func postOptions(_ post: Post) {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         

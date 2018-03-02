@@ -21,9 +21,9 @@ class CommentCellNode:ASCellNode {
     var commentBubbleNode = CommentBubbleNode()
     var isFirst = false
     
-    let likeButtonNode = ASButtonNode()
-    let shareButtonNode = ASButtonNode()
-    let moreButtonNode = ASButtonNode()
+//    let likeButtonNode = ASButtonNode()
+//    let shareButtonNode = ASButtonNode()
+//    let moreButtonNode = ASButtonNode()
     
     var lexiconRefListener:ListenerRegistration?
     
@@ -39,11 +39,11 @@ class CommentCellNode:ASCellNode {
         backgroundColor = UIColor(white: 1.0, alpha: 1.0)
         
         commentBubbleNode.set(reply: reply, toPost: post)
-        imageNode.imageNode.backgroundColor = reply.anon.color
+        imageNode.mainImageNode.backgroundColor = reply.anon.color
         
-        likeButtonNode.setImage(UIImage(named:"heart"), for: .normal)
-        shareButtonNode.setImage(UIImage(named:"reply"), for: .normal)
-        moreButtonNode.setImage(UIImage(named:"more"), for: .normal)
+//        likeButtonNode.setImage(UIImage(named:"heart"), for: .normal)
+//        shareButtonNode.setImage(UIImage(named:"reply"), for: .normal)
+//        moreButtonNode.setImage(UIImage(named:"more"), for: .normal)
     
         
         subnameNode.textContainerInset = UIEdgeInsets(top: 1.0, left: 6.0, bottom: 0, right: 6.0)
@@ -75,14 +75,14 @@ class CommentCellNode:ASCellNode {
         imageStack.spacing = 6.0
         imageStack.style.layoutPosition = CGPoint(x: 0, y: 0)
         
-        let leftActions = ASStackLayoutSpec.horizontal()
-        leftActions.children = [likeButtonNode, shareButtonNode]
-        leftActions.spacing = 10.0
-        
-        let insetActions = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12.0, 0.0, 0.0), child: leftActions)
+//        let leftActions = ASStackLayoutSpec.horizontal()
+//        leftActions.children = [likeButtonNode, shareButtonNode]
+//        leftActions.spacing = 10.0
+//
+        //let insetActions = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12.0, 0.0, 0.0), child: leftActions)
         
         let mainVerticalStack = ASStackLayoutSpec.vertical()
-        mainVerticalStack.children = [commentBubbleNode, insetActions]
+        mainVerticalStack.children = [commentBubbleNode]
         mainVerticalStack.spacing = 0.0
         mainVerticalStack.style.layoutPosition = CGPoint(x: 44.0 + 10.0, y: 0)
         

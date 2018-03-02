@@ -13,11 +13,12 @@ import Firebase
 
 protocol PostCellDelegate:class {
     func postOptions(_ post:Post)
+    func postParentVC() -> UIViewController
+    func postOpen(tag:String)
 }
 
 class PostCellNode:ASCellNode {
     
-    let backNode = ASDisplayNode()
     let gradientColorTop = accentColor
     let gradientColorBot = hexColor(from: "#22D29F")
     
@@ -25,7 +26,7 @@ class PostCellNode:ASCellNode {
     var titleNode = ASTextNode()
     var subnameNode = ASTextNode()
     var subtitleNode = ASTextNode()
-    var postTextNode = ASTextNode()
+    var postTextNode = ActiveTextNode()
     var actionsNode = ASDisplayNode()
     var dividerNode = ASDisplayNode()
     var rankButton = ASButtonNode()
@@ -35,9 +36,12 @@ class PostCellNode:ASCellNode {
     let commentButton = ASButtonNode()
     let moreButtonNode = ASButtonNode()
     
+    let groupNode = ASButtonNode()
+    
     let countLabel = ASTextNode()
     var postImageNode = ASRoundShadowedImageNode(imageCornerRadius: 16.0, imageShadowRadius: 8.0)
     
+    var transitionManager = LightboxViewerTransitionManager()
     weak var delegate:PostCellDelegate?
     
     let gapNode = ASDisplayNode()
@@ -45,6 +49,8 @@ class PostCellNode:ASCellNode {
     static let mainInsets = UIEdgeInsets(top: 16.0, left: 16.0, bottom: 0.0, right: 16.0)
     
     weak var post:Post?
+    
+    
 
     private(set) var bgColor = UIColor.white
     private(set) var textColor = UIColor.gray
@@ -82,11 +88,13 @@ class PostCellNode:ASCellNode {
 //            moreImage = UIImage(named:"more_white")
 //        }
         
-        
-        backNode.backgroundColor = UIColor.blue
         backgroundColor = bgColor
         
-        imageNode.imageNode.backgroundColor = post.anon.color
+        imageNode.mainImageNode.backgroundColor = post.anon.color
+        
+        postImageNode.addTarget(self, action: #selector(handleImageTap), forControlEvents: .touchUpInside)
+        postImageNode.isUserInteractionEnabled = true
+        
         titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: textColor
@@ -114,10 +122,19 @@ class PostCellNode:ASCellNode {
         
         postTextNode.maximumNumberOfLines = 0
         postTextNode.truncationMode = .byWordWrapping
-        postTextNode.attributedText = NSAttributedString(string: post.text, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
-            NSAttributedStringKey.foregroundColor: textColor
-            ])
+        
+        postTextNode.setText(text: post.text, withFont: Fonts.medium(ofSize: 15.0), normalColor: textColor, activeColor: post.anon.color)
+        postTextNode.tapHandler = { type, textValue in
+            switch type {
+            case .hashtag:
+                self.delegate?.postOpen(tag: textValue)
+                break
+            case .mention:
+                break
+            case .link:
+                break
+            }
+        }
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
@@ -132,8 +149,8 @@ class PostCellNode:ASCellNode {
             if attachments.images.count > 0 {
                 let image = attachments.images[0]
                 let color =  hexColor(from: image.colorHex)
-                postImageNode.imageNode.backgroundColor = color
-                postImageNode.imageNode.url = image.url
+                postImageNode.mainImageNode.backgroundColor = color
+                postImageNode.mainImageNode.url = image.url
                 postImageNode.style.height = ASDimension(unit: .points, value: 192)
                 postImageNode.applyShadow(withColor: color, opacity: 0.5)
             }
@@ -192,7 +209,18 @@ class PostCellNode:ASCellNode {
             rankButton.layer.cornerRadius = 13.0
             rankButton.clipsToBounds = true
         }
+        let groupText = NSAttributedString(string: "Marvel Movies", attributes: [
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: post.anon.color
+            ])
+        groupNode.setAttributedTitle(groupText, for: .normal)
+        groupNode.contentEdgeInsets = UIEdgeInsetsMake(0, 8.0, 0.0, 8.0)
+        groupNode.contentHorizontalAlignment = .left
+        groupNode.layer.cornerRadius = 12.0
+        groupNode.clipsToBounds = true
         
+        groupNode.layer.borderColor = post.anon.color.cgColor
+        groupNode.layer.borderWidth = 1.5
         
     }
     
@@ -201,6 +229,9 @@ class PostCellNode:ASCellNode {
         subnameNode.layer.cornerRadius = 8
         subnameNode.clipsToBounds = true
         selectionStyle = .none
+        
+        imageNode.addTarget(self, action: #selector(handleImageTap), forControlEvents: .touchUpInside)
+        imageNode.isUserInteractionEnabled = true
         
 //        let layoutGuide = view.safeAreaLayoutGuide
 //        gradientView = UIImageView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
@@ -267,7 +298,6 @@ class PostCellNode:ASCellNode {
         titleRow.children = [ titleStack, rankButton]
         
         
-        
         let leftActions = ASStackLayoutSpec.horizontal()
         leftActions.children = [ likeButton, dislikeButton, commentButton]
         leftActions.spacing = 0.0
@@ -311,6 +341,11 @@ class PostCellNode:ASCellNode {
             }
         }
         
+//        groupNode.style.height = ASDimension(unit: .points, value: 24.0)
+//        let groupStack = ASStackLayoutSpec.horizontal()
+//        groupStack.children = [groupNode,gapNode]
+//        contentStack.children?.append(groupStack)
+        
         let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 16.0), child: actionsRow)
         contentStack.children?.append(actionsInset)
         
@@ -322,7 +357,6 @@ class PostCellNode:ASCellNode {
         
         let abs = ASAbsoluteLayoutSpec(children: [imageStack, mainVerticalStack])
         let mainInset = ASInsetLayoutSpec(insets: PostCellNode.mainInsets, child: abs)
-        let overlay = ASOverlayLayoutSpec(child: backNode, overlay: mainInset)
         return mainInset
     }
 
@@ -538,9 +572,25 @@ class PostCellNode:ASCellNode {
     }
     
     @objc func handleMoreButton() {
-        guard let post = post else { return }
-        
+        guard let post = self.post else { return }
         delegate?.postOptions(post)
+        
+    }
+    
+    @objc func handleImageTap() {
+        guard let post = post,
+            let parentVC = delegate?.postParentVC() else { return }
+        
+        
+        let lightBoxVC = LightboxViewController()
+        lightBoxVC.post = post
+        
+        
+        //transitionManager.sourceDelegate = self
+        //transitionManager.destinationDelegate = lightBoxVC
+        //lightBoxVC.transitioningDelegate = transitionManager
+        parentVC.present(lightBoxVC, animated: true, completion: nil)
+        
     }
     
     override func didEnterVisibleState() {
@@ -556,5 +606,32 @@ class PostCellNode:ASCellNode {
         super.didExitVisibleState()
         stopListeningToPost()
     }
+    
+}
+
+extension PostCellNode: LightboxTransitionSourceDelegate {
+    func transitionWillBegin(_ isPresenting: Bool) {
+        postImageNode.alpha = 0.0
+    }
+    
+    func transitionDidEnd(_ isPresenting: Bool) {
+        postImageNode.alpha = 1.0
+    }
+    
+    func transitionSourceImage() -> UIImage? {
+        
+        return postImageNode.mainImageNode.image
+    }
+    
+    func transitionSourceURL() -> URL? {
+        return post?.attachments?.images[0].url
+    }
+    
+    func transitionSourceFrame(_ parentView: UIView) -> CGRect {
+        let frame = view.convert(postImageNode.view.frame, to: parentView)
+
+        return frame
+    }
+    
     
 }

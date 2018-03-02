@@ -15,8 +15,17 @@ import AsyncDisplayKit
 import Photos
 import MobileCoreServices
 
-class NewPostViewController:UIViewController {
+class NewPost {
+    var text:String
+    var attachments:[SelectedImage]
     
+    init(text:String, attachments:[SelectedImage]) {
+        self.text = text
+        self.attachments = attachments
+    }
+}
+
+class NewPostViewController:UIViewController {
     
     @IBOutlet weak var cancelButton: UIBarButtonItem!
     @IBOutlet weak var doneButton: UIButton!
@@ -24,14 +33,20 @@ class NewPostViewController:UIViewController {
     var composerView = ComposerView()
     var isImagesRowHidden = false
     
+    var newPost:NewPost?
     @IBAction func handlePostButton() {
-        
-        guard let user = Auth.auth().currentUser else { return }
-        doneButton.isEnabled = false
-        self.dismiss(animated: true, completion: nil)
-        UploadService.uploadPost(text:composerView.textView.text,
+        UploadService.uploadPost(text: composerView.textView.text,
                                  images: composerView.imagesView.selectedImages,
-                                 includeLocation: true)
+                                 includeLocation:true)
+        self.dismiss(animated: true, completion: nil)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        guard let newPost = newPost else { return }
+        if segue.identifier == "toGroupSelector" {
+            let dest = segue.destination as! PostGroupViewController
+            dest.newPost = newPost
+        }
     }
     
     @IBAction func handleCancelButton() {
@@ -92,6 +107,8 @@ class NewPostViewController:UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
         
+        navigationItem.backBarButtonItem = UIBarButtonItem(image: UIImage(named:"Back"), style: .plain, target: nil, action: nil)
+        
         // Remove the nav shadow underline
         navigationController?.navigationBar.shadowImage = UIImage()
     }
@@ -131,15 +148,15 @@ class NewPostViewController:UIViewController {
 extension NewPostViewController: AttachmentsDelegate {
     func attachments(didSelect images: [SelectedImage]) {
         composerView.imagesView.selectedImages = images
-//        isImagesRowHidden = true
-//        UIView.animate(withDuration: 0.35, animations: {
-//            self.attachmentsView.alpha = 0.0
-//
-//            self.attachmentsBottomAnchor?.constant = -8.0
-//            self.view.layoutIfNeeded()
-//        }, completion: { _ in
-//
-//        })
+        isImagesRowHidden = true
+        UIView.animate(withDuration: 0.35, animations: {
+            self.attachmentsView.alpha = 0.0
+
+            self.attachmentsBottomAnchor?.constant = -8.0
+            self.view.layoutIfNeeded()
+        }, completion: { _ in
+
+        })
     }
 }
 

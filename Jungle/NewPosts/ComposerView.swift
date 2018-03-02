@@ -9,8 +9,6 @@
 import Foundation
 import UIKit
 
-
-
 class ComposerView:UIView, UITextViewDelegate {
     
     var scrollView = UIScrollView()
@@ -88,7 +86,6 @@ class ComposerView:UIView, UITextViewDelegate {
         imagesView.topAnchor.constraint(equalTo: textView.safeAreaLayoutGuide.bottomAnchor, constant: 8.0).isActive = true
         imagesView.trailingAnchor.constraint(equalTo: contentLayoutGuide.trailingAnchor).isActive = true
         imagesView.heightAnchor.constraint(equalToConstant: 200.0).isActive = true
-        
         contentView.frame = CGRect(x: 0, y: 0, width: scrollView.bounds.width, height: textHeightAnchor!.constant)
         
         scrollView.contentSize = contentView.bounds.size
@@ -160,8 +157,7 @@ class ComposerImagesView: UIView, UICollectionViewDelegate, UICollectionViewData
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "attachmentCell", for: indexPath) as! AttachmentCollectionCell
         let selectedAsset = selectedImages[indexPath.row]
-        cell.imageView.image = selectedAsset.image
-        
+        cell.setAsset(selectedAsset, hideGIFTag: true)
         return cell
     }
     

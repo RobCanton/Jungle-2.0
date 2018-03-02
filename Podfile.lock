@@ -1,5 +1,6 @@
 PODS:
   - Alamofire (4.6.0)
+  - AlgoliaSearch-Client-Swift (5.1.2)
   - BoringSSL (9.2):
     - BoringSSL/Implementation (= 9.2)
     - BoringSSL/Interface (= 9.2)
@@ -112,6 +113,7 @@ PODS:
 
 DEPENDENCIES:
   - Alamofire (~> 4.5)
+  - AlgoliaSearch-Client-Swift
   - Firebase/Auth
   - Firebase/Core
   - Firebase/Database
@@ -133,6 +135,7 @@ CHECKOUT OPTIONS:
 
 SPEC CHECKSUMS:
   Alamofire: f41a599bd63041760b26d393ec1069d9d7b917f4
+  AlgoliaSearch-Client-Swift: 6c88667420b02e57c24dc54cfcfa71848980c495
   BoringSSL: f3d6b8ce199b9c450a8cfc14895d07a2627fc232
   Firebase: 7d3b8cd837ad9fcd391657734c0d56dab8e9a5a3
   FirebaseAnalytics: 388b630c15713f5dbf364071f5f3d6077fb52f4e
@@ -158,6 +161,6 @@ SPEC CHECKSUMS:
   SwiftMessages: 1bacc783c8f10bdfdc57c14860cae8a1f1fa6591
   Texture: 7249074582daf75e524e59df5428b66b8e8db0e4
 
-PODFILE CHECKSUM: 003ea9f08eba4f30b0fc1e24375b969a7c8cef6e
+PODFILE CHECKSUM: 0783602d911232bfb12d461749bab58af6aba326
 
 COCOAPODS: 1.4.0

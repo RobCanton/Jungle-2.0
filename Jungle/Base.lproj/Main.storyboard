@@ -348,6 +348,21 @@
             </objects>
             <point key="canvasLocation" x="3150" y="-1093"/>
         </scene>
+        <!--Search View Controller-->
+        <scene sceneID="Ood-o8-Gu3">
+            <objects>
+                <viewController storyboardIdentifier="SearchViewController" id="9of-DN-KlB" customClass="SearchViewController" customModule="Jungle" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="yQk-C9-Iho">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <viewLayoutGuide key="safeArea" id="nqm-di-7mJ"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Qb1-HQ-FkR" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3969" y="-1093"/>
+        </scene>
         <!--Navigation Controller-->
         <scene sceneID="vGT-j5-T0A">
             <objects>
@@ -577,14 +592,13 @@
                             <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="w9d-fa-16S">
                                 <rect key="frame" x="276" y="4.5" width="83" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" red="0.19379304626640437" green="0.88896534974093266" blue="0.44766425984165764" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="19"/>
-                                <state key="normal" title="Post">
+                                <color key="backgroundColor" red="0.19215686274509802" green="0.8901960784313725" blue="0.44705882352941173" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                <fontDescription key="fontDescription" name="Montserrat-SemiBold" family="Montserrat" pointSize="18"/>
+                                <state key="normal" title="Next">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </state>
                                 <connections>
-                                    <action selector="handlePostButton" destination="YIj-gP-KnS" eventType="touchUpInside" id="0mV-a3-J1e"/>
-                                    <action selector="postButton:" destination="dgw-tn-SaG" eventType="touchUpInside" id="8I3-kk-crk"/>
+                                    <action selector="handlePostButton" destination="YIj-gP-KnS" eventType="touchUpInside" id="So0-1w-FLF"/>
                                 </connections>
                             </button>
                         </barButtonItem>
@@ -592,12 +606,59 @@
                     <connections>
                         <outlet property="cancelButton" destination="fPs-XB-Mr9" id="0b5-KM-zuB"/>
                         <outlet property="doneButton" destination="w9d-fa-16S" id="Ep1-qC-G53"/>
+                        <segue destination="9GV-gY-wyZ" kind="show" identifier="toGroupSelector" animates="NO" id="Fxs-gU-il2"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="QYB-WE-B8I" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <exit id="dgw-tn-SaG" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
             <point key="canvasLocation" x="3089" y="-1827"/>
+        </scene>
+        <!--Post Group View Controller-->
+        <scene sceneID="BgD-bf-vdF">
+            <objects>
+                <viewController id="9GV-gY-wyZ" customClass="PostGroupViewController" customModule="Jungle" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Xp6-Vh-40i">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="603"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="hYh-hi-gWL">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="603"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </tableView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="hYh-hi-gWL" firstAttribute="leading" secondItem="wfh-cU-OOs" secondAttribute="leading" id="Cea-G7-Mwp"/>
+                            <constraint firstItem="hYh-hi-gWL" firstAttribute="top" secondItem="wfh-cU-OOs" secondAttribute="top" id="FGd-Oq-4p2"/>
+                            <constraint firstItem="wfh-cU-OOs" firstAttribute="trailing" secondItem="hYh-hi-gWL" secondAttribute="trailing" id="Nbj-oz-Lvx"/>
+                            <constraint firstItem="wfh-cU-OOs" firstAttribute="bottom" secondItem="hYh-hi-gWL" secondAttribute="bottom" id="mBJ-j7-R32"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="wfh-cU-OOs"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="ZMw-NA-Fc0">
+                        <barButtonItem key="rightBarButtonItem" style="plain" id="2OC-st-kbR">
+                            <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="1e0-oX-3LX">
+                                <rect key="frame" x="276" y="5" width="83" height="34"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" red="0.19215686269999999" green="0.89019607840000003" blue="0.44705882349999998" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                <fontDescription key="fontDescription" name="Montserrat-SemiBold" family="Montserrat" pointSize="18"/>
+                                <state key="normal" title="Post">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <action selector="handlePostButton:" destination="9GV-gY-wyZ" eventType="touchUpInside" id="o4h-Xb-6fv"/>
+                                </connections>
+                            </button>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="postButton" destination="1e0-oX-3LX" id="86a-VD-Meh"/>
+                        <outlet property="tableView" destination="hYh-hi-gWL" id="7G4-Dc-hCu"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="tHf-ly-Qtw" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3950" y="-1827"/>
         </scene>
         <!--NewPostViewController-->
         <scene sceneID="Xsy-bY-Yla">
@@ -607,6 +668,7 @@
                     <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" translucent="NO" id="jnP-Hy-DRK">
                         <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
+                        <color key="tintColor" white="0.5" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <color key="barTintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
@@ -652,7 +714,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="RjI-1v-AAd" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="4519" y="-1827"/>
+            <point key="canvasLocation" x="6236" y="-1827.4362818590705"/>
         </scene>
         <!--NewPostViewController-->
         <scene sceneID="86f-4O-srp">
@@ -671,7 +733,7 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="M9d-Ak-oyM" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3894" y="-1827"/>
+            <point key="canvasLocation" x="5612" y="-1827.4362818590705"/>
         </scene>
     </scenes>
     <resources>
