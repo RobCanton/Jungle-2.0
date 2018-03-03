@@ -8,9 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		3EBEB95F5F586C00FC62446B /* Pods_Jungle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44DD5A79B72847B98024BE93 /* Pods_Jungle.framework */; };
+		B0017D8D204A10FB00E20DE8 /* PushTransitionAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0017D8C204A10FB00E20DE8 /* PushTransitionAnimation.swift */; };
+		B0017D8F204A1AAA00E20DE8 /* JNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0017D8E204A1AAA00E20DE8 /* JNavigationBar.swift */; };
 		B0058C6E203BCD7200510EEC /* LoadingCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */; };
 		B0058C70203BDACF00510EEC /* NewPostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0058C6F203BDACF00510EEC /* NewPostsView.swift */; };
 		B0058C72203BDB1300510EEC /* NewPostsView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B0058C71203BDB1300510EEC /* NewPostsView.xib */; };
+		B007D5262049CC52009A6B84 /* RegexParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B007D5252049CC52009A6B84 /* RegexParser.swift */; };
 		B00F66AA203F3475002FCDA0 /* ActiveTextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */; };
 		B01E2A54203D0D0A006C8C2D /* UploadingPostMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */; };
 		B01E2A56203D4B4F006C8C2D /* PostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */; };
@@ -73,9 +76,12 @@
 /* Begin PBXFileReference section */
 		0CA8C85A80C56F48485FD8E5 /* Pods-Jungle.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Jungle.release.xcconfig"; path = "Pods/Target Support Files/Pods-Jungle/Pods-Jungle.release.xcconfig"; sourceTree = "<group>"; };
 		44DD5A79B72847B98024BE93 /* Pods_Jungle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Jungle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B0017D8C204A10FB00E20DE8 /* PushTransitionAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushTransitionAnimation.swift; sourceTree = "<group>"; };
+		B0017D8E204A1AAA00E20DE8 /* JNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JNavigationBar.swift; sourceTree = "<group>"; };
 		B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingCellNode.swift; sourceTree = "<group>"; };
 		B0058C6F203BDACF00510EEC /* NewPostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostsView.swift; sourceTree = "<group>"; };
 		B0058C71203BDB1300510EEC /* NewPostsView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NewPostsView.xib; sourceTree = "<group>"; };
+		B007D5252049CC52009A6B84 /* RegexParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegexParser.swift; sourceTree = "<group>"; };
 		B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTextNode.swift; sourceTree = "<group>"; };
 		B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UploadingPostMessage.xib; sourceTree = "<group>"; };
 		B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsTableViewController.swift; sourceTree = "<group>"; };
@@ -224,6 +230,7 @@
 				B0F50EDC2038060E00037343 /* CommentBar.xib */,
 				B01E2A5E203E0E66006C8C2D /* CommentBar.swift */,
 				B0F50ED82037CAB300037343 /* SinglePostViewController.swift */,
+				B0017D8E204A1AAA00E20DE8 /* JNavigationBar.swift */,
 				B0F50EDE203809F900037343 /* NewReplyViewController.swift */,
 				B0B29DDC2037408900FBE5FF /* Main.storyboard */,
 				B0F50ECF2037838400037343 /* InitialViewController.swift */,
@@ -301,6 +308,7 @@
 				B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */,
 				B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */,
 				B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */,
+				B0017D8C204A10FB00E20DE8 /* PushTransitionAnimation.swift */,
 			);
 			path = "UI Elements";
 			sourceTree = "<group>";
@@ -310,6 +318,7 @@
 			children = (
 				B0B29DED2037454200FBE5FF /* Extensions.swift */,
 				B0B29E022037717500FBE5FF /* Constants.swift */,
+				B007D5252049CC52009A6B84 /* RegexParser.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -503,9 +512,11 @@
 			files = (
 				B0F50EE12038233900037343 /* Reply.swift in Sources */,
 				B0F50ED92037CAB300037343 /* SinglePostViewController.swift in Sources */,
+				B0017D8F204A1AAA00E20DE8 /* JNavigationBar.swift in Sources */,
 				B07F61072043D05A005010B7 /* AlertService.swift in Sources */,
 				B09CAFE020492F34009C3901 /* SearchService.swift in Sources */,
 				B0E4A2202047F6A700037D0C /* Group.swift in Sources */,
+				B007D5262049CC52009A6B84 /* RegexParser.swift in Sources */,
 				B07F611820454516005010B7 /* LightboxViewController.swift in Sources */,
 				B07F610D2044C93B005010B7 /* GPSService.swift in Sources */,
 				B0B29DDB2037408900FBE5FF /* ViewController.swift in Sources */,
@@ -537,6 +548,7 @@
 				B0058C70203BDACF00510EEC /* NewPostsView.swift in Sources */,
 				B07F610F2044ECFF005010B7 /* PostsService.swift in Sources */,
 				B0F50EDF203809F900037343 /* NewReplyViewController.swift in Sources */,
+				B0017D8D204A10FB00E20DE8 /* PushTransitionAnimation.swift in Sources */,
 				B07F611420454438005010B7 /* ImagePresentAnimationController.swift in Sources */,
 				B0B29DF020374BC800FBE5FF /* LoginViewController.swift in Sources */,
 				B0058C6E203BCD7200510EEC /* LoadingCellNode.swift in Sources */,

@@ -21,16 +21,16 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="iny-H9-ujg">
-                    <rect key="frame" x="16" y="0.0" width="343" height="44"/>
+                    <rect key="frame" x="44" y="0.0" width="287" height="44"/>
                     <subviews>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="n9K-7U-c0d">
-                            <rect key="frame" x="0.0" y="4" width="339" height="36"/>
+                            <rect key="frame" x="0.0" y="4" width="283" height="36"/>
                             <subviews>
                                 <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="asdf" placeholder="Search" textAlignment="center" minimumFontSize="15" translatesAutoresizingMaskIntoConstraints="NO" id="FXc-3F-2aG">
-                                    <rect key="frame" x="12" y="0.0" width="315" height="36"/>
+                                    <rect key="frame" x="12" y="0.0" width="259" height="36"/>
                                     <nil key="textColor"/>
                                     <fontDescription key="fontDescription" name="Montserrat-Regular" family="Montserrat" pointSize="15"/>
-                                    <textInputTraits key="textInputTraits"/>
+                                    <textInputTraits key="textInputTraits" returnKeyType="search"/>
                                 </textField>
                             </subviews>
                             <color key="backgroundColor" white="0.94999999999999996" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -50,13 +50,21 @@
                         <constraint firstItem="n9K-7U-c0d" firstAttribute="top" secondItem="iny-H9-ujg" secondAttribute="top" constant="4" id="kEl-Rz-Srk"/>
                     </constraints>
                 </view>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4Ca-Vr-4Jw">
+                    <rect key="frame" x="0.0" y="0.0" width="36" height="44"/>
+                    <state key="normal" image="back"/>
+                </button>
             </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
+                <constraint firstItem="4Ca-Vr-4Jw" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="4r0-Lr-Cr2"/>
+                <constraint firstItem="4Ca-Vr-4Jw" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="56I-Zy-yKN"/>
+                <constraint firstItem="iny-H9-ujg" firstAttribute="leading" secondItem="4Ca-Vr-4Jw" secondAttribute="trailing" constant="8" id="CAv-60-OzU"/>
                 <constraint firstItem="iny-H9-ujg" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="GJb-dF-uZI"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="iny-H9-ujg" secondAttribute="bottom" id="LBe-2Z-rAu"/>
-                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="iny-H9-ujg" secondAttribute="trailing" constant="16" id="gRl-yk-lME"/>
-                <constraint firstItem="iny-H9-ujg" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="16" id="swy-D8-lPY"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="iny-H9-ujg" secondAttribute="trailing" constant="44" id="gRl-yk-lME"/>
+                <constraint firstItem="iny-H9-ujg" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="44" id="swy-D8-lPY"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="4Ca-Vr-4Jw" secondAttribute="bottom" id="yxh-t2-1aC"/>
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
@@ -67,4 +75,7 @@
             <point key="canvasLocation" x="33.5" y="47"/>
         </view>
     </objects>
+    <resources>
+        <image name="back" width="32" height="32"/>
+    </resources>
 </document>

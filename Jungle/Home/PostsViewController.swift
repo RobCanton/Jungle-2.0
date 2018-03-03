@@ -21,7 +21,9 @@ class SearchPostsViewController: PostsViewController {
             IndexPath(row: index, section: 0)
         }
         state = .empty
+        UIView.setAnimationsEnabled(false)
         tableNode.deleteRows(at: indexPaths, with: .none)
+        UIView.setAnimationsEnabled(true)
         searchText = text
         self.tableNode.reloadSections(IndexSet(integer: 0), with: .none)
     }
@@ -35,6 +37,7 @@ class SearchPostsViewController: PostsViewController {
                 
                 if documents.count == 0 {
                     endReached = true
+                    print("SEARCH: \(searchText) | END REACHED!")
                 }
                 
                 for document in documents {
@@ -227,8 +230,7 @@ extension PostsViewController: ASTableDelegate, ASTableDataSource {
     
     fileprivate func renderDiff(_ oldState: State) {
         
-        self.tableNode.performBatchUpdates({
-            
+        self.tableNode.performBatch(animated: false, updates: {
             // Add or remove items
             let rowCountChange = state.posts.count - oldState.posts.count
             if rowCountChange > 0 {
@@ -252,7 +254,7 @@ extension PostsViewController: ASTableDelegate, ASTableDataSource {
                     tableNode.deleteRows(at: [ spinnerIndexPath ], with: .none)
                 }
             }
-        }, completion:nil)
+        }, completion: nil)
     }
     
     fileprivate static func handleAction(_ action: Action, fromState state: State) -> State {

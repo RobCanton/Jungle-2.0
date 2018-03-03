@@ -21,27 +21,27 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fa1-L7-y2o">
-                    <rect key="frame" x="50" y="0.0" width="234" height="44"/>
+                    <rect key="frame" x="0.0" y="0.0" width="334" height="44"/>
                     <subviews>
                         <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="2uM-lF-b4A">
-                            <rect key="frame" x="0.0" y="0.0" width="234" height="44"/>
+                            <rect key="frame" x="0.0" y="0.0" width="334" height="44"/>
                             <subviews>
                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Xd7-TE-XDG">
-                                    <rect key="frame" x="0.0" y="0.0" width="78" height="44"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="111.5" height="44"/>
                                     <fontDescription key="fontDescription" name="Montserrat-Medium" family="Montserrat" pointSize="14"/>
-                                    <state key="normal" title="Home">
+                                    <state key="normal" title="Latest">
                                         <color key="titleColor" cocoaTouchSystemColor="darkTextColor"/>
                                     </state>
                                 </button>
                                 <button opaque="NO" alpha="0.25" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rOF-c3-Zp8">
-                                    <rect key="frame" x="78" y="0.0" width="78" height="44"/>
+                                    <rect key="frame" x="111.5" y="0.0" width="111" height="44"/>
                                     <fontDescription key="fontDescription" name="Montserrat-Medium" family="Montserrat" pointSize="14"/>
                                     <state key="normal" title="Popular">
                                         <color key="titleColor" cocoaTouchSystemColor="darkTextColor"/>
                                     </state>
                                 </button>
                                 <button opaque="NO" alpha="0.25" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6YX-P7-bck">
-                                    <rect key="frame" x="156" y="0.0" width="78" height="44"/>
+                                    <rect key="frame" x="222.5" y="0.0" width="111.5" height="44"/>
                                     <fontDescription key="fontDescription" name="Montserrat-Medium" family="Montserrat" pointSize="14"/>
                                     <state key="normal" title="Nearby">
                                         <color key="titleColor" cocoaTouchSystemColor="darkTextColor"/>
@@ -49,8 +49,15 @@
                                 </button>
                             </subviews>
                         </stackView>
+                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="UBN-sX-GKj">
+                            <rect key="frame" x="0.0" y="43.5" width="334" height="0.5"/>
+                            <color key="backgroundColor" white="0.90000000000000002" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="0.5" id="163-L2-RjY"/>
+                            </constraints>
+                        </view>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="agz-xT-fwD">
-                            <rect key="frame" x="0.0" y="42" width="78" height="2"/>
+                            <rect key="frame" x="0.0" y="42" width="111.5" height="2"/>
                             <color key="backgroundColor" cocoaTouchSystemColor="darkTextColor"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="2" id="Isj-rr-ITu"/>
@@ -64,37 +71,20 @@
                         <constraint firstAttribute="bottom" secondItem="agz-xT-fwD" secondAttribute="bottom" id="5Zk-6v-slc"/>
                         <constraint firstItem="2uM-lF-b4A" firstAttribute="top" secondItem="fa1-L7-y2o" secondAttribute="top" id="EIq-pJ-Hk3"/>
                         <constraint firstItem="agz-xT-fwD" firstAttribute="leading" secondItem="fa1-L7-y2o" secondAttribute="leading" id="LmE-JA-OVJ"/>
+                        <constraint firstAttribute="bottom" secondItem="UBN-sX-GKj" secondAttribute="bottom" id="Mpd-OD-uBY"/>
+                        <constraint firstAttribute="trailing" secondItem="UBN-sX-GKj" secondAttribute="trailing" id="d7S-7d-gNM"/>
+                        <constraint firstItem="UBN-sX-GKj" firstAttribute="leading" secondItem="fa1-L7-y2o" secondAttribute="leading" id="jPo-to-osc"/>
                         <constraint firstAttribute="trailing" secondItem="2uM-lF-b4A" secondAttribute="trailing" id="qIq-Sb-iRh"/>
                         <constraint firstItem="agz-xT-fwD" firstAttribute="width" secondItem="Xd7-TE-XDG" secondAttribute="width" id="wxP-mk-poz"/>
-                    </constraints>
-                </view>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="6M4-l9-Wjv">
-                    <rect key="frame" x="0.0" y="0.0" width="50" height="44"/>
-                    <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    <constraints>
-                        <constraint firstAttribute="width" constant="50" id="92F-MH-OGs"/>
-                    </constraints>
-                </view>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bxt-2E-51s">
-                    <rect key="frame" x="284" y="0.0" width="50" height="44"/>
-                    <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    <constraints>
-                        <constraint firstAttribute="width" constant="50" id="R7p-Za-dnt"/>
                     </constraints>
                 </view>
             </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
-                <constraint firstItem="6M4-l9-Wjv" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="4pY-9t-jM8"/>
-                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="bxt-2E-51s" secondAttribute="bottom" id="9ur-Vy-RbR"/>
-                <constraint firstItem="bxt-2E-51s" firstAttribute="leading" secondItem="fa1-L7-y2o" secondAttribute="trailing" id="DrF-7M-pLw"/>
-                <constraint firstItem="fa1-L7-y2o" firstAttribute="leading" secondItem="6M4-l9-Wjv" secondAttribute="trailing" id="G6n-67-PFQ"/>
-                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="6M4-l9-Wjv" secondAttribute="bottom" id="OSq-Ns-dFI"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="fa1-L7-y2o" secondAttribute="trailing" id="3aB-EQ-57A"/>
                 <constraint firstItem="fa1-L7-y2o" firstAttribute="bottom" secondItem="vUN-kp-3ea" secondAttribute="bottom" id="dc6-jl-M9b"/>
-                <constraint firstItem="6M4-l9-Wjv" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="jVr-bl-jRG"/>
-                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="bxt-2E-51s" secondAttribute="trailing" id="nan-Ev-ENf"/>
+                <constraint firstItem="fa1-L7-y2o" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="fwh-Ag-XEu"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="top" secondItem="fa1-L7-y2o" secondAttribute="top" id="sRW-4G-R1P"/>
-                <constraint firstItem="bxt-2E-51s" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="wW3-Be-JkE"/>
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>

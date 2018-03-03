@@ -55,16 +55,32 @@ class SinglePostViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        view.backgroundColor = UIColor.white
         view.addSubview(tableNode.view)
+        
+        
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
         
         var layoutGuide:UILayoutGuide!
         
+        
+        let navView = JNavigationBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44.0))
+        
         layoutGuide = view.safeAreaLayoutGuide
         
+        view.addSubview(navView)
+        navView.translatesAutoresizingMaskIntoConstraints = false
+        navView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        navView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        navView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        navView.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+        
+        navView.leftButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
+        
+        let navLayoutGuide = navView.safeAreaLayoutGuide
+        
         tableNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        tableNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        tableNode.view.topAnchor.constraint(equalTo: navLayoutGuide.bottomAnchor).isActive = true
         tableNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
         tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -44.0).isActive = true
         tableNode.view.contentInsetAdjustmentBehavior = .never
@@ -104,7 +120,7 @@ class SinglePostViewController: UIViewController {
         view.addSubview(gradientView)
         gradientView.translatesAutoresizingMaskIntoConstraints = false
         gradientView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        gradientView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        gradientView.topAnchor.constraint(equalTo: navLayoutGuide.bottomAnchor).isActive = true
         gradientView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
         gradientView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
         gradientView.isUserInteractionEnabled = false
@@ -140,6 +156,11 @@ class SinglePostViewController: UIViewController {
         super.viewDidDisappear(animated)
         listener?.remove()
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc func handleDismiss() {
+    
+        presentingViewController?.dismiss(animated: true, completion: nil)
     }
     
     func setSort(mode:SortMode) {

@@ -29,30 +29,34 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         pagerNode.setDataSource(self)
         pagerNode.backgroundColor = nil
         view.addSubview(pagerNode.view)
+        let layoutGuide = view.safeAreaLayoutGuide
+       
+        let bg = UIView(frame: CGRect(x: 0, y: 20, width: view.bounds.width, height: 44.0))
+        bg.backgroundColor = UIColor.red
+        view.addSubview(bg)
         
         titleView = UINib(nibName: "HomeTitleView", bundle: nil).instantiate(withOwner: nil, options: nil)[0] as! HomeTitleView
-        titleView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 44.0)
+        titleView.frame = bg.bounds
+        titleView.layoutIfNeeded()
         titleView.delegate = self
-        view.addSubview(titleView)
-        
-        let layoutGuide = view.safeAreaLayoutGuide
+        titleView.backgroundColor = UIColor.red
+        bg.addSubview(titleView)
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
         pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         pagerNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
         pagerNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: 44).isActive = true
         pagerNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
         pagerNode.reloadData()
-   
         
     }
     
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.navigationBar.shadowImage = UIImage()
-        navigationController?.setNavigationBarHidden(true, animated: animated)
-        navigationController?.navigationBar.tintColor = UIColor.gray
-        navigationItem.backBarButtonItem = UIBarButtonItem(image: UIImage(named:"Back"), style: .plain, target: nil, action: nil)
+//        navigationController?.navigationBar.shadowImage = UIImage()
+//        navigationController?.setNavigationBarHidden(true, animated: animated)
+//        navigationController?.navigationBar.tintColor = UIColor.gray
+//        navigationItem.backBarButtonItem = UIBarButtonItem(image: UIImage(named:"Back"), style: .plain, target: nil, action: nil)
         
         
     }

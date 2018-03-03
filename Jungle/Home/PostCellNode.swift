@@ -123,7 +123,7 @@ class PostCellNode:ASCellNode {
         postTextNode.maximumNumberOfLines = 0
         postTextNode.truncationMode = .byWordWrapping
         
-        postTextNode.setText(text: post.text, withFont: Fonts.medium(ofSize: 15.0), normalColor: textColor, activeColor: post.anon.color)
+        postTextNode.setText(text: post.text, withFont: Fonts.medium(ofSize: 15.0), normalColor: textColor, activeColor: accentColor)
         postTextNode.tapHandler = { type, textValue in
             switch type {
             case .hashtag:

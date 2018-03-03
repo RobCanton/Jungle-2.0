@@ -30,7 +30,6 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         self.passthroughNonlinkTouches = true
         
         self.linkAttributeNames = [ActiveTextType.hashtag.rawValue, ActiveTextType.mention.rawValue]
-        
         let attributedString = NSMutableAttributedString(string: text)
         let count = attributedString.length
         
@@ -52,27 +51,15 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
     
     
     private func setAttrWithName(attrName: String, wordPrefix: String, color: UIColor, text: String, font: UIFont) {
-//        //Words can be separated by either a space or a line break
-//        let charSet = CharacterSet(charactersIn: " \n")
-//        let words = text.components(separatedBy: charSet)
-//
-//        //Filter to check for the # or @ prefix
-//        for word in words.filter({$0.hasPrefix(wordPrefix)}) {
-//            let range = textString!.range(of: word)!
-//            let nsRange = NSRange(range, in: textString!)
-//            attrString?.addAttributes([NSAttributedStringKey(rawValue: attrName): word,
-//                                       NSAttributedStringKey.foregroundColor: color], range: nsRange)
-//        }
-//        self.attributedText = attrString
 
         var textLength = text.utf16.count
         var textRange = NSRange(location: 0, length: textLength)
-        let elements = getElements(from: text, with: "(?:^|\\s|$)#[\\p{L}0-9_]*", range: textRange)
+        
+        let elements = RegexParser.getElements(from: text, with: RegexParser.hashtagPattern, range: textRange)
         //print("ELEMENTS: \(elements)")
         for element in elements {
             let range = Range(element.range, in: text)!
             let str = text.substring(with: range)
-            print("ELEMENT: \(range) -> \(str)")
             attrString?.addAttributes([NSAttributedStringKey(rawValue: attrName): str,
                                                   NSAttributedStringKey.foregroundColor: color], range: element.range)
             
@@ -96,11 +83,10 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
     func textNode(_ textNode: ASTextNode, tappedLinkAttribute attribute: String, value: Any, at point: CGPoint, textRange: NSRange) {
         
         guard let textValue = value as? String else { return }
-        print("TAPPED: \(textValue)")
         switch attribute {
         case ActiveTextType.hashtag.rawValue:
-            
-            tapHandler?(.hashtag, textValue)
+            let hasthag = textValue.removeWhitespaces()
+            tapHandler?(.hashtag, hasthag)
             break
         case ActiveTextType.mention.rawValue:
             tapHandler?(.mention, textValue)
@@ -112,4 +98,9 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
             break
         }
     }
+    
+    func textNode(_ textNode: ASTextNode, shouldHighlightLinkAttribute attribute: String, value: Any, at point: CGPoint) -> Bool {
+        return true
+    }
+    
 }

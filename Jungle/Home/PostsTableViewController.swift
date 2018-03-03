@@ -26,6 +26,8 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     
     var transitionManager = LightboxViewerTransitionManager()
     
+    var pushTransitionManager = PushTransitionManager()
+    
     struct State {
         var posts: [Post]
         var postKeys:[String:Bool]
@@ -441,7 +443,10 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         let controller = SinglePostViewController()
         controller.hidesBottomBarWhenPushed = true
         controller.post = state.posts[indexPath.row]
-        self.navigationController?.pushViewController(controller, animated: true)
+        controller.transitioningDelegate = pushTransitionManager
+        self.transitioningDelegate = pushTransitionManager
+        self.present(controller, animated: true, completion: nil)
+        //self.navigationController?.pushViewController(controller, animated: true)
     }
     
     
@@ -455,10 +460,12 @@ extension PostsTableViewController: PostCellDelegate {
     }
     
     func postOpen(tag: String) {
+        
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let vc = storyboard.instantiateViewController(withIdentifier: "SearchViewController") as! SearchViewController
         vc.initialSearch = tag
-        self.navigationController?.pushViewController(vc, animated: true)
+        vc.transitioningDelegate = pushTransitionManager
+        self.present(vc, animated: true, completion: nil)
     }
     
     func postOptions(_ post: Post) {

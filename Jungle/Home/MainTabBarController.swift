@@ -42,6 +42,10 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate {
         tabBar.shadowImage = UIImage()
         tabBar.backgroundImage = UIImage()
         
+        let divider = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 0.5))
+        divider.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
+        tabBar.addSubview(divider)
+        
     }
     
     @objc func openNewPostVC() {
