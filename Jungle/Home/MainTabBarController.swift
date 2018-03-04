@@ -15,7 +15,7 @@ protocol UploadProgressDelegate {
     func uploadedDidComplete()
 }
 
-class MainTabBarController:UITabBarController, UploadProgressDelegate {
+class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTransitionSourceDelegate {
     
     var messageWrapper = SwiftMessages()
     var postButtonContainer:UIView!
@@ -64,4 +64,9 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate {
 
     }
     
+    func staticTopView() -> UIImageView? {
+        return view.snapshot(of: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
+    }
+    
 }
+

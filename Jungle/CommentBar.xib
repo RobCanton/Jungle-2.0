@@ -69,13 +69,23 @@
                         </view>
                     </subviews>
                 </stackView>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Hps-mO-Ptf">
+                    <rect key="frame" x="0.0" y="0.0" width="428" height="0.5"/>
+                    <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="0.5" id="tqw-Xr-kkk"/>
+                    </constraints>
+                </view>
             </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
+                <constraint firstItem="Hps-mO-Ptf" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="5tF-KT-1IH"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="0v8-SJ-p1x" secondAttribute="trailing" id="PPf-1b-rBT"/>
+                <constraint firstItem="Hps-mO-Ptf" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="jjY-Hf-mIS"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="Hps-mO-Ptf" secondAttribute="trailing" id="n5S-kj-dX4"/>
                 <constraint firstItem="0v8-SJ-p1x" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="p2y-tp-7I0"/>
-                <constraint firstItem="0v8-SJ-p1x" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="qRp-zl-2x1"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="0v8-SJ-p1x" secondAttribute="bottom" id="rzR-bo-50Y"/>
+                <constraint firstItem="0v8-SJ-p1x" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="zVt-C8-50C"/>
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>

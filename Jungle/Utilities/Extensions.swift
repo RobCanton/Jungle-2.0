@@ -18,6 +18,25 @@ extension UIView {
         self.layer.shadowColor = color.cgColor
         self.layer.shouldRasterize = shouldRasterize
     }
+    
+    func snapshot(of rect: CGRect? = nil) -> UIImageView? {
+        
+        UIGraphicsBeginImageContextWithOptions(bounds.size, isOpaque, 0)
+        drawHierarchy(in: bounds, afterScreenUpdates: false)
+        let wholeImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        
+        guard let image = wholeImage, let rect = rect else { return nil }
+        
+        let scale = image.scale
+        let scaledRect = CGRect(x: rect.origin.x * scale, y: rect.origin.y * scale, width: rect.size.width * scale, height: rect.size.height * scale)
+        guard let cgImage = image.cgImage?.cropping(to: scaledRect) else { return nil }
+        let screenshot = UIImage(cgImage: cgImage, scale: scale, orientation: .up)
+        let view = UIImageView(frame: rect)
+        view.image = screenshot
+        return view
+    }
 }
 
 func hexColor(from hex:String) -> UIColor {

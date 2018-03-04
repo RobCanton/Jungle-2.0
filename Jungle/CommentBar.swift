@@ -38,6 +38,9 @@ class CommentBar:UIView, UITextViewDelegate {
     
     var replyLabel:ActiveTextNode!
     
+    
+    
+    var divider:UIView!
 
     
     override init(frame: CGRect) {
@@ -149,6 +152,14 @@ class CommentBar:UIView, UITextViewDelegate {
         sendButton.clipsToBounds = true
         sendButton.addTarget(self, action: #selector(sendText), for: .touchUpInside)
         
+        divider = UIView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 0.5))
+        divider.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(divider)
+        divider.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        divider.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        divider.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        divider.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
     }
     
     required init?(coder aDecoder: NSCoder) {

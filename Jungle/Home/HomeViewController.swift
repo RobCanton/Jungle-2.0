@@ -15,6 +15,7 @@ import SwiftMessages
 class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, HomeTitleDelegate {
     
     var pagerNode:ASPagerNode!
+    var navBar:UIView!
     var titleView:HomeTitleView!
     
     var sm = SwiftMessages()
@@ -31,21 +32,22 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         view.addSubview(pagerNode.view)
         let layoutGuide = view.safeAreaLayoutGuide
        
-        let bg = UIView(frame: CGRect(x: 0, y: 20, width: view.bounds.width, height: 44.0))
-        bg.backgroundColor = UIColor.red
-        view.addSubview(bg)
+        navBar = UIView(frame: CGRect(x: 0, y: 20, width: view.bounds.width, height: 44.0))
+        navBar.backgroundColor = UIColor.red
+        view.addSubview(navBar)
         
         titleView = UINib(nibName: "HomeTitleView", bundle: nil).instantiate(withOwner: nil, options: nil)[0] as! HomeTitleView
-        titleView.frame = bg.bounds
+        titleView.frame = navBar.bounds
         titleView.layoutIfNeeded()
         titleView.delegate = self
         titleView.backgroundColor = UIColor.red
-        bg.addSubview(titleView)
+        navBar.addSubview(titleView)
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
         pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         pagerNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
         pagerNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: 44).isActive = true
         pagerNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        pagerNode.view.delaysContentTouches = false
         pagerNode.reloadData()
         
     }
@@ -53,10 +55,10 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-//        navigationController?.navigationBar.shadowImage = UIImage()
-//        navigationController?.setNavigationBarHidden(true, animated: animated)
-//        navigationController?.navigationBar.tintColor = UIColor.gray
-//        navigationItem.backBarButtonItem = UIBarButtonItem(image: UIImage(named:"Back"), style: .plain, target: nil, action: nil)
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+        navigationController?.navigationBar.tintColor = UIColor.gray
+        navigationItem.backBarButtonItem = UIBarButtonItem(image: UIImage(named:"Back"), style: .plain, target: nil, action: nil)
         
         
     }
@@ -183,3 +185,4 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         }
     }
 }
+

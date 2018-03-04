@@ -50,6 +50,8 @@ class PostCellNode:ASCellNode {
     
     weak var post:Post?
     
+    var isSinglePost = false
+    
     
 
     private(set) var bgColor = UIColor.white
@@ -64,9 +66,12 @@ class PostCellNode:ASCellNode {
     
     var isKing = false
     
-    required init(withPost post:Post, type: PostsTableType) {
+    required init(withPost post:Post, type: PostsTableType, isSinglePost:Bool?=nil) {
         super.init()
         self.post = post
+        if isSinglePost != nil {
+            self.isSinglePost = isSinglePost!
+        }
         automaticallyManagesSubnodes = true
         
         upvoteImage = UIImage(named:"upvote")
@@ -75,6 +80,7 @@ class PostCellNode:ASCellNode {
         downvotedImage = UIImage(named:"downvoted")
         commentImage = UIImage(named:"comment2")
         moreImage = UIImage(named:"more")
+        
         isKing = type == .popular && post.rank != nil && post.rank == 1
         
 //        if isKing {
@@ -168,6 +174,7 @@ class PostCellNode:ASCellNode {
         likeButton.contentEdgeInsets = .zero
         likeButton.tintColor = buttonColor
         likeButton.tintColorDidChange()
+        likeButton.alpha = 0.75
         
         dislikeButton.setImage(downvoteImage, for: .normal)
         dislikeButton.laysOutHorizontally = true
@@ -176,12 +183,14 @@ class PostCellNode:ASCellNode {
         dislikeButton.contentEdgeInsets = .zero
         dislikeButton.tintColor = buttonColor
         dislikeButton.tintColorDidChange()
+        dislikeButton.alpha = 0.75
         
         commentButton.setImage(commentImage, for: .normal)
         commentButton.laysOutHorizontally = true
         commentButton.contentSpacing = 8.0
         commentButton.contentHorizontalAlignment = .middle
-        
+        commentButton.alpha = 0.75
+        countLabel.alpha = 0.75
         likeButton.addTarget(self, action: #selector(handleUpvote), forControlEvents: .touchUpInside)
         dislikeButton.addTarget(self, action: #selector(handleDownvote), forControlEvents: .touchUpInside)
         
@@ -452,6 +461,8 @@ class PostCellNode:ASCellNode {
                     })
                 })
             }
+            likeButton.alpha = 1.0
+            dislikeButton.alpha = 0.75
             likeButton.setImage(upvotedImage, for: .normal)
             dislikeButton.setImage(downvoteImage, for: .normal)
             break
@@ -472,10 +483,14 @@ class PostCellNode:ASCellNode {
                     })
                 })
             }
+            likeButton.alpha = 0.75
+            dislikeButton.alpha = 1.0
             likeButton.setImage(upvoteImage, for: .normal)
             dislikeButton.setImage(downvotedImage, for: .normal)
             break
         case .notvoted:
+            likeButton.alpha = 0.75
+            dislikeButton.alpha = 0.75
             likeButton.setImage(upvoteImage, for: .normal)
             dislikeButton.setImage(downvoteImage, for: .normal)
             break
@@ -605,6 +620,17 @@ class PostCellNode:ASCellNode {
     override func didExitVisibleState() {
         super.didExitVisibleState()
         stopListeningToPost()
+        //backgroundColor = bgColor
+    }
+    
+    func setHighlighted(_ highlighted:Bool) {
+        print("setHighlighted: \(highlighted)")
+        backgroundColor = highlighted ? UIColor(white: 0.95, alpha: 1.0) : bgColor
+    }
+    
+    func setSelected(_ selected:Bool) {
+        print("setSelected: \(selected)")
+        backgroundColor = selected ? UIColor(white: 0.95, alpha: 1.0) : bgColor
     }
     
 }

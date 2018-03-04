@@ -21,9 +21,19 @@ class CommentCellNode:ASCellNode {
     var commentBubbleNode = CommentBubbleNode()
     var isFirst = false
     
-//    let likeButtonNode = ASButtonNode()
-//    let shareButtonNode = ASButtonNode()
-//    let moreButtonNode = ASButtonNode()
+    let likeButton = ASButtonNode()
+    let dislikeButton = ASButtonNode()
+    let countLabel = ASTextNode()
+    
+    let replyButton = ASButtonNode()
+    
+    let gapNode = ASDisplayNode()
+
+    private(set) var upvoteImage:UIImage!
+    private(set) var upvotedImage:UIImage!
+    private(set) var downvoteImage:UIImage!
+    private(set) var downvotedImage:UIImage!
+    private(set) var buttonColor = grayColor
     
     var lexiconRefListener:ListenerRegistration?
     
@@ -41,9 +51,39 @@ class CommentCellNode:ASCellNode {
         commentBubbleNode.set(reply: reply, toPost: post)
         imageNode.mainImageNode.backgroundColor = reply.anon.color
         
-//        likeButtonNode.setImage(UIImage(named:"heart"), for: .normal)
-//        shareButtonNode.setImage(UIImage(named:"reply"), for: .normal)
-//        moreButtonNode.setImage(UIImage(named:"more"), for: .normal)
+        upvoteImage = UIImage(named:"upvote")
+        upvotedImage = UIImage(named:"upvoted")
+        downvoteImage = UIImage(named:"downvote")
+        downvotedImage = UIImage(named:"downvoted")
+        
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        countLabel.attributedText = NSAttributedString(string: "-", attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: buttonColor,
+            NSAttributedStringKey.paragraphStyle: paragraph
+            ])
+        
+        likeButton.setImage(upvoteImage, for: .normal)
+        likeButton.laysOutHorizontally = true
+        likeButton.contentSpacing = 6.0
+        likeButton.contentHorizontalAlignment = .middle
+        likeButton.contentEdgeInsets = .zero
+        likeButton.tintColor = buttonColor
+        likeButton.tintColorDidChange()
+        
+        dislikeButton.setImage(downvoteImage, for: .normal)
+        dislikeButton.laysOutHorizontally = true
+        dislikeButton.contentSpacing = 6.0
+        dislikeButton.contentHorizontalAlignment = .middle
+        dislikeButton.contentEdgeInsets = .zero
+        dislikeButton.tintColor = buttonColor
+        dislikeButton.tintColorDidChange()
+        
+        replyButton.setImage(UIImage(named:"reply"), for: .normal)
+        replyButton.tintColor = buttonColor
+        replyButton.tintColorDidChange()
+        
     
         
         subnameNode.textContainerInset = UIEdgeInsets(top: 1.0, left: 6.0, bottom: 0, right: 6.0)
@@ -69,20 +109,35 @@ class CommentCellNode:ASCellNode {
         
         subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
 
+        likeButton.style.height = ASDimension(unit: .points, value: 32.0)
+        dislikeButton.style.height = ASDimension(unit: .points, value: 32.0)
+        replyButton.style.height = ASDimension(unit: .points, value: 32.0)
+        
         let subnameCenterX = ASCenterLayoutSpec(centeringOptions: .X, sizingOptions: .minimumX, child: subnameNode)
         let imageStack = ASStackLayoutSpec.vertical()
         imageStack.children = [imageNode, subnameCenterX]
         imageStack.spacing = 6.0
         imageStack.style.layoutPosition = CGPoint(x: 0, y: 0)
         
-//        let leftActions = ASStackLayoutSpec.horizontal()
-//        leftActions.children = [likeButtonNode, shareButtonNode]
-//        leftActions.spacing = 10.0
-//
-        //let insetActions = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12.0, 0.0, 0.0), child: leftActions)
+        let countCenterY = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: countLabel)
+        let likeStack = ASStackLayoutSpec.horizontal()
+        likeStack.children = [ likeButton, countCenterY, dislikeButton ]
+        likeStack.spacing = 0.0
+        
+        countLabel.style.width = ASDimension(unit: .points, value: 28.0)
+        countLabel.style.flexGrow = 1.0
+        likeButton.style.flexShrink = 1.0
+        dislikeButton.style.flexShrink = 1.0
+        
+        let actionsRow = ASStackLayoutSpec.horizontal()
+        
+        actionsRow.children = [ likeStack,  replyButton]
+        actionsRow.spacing = 32.0
+        
+        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 16.0), child: actionsRow)
         
         let mainVerticalStack = ASStackLayoutSpec.vertical()
-        mainVerticalStack.children = [commentBubbleNode]
+        mainVerticalStack.children = [commentBubbleNode, actionsInset]
         mainVerticalStack.spacing = 0.0
         mainVerticalStack.style.layoutPosition = CGPoint(x: 44.0 + 10.0, y: 0)
         

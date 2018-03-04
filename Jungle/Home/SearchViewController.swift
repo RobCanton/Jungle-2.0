@@ -137,3 +137,17 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource,
     }
     
 }
+
+extension SearchViewController: PushTransitionDestinationDelegate {
+    func staticTopView() -> UIImageView? {
+        let rect = CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0)
+        let size = CGSize(width: view.bounds.width, height: 64.0)
+        UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
+        view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        let imageView = UIImageView(frame:rect)
+        imageView.image = image
+        return imageView
+    }
+}

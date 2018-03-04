@@ -21,6 +21,20 @@ enum SortMode {
     case top, live
 }
 
+extension SinglePostViewController: PushTransitionDestinationDelegate {
+    func staticTopView() -> UIImageView? {
+        let rect = CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0)
+        let size = CGSize(width: view.bounds.width, height: 64.0)
+        UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
+        view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        let imageView = UIImageView(frame:rect)
+        imageView.image = image
+        return imageView
+    }
+}
+
 class SinglePostViewController: UIViewController {
     
     var post:Post!
@@ -34,6 +48,7 @@ class SinglePostViewController: UIViewController {
     var liveListener:ListenerRegistration?
     var currentContext:ASBatchContext?
     var sortMode = SortMode.top
+    var navView:JNavigationBar!
     
     struct State {
         var replies: [Reply]
@@ -64,7 +79,7 @@ class SinglePostViewController: UIViewController {
         var layoutGuide:UILayoutGuide!
         
         
-        let navView = JNavigationBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44.0))
+        navView = JNavigationBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44.0))
         
         layoutGuide = view.safeAreaLayoutGuide
         
@@ -146,7 +161,7 @@ class SinglePostViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.navigationBar.shadowImage = UIImage()
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
     }
@@ -160,7 +175,7 @@ class SinglePostViewController: UIViewController {
     
     @objc func handleDismiss() {
     
-        presentingViewController?.dismiss(animated: true, completion: nil)
+        self.navigationController?.popViewController(animated: true)
     }
     
     func setSort(mode:SortMode) {

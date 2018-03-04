@@ -85,6 +85,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         tableNode.delegate = self
         tableNode.dataSource = self
         tableNode.view.separatorStyle = .none
+        tableNode.view.delaysContentTouches = false
         //tableNode.allowsSelection = false
         tableNode.reloadData()
         
@@ -151,6 +152,12 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         newPostsListener?.remove()
+        
+        if let postCellNodes = tableNode.visibleNodes as? [PostCellNode] {
+            for node in postCellNodes {
+                node.setSelected(false)
+            }
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -246,7 +253,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
                     let indexPaths = (0..<_posts.count).map { index in
                         IndexPath(row: index, section: 0)
                     }
-                    self.tableNode.insertRows(at: indexPaths, with: .none)
+                    self.tableNode.insertRows(at: indexPaths, with: .fade)
                 }, completion: { _ in
                     if self.state.posts.count > 0 {
                         self.tableNode.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
@@ -440,15 +447,28 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     }
     
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
+        let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
+        node.setSelected(true)
         let controller = SinglePostViewController()
         controller.hidesBottomBarWhenPushed = true
         controller.post = state.posts[indexPath.row]
-        controller.transitioningDelegate = pushTransitionManager
-        self.transitioningDelegate = pushTransitionManager
-        self.present(controller, animated: true, completion: nil)
-        //self.navigationController?.pushViewController(controller, animated: true)
+        self.navigationController?.pushViewController(controller, animated: true)
     }
     
+    func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
+        let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
+        node.setSelected(false)
+    }
+    
+    func tableNode(_ tableNode: ASTableNode, didHighlightRowAt indexPath: IndexPath) {
+        let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
+        node.setHighlighted(true)
+    }
+    
+    func tableNode(_ tableNode: ASTableNode, didUnhighlightRowAt indexPath: IndexPath) {
+        let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
+        node.setHighlighted(false)
+    }
     
     
 }
@@ -464,8 +484,7 @@ extension PostsTableViewController: PostCellDelegate {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let vc = storyboard.instantiateViewController(withIdentifier: "SearchViewController") as! SearchViewController
         vc.initialSearch = tag
-        vc.transitioningDelegate = pushTransitionManager
-        self.present(vc, animated: true, completion: nil)
+        self.navigationController?.pushViewController(vc, animated: true)
     }
     
     func postOptions(_ post: Post) {
