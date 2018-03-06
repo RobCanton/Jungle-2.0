@@ -50,6 +50,11 @@ class SinglePostViewController: UIViewController {
     var sortMode = SortMode.top
     var navView:JNavigationBar!
     
+    var focusedReply:Reply?
+    
+    var tableTopAnchor:NSLayoutConstraint?
+    var tableBottomAnchor:NSLayoutConstraint?
+    
     struct State {
         var replies: [Reply]
         var fetchingMore: Bool
@@ -73,13 +78,12 @@ class SinglePostViewController: UIViewController {
         view.backgroundColor = UIColor.white
         view.addSubview(tableNode.view)
         
-        
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
         
         var layoutGuide:UILayoutGuide!
         
         
-        navView = JNavigationBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44.0))
+        navView = JNavigationBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
         
         layoutGuide = view.safeAreaLayoutGuide
         
@@ -87,20 +91,24 @@ class SinglePostViewController: UIViewController {
         navView.translatesAutoresizingMaskIntoConstraints = false
         navView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         navView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        navView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
-        navView.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+        navView.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: -20.0).isActive = true
+        navView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
         
         navView.leftButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
         
         let navLayoutGuide = navView.safeAreaLayoutGuide
         
         tableNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        tableNode.view.topAnchor.constraint(equalTo: navLayoutGuide.bottomAnchor).isActive = true
+        
+        tableTopAnchor = tableNode.view.topAnchor.constraint(equalTo: navLayoutGuide.bottomAnchor)
+        tableTopAnchor?.isActive = true
         tableNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -44.0).isActive = true
+        tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -44.0)
+        tableBottomAnchor = tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -44.0)
+        tableBottomAnchor?.isActive = true
         tableNode.view.contentInsetAdjustmentBehavior = .never
         tableNode.view.separatorStyle = .none
-        
+        tableNode.view.backgroundColor = UIColor(white: 0.97, alpha: 1.0)
         tableNode.delegate = self
         tableNode.dataSource = self
         tableNode.batchFetchingDelegate = self
@@ -186,19 +194,16 @@ class SinglePostViewController: UIViewController {
         // Clean up table before changing sorting modes
         switch sortMode {
         case .top:
-            let indexPaths = (0..<topState.replies.count).map { index in
-                IndexPath(row: index, section: 2)
-            }
-            topState = .empty
-            tableNode.deleteRows(at: indexPaths, with: .none)
             
+            let indices = IndexSet(2..<topState.replies.count+2)
+            topState = .empty
+            
+            tableNode.deleteSections(indices, with: .none)
             break
         case .live:
-            let indexPaths = (0..<liveState.replies.count).map { index in
-                IndexPath(row: index, section: 2)
-            }
+            let indices = IndexSet(2..<liveState.replies.count+2)
             liveState = .empty
-            tableNode.deleteRows(at: indexPaths, with: .none)
+            tableNode.deleteSections(indices, with: .none)
             self.disableLiveComments()
             break
         }
@@ -207,7 +212,17 @@ class SinglePostViewController: UIViewController {
         if let titleNode = self.tableNode.nodeForRow(at: IndexPath(row: 0, section: 1)) as? TitleCellNode {
             titleNode.setSortTitle(self.sortMode)
         }
-        self.tableNode.reloadSections(IndexSet(integer: 2), with: .none)
+        
+        switch sortMode {
+        case .top:
+            let indices = IndexSet(2..<topState.replies.count+2)
+            self.tableNode.reloadSections(indices, with: .none)
+            break
+        case .live:
+            let indices = IndexSet(2..<liveState.replies.count+2)
+            self.tableNode.reloadSections(indices, with: .none)
+            break
+        }
     }
     
     func enableLiveComments() {
@@ -216,7 +231,7 @@ class SinglePostViewController: UIViewController {
         }
         
         liveListener?.remove()
-        let postsRef = firestore.collection("posts").document(post.key).collection("replies")
+        let postsRef = firestore.collection("posts").document(post.key).collection("comments")
         var query:Query!
         if liveState.replies.count > 0 {
             let firstPost = liveState.replies[0].createdAt.timeIntervalSince1970 * 1000
@@ -236,7 +251,7 @@ class SinglePostViewController: UIViewController {
                     if let anon = Anon.parse(data),
                         let text = data["text"] as? String,
                         let createdAt = data["createdAt"] as? Double {
-                        reply = Reply(key: firstDoc.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000))
+                        reply = Reply(key: firstDoc.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: 4)
                         
                     }
                 }
@@ -285,13 +300,13 @@ class SinglePostViewController: UIViewController {
                     if let anon = Anon.parse(data),
                         let text = data["text"] as? String,
                         let createdAt = data["createdAt"] as? Double {
-                        let reply = Reply(key: document.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000))
+                        let numReplies = data["numReplies"] as? Int ?? 0
+                        let reply = Reply(key: document.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: numReplies)
                         _replies.append(reply)
                     }
                 }
             }
             completion(_replies, endReached)
-            
         }
 
     }
@@ -300,7 +315,23 @@ class SinglePostViewController: UIViewController {
 
 extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchFetchingDelegate {
     func numberOfSections(in tableNode: ASTableNode) -> Int {
-        return 3
+        var sections = 2
+
+        switch sortMode {
+        case .top:
+            sections += topState.replies.count
+//            if topState.fetchingMore {
+//                sections += 1
+//            }
+            break
+        case .live:
+            sections += liveState.replies.count
+//            if liveState.fetchingMore {
+//                sections += 1
+//            }
+            break
+        }
+        return sections
     }
     
     func tableNode(_ tableNode: ASTableNode, numberOfRowsInSection section: Int) -> Int {
@@ -310,28 +341,24 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
         case 1:
             return 1
         default:
+            let replySection = section - 2
             switch sortMode {
             case .top:
-                var count = topState.replies.count
-                if topState.fetchingMore {
-                    count += 1
+                let reply = topState.replies[replySection]
+                if reply.numReplies > 0 && reply.replies.count == 0 {
+                    return 2
                 }
-                return count
+                return  1 + reply.replies.count
             case .live:
-                var count = liveState.replies.count
-                if liveState.fetchingMore {
-                    count += 1
-                }
-                return count
+                return 1
             }
-           
         }
     }
     
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
         switch indexPath.section {
         case 0:
-            let cell = PostCellNode(withPost: post, type: .newest)
+            let cell = PostCellNode(withPost: post, type: .newest, isSinglePost: true)
             cell.selectionStyle = .none
             return cell
         case 1:
@@ -339,30 +366,50 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
             cell.selectionStyle = .none
             return cell
         default:
+            
+            let section = indexPath.section - 2
+            
             switch sortMode {
             case .top:
-                let rowCount = self.tableNode(tableNode, numberOfRowsInSection: 2)
+                let rowCount = topState.replies.count
+                //let rowCount = self.tableNode(tableNode, numberOfRowsInSection: 2)
                 
-                if topState.fetchingMore && indexPath.row == rowCount - 1 {
-                    let node = LoadingCellNode()
-                    node.style.height = ASDimensionMake(44.0)
-                    return node;
+//                if topState.fetchingMore && section == rowCount - 1 {
+//                    let node = LoadingCellNode()
+//                    node.style.height = ASDimensionMake(44.0)
+//                    return node;
+//                }
+                let reply = topState.replies[section]
+                if indexPath.row == 0 {
+                    let cell = CommentCellNode(reply: reply, toPost: post)
+                    cell.selectionStyle = .none
+                    cell.delegate = self
+                    return cell
+                } else if indexPath.row == 1 && reply.replies.count == 0 {
+                    let cell = ViewRepliesCellNode(reply: reply)
+                    cell.selectionStyle = .none
+                    return cell
+                } else {
+                    let subReply = reply.replies[indexPath.row - 1]
+                    let hideDivider = indexPath.row < tableNode.numberOfRows(inSection: indexPath.section)
+                    let cell = CommentCellNode(reply: subReply, toPost: post, isReply: true, hideDivider: hideDivider)
+                    cell.selectionStyle = .none
+                    cell.delegate = self
+                    return cell
                 }
-                
-                let cell = CommentCellNode(withReply: topState.replies[indexPath.row], toPost: post)
-                cell.selectionStyle = .none
-                return cell
             case .live:
-                let rowCount = self.tableNode(tableNode, numberOfRowsInSection: 2)
+                let rowCount = liveState.replies.count
+                //let rowCount = self.tableNode(tableNode, numberOfRowsInSection: 2)
                 
-                if liveState.fetchingMore && indexPath.row == rowCount - 1 {
-                    let node = LoadingCellNode()
-                    node.style.height = ASDimensionMake(44.0)
-                    return node;
-                }
+//                if liveState.fetchingMore && section == rowCount - 1 {
+//                    let node = LoadingCellNode()
+//                    node.style.height = ASDimensionMake(44.0)
+//                    return node;
+//                }
                 
-                let cell = CommentCellNode(withReply: liveState.replies[indexPath.row], toPost: post)
+                let cell = CommentCellNode(reply: liveState.replies[section], toPost: post)
                 cell.selectionStyle = .none
+                cell.delegate = self
                 return cell
             }
             
@@ -371,6 +418,8 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
     
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
         switch indexPath.section {
+        case 0:
+            break
         case 1:
             let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
             alert.addAction(UIAlertAction(title: "Top", style: .default, handler: { _ in
@@ -383,7 +432,21 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
             self.present(alert, animated: true, completion: nil)
             break
         default:
-            break
+            let section = indexPath.section - 2
+            switch sortMode {
+            case .top:
+                let reply = topState.replies[section]
+                if indexPath.row == 1 {
+                    print("Show Replies for: \(reply.key)")
+                    reply.fetchReplies(post.key) {
+                        print("DID COMPLETE")
+                        self.tableNode.reloadSections(IndexSet([indexPath.section]), with: .none)
+                    }
+                }
+                break
+            case .live:
+                break
+            }
         }
     }
     
@@ -410,7 +473,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                 self.topState = SinglePostViewController.handleAction(.beginBatchFetch, fromState: oldState)
                 self.renderDiff(oldState)
             }
-            let ref = firestore.collection("posts").document(post.key).collection("replies").order(by: "createdAt", descending: false)
+            let ref = firestore.collection("posts").document(post.key).collection("comments").order(by: "createdAt", descending: false)
             
             SinglePostViewController.fetchData(state: topState, post: post, ref: ref, lastPostID: topState.lastPostTimestamp) { replies, endReached in
                 
@@ -440,7 +503,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
 
                 self.renderDiff(oldState)
             }
-            let ref = firestore.collection("posts").document(post.key).collection("replies").order(by: "createdAt", descending: true)
+            let ref = firestore.collection("posts").document(post.key).collection("comments").order(by: "createdAt", descending: true)
             
             SinglePostViewController.fetchData(state: liveState, post: post, ref: ref, lastPostID: liveState.lastPostTimestamp) { replies, endReached in
                 
@@ -474,26 +537,24 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                 // Add or remove items
                 let rowCountChange = topState.replies.count - oldState.replies.count
                 if rowCountChange > 0 {
-                    let indexPaths = (oldState.replies.count..<topState.replies.count).map { index in
-                        IndexPath(row: index, section: 2)
-                    }
-                    tableNode.insertRows(at: indexPaths, with: .none)
+                    let indices = IndexSet(oldState.replies.count+2..<topState.replies.count+2)
+                    tableNode.insertSections(indices, with: .none)
                 } else if rowCountChange < 0 {
                     assertionFailure("Deleting rows is not implemented. YAGNI.")
                 }
                 
-                // Add or remove spinner.
-                if topState.fetchingMore != oldState.fetchingMore {
-                    if topState.fetchingMore {
-                        // Add spinner.
-                        let spinnerIndexPath = IndexPath(row: topState.replies.count, section: 2)
-                        tableNode.insertRows(at: [ spinnerIndexPath ], with: .none)
-                    } else {
-                        // Remove spinner.
-                        let spinnerIndexPath = IndexPath(row: oldState.replies.count, section: 2)
-                        tableNode.deleteRows(at: [ spinnerIndexPath ], with: .none)
-                    }
-                }
+//                // Add or remove spinner.
+//                if topState.fetchingMore != oldState.fetchingMore {
+//                    if topState.fetchingMore {
+//                        // Add spinner.
+//                        let indexSet = IndexSet([topState.replies.count+2])
+//                        tableNode.insertSections(indexSet, with: .none)
+//                    } else {
+//                        // Remove spinner.
+//                        let indexSet = IndexSet([oldState.replies.count+2])
+//                        tableNode.deleteSections(indexSet, with: .none)
+//                    }
+//                }
             }, completion:nil)
             break
         case .live:
@@ -507,23 +568,24 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                         IndexPath(row: index, section: 2)
                     }
                     print("INSERT LIVE ROWS: \(indexPaths)")
-                    tableNode.insertRows(at: indexPaths, with: .none)
+                    let indices = IndexSet(oldState.replies.count+2..<liveState.replies.count+2)
+                    tableNode.insertSections(indices, with: .none)
                 } else if rowCountChange < 0 {
                     assertionFailure("Deleting rows is not implemented. YAGNI.")
                 }
                 
-                // Add or remove spinner.
-                if liveState.fetchingMore != oldState.fetchingMore {
-                    if liveState.fetchingMore {
-                        // Add spinner.
-                        let spinnerIndexPath = IndexPath(row: liveState.replies.count, section: 2)
-                        tableNode.insertRows(at: [ spinnerIndexPath ], with: .none)
-                    } else {
-                        // Remove spinner.
-                        let spinnerIndexPath = IndexPath(row: oldState.replies.count, section: 2)
-                        tableNode.deleteRows(at: [ spinnerIndexPath ], with: .none)
-                    }
-                }
+//                // Add or remove spinner.
+//                if liveState.fetchingMore != oldState.fetchingMore {
+//                    if liveState.fetchingMore {
+//                        // Add spinner.
+//                        let indexSet = IndexSet([liveState.replies.count+2])
+//                        tableNode.insertSections(indexSet, with: .none)
+//                    } else {
+//                        // Remove spinner.
+//                        let indexSet = IndexSet([liveState.replies.count+2])
+//                        tableNode.deleteSections(indexSet, with: .none)
+//                    }
+//                }
             }, completion:nil)
             break
         }
@@ -575,7 +637,29 @@ extension SinglePostViewController: KeyboardAccessoryProtocol {
         commentBar.setComposeMode(true)
         self.commentBarHeightAnchor?.constant = commentBar.textHeight + commentBar.nonTextHeight
         self.view.layoutIfNeeded()
+        var rect:CGRect?
+        var offsetPoint:CGFloat?
+        if let focusedReply = focusedReply {
+            for i in 0..<topState.replies.count {
+                let reply = topState.replies[i]
+                if focusedReply.key == reply.key {
+
+                    rect = tableNode.rectForRow(at: IndexPath(row: 0, section: i + 2))
+                }
+            }
+        }
+        
+        let keyboardTop = view.bounds.height - keyboardSize.height - commentBarHeightAnchor!.constant
+
+        if rect != nil {
+            offsetPoint = rect!.origin.y  + rect!.height + 64.0 - keyboardTop
+        }
+
         UIView.animate(withDuration: 0.15, animations: {
+            if offsetPoint != nil {
+                self.tableNode.contentOffset = CGPoint(x:0,y: offsetPoint!)
+            }
+            
             self.commentBarBottomAnchor?.constant = -keyboardSize.height
             self.view.layoutIfNeeded()
         }, completion: { _ in
@@ -586,6 +670,8 @@ extension SinglePostViewController: KeyboardAccessoryProtocol {
     @objc func keyboardWillHide(notification:Notification) {
         print("keyboardWillHide")
         commentBar.setComposeMode(false)
+        focusedReply = nil
+        
         self.commentBarHeightAnchor?.constant = commentBar.textHeight + CommentBar.textMarginHeight + 4
         self.commentBarHeightAnchor?.isActive = true
         self.view.layoutIfNeeded()
@@ -606,41 +692,51 @@ extension SinglePostViewController: CommentBarDelegate {
     
     func commentSend(text: String) {
         guard let user = Auth.auth().currentUser else { return }
+        
         user.getIDToken() { token, error in
-            let parameters: [String: Any] = [
+            
+            var parameters: [String: Any] = [
                 "uid" : user.uid,
                 "text" : text
             ]
+            
+            if let reply = self.focusedReply {
+                parameters["replyTo"] = reply.key
+            }
+            
             self.commentBar.textView.text = ""
             self.commentBar.textViewDidChange(self.commentBar.textView)
             self.commentBar.textView.resignFirstResponder()
             self.commentBar.placeHolderTextView.isHidden = false
             let headers: HTTPHeaders = ["Authorization": "Bearer \(token!)", "Accept": "application/json", "Content-Type" :"application/json"]
             
-            Alamofire.request("\(API_ENDPOINT)/addReply/\(self.post.key)", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
+            Alamofire.request("\(API_ENDPOINT)/addComment/\(self.post.key)", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
                 DispatchQueue.main.async {
-                    if let dict = response.result.value as? [String:Any], let success = dict["success"] as? Bool, success, let replyData = dict["reply"] as? [String:Any], let id = dict["id"] as? String {
+                    if let dict = response.result.value as? [String:Any], let success = dict["success"] as? Bool, success, let replyData = dict["comment"] as? [String:Any], let id = dict["id"] as? String {
+                        print("OSCARS: \(dict)")
                         if let reply = Reply.parse(id: id, replyData) {
-                            print("Got the reply")
-                            
-                            switch self.sortMode {
-                            case .top:
-                                if self.topState.endReached {
-                                    let action = Action.append(reply: reply)
-                                    let oldState = self.topState
-                                    self.topState = SinglePostViewController.handleAction(action, fromState: oldState)
-                                    let indexPath = IndexPath(row: self.topState.replies.count - 1, section: 2)
-
-                                    self.tableNode.performBatchUpdates({
-
-                                        self.tableNode.insertRows(at: [indexPath], with: .top)
-                                    }, completion: { _ in
-                                        self.tableNode.scrollToRow(at: indexPath, at: .bottom, animated: true)
-                                    })
+                            print("Got the comment")
+                            if let replyTo = dict["replyTo"] as? String {
+                                
+                            } else {
+                                switch self.sortMode {
+                                case .top:
+                                    if self.topState.endReached {
+                                        let action = Action.append(reply: reply)
+                                        let oldState = self.topState
+                                        self.topState = SinglePostViewController.handleAction(action, fromState: oldState)
+                                        let section = 2 + self.topState.replies.count - 1
+                                        let indexSet = IndexSet([section])
+                                        self.tableNode.performBatchUpdates({
+                                            self.tableNode.insertSections(indexSet, with: .top)
+                                        }, completion: { _ in
+                                            self.tableNode.scrollToRow(at: IndexPath(row: 0, section: section), at: .bottom, animated: true)
+                                        })
+                                    }
+                                    break
+                                case .live:
+                                    break
                                 }
-                                break
-                            case .live:
-                                break
                             }
                         }
                     }
@@ -649,3 +745,12 @@ extension SinglePostViewController: CommentBarDelegate {
         }
     }
 }
+
+extension SinglePostViewController: CommentCellDelegate {
+    func handleReply(_ reply:Reply) {
+        self.focusedReply = reply
+        commentBar.setReply(reply)
+        
+    }
+}
+

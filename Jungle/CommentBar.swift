@@ -77,7 +77,7 @@ class CommentBar:UIView, UITextViewDelegate {
         replyLabel.view.topAnchor.constraint(equalTo: topLayoutGuide.topAnchor, constant: 5.0).isActive = true
         replyLabel.view.trailingAnchor.constraint(equalTo: topLayoutGuide.trailingAnchor).isActive = true
         replyLabel.view.bottomAnchor.constraint(equalTo: topLayoutGuide.bottomAnchor).isActive = true
-        replyLabel.setText(text: "Replying to @Drizzy", withFont: Fonts.medium(ofSize: 12.0), normalColor: UIColor.gray, activeColor: accentColor)
+        setReply("Replying to @Drizzy")
         
         midView = UIView(frame: CGRect(x: 0, y: 0, width: stackView.bounds.width, height: stackView.bounds.height - CommentBar.topHeight - CommentBar.botHeight))
         midView.backgroundColor = UIColor.white
@@ -162,6 +162,11 @@ class CommentBar:UIView, UITextViewDelegate {
         divider.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
     }
     
+    
+    fileprivate func setReply(_ text:String) {
+        replyLabel.setText(text: text, withFont: Fonts.medium(ofSize: 12.0), normalColor: UIColor.gray, activeColor: accentColor)
+    }
+    
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -171,6 +176,8 @@ class CommentBar:UIView, UITextViewDelegate {
             stackView.insertArrangedSubview(topView, at: 0)
             stackView.addArrangedSubview(botView)
         } else {
+            textView.text = ""
+            textViewDidChange(textView)
             stackView.removeArrangedSubview(topView)
             topView.removeFromSuperview()
             stackView.removeArrangedSubview(botView)
@@ -205,5 +212,10 @@ class CommentBar:UIView, UITextViewDelegate {
     
     @objc func sendText(_ sender:Any) {
         delegate?.commentSend(text: textView.text)
+    }
+    
+    func setReply(_ reply:Reply) {
+        setReply("Replying to @\(reply.anon.displayName)")
+        textView.becomeFirstResponder()
     }
 }

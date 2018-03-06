@@ -55,6 +55,7 @@
 		B0B29E002037703600FBE5FF /* Montserrat-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = B0B29DFD2037703500FBE5FF /* Montserrat-Regular.otf */; };
 		B0B29E012037703600FBE5FF /* Montserrat-SemiBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = B0B29DFE2037703500FBE5FF /* Montserrat-SemiBold.otf */; };
 		B0B29E032037717500FBE5FF /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29E022037717500FBE5FF /* Constants.swift */; };
+		B0C99BE6204E41A2000C2C90 /* ViewRepliesCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C99BE5204E41A2000C2C90 /* ViewRepliesCellNode.swift */; };
 		B0E11B78203A13A000EF0814 /* AttachmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E11B77203A13A000EF0814 /* AttachmentsView.swift */; };
 		B0E11B7A203A904500EF0814 /* UploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E11B79203A904500EF0814 /* UploadService.swift */; };
 		B0E4A21B2047E67D00037D0C /* GroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E4A2192047E67D00037D0C /* GroupCell.swift */; };
@@ -125,6 +126,7 @@
 		B0B29DFD2037703500FBE5FF /* Montserrat-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Montserrat-Regular.otf"; sourceTree = "<group>"; };
 		B0B29DFE2037703500FBE5FF /* Montserrat-SemiBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Montserrat-SemiBold.otf"; sourceTree = "<group>"; };
 		B0B29E022037717500FBE5FF /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		B0C99BE5204E41A2000C2C90 /* ViewRepliesCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewRepliesCellNode.swift; sourceTree = "<group>"; };
 		B0E11B77203A13A000EF0814 /* AttachmentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentsView.swift; sourceTree = "<group>"; };
 		B0E11B79203A904500EF0814 /* UploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadService.swift; sourceTree = "<group>"; };
 		B0E4A2192047E67D00037D0C /* GroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCell.swift; sourceTree = "<group>"; };
@@ -227,6 +229,7 @@
 				B0058C71203BDB1300510EEC /* NewPostsView.xib */,
 				B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */,
 				B0F50EDA2037DF6600037343 /* CommentCellNode.swift */,
+				B0C99BE5204E41A2000C2C90 /* ViewRepliesCellNode.swift */,
 				B0F50EDC2038060E00037343 /* CommentBar.xib */,
 				B01E2A5E203E0E66006C8C2D /* CommentBar.swift */,
 				B0F50ED82037CAB300037343 /* SinglePostViewController.swift */,
@@ -519,6 +522,7 @@
 				B007D5262049CC52009A6B84 /* RegexParser.swift in Sources */,
 				B07F611820454516005010B7 /* LightboxViewController.swift in Sources */,
 				B07F610D2044C93B005010B7 /* GPSService.swift in Sources */,
+				B0C99BE6204E41A2000C2C90 /* ViewRepliesCellNode.swift in Sources */,
 				B0B29DDB2037408900FBE5FF /* ViewController.swift in Sources */,
 				B01E2A5F203E0E66006C8C2D /* CommentBar.swift in Sources */,
 				B0B29DE12037408900FBE5FF /* Jungle.xcdatamodeld in Sources */,

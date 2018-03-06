@@ -19,7 +19,7 @@ class Post {
     private(set) var text:String
     private(set) var createdAt:Date
     var votes:Int
-    var replies:Int
+    var comments:Int
     var rank:Int?
     private(set) var attachments:Attachments?
     private(set) var location:LocationPair?
@@ -27,13 +27,13 @@ class Post {
     var vote = Vote.notvoted
     var isYou = false
     
-    init(key:String, anon:Anon, text:String, createdAt:Date, votes:Int, replies:Int,rank:Int?, attachments:Attachments?=nil, location:LocationPair?) {
+    init(key:String, anon:Anon, text:String, createdAt:Date, votes:Int, comments:Int,rank:Int?, attachments:Attachments?=nil, location:LocationPair?) {
         self.key = key
         self.anon = anon
         self.text = text
         self.createdAt = createdAt
         self.votes = votes
-        self.replies = replies
+        self.comments = comments
         self.rank = rank
         self.attachments = attachments
         self.location = location
@@ -45,13 +45,13 @@ class Post {
             let text = data["text"] as? String,
             let createdAt = data["createdAt"] as? Double,
             let votes = data["votes"] as? Int,
-            let replies = data["replies"] as? Int {
+            let comments = data["numComments"] as? Int {
             
             let rank = data["rank"] as? Int
             let attachments = Attachments.parse(data)
             let location = LocationPair.parse(data)
             
-            post = Post(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), votes: votes, replies: replies, rank: rank,attachments: attachments, location:location)
+            post = Post(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), votes: votes, comments: comments, rank: rank, attachments: attachments, location:location)
         }
         return post
     }

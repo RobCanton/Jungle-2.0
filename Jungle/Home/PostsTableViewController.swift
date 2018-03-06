@@ -474,7 +474,6 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
 }
 
 extension PostsTableViewController: PostCellDelegate {
-    
     func postParentVC() -> UIViewController {
         return self
     }

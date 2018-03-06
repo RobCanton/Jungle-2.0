@@ -13,12 +13,12 @@ import UIKit
 class TitleCellNode: ASCellNode {
     var titleButtonNode = ASButtonNode()
     var liveDot = ASDisplayNode()
-    
+    var dividerNode = ASDisplayNode()
     var mode:SortMode = .top
     required init(mode: SortMode) {
         super.init()
         automaticallyManagesSubnodes = true
-        backgroundColor = UIColor.white
+        backgroundColor = UIColor(white: 0.97, alpha: 1.0)
     
         titleButtonNode.tintColor = UIColor.gray
         titleButtonNode.tintColorDidChange()
@@ -31,6 +31,8 @@ class TitleCellNode: ASCellNode {
         liveDot.layer.cornerRadius = 6.0
         liveDot.clipsToBounds = true
         setSortTitle(mode)
+        
+        dividerNode.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
     }
     
     override func didLoad() {
@@ -55,17 +57,23 @@ class TitleCellNode: ASCellNode {
     
     func setTitle(_ text:String) {
         let attrTitle = NSAttributedString(string: text, attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
             NSAttributedStringKey.foregroundColor: UIColor.gray
             ])
         titleButtonNode.setAttributedTitle(attrTitle, for: .normal)
     }
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
+        dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
         titleButtonNode.style.flexGrow = 1.0
         let centerDot = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: liveDot)
         let horizontalStack = ASStackLayoutSpec.horizontal()
         horizontalStack.children = [ titleButtonNode, centerDot ]
-        return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(12, 44 + 12 + 16, 12, 16), child: horizontalStack)
+        
+        let mainInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 16, 4, 16), child: horizontalStack)
+        let mainVerticalStack = ASStackLayoutSpec.vertical()
+        mainVerticalStack.children = [mainInset, dividerNode]
+        mainVerticalStack.spacing = 4.0
+        return mainVerticalStack
     }
     
     func animateLiveDot() {

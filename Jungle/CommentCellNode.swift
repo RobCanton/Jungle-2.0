@@ -11,50 +11,113 @@ import AsyncDisplayKit
 import UIKit
 import Firebase
 
-class CommentCellNode:ASCellNode {
+protocol CommentCellDelegate:class {
+    func handleReply(_ reply:Reply)
+}
 
+class CommentCellNode:ASCellNode {
     
-    static let mainInsets = UIEdgeInsets(top: 0, left: 16.0, bottom: 10.0, right: 16.0)
+    let gradientColorTop = accentColor
+    let gradientColorBot = hexColor(from: "#22D29F")
     
-    var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 18, imageShadowRadius: 0.0)
-    let subnameNode = ASTextNode()
-    var commentBubbleNode = CommentBubbleNode()
-    var isFirst = false
+    var imageNode = ASNetworkImageNode()
+    var titleNode = ASTextNode()
+    var subnameNode = ASTextNode()
+    var subtitleNode = ASTextNode()
+    var postTextNode = ActiveTextNode()
+    var actionsNode = ASDisplayNode()
+    var dividerNode = ASDisplayNode()
+    var rankButton = ASButtonNode()
     
     let likeButton = ASButtonNode()
     let dislikeButton = ASButtonNode()
-    let countLabel = ASTextNode()
+    let commentButton = ASButtonNode()
+    let moreButtonNode = ASButtonNode()
     
-    let replyButton = ASButtonNode()
+    var replyImageNode = ASRoundShadowedImageNode(imageCornerRadius: 12.0, imageShadowRadius: 0.0)
+    var replyTitleNode = ASTextNode()
+    
+    let groupNode = ASButtonNode()
+    
+    let countLabel = ASTextNode()
+    var postImageNode = ASRoundShadowedImageNode(imageCornerRadius: 18.0, imageShadowRadius: 8.0)
+    
+    var transitionManager = LightboxViewerTransitionManager()
+    weak var delegate:CommentCellDelegate?
+    weak var reply:Reply?
+    weak var post:Post?
     
     let gapNode = ASDisplayNode()
+    
+    var isReply = false
+    
+    static let mainInsets = UIEdgeInsets(top: 12.0, left: 16.0, bottom: 0.0, right: 16.0)
+    static let replyInsets = UIEdgeInsets(top: 4.0, left: 16.0, bottom: 0.0, right: 16.0)
 
+    
+    private(set) var bgColor = UIColor.white
+    private(set) var textColor = UIColor.gray
+    private(set) var buttonColor = grayColor
     private(set) var upvoteImage:UIImage!
     private(set) var upvotedImage:UIImage!
     private(set) var downvoteImage:UIImage!
     private(set) var downvotedImage:UIImage!
-    private(set) var buttonColor = grayColor
+    private(set) var commentImage:UIImage!
+    private(set) var moreImage:UIImage!
     
-    var lexiconRefListener:ListenerRegistration?
+
     
-    weak var reply:Reply?
-    weak var post:Post?
-    
-    required init(withReply reply:Reply, toPost post:Post, isFirst:Bool?=nil) {
+    required init(reply:Reply, toPost post:Post, isReply:Bool?=nil, hideDivider:Bool?=nil) {
         super.init()
+
         self.reply = reply
         self.post = post
-        self.isFirst = isFirst ?? false
-        automaticallyManagesSubnodes = true
-        backgroundColor = UIColor(white: 1.0, alpha: 1.0)
+        self.isReply = isReply != nil ? isReply! : false
         
-        commentBubbleNode.set(reply: reply, toPost: post)
-        imageNode.mainImageNode.backgroundColor = reply.anon.color
+        automaticallyManagesSubnodes = true
         
         upvoteImage = UIImage(named:"upvote")
         upvotedImage = UIImage(named:"upvoted")
         downvoteImage = UIImage(named:"downvote")
         downvotedImage = UIImage(named:"downvoted")
+        commentImage = UIImage(named:"reply")
+        moreImage = UIImage(named:"more")
+        
+    
+        backgroundColor = bgColor
+        
+        imageNode.backgroundColor = reply.anon.color
+        
+        postImageNode.isUserInteractionEnabled = true
+        
+        titleNode.attributedText = NSAttributedString(string: reply.anon.displayName, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: textColor
+            ])
+        
+        subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 10.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white
+            ])
+        subnameNode.textContainerInset = UIEdgeInsets(top: 1.0, left: 6.0, bottom: 0, right: 6.0)
+        subnameNode.backgroundColor = reply.anon.color
+        subnameNode.isHidden = true
+        
+
+        let subtitleStr = "\(reply.createdAt.timeSinceNow())"
+        
+        subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
+            NSAttributedStringKey.font: Fonts.regular(ofSize: 12.0),
+            NSAttributedStringKey.foregroundColor: textColor
+            ])
+        
+        postTextNode.maximumNumberOfLines = 0
+        postTextNode.truncationMode = .byWordWrapping
+        
+        postTextNode.setText(text: reply.text, withFont: Fonts.medium(ofSize: 15.0), normalColor: textColor, activeColor: accentColor)
+        postTextNode.tapHandler = { type, textValue in
+           
+        }
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
@@ -64,6 +127,27 @@ class CommentCellNode:ASCellNode {
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
         
+//
+//        if let attachments = post.attachments {
+//            if attachments.images.count > 0 {
+//                let image = attachments.images[0]
+//                let color =  hexColor(from: image.colorHex)
+//                postImageNode.mainImageNode.backgroundColor = color
+//                postImageNode.mainImageNode.url = image.url
+//                postImageNode.style.height = ASDimension(unit: .points, value: 192)
+//                postImageNode.applyShadow(withColor: color, opacity: 0.5)
+//            }
+//        } else {
+//            postImageNode.style.height = ASDimension(unit: .points, value: 0.0)
+//        }
+        
+        dividerNode.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
+        if let hideDivider = hideDivider {
+            dividerNode.isHidden = hideDivider
+        } else {
+            dividerNode.isHidden = reply.numReplies > 0 || self.isReply
+        }
+        
         likeButton.setImage(upvoteImage, for: .normal)
         likeButton.laysOutHorizontally = true
         likeButton.contentSpacing = 6.0
@@ -71,6 +155,7 @@ class CommentCellNode:ASCellNode {
         likeButton.contentEdgeInsets = .zero
         likeButton.tintColor = buttonColor
         likeButton.tintColorDidChange()
+        likeButton.alpha = 0.75
         
         dislikeButton.setImage(downvoteImage, for: .normal)
         dislikeButton.laysOutHorizontally = true
@@ -79,45 +164,92 @@ class CommentCellNode:ASCellNode {
         dislikeButton.contentEdgeInsets = .zero
         dislikeButton.tintColor = buttonColor
         dislikeButton.tintColorDidChange()
+        dislikeButton.alpha = 0.75
         
-        replyButton.setImage(UIImage(named:"reply"), for: .normal)
-        replyButton.tintColor = buttonColor
-        replyButton.tintColorDidChange()
+        commentButton.setImage(commentImage, for: .normal)
+        commentButton.laysOutHorizontally = true
+        commentButton.contentSpacing = 8.0
+        commentButton.contentHorizontalAlignment = .middle
+        commentButton.alpha = 0.75
+        countLabel.alpha = 0.75
+       
+        moreButtonNode.setImage(moreImage, for: .normal)
+        moreButtonNode.contentHorizontalAlignment = .right
         
-    
+        commentButton.addTarget(self, action: #selector(handleReply), forControlEvents: .touchUpInside)
         
-        subnameNode.textContainerInset = UIEdgeInsets(top: 1.0, left: 6.0, bottom: 0, right: 6.0)
+        replyImageNode.style.width = ASDimension(unit: .points, value: 24)
+        replyImageNode.style.height = ASDimension(unit: .points, value: 24)
         
+        titleNode.tintColor = UIColor.gray
+        titleNode.tintColorDidChange()
         
-       /// assignAnonymous(reply: reply, toPost: post)
+        setTitle("SillyDeer Replied · \(reply.numReplies) Replies")
         
     }
-    
     
     override func didLoad() {
         super.didLoad()
         subnameNode.layer.cornerRadius = 8
         subnameNode.clipsToBounds = true
         selectionStyle = .none
+        
+        imageNode.clipsToBounds = true
+        
+        if self.isReply {
+            imageNode.layer.cornerRadius = 12.0
+        } else {
+            imageNode.layer.cornerRadius = 18.0
+        }
+        
     }
-
+    
+    func setTitle(_ text:String) {
+        let attrTitle = NSAttributedString(string: text, attributes: [
+            NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: UIColor.gray
+            ])
+        replyTitleNode.attributedText = attrTitle
+    }
+    
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
-        imageNode.style.width = ASDimension(unit: .points, value: 36)
-        imageNode.style.height = ASDimension(unit: .points, value: 36)
-        //commentBubbleNode.style.height = ASDimension(unit: .points, value: 90.0)
-        
-        subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
-
         likeButton.style.height = ASDimension(unit: .points, value: 32.0)
         dislikeButton.style.height = ASDimension(unit: .points, value: 32.0)
-        replyButton.style.height = ASDimension(unit: .points, value: 32.0)
+        commentButton.style.height = ASDimension(unit: .points, value: 32.0)
         
-        let subnameCenterX = ASCenterLayoutSpec(centeringOptions: .X, sizingOptions: .minimumX, child: subnameNode)
-        let imageStack = ASStackLayoutSpec.vertical()
-        imageStack.children = [imageNode, subnameCenterX]
-        imageStack.spacing = 6.0
-        imageStack.style.layoutPosition = CGPoint(x: 0, y: 0)
+        dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
+    
+        subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
+        
+        var leadingInset:CGFloat = 36 + 8
+        var imageLeadingInset:CGFloat = 0
+        var imageNodeSize:CGFloat = 36.0
+        var mainInsets = CommentCellNode.mainInsets
+        
+        if isReply {
+            leadingInset += 24 + 8
+            imageLeadingInset += 42
+            imageNodeSize = 24.0
+            mainInsets = CommentCellNode.replyInsets
+        }
+        
+        let centerTitle = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: titleNode)
+        let centerSubtitle = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subtitleNode)
+
+        var nameStack:ASStackLayoutSpec!
+        if isReply {
+            nameStack = ASStackLayoutSpec.horizontal()
+            nameStack.spacing = 6.0
+        } else {
+            nameStack = ASStackLayoutSpec.vertical()
+            nameStack.spacing = 2.0
+        }
+        nameStack.children = [centerTitle, centerSubtitle]
+        
+        let imageStack = ASStackLayoutSpec.horizontal()
+        imageStack.children = [imageNode, nameStack]
+        imageStack.spacing = 8.0
         
         let countCenterY = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: countLabel)
         let likeStack = ASStackLayoutSpec.horizontal()
@@ -128,159 +260,69 @@ class CommentCellNode:ASCellNode {
         countLabel.style.flexGrow = 1.0
         likeButton.style.flexShrink = 1.0
         dislikeButton.style.flexShrink = 1.0
+        likeStack.style.width = ASDimension(unit: .fraction, value: 0.35)
+        commentButton.style.width = ASDimension(unit: .fraction, value: 0.35)
         
         let actionsRow = ASStackLayoutSpec.horizontal()
         
-        actionsRow.children = [ likeStack,  replyButton]
-        actionsRow.spacing = 32.0
+        actionsRow.children = [ likeStack]
+        actionsRow.spacing = 8.0
         
-        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 16.0), child: actionsRow)
+        if !self.isReply {
+            actionsRow.children?.append(commentButton)
+        }
         
+        imageNode.style.width = ASDimension(unit: .points, value: imageNodeSize)
+        imageNode.style.height = ASDimension(unit: .points, value: imageNodeSize)
+        
+        let imageInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, imageLeadingInset, 0, 0), child: imageStack)
+        
+        let contentStack = ASStackLayoutSpec.vertical()
+        contentStack.children = [imageInset]
+        contentStack.spacing = 6.0
+        
+        let textInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, leadingInset, 0, 0.0), child: postTextNode)
+        
+        if let text = reply?.text, !text.isEmpty {
+            contentStack.children?.append(textInset)
+        }
+        
+        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, leadingInset, 0, 16.0), child: actionsRow)
+        contentStack.children?.append(actionsInset)
+        
+        let centerReplyImage = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: replyImageNode)
+        let centerReplyTitle = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: replyTitleNode)
+        let replyStack = ASStackLayoutSpec.horizontal()
+        replyStack.children = [centerReplyImage, centerReplyTitle]
+        replyStack.spacing = 8.0
+//        let replyInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, leadingInset, 0, 0.0), child: replyStack)
+//        if let reply = self.reply, reply.numReplies > 0 {
+//            contentStack.children?.append(replyInset)
+//        }
+        
+        let mainInset = ASInsetLayoutSpec(insets: mainInsets, child: contentStack)
         let mainVerticalStack = ASStackLayoutSpec.vertical()
-        mainVerticalStack.children = [commentBubbleNode, actionsInset]
-        mainVerticalStack.spacing = 0.0
-        mainVerticalStack.style.layoutPosition = CGPoint(x: 44.0 + 10.0, y: 0)
+        mainVerticalStack.children = [mainInset, dividerNode]
+        mainVerticalStack.spacing = 4.0
         
-        let abs = ASAbsoluteLayoutSpec(children: [imageStack, mainVerticalStack])
-        
-        return ASInsetLayoutSpec(insets: CommentCellNode.mainInsets, child: abs)
+        return mainVerticalStack
     }
-    
-    func setSubname(title:String, color:UIColor) {
-        subnameNode.attributedText = NSAttributedString(string: title, attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 11.0),
-            NSAttributedStringKey.foregroundColor: UIColor.white
-            ])
-        subnameNode.backgroundColor = color
-    }
-    
-    override func didEnterVisibleState() {
-        super.didEnterVisibleState()
-        if let reply = reply, let post = post {
-            listenTo(reply: reply, toPost: post)
-        }
-    }
-    
-    override func didExitVisibleState() {
-        super.didExitVisibleState()
-        stopListeningToPost()
-    }
-    
-    func listenTo(reply:Reply, toPost post:Post) {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        let postRef = firestore.collection("posts").document(post.key)
-        let lexiconRef = postRef.collection("lexicon").document(uid)
-        
-        lexiconRefListener = lexiconRef.addSnapshotListener { lexiconSnapshot, error in
-            guard let document = lexiconSnapshot else { return }
-            
-            if let data = document.data(),
-                let anon = Anon.parse(data) {
-                self.assignAnonymous(replyAnon: reply.anon, postAnon: post.anon, myAnon: anon)
-            } else {
-                self.assignAnonymous(replyAnon: reply.anon, postAnon: post.anon, myAnon:nil)
-            }
-        }
-    }
-    
-    func stopListeningToPost() {
-        lexiconRefListener?.remove()
-    }
-    
-    func assignAnonymous(replyAnon:Anon, postAnon:Anon, myAnon:Anon?) {
-        if let myAnon = myAnon, myAnon.key == replyAnon.key {
-                setSubname(title: "YOU", color: replyAnon.color)
-                subnameNode.isHidden = false
-        } else if replyAnon.key == postAnon.key {
-            setSubname(title: "OP", color: replyAnon.color)
-            subnameNode.isHidden = false
-        } else {
-            subnameNode.isHidden = true
-        }
-    }
-}
-
-class CommentBubbleNode:ASDisplayNode {
-    
-    var bubbleNode = ContentBubbleNode()
-    
-    override init() {
-        super.init()
-        automaticallyManagesSubnodes = true
-        bubbleNode.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
-        bubbleNode.layer.cornerRadius = 16.0
-        self.clipsToBounds = false
-    }
-    
-    func set(reply:Reply, toPost post:Post) {
-        bubbleNode.set(reply: reply, toPost: post)
-    }
-    
-    override func didLoad() {
-        super.didLoad()
-        self.clipsToBounds = false
-        self.layer.masksToBounds = false
-        let color = UIColor(white: 0.0, alpha: 1.0)
-        let offset = CGSize(width: 0, height: 8.0)
-        //view.applyShadow(radius: 8.0, opacity: 0.06, offset: offset, color: color, shouldRasterize: false)
-    }
-    
-    override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        return ASInsetLayoutSpec(insets: .zero, child: bubbleNode)
-    }
-}
-
-class ContentBubbleNode:ASDisplayNode {
-    
-    let titleNode = ASTextNode()
-    let timeNode = ASTextNode()
-    let postTextNode = ASTextNode()
 
     
-    func set(reply:Reply, toPost post:Post) {
-        titleNode.attributedText = NSAttributedString(string: reply.anon.displayName , attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
-            ])
-        
-    
-        //subnameNode.isHidden = true
-        
-        postTextNode.attributedText = NSAttributedString(string: reply.text, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
-            ])
-        
-        timeNode.attributedText = NSAttributedString(string: " · \(reply.createdAt.timeSinceNow())", attributes: [
-            NSAttributedStringKey.font: Fonts.regular(ofSize: 12.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
-            ])
-    
+    @objc func handleReply() {
+        guard let reply = self.reply else { return }
+        delegate?.handleReply(reply)
     }
     
-    
-    override init() {
-        super.init()
-        automaticallyManagesSubnodes = true
-        
-        postTextNode.maximumNumberOfLines = 0
-        postTextNode.truncationMode = .byWordWrapping
-        
+    func setHighlighted(_ highlighted:Bool) {
+        print("setHighlighted: \(highlighted)")
+        backgroundColor = highlighted ? UIColor(white: 0.95, alpha: 1.0) : bgColor
     }
     
-    
-    override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        
-        let timeInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(1.5, 0, 0, 0), child: timeNode)
-        let titleStack = ASStackLayoutSpec.horizontal()
-        titleStack.children = [titleNode, timeInset]
-        
-        let textStack = ASStackLayoutSpec.vertical()
-        textStack.children = [ titleStack, postTextNode ]
-        textStack.spacing = 2.0
-        
-        
-        let insets = UIEdgeInsetsMake(8.0, 12.0, 8.0, 12.0)
-        return ASInsetLayoutSpec(insets: insets, child: textStack)
+    func setSelected(_ selected:Bool) {
+        print("setSelected: \(selected)")
+        backgroundColor = selected ? UIColor(white: 0.95, alpha: 1.0) : bgColor
     }
+    
 }
+

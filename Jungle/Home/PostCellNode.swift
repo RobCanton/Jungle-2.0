@@ -22,7 +22,7 @@ class PostCellNode:ASCellNode {
     let gradientColorTop = accentColor
     let gradientColorBot = hexColor(from: "#22D29F")
     
-    var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 22.0, imageShadowRadius: 0.0)
+    var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 20.0, imageShadowRadius: 0.0)
     var titleNode = ASTextNode()
     var subnameNode = ASTextNode()
     var subtitleNode = ASTextNode()
@@ -51,8 +51,6 @@ class PostCellNode:ASCellNode {
     weak var post:Post?
     
     var isSinglePost = false
-    
-    
 
     private(set) var bgColor = UIColor.white
     private(set) var textColor = UIColor.gray
@@ -129,7 +127,9 @@ class PostCellNode:ASCellNode {
         postTextNode.maximumNumberOfLines = 0
         postTextNode.truncationMode = .byWordWrapping
         
-        postTextNode.setText(text: post.text, withFont: Fonts.medium(ofSize: 15.0), normalColor: textColor, activeColor: accentColor)
+        let postFont = self.isSinglePost ? Fonts.medium(ofSize: 18.0) : Fonts.medium(ofSize: 15.0)
+        
+        postTextNode.setText(text: post.text, withFont: postFont, normalColor: textColor, activeColor: accentColor)
         postTextNode.tapHandler = { type, textValue in
             switch type {
             case .hashtag:
@@ -174,7 +174,6 @@ class PostCellNode:ASCellNode {
         likeButton.contentEdgeInsets = .zero
         likeButton.tintColor = buttonColor
         likeButton.tintColorDidChange()
-        likeButton.alpha = 0.75
         
         dislikeButton.setImage(downvoteImage, for: .normal)
         dislikeButton.laysOutHorizontally = true
@@ -183,14 +182,13 @@ class PostCellNode:ASCellNode {
         dislikeButton.contentEdgeInsets = .zero
         dislikeButton.tintColor = buttonColor
         dislikeButton.tintColorDidChange()
-        dislikeButton.alpha = 0.75
+        
         
         commentButton.setImage(commentImage, for: .normal)
         commentButton.laysOutHorizontally = true
-        commentButton.contentSpacing = 8.0
+        commentButton.contentSpacing = 2.0
         commentButton.contentHorizontalAlignment = .middle
-        commentButton.alpha = 0.75
-        countLabel.alpha = 0.75
+
         likeButton.addTarget(self, action: #selector(handleUpvote), forControlEvents: .touchUpInside)
         dislikeButton.addTarget(self, action: #selector(handleDownvote), forControlEvents: .touchUpInside)
         
@@ -242,31 +240,14 @@ class PostCellNode:ASCellNode {
         imageNode.addTarget(self, action: #selector(handleImageTap), forControlEvents: .touchUpInside)
         imageNode.isUserInteractionEnabled = true
         
-//        let layoutGuide = view.safeAreaLayoutGuide
-//        gradientView = UIImageView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
-//        gradientView.backgroundColor = UIColor.red.withAlphaComponent(0.25)
-//
-//        if isKing {
-//            view.insertSubview(gradientView, at: 0)
-//            gradientView.translatesAutoresizingMaskIntoConstraints = false
-//            gradientView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-//            gradientView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
-//            gradientView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-//            gradientView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
-//            view.sendSubview(toBack: gradientView)
-//            gradientView.contentMode = .scaleAspectFill
-//            gradientView.image = UIImage(named:"BoxGradient")
-//        }
-//        gradientView.isHidden = !isKing
     }
     
-    var gradientView:UIImageView!
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
         
-        imageNode.style.width = ASDimension(unit: .points, value: 44.0)
-        imageNode.style.height = ASDimension(unit: .points, value: 44.0)
+        imageNode.style.width = ASDimension(unit: .points, value: 40.0)
+        imageNode.style.height = ASDimension(unit: .points, value: 40.0)
         
         
         likeButton.style.height = ASDimension(unit: .points, value: 32.0)
@@ -278,6 +259,63 @@ class PostCellNode:ASCellNode {
         
         subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
         
+        if isSinglePost {
+            subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
+            
+            let nameStack = ASStackLayoutSpec.vertical()
+            nameStack.spacing = 2.0
+            nameStack.children = [titleNode, subtitleNode]
+            
+            let imageStack = ASStackLayoutSpec.horizontal()
+            imageStack.children = [imageNode, nameStack]
+            imageStack.spacing = 8.0
+            
+            let leftActions = ASStackLayoutSpec.horizontal()
+            leftActions.children = [ likeButton, dislikeButton, commentButton]
+            leftActions.spacing = 0.0
+            
+            let countCenterY = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: countLabel)
+            let likeStack = ASStackLayoutSpec.horizontal()
+            likeStack.children = [ likeButton, countCenterY, dislikeButton ]
+            likeStack.spacing = 0.0
+            
+            countLabel.style.width = ASDimension(unit: .points, value: 28.0)
+            countLabel.style.flexGrow = 1.0
+            likeButton.style.flexShrink = 1.0
+            dislikeButton.style.flexShrink = 1.0
+            likeStack.style.width = ASDimension(unit: .fraction, value: 0.35)
+            commentButton.style.width = ASDimension(unit: .fraction, value: 0.35)
+            
+            let actionsRow = ASStackLayoutSpec.horizontal()
+            
+            actionsRow.children = [ likeStack, commentButton]
+            actionsRow.spacing = 8.0
+            
+            let contentStack = ASStackLayoutSpec.vertical()
+            contentStack.children = [imageStack]
+            contentStack.spacing = 10.0
+            
+            let textInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 0.0), child: postTextNode)
+            
+            if let text = post?.text, !text.isEmpty {
+                contentStack.children?.append(textInset)
+            }
+            
+            if let attachments = post? .attachments {
+                if attachments.images.count > 0 {
+                    contentStack.children?.append(postImageNode)
+                }
+            }
+            
+            let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 16.0), child: actionsRow)
+            contentStack.children?.append(actionsInset)
+            
+            let mainInset = ASInsetLayoutSpec(insets: PostCellNode.mainInsets, child: contentStack)
+            let mainVerticalStack = ASStackLayoutSpec.vertical()
+            mainVerticalStack.children = [mainInset, dividerNode]
+            mainVerticalStack.spacing = 4.0
+            return mainVerticalStack
+        }
         
         let nameStack = ASStackLayoutSpec.horizontal()
         nameStack.children = [titleNode]
@@ -362,14 +400,14 @@ class PostCellNode:ASCellNode {
         mainVerticalStack.children = [contentStack, dividerNode]
         mainVerticalStack.spacing = 4.0
         
-        mainVerticalStack.style.layoutPosition = CGPoint(x: 44 + 10.0, y: 0)
+        mainVerticalStack.style.layoutPosition = CGPoint(x: 40.0 + 10.0, y: 0)
         
         let abs = ASAbsoluteLayoutSpec(children: [imageStack, mainVerticalStack])
         let mainInset = ASInsetLayoutSpec(insets: PostCellNode.mainInsets, child: abs)
         return mainInset
     }
 
-    func setReplies(count:Int) {
+    func setComments(count:Int) {
         let str = NSAttributedString(string: "\(count)", attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: buttonColor
@@ -442,55 +480,56 @@ class PostCellNode:ASCellNode {
         setNumVotes(post.votes)
     }
     
+    var isAnimatingDownvote = false
+    var isAnimatingUpVote = false
+    
     func setVote(_ vote:Vote, animated:Bool) {
         switch vote {
         case .upvoted:
-            if animated {
-                likeButton.isUserInteractionEnabled = false
-                UIView.animate(withDuration: 0.1, delay: 0.0, options: [.curveEaseOut], animations: {
+            if animated && !isAnimatingUpVote {
+                isAnimatingUpVote = true
+                //likeButton.isUserInteractionEnabled = false
+                UIView.animate(withDuration: 0.15, delay: 0.0, options: [.curveEaseOut], animations: {
                     var frame = self.likeButton.view.frame
-                    frame.origin.y -= 10.0
+                    frame.origin.y -= 16.0
                     self.likeButton.view.frame = frame
                 }, completion: { _ in
-                    UIView.animate(withDuration: 0.4, delay: 0.0, usingSpringWithDamping: 0.3, initialSpringVelocity: 0.7, options: [.curveEaseOut], animations: {
+                    UIView.animate(withDuration: 0.50, delay: 0.0, usingSpringWithDamping: 0.4, initialSpringVelocity: 0.6, options: [.curveEaseIn], animations: {
                         var frame = self.likeButton.view.frame
-                        frame.origin.y += 10.0
+                        frame.origin.y += 16.0
                         self.likeButton.view.frame = frame
                     }, completion: { _ in
-                        self.likeButton.isUserInteractionEnabled = true
+                        self.isAnimatingUpVote = false
+                        //self.likeButton.isUserInteractionEnabled = true
                     })
                 })
             }
-            likeButton.alpha = 1.0
-            dislikeButton.alpha = 0.75
             likeButton.setImage(upvotedImage, for: .normal)
             dislikeButton.setImage(downvoteImage, for: .normal)
             break
         case .downvoted:
-            if animated {
-                self.dislikeButton.isUserInteractionEnabled = false
+            if animated && !isAnimatingDownvote {
+                isAnimatingDownvote = true
+                //self.dislikeButton.isUserInteractionEnabled = false
                 UIView.animate(withDuration: 0.1, delay: 0.0, options: [.curveEaseOut], animations: {
                     var frame = self.dislikeButton.view.frame
                     frame.origin.y += 10.0
                     self.dislikeButton.view.frame = frame
                 }, completion: { _ in
-                    UIView.animate(withDuration: 0.4, delay: 0.0, usingSpringWithDamping: 0.3, initialSpringVelocity: 0.7, options: [.curveEaseOut], animations: {
+                    UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.4, initialSpringVelocity: 0.6, options: [.curveEaseIn], animations: {
                         var frame = self.dislikeButton.view.frame
                         frame.origin.y -= 10.0
                         self.dislikeButton.view.frame = frame
                     }, completion: { _ in
-                        self.dislikeButton.isUserInteractionEnabled = true
+                        self.isAnimatingDownvote = false
+                        //self.dislikeButton.isUserInteractionEnabled = true
                     })
                 })
             }
-            likeButton.alpha = 0.75
-            dislikeButton.alpha = 1.0
             likeButton.setImage(upvoteImage, for: .normal)
             dislikeButton.setImage(downvotedImage, for: .normal)
             break
         case .notvoted:
-            likeButton.alpha = 0.75
-            dislikeButton.alpha = 0.75
             likeButton.setImage(upvoteImage, for: .normal)
             dislikeButton.setImage(downvoteImage, for: .normal)
             break
@@ -527,9 +566,9 @@ class PostCellNode:ASCellNode {
             }
             if let data = document.data() {
                 post.votes = data["votesSum"] as? Int ?? 0
-                post.replies = data["comments"] as? Int ?? 0
+                post.comments = data["numComments"] as? Int ?? 0
                 self.setNumVotes(post.votes)
-                self.setReplies(count: post.replies)
+                self.setComments(count: post.comments)
             }
         }
         
@@ -608,20 +647,16 @@ class PostCellNode:ASCellNode {
         
     }
     
-    override func didEnterVisibleState() {
-        super.didEnterVisibleState()
+    override func didEnterDisplayState() {
+        super.didEnterDisplayState()
         listenToPost()
-//        if isKing {
-//            view.sendSubview(toBack: gradientView)
-//        }
-        
     }
     
-    override func didExitVisibleState() {
-        super.didExitVisibleState()
+    override func didExitDisplayState() {
+        super.didExitDisplayState()
         stopListeningToPost()
-        //backgroundColor = bgColor
     }
+    
     
     func setHighlighted(_ highlighted:Bool) {
         print("setHighlighted: \(highlighted)")

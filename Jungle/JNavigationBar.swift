@@ -26,7 +26,7 @@ class JNavigationBar:UIView {
         
         let layoutGuide = safeAreaLayoutGuide
         leftButton.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        leftButton.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        leftButton.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: 0).isActive = true
         leftButton.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
         leftButton.heightAnchor.constraint(equalTo: leftButton.widthAnchor, multiplier: 1.0/1.0).isActive = true
         leftButton.setImage(UIImage(named:"back"), for: .normal)
