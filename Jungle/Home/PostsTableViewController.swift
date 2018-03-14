@@ -69,7 +69,6 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
         view.addSubview(tableNode.view)
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
         
@@ -86,52 +85,13 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         tableNode.dataSource = self
         tableNode.view.separatorStyle = .none
         tableNode.view.delaysContentTouches = false
+        
         //tableNode.allowsSelection = false
         tableNode.reloadData()
         
         refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         tableNode.view.refreshControl = refreshControl
-        
-        let gradientView = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
-        gradientView.backgroundColor = nil
-        view.addSubview(gradientView)
-        gradientView.translatesAutoresizingMaskIntoConstraints = false
-        gradientView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        gradientView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
-        gradientView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        gradientView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
-        gradientView.isUserInteractionEnabled = false
-        let gradient = CAGradientLayer()
-        gradient.frame = gradientView.bounds
-        gradient.colors = [
-            UIColor(white: 0.0, alpha: 0.015).cgColor,
-            UIColor(white: 0.0, alpha: 0.0).cgColor
-        ]
-        gradient.locations = [0.0, 1.0]
-        gradient.startPoint = CGPoint(x: 0, y: 0)
-        gradient.endPoint = CGPoint(x: 0, y: 1)
-        gradientView.layer.insertSublayer(gradient, at: 0)
-        
-        let bottomGradientView = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
-        bottomGradientView.backgroundColor = nil
-        view.addSubview(bottomGradientView)
-        bottomGradientView.translatesAutoresizingMaskIntoConstraints = false
-        bottomGradientView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        bottomGradientView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
-        bottomGradientView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        bottomGradientView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
-        bottomGradientView.isUserInteractionEnabled = false
-        let bottomGradient = CAGradientLayer()
-        bottomGradient.frame = bottomGradientView.bounds
-        bottomGradient.colors = [
-            UIColor(white: 0.0, alpha: 0.0).cgColor,
-            UIColor(white: 0.0, alpha: 0.015).cgColor
-        ]
-        bottomGradient.locations = [0.0, 1.0]
-        bottomGradient.startPoint = CGPoint(x: 0, y: 0)
-        bottomGradient.endPoint = CGPoint(x: 0, y: 1)
-        bottomGradientView.layer.insertSublayer(bottomGradient, at: 0)
         
         let seeNewPosts = NewPostsView(frame: CGRect(x: 0, y: 100, width: view.bounds.width, height: 44.0))
         view.addSubview(seeNewPosts)

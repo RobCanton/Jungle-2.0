@@ -138,25 +138,25 @@ class SinglePostViewController: UIViewController {
         self.commentBarHeightAnchor?.constant = commentBar.textHeight + CommentBar.textMarginHeight + 4
         self.view.layoutIfNeeded()
         
-        let gradientView = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
-        gradientView.backgroundColor = nil
-        view.addSubview(gradientView)
-        gradientView.translatesAutoresizingMaskIntoConstraints = false
-        gradientView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        gradientView.topAnchor.constraint(equalTo: navLayoutGuide.bottomAnchor).isActive = true
-        gradientView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        gradientView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
-        gradientView.isUserInteractionEnabled = false
-        let gradient = CAGradientLayer()
-        gradient.frame = gradientView.bounds
-        gradient.colors = [
-            UIColor(white: 0.0, alpha: 0.015).cgColor,
-            UIColor(white: 0.0, alpha: 0.0).cgColor
-        ]
-        gradient.locations = [0.0, 1.0]
-        gradient.startPoint = CGPoint(x: 0, y: 0)
-        gradient.endPoint = CGPoint(x: 0, y: 1)
-        gradientView.layer.insertSublayer(gradient, at: 0)
+//        let gradientView = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
+//        gradientView.backgroundColor = nil
+//        view.addSubview(gradientView)
+//        gradientView.translatesAutoresizingMaskIntoConstraints = false
+//        gradientView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+//        gradientView.topAnchor.constraint(equalTo: navLayoutGuide.bottomAnchor).isActive = true
+//        gradientView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+//        gradientView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
+//        gradientView.isUserInteractionEnabled = false
+//        let gradient = CAGradientLayer()
+//        gradient.frame = gradientView.bounds
+//        gradient.colors = [
+//            UIColor(white: 0.0, alpha: 0.015).cgColor,
+//            UIColor(white: 0.0, alpha: 0.0).cgColor
+//        ]
+//        gradient.locations = [0.0, 1.0]
+//        gradient.startPoint = CGPoint(x: 0, y: 0)
+//        gradient.endPoint = CGPoint(x: 0, y: 1)
+//        gradientView.layer.insertSublayer(gradient, at: 0)
     }
     
     @objc func openReplyVC() {
@@ -251,7 +251,7 @@ class SinglePostViewController: UIViewController {
                     if let anon = Anon.parse(data),
                         let text = data["text"] as? String,
                         let createdAt = data["createdAt"] as? Double {
-                        reply = Reply(key: firstDoc.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: 4)
+                        reply = Reply(key: firstDoc.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: 4,votes:0)
                         
                     }
                 }
@@ -296,12 +296,7 @@ class SinglePostViewController: UIViewController {
                 }
                 
                 for document in documents {
-                    let data = document.data()
-                    if let anon = Anon.parse(data),
-                        let text = data["text"] as? String,
-                        let createdAt = data["createdAt"] as? Double {
-                        let numReplies = data["numReplies"] as? Int ?? 0
-                        let reply = Reply(key: document.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: numReplies)
+                    if let reply = Reply.parse(id: document.documentID, document.data()) {
                         _replies.append(reply)
                     }
                 }
@@ -391,7 +386,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                     return cell
                 } else {
                     let subReply = reply.replies[indexPath.row - 1]
-                    let hideDivider = indexPath.row < tableNode.numberOfRows(inSection: indexPath.section)
+                    let hideDivider = indexPath.row != reply.replies.count
                     let cell = CommentCellNode(reply: subReply, toPost: post, isReply: true, hideDivider: hideDivider)
                     cell.selectionStyle = .none
                     cell.delegate = self
@@ -436,11 +431,14 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
             switch sortMode {
             case .top:
                 let reply = topState.replies[section]
-                if indexPath.row == 1 {
-                    print("Show Replies for: \(reply.key)")
+                if indexPath.row == 1, let viewRepliesCell = tableNode.nodeForRow(at: indexPath) as? ViewRepliesCellNode {
+                    viewRepliesCell.fetching()
                     reply.fetchReplies(post.key) {
                         print("DID COMPLETE")
-                        self.tableNode.reloadSections(IndexSet([indexPath.section]), with: .none)
+                        self.tableNode.performBatch(animated: false, updates: {
+                            self.tableNode.reloadSections(IndexSet([indexPath.section]), with: .fade)
+                        }, completion: nil)
+                        
                     }
                 }
                 break
@@ -532,8 +530,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
         
         switch sortMode {
         case .top:
-            self.tableNode.performBatchUpdates({
-                
+            self.tableNode.performBatch(animated: false, updates: {
                 // Add or remove items
                 let rowCountChange = topState.replies.count - oldState.replies.count
                 if rowCountChange > 0 {
@@ -543,19 +540,20 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                     assertionFailure("Deleting rows is not implemented. YAGNI.")
                 }
                 
-//                // Add or remove spinner.
-//                if topState.fetchingMore != oldState.fetchingMore {
-//                    if topState.fetchingMore {
-//                        // Add spinner.
-//                        let indexSet = IndexSet([topState.replies.count+2])
-//                        tableNode.insertSections(indexSet, with: .none)
-//                    } else {
-//                        // Remove spinner.
-//                        let indexSet = IndexSet([oldState.replies.count+2])
-//                        tableNode.deleteSections(indexSet, with: .none)
-//                    }
-//                }
-            }, completion:nil)
+                //                // Add or remove spinner.
+                //                if topState.fetchingMore != oldState.fetchingMore {
+                //                    if topState.fetchingMore {
+                //                        // Add spinner.
+                //                        let indexSet = IndexSet([topState.replies.count+2])
+                //                        tableNode.insertSections(indexSet, with: .none)
+                //                    } else {
+                //                        // Remove spinner.
+                //                        let indexSet = IndexSet([oldState.replies.count+2])
+                //                        tableNode.deleteSections(indexSet, with: .none)
+                //                    }
+                //                }
+            }, completion: nil)
+            
             break
         case .live:
             print("RENDERDIFF LIVE STATE")
@@ -713,11 +711,23 @@ extension SinglePostViewController: CommentBarDelegate {
             Alamofire.request("\(API_ENDPOINT)/addComment/\(self.post.key)", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
                 DispatchQueue.main.async {
                     if let dict = response.result.value as? [String:Any], let success = dict["success"] as? Bool, success, let replyData = dict["comment"] as? [String:Any], let id = dict["id"] as? String {
-                        print("OSCARS: \(dict)")
+                        print("GOTTY: \(replyData)")
                         if let reply = Reply.parse(id: id, replyData) {
-                            print("Got the comment")
                             if let replyTo = dict["replyTo"] as? String {
-                                
+                                print("Added reply to: \(replyTo)")
+                                for i in 0..<self.topState.replies.count {
+                                    let stateReply = self.topState.replies[i]
+                                    if stateReply.key == replyTo {
+                                        stateReply.replies.append(reply)
+                                         let prevIndex = IndexPath(row: stateReply.replies.count - 1, section: i + 2)
+                                        let index = IndexPath(row: stateReply.replies.count, section: i + 2)
+                                        self.tableNode.performBatch(animated: true, updates: {
+                                            self.tableNode.insertRows(at: [index], with: .top)
+                                            self.tableNode.reloadRows(at: [prevIndex], with: .none)
+                                        }, completion: nil)
+                                        
+                                    }
+                                }
                             } else {
                                 switch self.sortMode {
                                 case .top:

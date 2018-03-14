@@ -86,8 +86,10 @@ class CommentBar:UIView, UITextViewDelegate {
         
         let midLayoutGuide = midView.safeAreaLayoutGuide
         textBubble = UIView(frame: midView.bounds)
+        textBubble.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
         midView.addSubview(textBubble)
-        textBubble.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
+        textBubble.layer.borderWidth = 1.0
+        textBubble.layer.borderColor = UIColor(white: 0.90,alpha:1.0).cgColor
         textBubble.translatesAutoresizingMaskIntoConstraints = false
         textBubble.leadingAnchor.constraint(equalTo: midLayoutGuide.leadingAnchor, constant: 12.0).isActive = true
         textBubble.topAnchor.constraint(equalTo: midLayoutGuide.topAnchor, constant: 4.0).isActive = true

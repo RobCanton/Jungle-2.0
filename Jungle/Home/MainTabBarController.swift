@@ -43,8 +43,10 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         tabBar.backgroundImage = UIImage()
         
         let divider = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 0.5))
-        divider.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
+        divider.backgroundColor = hexColor(from: "708078").withAlphaComponent(0.25)
         tabBar.addSubview(divider)
+        
+        self.tabBar.unselectedItemTintColor = hexColor(from: "#708078")
         
     }
     

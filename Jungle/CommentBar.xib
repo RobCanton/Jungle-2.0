@@ -43,7 +43,7 @@
                                             <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                         </textView>
                                     </subviews>
-                                    <color key="backgroundColor" white="0.90625" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                    <color key="backgroundColor" white="0.95999999999999996" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     <constraints>
                                         <constraint firstAttribute="trailing" secondItem="RKd-q9-vCb" secondAttribute="trailing" constant="4" id="EzO-BC-dAm"/>
                                         <constraint firstItem="RKd-q9-vCb" firstAttribute="leading" secondItem="tuv-Bt-05u" secondAttribute="leading" constant="4" id="IBh-kF-kFE"/>

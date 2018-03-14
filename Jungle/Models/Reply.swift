@@ -21,23 +21,29 @@ class Reply {
             print("DID SET THESE REPLIES: \(replies)")
         }
     }
+    var votes:Int
+    var vote = Vote.notvoted
     var endReached = true
+    var replyTo:String?
     
-    init(key:String, anon:Anon, text:String, createdAt:Date, numReplies:Int) {
+    init(key:String, anon:Anon, text:String, createdAt:Date, numReplies:Int, votes:Int, replyTo:String?=nil) {
         self.key = key
         self.anon = anon
         self.text = text
         self.createdAt = createdAt
         self.numReplies = numReplies
         self.replies = []
+        self.votes = votes
+        self.replyTo = replyTo
     }
     
-    static func parse(id:String,_ data:[String:Any]) -> Reply? {
+    static func parse(id:String,_ data:[String:Any], replyTo:String?=nil) -> Reply? {
         if let anon = Anon.parse(data),
             let text = data["text"] as? String,
             let createdAt = data["createdAt"] as? Double {
             let numReplies = data["numReplies"] as? Int ?? 0
-            let reply = Reply(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: numReplies)
+            let votes = data["votesSum"] as? Int ?? 0
+            let reply = Reply(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: numReplies,votes:votes, replyTo:replyTo)
             return reply
         }
         return nil
@@ -69,7 +75,7 @@ class Reply {
                         let text = data["text"] as? String,
                         let createdAt = data["createdAt"] as? Double {
                         let numReplies = data["numReplies"] as? Int ?? 0
-                        let reply = Reply(key: document.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: numReplies)
+                        let reply = Reply(key: document.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: numReplies, votes: 0, replyTo: self.key)
                         _replies.append(reply)
                     }
                 }
