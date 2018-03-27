@@ -8,74 +8,16 @@
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
-    <customFonts key="customFonts">
-        <array key="Montserrat-Regular.otf">
-            <string>Montserrat-Regular</string>
-        </array>
-    </customFonts>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="SearchTitleView" customModule="Jungle" customModuleProvider="target">
             <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-            <subviews>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="iny-H9-ujg">
-                    <rect key="frame" x="44" y="0.0" width="287" height="44"/>
-                    <subviews>
-                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="n9K-7U-c0d">
-                            <rect key="frame" x="0.0" y="4" width="283" height="36"/>
-                            <subviews>
-                                <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="asdf" placeholder="Search" textAlignment="center" minimumFontSize="15" translatesAutoresizingMaskIntoConstraints="NO" id="FXc-3F-2aG">
-                                    <rect key="frame" x="12" y="0.0" width="259" height="36"/>
-                                    <nil key="textColor"/>
-                                    <fontDescription key="fontDescription" name="Montserrat-Regular" family="Montserrat" pointSize="15"/>
-                                    <textInputTraits key="textInputTraits" returnKeyType="search"/>
-                                </textField>
-                            </subviews>
-                            <color key="backgroundColor" white="0.94999999999999996" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                            <constraints>
-                                <constraint firstAttribute="trailing" secondItem="FXc-3F-2aG" secondAttribute="trailing" constant="12" id="0GP-wN-gg4"/>
-                                <constraint firstItem="FXc-3F-2aG" firstAttribute="leading" secondItem="n9K-7U-c0d" secondAttribute="leading" constant="12" id="HIS-YC-pUb"/>
-                                <constraint firstItem="FXc-3F-2aG" firstAttribute="top" secondItem="n9K-7U-c0d" secondAttribute="top" id="Ljv-hb-GXZ"/>
-                                <constraint firstAttribute="bottom" secondItem="FXc-3F-2aG" secondAttribute="bottom" id="UvP-eq-erj"/>
-                            </constraints>
-                        </view>
-                    </subviews>
-                    <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    <constraints>
-                        <constraint firstItem="n9K-7U-c0d" firstAttribute="leading" secondItem="iny-H9-ujg" secondAttribute="leading" id="0Kg-GG-5Jr"/>
-                        <constraint firstAttribute="bottom" secondItem="n9K-7U-c0d" secondAttribute="bottom" constant="4" id="AMi-DL-wp5"/>
-                        <constraint firstAttribute="trailing" secondItem="n9K-7U-c0d" secondAttribute="trailing" constant="4" id="Mkr-cq-HXg"/>
-                        <constraint firstItem="n9K-7U-c0d" firstAttribute="top" secondItem="iny-H9-ujg" secondAttribute="top" constant="4" id="kEl-Rz-Srk"/>
-                    </constraints>
-                </view>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4Ca-Vr-4Jw">
-                    <rect key="frame" x="0.0" y="0.0" width="36" height="44"/>
-                    <state key="normal" image="back"/>
-                </button>
-            </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-            <constraints>
-                <constraint firstItem="4Ca-Vr-4Jw" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="4r0-Lr-Cr2"/>
-                <constraint firstItem="4Ca-Vr-4Jw" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="56I-Zy-yKN"/>
-                <constraint firstItem="iny-H9-ujg" firstAttribute="leading" secondItem="4Ca-Vr-4Jw" secondAttribute="trailing" constant="8" id="CAv-60-OzU"/>
-                <constraint firstItem="iny-H9-ujg" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="GJb-dF-uZI"/>
-                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="iny-H9-ujg" secondAttribute="bottom" id="LBe-2Z-rAu"/>
-                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="iny-H9-ujg" secondAttribute="trailing" constant="44" id="gRl-yk-lME"/>
-                <constraint firstItem="iny-H9-ujg" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="44" id="swy-D8-lPY"/>
-                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="4Ca-Vr-4Jw" secondAttribute="bottom" id="yxh-t2-1aC"/>
-            </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
-            <connections>
-                <outlet property="bubbleView" destination="n9K-7U-c0d" id="b4h-fa-rV3"/>
-                <outlet property="textField" destination="FXc-3F-2aG" id="fFc-HH-2Oq"/>
-            </connections>
             <point key="canvasLocation" x="33.5" y="47"/>
         </view>
     </objects>
-    <resources>
-        <image name="back" width="32" height="32"/>
-    </resources>
 </document>

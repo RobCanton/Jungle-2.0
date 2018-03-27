@@ -26,6 +26,7 @@ class Post {
     
     var vote = Vote.notvoted
     var isYou = false
+    var myAnonKey = ""
     
     init(key:String, anon:Anon, text:String, createdAt:Date, votes:Int, comments:Int,rank:Int?, attachments:Attachments?=nil, location:LocationPair?) {
         self.key = key

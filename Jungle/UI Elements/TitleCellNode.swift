@@ -20,7 +20,7 @@ class TitleCellNode: ASCellNode {
         automaticallyManagesSubnodes = true
         backgroundColor = UIColor(white: 0.97, alpha: 1.0)
     
-        titleButtonNode.tintColor = UIColor.gray
+        titleButtonNode.tintColor = subtitleColor
         titleButtonNode.tintColorDidChange()
         titleButtonNode.setImage(UIImage(named: "sort"), for: .normal)
         titleButtonNode.contentHorizontalAlignment = .left
@@ -32,11 +32,12 @@ class TitleCellNode: ASCellNode {
         liveDot.clipsToBounds = true
         setSortTitle(mode)
         
-        dividerNode.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
+        dividerNode.backgroundColor = subtitleColor.withAlphaComponent(0.25)
     }
     
     override func didLoad() {
         super.didLoad()
+        self.selectionStyle = .none
     }
     
     func setSortTitle(_ mode:SortMode) {
@@ -57,8 +58,8 @@ class TitleCellNode: ASCellNode {
     
     func setTitle(_ text:String) {
         let attrTitle = NSAttributedString(string: text, attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 12.0),
+            NSAttributedStringKey.foregroundColor: subtitleColor
             ])
         titleButtonNode.setAttributedTitle(attrTitle, for: .normal)
     }
@@ -71,8 +72,7 @@ class TitleCellNode: ASCellNode {
         
         let mainInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 16, 4, 16), child: horizontalStack)
         let mainVerticalStack = ASStackLayoutSpec.vertical()
-        mainVerticalStack.children = [mainInset, dividerNode]
-        mainVerticalStack.spacing = 4.0
+        mainVerticalStack.children = [mainInset]
         return mainVerticalStack
     }
     

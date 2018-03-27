@@ -34,7 +34,7 @@ class SearchService {
     
     static let facet_hastags = "hashtags"
     
-    static func searchFor(text:String, offset:Int, completion: @escaping(_ documents:[[String:Any]])->()) {
+    static func searchFor(text:String, limit:Int, offset:Int, completion: @escaping(_ documents:[[String:Any]])->()) {
         
         var query:Query!
         
@@ -43,11 +43,11 @@ class SearchService {
             query = Query()
             query.facetFilters = ["hashtags:\(searchText)"]
             query.offset = UInt(offset)
-            query.length = 15
+            query.length = UInt(limit)
         } else {
             query = Query(query: text)
             query.offset = UInt(offset)
-            query.length = 15
+            query.length = UInt(limit)
         }
         
         postsIndex.search(query) { content, error in
@@ -55,8 +55,10 @@ class SearchService {
             if let hits = content?["hits"] as? [[String:Any]] {
                 documents = hits
             }
-            print("DOCUMENTS:\(documents)")
             completion(documents)
         }
+    }
+    
+    static func getTrendingHashtags() {
     }
 }

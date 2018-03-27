@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3EBEB95F5F586C00FC62446B /* Pods_Jungle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44DD5A79B72847B98024BE93 /* Pods_Jungle.framework */; };
+		B00124642068560A00E5F2A6 /* SearchTabViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00124632068560A00E5F2A6 /* SearchTabViewController.swift */; };
 		B0017D8D204A10FB00E20DE8 /* PushTransitionAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0017D8C204A10FB00E20DE8 /* PushTransitionAnimation.swift */; };
 		B0017D8F204A1AAA00E20DE8 /* JNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0017D8E204A1AAA00E20DE8 /* JNavigationBar.swift */; };
 		B0058C6E203BCD7200510EEC /* LoadingCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */; };
@@ -21,9 +22,11 @@
 		B01E2A5A203D5352006C8C2D /* HomeTitleView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B01E2A59203D5352006C8C2D /* HomeTitleView.xib */; };
 		B01E2A5C203D6C97006C8C2D /* TitleCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */; };
 		B01E2A5F203E0E66006C8C2D /* CommentBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A5E203E0E66006C8C2D /* CommentBar.swift */; };
+		B03291DA206A253C00B8A0C7 /* SignUpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03291D9206A253C00B8A0C7 /* SignUpViewController.swift */; };
+		B03291DC206A396100B8A0C7 /* VerificationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03291DB206A396100B8A0C7 /* VerificationViewController.swift */; };
 		B04D4E5420492737000A1033 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04D4E5320492737000A1033 /* SearchViewController.swift */; };
-		B04D4E562049289B000A1033 /* SearchTitleView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B04D4E552049289B000A1033 /* SearchTitleView.xib */; };
-		B04D4E58204929FB000A1033 /* SearchTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04D4E57204929FB000A1033 /* SearchTitleView.swift */; };
+		B04D4E562049289B000A1033 /* SearchBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B04D4E552049289B000A1033 /* SearchBarView.xib */; };
+		B04D4E58204929FB000A1033 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04D4E57204929FB000A1033 /* SearchBarView.swift */; };
 		B07F61052043C7A4005010B7 /* UploadProgressPopupView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B07F61042043C7A4005010B7 /* UploadProgressPopupView.xib */; };
 		B07F61072043D05A005010B7 /* AlertService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F61062043D05A005010B7 /* AlertService.swift */; };
 		B07F61092044983E005010B7 /* ComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F61082044983E005010B7 /* ComposerView.swift */; };
@@ -39,7 +42,7 @@
 		B0A94AF52046730D009445C2 /* LightboxCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A94AF32046730D009445C2 /* LightboxCell.swift */; };
 		B0A94AF62046730D009445C2 /* LightboxCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B0A94AF42046730D009445C2 /* LightboxCell.xib */; };
 		B0B29DD92037408900FBE5FF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DD82037408900FBE5FF /* AppDelegate.swift */; };
-		B0B29DDB2037408900FBE5FF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DDA2037408900FBE5FF /* ViewController.swift */; };
+		B0B29DDB2037408900FBE5FF /* AuthViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DDA2037408900FBE5FF /* AuthViewController.swift */; };
 		B0B29DDE2037408900FBE5FF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B0B29DDC2037408900FBE5FF /* Main.storyboard */; };
 		B0B29DE12037408900FBE5FF /* Jungle.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DDF2037408900FBE5FF /* Jungle.xcdatamodeld */; };
 		B0B29DE32037408900FBE5FF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B0B29DE22037408900FBE5FF /* Assets.xcassets */; };
@@ -77,6 +80,7 @@
 /* Begin PBXFileReference section */
 		0CA8C85A80C56F48485FD8E5 /* Pods-Jungle.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Jungle.release.xcconfig"; path = "Pods/Target Support Files/Pods-Jungle/Pods-Jungle.release.xcconfig"; sourceTree = "<group>"; };
 		44DD5A79B72847B98024BE93 /* Pods_Jungle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Jungle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B00124632068560A00E5F2A6 /* SearchTabViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTabViewController.swift; sourceTree = "<group>"; };
 		B0017D8C204A10FB00E20DE8 /* PushTransitionAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushTransitionAnimation.swift; sourceTree = "<group>"; };
 		B0017D8E204A1AAA00E20DE8 /* JNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JNavigationBar.swift; sourceTree = "<group>"; };
 		B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingCellNode.swift; sourceTree = "<group>"; };
@@ -90,9 +94,12 @@
 		B01E2A59203D5352006C8C2D /* HomeTitleView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = HomeTitleView.xib; sourceTree = "<group>"; };
 		B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleCellNode.swift; sourceTree = "<group>"; };
 		B01E2A5E203E0E66006C8C2D /* CommentBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentBar.swift; sourceTree = "<group>"; };
+		B03291D8206A235100B8A0C7 /* Jungle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Jungle.entitlements; sourceTree = "<group>"; };
+		B03291D9206A253C00B8A0C7 /* SignUpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpViewController.swift; sourceTree = "<group>"; };
+		B03291DB206A396100B8A0C7 /* VerificationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationViewController.swift; sourceTree = "<group>"; };
 		B04D4E5320492737000A1033 /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
-		B04D4E552049289B000A1033 /* SearchTitleView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SearchTitleView.xib; sourceTree = "<group>"; };
-		B04D4E57204929FB000A1033 /* SearchTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTitleView.swift; sourceTree = "<group>"; };
+		B04D4E552049289B000A1033 /* SearchBarView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SearchBarView.xib; sourceTree = "<group>"; };
+		B04D4E57204929FB000A1033 /* SearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarView.swift; sourceTree = "<group>"; };
 		B07F61042043C7A4005010B7 /* UploadProgressPopupView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UploadProgressPopupView.xib; sourceTree = "<group>"; };
 		B07F61062043D05A005010B7 /* AlertService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertService.swift; sourceTree = "<group>"; };
 		B07F61082044983E005010B7 /* ComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerView.swift; sourceTree = "<group>"; };
@@ -109,7 +116,7 @@
 		B0A94AF42046730D009445C2 /* LightboxCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LightboxCell.xib; sourceTree = "<group>"; };
 		B0B29DD52037408900FBE5FF /* Jungle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jungle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0B29DD82037408900FBE5FF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		B0B29DDA2037408900FBE5FF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		B0B29DDA2037408900FBE5FF /* AuthViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewController.swift; sourceTree = "<group>"; };
 		B0B29DDD2037408900FBE5FF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		B0B29DE02037408900FBE5FF /* Jungle.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Jungle.xcdatamodel; sourceTree = "<group>"; };
 		B0B29DE22037408900FBE5FF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -218,6 +225,7 @@
 		B0B29DD72037408900FBE5FF /* Jungle */ = {
 			isa = PBXGroup;
 			children = (
+				B03291D8206A235100B8A0C7 /* Jungle.entitlements */,
 				B0B29DD82037408900FBE5FF /* AppDelegate.swift */,
 				B0E4A2182047E60000037D0C /* Auth */,
 				B0E4A2172047E5E100037D0C /* Home */,
@@ -235,6 +243,7 @@
 				B0F50ED82037CAB300037343 /* SinglePostViewController.swift */,
 				B0017D8E204A1AAA00E20DE8 /* JNavigationBar.swift */,
 				B0F50EDE203809F900037343 /* NewReplyViewController.swift */,
+				B00124632068560A00E5F2A6 /* SearchTabViewController.swift */,
 				B0B29DDC2037408900FBE5FF /* Main.storyboard */,
 				B0F50ECF2037838400037343 /* InitialViewController.swift */,
 				B01E2A5D203E0B59006C8C2D /* Services */,
@@ -288,8 +297,8 @@
 				B0B29DF7203768A700FBE5FF /* PostCellNode.swift */,
 				B04D4E5320492737000A1033 /* SearchViewController.swift */,
 				B09CAFE1204938AB009C3901 /* PostsViewController.swift */,
-				B04D4E57204929FB000A1033 /* SearchTitleView.swift */,
-				B04D4E552049289B000A1033 /* SearchTitleView.xib */,
+				B04D4E57204929FB000A1033 /* SearchBarView.swift */,
+				B04D4E552049289B000A1033 /* SearchBarView.xib */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -297,7 +306,9 @@
 		B0E4A2182047E60000037D0C /* Auth */ = {
 			isa = PBXGroup;
 			children = (
-				B0B29DDA2037408900FBE5FF /* ViewController.swift */,
+				B0B29DDA2037408900FBE5FF /* AuthViewController.swift */,
+				B03291D9206A253C00B8A0C7 /* SignUpViewController.swift */,
+				B03291DB206A396100B8A0C7 /* VerificationViewController.swift */,
 				B0B29DEF20374BC800FBE5FF /* LoginViewController.swift */,
 			);
 			path = Auth;
@@ -373,6 +384,14 @@
 					B0B29DD42037408900FBE5FF = {
 						CreatedOnToolsVersion = 9.2;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+							com.apple.Push = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -406,7 +425,7 @@
 				B01E2A5A203D5352006C8C2D /* HomeTitleView.xib in Resources */,
 				B0F50ECE20377B3400037343 /* GoogleService-Info.plist in Resources */,
 				B0F50EDD2038060E00037343 /* CommentBar.xib in Resources */,
-				B04D4E562049289B000A1033 /* SearchTitleView.xib in Resources */,
+				B04D4E562049289B000A1033 /* SearchBarView.xib in Resources */,
 				B0B29DE32037408900FBE5FF /* Assets.xcassets in Resources */,
 				B0A94AF62046730D009445C2 /* LightboxCell.xib in Resources */,
 				B0B29DDE2037408900FBE5FF /* Main.storyboard in Resources */,
@@ -451,6 +470,7 @@
 				"${BUILT_PRODUCTS_DIR}/PINCache/PINCache.framework",
 				"${BUILT_PRODUCTS_DIR}/PINOperation/PINOperation.framework",
 				"${BUILT_PRODUCTS_DIR}/PINRemoteImage/PINRemoteImage.framework",
+				"${BUILT_PRODUCTS_DIR}/PromiseKit/PromiseKit.framework",
 				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
 				"${BUILT_PRODUCTS_DIR}/ScrollableGraphView/ScrollableGraphView.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftMessages/SwiftMessages.framework",
@@ -472,6 +492,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINCache.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINOperation.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINRemoteImage.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PromiseKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ScrollableGraphView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftMessages.framework",
@@ -519,11 +540,13 @@
 				B07F61072043D05A005010B7 /* AlertService.swift in Sources */,
 				B09CAFE020492F34009C3901 /* SearchService.swift in Sources */,
 				B0E4A2202047F6A700037D0C /* Group.swift in Sources */,
+				B00124642068560A00E5F2A6 /* SearchTabViewController.swift in Sources */,
 				B007D5262049CC52009A6B84 /* RegexParser.swift in Sources */,
 				B07F611820454516005010B7 /* LightboxViewController.swift in Sources */,
 				B07F610D2044C93B005010B7 /* GPSService.swift in Sources */,
 				B0C99BE6204E41A2000C2C90 /* ViewRepliesCellNode.swift in Sources */,
-				B0B29DDB2037408900FBE5FF /* ViewController.swift in Sources */,
+				B0B29DDB2037408900FBE5FF /* AuthViewController.swift in Sources */,
+				B03291DA206A253C00B8A0C7 /* SignUpViewController.swift in Sources */,
 				B01E2A5F203E0E66006C8C2D /* CommentBar.swift in Sources */,
 				B0B29DE12037408900FBE5FF /* Jungle.xcdatamodeld in Sources */,
 				B0B29DF220375AD500FBE5FF /* MainTabBarController.swift in Sources */,
@@ -545,7 +568,7 @@
 				B0A94AF52046730D009445C2 /* LightboxCell.swift in Sources */,
 				B0E11B78203A13A000EF0814 /* AttachmentsView.swift in Sources */,
 				B00F66AA203F3475002FCDA0 /* ActiveTextNode.swift in Sources */,
-				B04D4E58204929FB000A1033 /* SearchTitleView.swift in Sources */,
+				B04D4E58204929FB000A1033 /* SearchBarView.swift in Sources */,
 				B0F50ECC203775E900037343 /* ASRoundShadowedImage.swift in Sources */,
 				B0B29DD92037408900FBE5FF /* AppDelegate.swift in Sources */,
 				B04D4E5420492737000A1033 /* SearchViewController.swift in Sources */,
@@ -559,6 +582,7 @@
 				B01E2A58203D520D006C8C2D /* HomeTitleView.swift in Sources */,
 				B0F50ED72037A6E100037343 /* Anon.swift in Sources */,
 				B07F61092044983E005010B7 /* ComposerView.swift in Sources */,
+				B03291DC206A396100B8A0C7 /* VerificationViewController.swift in Sources */,
 				B0B29DEE2037454200FBE5FF /* Extensions.swift in Sources */,
 				B0B29DF8203768A700FBE5FF /* PostCellNode.swift in Sources */,
 			);
@@ -698,6 +722,7 @@
 			baseConfigurationReference = D619470CA6EAA1F65F3DFF24 /* Pods-Jungle.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Jungle/Jungle.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6BES3VUFCX;
 				INFOPLIST_FILE = Jungle/Info.plist;
@@ -715,6 +740,7 @@
 			baseConfigurationReference = 0CA8C85A80C56F48485FD8E5 /* Pods-Jungle.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Jungle/Jungle.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6BES3VUFCX;
 				INFOPLIST_FILE = Jungle/Info.plist;

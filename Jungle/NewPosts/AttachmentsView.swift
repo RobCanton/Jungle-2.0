@@ -177,10 +177,10 @@ class AttachmentCollectionCell: UICollectionViewCell {
         imageView.layer.cornerRadius = 16.0
         imageView.clipsToBounds = true
         
-        imageView.layer.borderColor = accentColor.cgColor
-        imageView.layer.borderWidth = 0.0
-        self.applyShadow(radius: 8.0, opacity: 0.15, offset: CGSize(width: 0, height: 6.0), color: UIColor.black, shouldRasterize: false)
-        self.clipsToBounds = false
+        imageView.layer.borderColor = UIColor(white: 0.80, alpha: 1.0).cgColor
+        imageView.layer.borderWidth = 0.5
+        //self.applyShadow(radius: 8.0, opacity: 0.15, offset: CGSize(width: 0, height: 6.0), color: UIColor.black, shouldRasterize: false)
+        //self.clipsToBounds = false
         
         gifView = UIView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 25.0))
         gifView.backgroundColor = UIColor(white: 0.0, alpha: 0.6)
@@ -238,11 +238,11 @@ class AttachmentCollectionCell: UICollectionViewCell {
     
     override var isSelected: Bool{
         didSet{
-            if isSelected {
-                imageView.layer.borderWidth = 3.0
-            } else {
-                imageView.layer.borderWidth = 0.0
-            }
+//            if isSelected {
+//                imageView.layer.borderWidth = 3.0
+//            } else {
+//                imageView.layer.borderWidth = 0.5
+//            }
         }
     }
     

@@ -51,6 +51,8 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
     }
     
     @objc func openNewPostVC() {
+        openLoginView()
+        return
         let controller = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "NewPostNavController")
         self.present(controller, animated: true, completion: nil)
     }
@@ -70,5 +72,10 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         return view.snapshot(of: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
     }
     
+    
+    func openLoginView() {
+        let loginVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "AuthViewController") as! AuthViewController
+        self.present(loginVC, animated: true, completion: nil)
+    }
 }
 

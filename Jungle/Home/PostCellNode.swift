@@ -79,7 +79,7 @@ class PostCellNode:ASCellNode {
         commentImage = UIImage(named:"comment2")
         moreImage = UIImage(named:"more")
         
-        isKing = type == .popular && post.rank != nil && post.rank == 1
+        // isKing = type == .popular && post.rank != nil && post.rank == 1
         
 //        if isKing {
 //            textColor = UIColor.white
@@ -100,17 +100,24 @@ class PostCellNode:ASCellNode {
         postImageNode.isUserInteractionEnabled = true
         
         titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: textColor
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: post.anon.color
             ])
         
-        subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 11.0),
+        var subnameStr = ""
+        if post.myAnonKey == post.anon.key {
+            subnameStr = "YOU"
+            subnameNode.isHidden = false
+        }else {
+            subnameNode.isHidden = true
+        }
+        
+        subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
-        subnameNode.textContainerInset = UIEdgeInsets(top: 1.0, left: 6.0, bottom: 0, right: 6.0)
+        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 0, right: 4.0)
         subnameNode.backgroundColor = post.anon.color
-        subnameNode.isHidden = true
         
         var locationStr = ""
         if let location = post.location {
@@ -211,7 +218,7 @@ class PostCellNode:ASCellNode {
                 NSAttributedStringKey.paragraphStyle: paragraph
                 ])
             rankButton.setAttributedTitle(rankText, for: .normal)
-            rankButton.isHidden = type != .popular
+            rankButton.isHidden = true//type != .popular
             rankButton.backgroundColor = post.anon.color
             rankButton.layer.cornerRadius = 13.0
             rankButton.clipsToBounds = true
@@ -233,7 +240,7 @@ class PostCellNode:ASCellNode {
     
     override func didLoad() {
         super.didLoad()
-        subnameNode.layer.cornerRadius = 8
+        subnameNode.layer.cornerRadius = 4
         subnameNode.clipsToBounds = true
         selectionStyle = .none
         
@@ -259,12 +266,23 @@ class PostCellNode:ASCellNode {
         
         subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
         
+        let subnameCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
+        
+        let hTitleStack = ASStackLayoutSpec.horizontal()
+        hTitleStack.children = [titleNode]
+        hTitleStack.spacing = 4.0
+        
+        if !subnameNode.isHidden {
+            hTitleStack.children?.append(subnameCenterY)
+        }
+        
         if isSinglePost {
             subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
             
+            
             let nameStack = ASStackLayoutSpec.vertical()
             nameStack.spacing = 2.0
-            nameStack.children = [titleNode, subtitleNode]
+            nameStack.children = [hTitleStack, subtitleNode]
             
             let imageStack = ASStackLayoutSpec.horizontal()
             imageStack.children = [imageNode, nameStack]
@@ -287,7 +305,7 @@ class PostCellNode:ASCellNode {
             commentButton.style.width = ASDimension(unit: .fraction, value: 0.35)
             
             let actionsRow = ASStackLayoutSpec.horizontal()
-            
+            actionsRow.style.flexGrow = 1.0
             actionsRow.children = [ likeStack, commentButton]
             actionsRow.spacing = 8.0
             
@@ -318,18 +336,13 @@ class PostCellNode:ASCellNode {
             return mainVerticalStack
         }
         
-        let nameStack = ASStackLayoutSpec.horizontal()
-        nameStack.children = [titleNode]
-        nameStack.spacing = 4.0
-        
-        let subnameCenterX = ASCenterLayoutSpec(centeringOptions: .X, sizingOptions: .minimumX, child: subnameNode)
         let imageStack = ASStackLayoutSpec.vertical()
-        imageStack.children = [imageNode, subnameCenterX]
+        imageStack.children = [imageNode]
         imageStack.spacing = 6.0
         imageStack.style.layoutPosition = CGPoint(x: 0, y: 0)
         
         let titleStack = ASStackLayoutSpec.vertical()
-        titleStack.children = [nameStack, subtitleNode]
+        titleStack.children = [hTitleStack, subtitleNode]
         titleStack.spacing = 2.0
         
         //let rankCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: rankButton)
@@ -553,7 +566,6 @@ class PostCellNode:ASCellNode {
     }
     
     var likedRefListener:ListenerRegistration?
-    var lexiconRefListener:ListenerRegistration?
     var metaRef:DatabaseReference?
     func listenToPost() {
         guard let post = self.post else { return }
@@ -561,7 +573,6 @@ class PostCellNode:ASCellNode {
         print("listenToPost")
         let postRef = firestore.collection("posts").document(post.key)
         let voteRef = postRef.collection("votes").document(uid)
-        let lexiconRef = postRef.collection("lexicon").document(uid)
         likedRefListener = voteRef.addSnapshotListener({ snapshot, error in
             if let snapshot = snapshot,
                 let data = snapshot.data(),
@@ -574,6 +585,7 @@ class PostCellNode:ASCellNode {
         })
         
         metaRef = database.child("posts/meta/\(post.key)")
+        metaRef?.keepSynced(true)
         metaRef?.observe(.value, with: { snapshot in
             if let data = snapshot.value as? [String:Any] {
                 let votesUp = data["votesUp"] as? Int ?? 0
@@ -593,17 +605,6 @@ class PostCellNode:ASCellNode {
                 self.setComments(count: post.comments)
             }
         })
-        
-        lexiconRefListener = lexiconRef.addSnapshotListener { lexiconSnapshot, error in
-            guard let document = lexiconSnapshot else { return }
-            
-            if let data = document.data(),
-                let anon = Anon.parse(data) {
-                self.assignAnonymous(anon)
-            } else {
-                self.assignAnonymous(nil)
-            }
-        }
     }
     
     func setNumVotes(_ votes:Int) {
@@ -616,28 +617,11 @@ class PostCellNode:ASCellNode {
             ])
     }
     
-    func assignAnonymous(_ anon:Anon?) {
-        
-        if let post = post,
-            let anon = anon,
-            anon.key == post.anon.key {
-                self.post?.isYou = true
-                subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
-                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 11.0),
-                    NSAttributedStringKey.foregroundColor: UIColor.white
-                ])
-                subnameNode.isHidden = false
-        } else {
-            self.post?.isYou = false
-            subnameNode.isHidden = true
-        }
-    }
-    
     func stopListeningToPost() {
         print("stopListeningToPost")
         likedRefListener?.remove()
+        metaRef?.keepSynced(false)
         metaRef?.removeAllObservers()
-        lexiconRefListener?.remove()
     }
     
     func updatePost(_ post:Post) {

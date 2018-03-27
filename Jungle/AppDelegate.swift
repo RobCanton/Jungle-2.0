@@ -29,6 +29,13 @@ let API_ENDPOINT = "https://us-central1-jungle-anonymous.cloudfunctions.net/app"
 let accentColor = hexColor(from: "#6ae45a")
 let redColor = hexColor(from: "FF6B6B")
 let grayColor = UIColor(white: 0.5, alpha: 1.0)
+let subtitleColor = hexColor(from: "708078")
+
+var listeningDict = [String:Bool]() {
+    didSet {
+        print("NEWFOUNDLAND: \(listeningDict)")
+    }
+}
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {

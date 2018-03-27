@@ -49,16 +49,18 @@ class CommentCellNode:ASCellNode {
     
     let gapNode = ASDisplayNode()
     
+    var replyLine = ASDisplayNode()
     var isReply = false
 
     struct Constants {
         static let imageWidth:CGFloat = 36.0
         static let mainInsets = UIEdgeInsets(top: 12.0, left: 16.0, bottom: 0.0, right: 0.0)
+        static let replyLineWidth:CGFloat = 3.0
     }
     
     struct ReplyConstants {
         static let imageWidth:CGFloat = 24.0
-        static let mainInsets = UIEdgeInsets(top: 4.0, left: 16.0 + 36.0 + 8.0, bottom: 0.0, right: 0.0)
+        static let mainInsets = UIEdgeInsets(top: 4.0, left: 16.0, bottom: 0.0, right: 0.0)
     }
     
     private(set) var bgColor = UIColor.white
@@ -73,7 +75,7 @@ class CommentCellNode:ASCellNode {
     
 
     
-    required init(reply:Reply, toPost post:Post, isReply:Bool?=nil, hideDivider:Bool?=nil) {
+    required init(reply:Reply, toPost post:Post, isReply:Bool?=nil, hideDivider:Bool?=nil, hideReplyLine:Bool?=nil) {
         super.init()
 
         self.reply = reply
@@ -97,24 +99,33 @@ class CommentCellNode:ASCellNode {
         postImageNode.isUserInteractionEnabled = true
         
         titleNode.attributedText = NSAttributedString(string: reply.anon.displayName, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 12.0),
-            NSAttributedStringKey.foregroundColor: textColor
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
+            NSAttributedStringKey.foregroundColor: reply.anon.color
             ])
         
-        subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 10.0),
+        var subnameStr = ""
+        if reply.isYou {
+            subnameStr = "YOU"
+            subnameNode.isHidden = false
+        } else if reply.anon.key == post.anon.key {
+            subnameStr = "OP"
+            subnameNode.isHidden = false
+        } else {
+            subnameNode.isHidden = true
+        }
+        
+        subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
-        subnameNode.textContainerInset = UIEdgeInsets(top: 1.0, left: 6.0, bottom: 0, right: 6.0)
+        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 0, right: 4.0)
         subnameNode.backgroundColor = reply.anon.color
-        subnameNode.isHidden = true
-        
 
         let subtitleStr = " · \(reply.createdAt.timeSinceNow())"
         
         subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 12.0),
-            NSAttributedStringKey.foregroundColor: textColor
+            NSAttributedStringKey.foregroundColor: subtitleColor
             ])
         
         postTextNode.maximumNumberOfLines = 0
@@ -129,30 +140,15 @@ class CommentCellNode:ASCellNode {
         paragraph.alignment = .center
         countLabel.attributedText = NSAttributedString(string: "-", attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: buttonColor,
+            NSAttributedStringKey.foregroundColor: subtitleColor,
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
         
-//
-//        if let attachments = post.attachments {
-//            if attachments.images.count > 0 {
-//                let image = attachments.images[0]
-//                let color =  hexColor(from: image.colorHex)
-//                postImageNode.mainImageNode.backgroundColor = color
-//                postImageNode.mainImageNode.url = image.url
-//                postImageNode.style.height = ASDimension(unit: .points, value: 192)
-//                postImageNode.applyShadow(withColor: color, opacity: 0.5)
-//            }
-//        } else {
-//            postImageNode.style.height = ASDimension(unit: .points, value: 0.0)
-//        }
+        dividerNode.backgroundColor = subtitleColor.withAlphaComponent(0.25)
+        dividerNode.isHidden = self.isReply
+        replyLine.isHidden = hideReplyLine ?? true
         
-        dividerNode.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
-        if let hideDivider = hideDivider {
-            dividerNode.isHidden = hideDivider
-        } else {
-            dividerNode.isHidden = reply.numReplies > 0 || self.isReply
-        }
+        replyLine.backgroundColor = subtitleColor.withAlphaComponent(0.25)
         
         likeButton.setImage(upvoteImage, for: .normal)
         likeButton.laysOutHorizontally = true
@@ -161,7 +157,7 @@ class CommentCellNode:ASCellNode {
         likeButton.contentEdgeInsets = .zero
         likeButton.tintColor = buttonColor
         likeButton.tintColorDidChange()
-        likeButton.alpha = 0.75
+        likeButton.alpha = 0.80
         
         dislikeButton.setImage(downvoteImage, for: .normal)
         dislikeButton.laysOutHorizontally = true
@@ -170,21 +166,21 @@ class CommentCellNode:ASCellNode {
         dislikeButton.contentEdgeInsets = .zero
         dislikeButton.tintColor = buttonColor
         dislikeButton.tintColorDidChange()
-        dislikeButton.alpha = 0.75
+        dislikeButton.alpha = 0.80
         
         likeButton.addTarget(self, action: #selector(handleUpvote), forControlEvents: .touchUpInside)
         dislikeButton.addTarget(self, action: #selector(handleDownvote), forControlEvents: .touchUpInside)
         
         let commentStr = NSAttributedString(string: "Reply", attributes: [
             NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: buttonColor
+            NSAttributedStringKey.foregroundColor: subtitleColor
             ])
         commentButton.setAttributedTitle(commentStr, for: .normal)
         commentButton.laysOutHorizontally = true
         commentButton.contentSpacing = 8.0
         commentButton.contentHorizontalAlignment = .middle
-        commentButton.alpha = 0.75
-        countLabel.alpha = 0.75
+        commentButton.alpha = 0.80
+        countLabel.alpha = 0.80
        
         moreButtonNode.setImage(moreImage, for: .normal)
         moreButtonNode.contentHorizontalAlignment = .right
@@ -194,7 +190,7 @@ class CommentCellNode:ASCellNode {
         replyImageNode.style.width = ASDimension(unit: .points, value: 24)
         replyImageNode.style.height = ASDimension(unit: .points, value: 24)
         
-        titleNode.tintColor = UIColor.gray
+        titleNode.tintColor = subtitleColor
         titleNode.tintColorDidChange()
         
         setTitle("SillyDeer Replied · \(reply.numReplies) Replies")
@@ -204,17 +200,15 @@ class CommentCellNode:ASCellNode {
     
     override func didLoad() {
         super.didLoad()
-        subnameNode.layer.cornerRadius = 8
+        subnameNode.layer.cornerRadius = 4
         subnameNode.clipsToBounds = true
         selectionStyle = .none
         
         imageNode.clipsToBounds = true
+        imageNode.layer.cornerRadius = Constants.imageWidth / 2
         
-        if self.isReply {
-            imageNode.layer.cornerRadius = ReplyConstants.imageWidth / 2
-        } else {
-            imageNode.layer.cornerRadius = Constants.imageWidth / 2
-        }
+        replyLine.cornerRadius = Constants.replyLineWidth / 2
+        replyLine.clipsToBounds = true
         
     }
     
@@ -227,14 +221,8 @@ class CommentCellNode:ASCellNode {
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        
-        if isReply {
-            imageNode.style.width = ASDimension(unit: .points, value: ReplyConstants.imageWidth)
-            imageNode.style.height = ASDimension(unit: .points, value: ReplyConstants.imageWidth)
-        } else {
-            imageNode.style.width = ASDimension(unit: .points, value: Constants.imageWidth)
-            imageNode.style.height = ASDimension(unit: .points, value: Constants.imageWidth)
-        }
+        imageNode.style.width = ASDimension(unit: .points, value: Constants.imageWidth)
+        imageNode.style.height = ASDimension(unit: .points, value: Constants.imageWidth)
         
         
         likeButton.style.height = ASDimension(unit: .points, value: 32.0)
@@ -245,14 +233,29 @@ class CommentCellNode:ASCellNode {
         
         subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
         
+        
+        let subnameCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
+        
         let nameStack = ASStackLayoutSpec.horizontal()
         nameStack.children = [titleNode]
         nameStack.spacing = 4.0
         
-        let subnameCenterX = ASCenterLayoutSpec(centeringOptions: .X, sizingOptions: .minimumX, child: subnameNode)
+        if !subnameNode.isHidden {
+            nameStack.children?.append(subnameCenterY)
+        }
+        
+        replyLine.style.width = ASDimension(unit: .points, value: Constants.replyLineWidth)
+        replyLine.style.flexGrow = 1.0
+        let replyLineXPos = Constants.mainInsets.left + Constants.imageWidth/2 - Constants.replyLineWidth/2
+        var top = Constants.mainInsets.top
+        if isReply {
+            top = ReplyConstants.mainInsets.top
+        }
+        replyLine.style.layoutPosition = CGPoint(x:replyLineXPos, y: Constants.imageWidth + 4.0 + top)
+        let replyLineAbs = ASAbsoluteLayoutSpec(children: [replyLine])
+        
         let imageStack = ASStackLayoutSpec.vertical()
-        imageStack.children = [imageNode, subnameCenterX]
-        imageStack.spacing = 6.0
+        imageStack.children = [imageNode]
         imageStack.style.layoutPosition = CGPoint(x: 0, y: 0)
         
         let subtitleCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subtitleNode)
@@ -296,10 +299,7 @@ class CommentCellNode:ASCellNode {
         }
         var ainsets = UIEdgeInsets.zero
         
-        if !isReply {
-            ainsets = UIEdgeInsetsMake(0, -6.0, 0, -16.0)
-        }
-        
+        ainsets = UIEdgeInsetsMake(0, -6.0, 0, -16.0)
         
         let actionsInset = ASInsetLayoutSpec(insets: ainsets, child: actionsRow)
         contentStack.children?.append(actionsInset)
@@ -309,21 +309,21 @@ class CommentCellNode:ASCellNode {
         mainVerticalStack.spacing = 0.0
         
         
-        
         let abs = ASAbsoluteLayoutSpec(children: [imageStack, mainVerticalStack])
         
         var insets:UIEdgeInsets!
-        if isReply {
-            mainVerticalStack.style.layoutPosition = CGPoint(x: CommentCellNode.ReplyConstants.imageWidth + 8.0, y: 0)
-            insets = UIEdgeInsets(top: 4.0, left: 16.0 + 36.0 + 8.0, bottom: 0.0, right: 0.0)
+        actionsRow.children?.append(commentButton)
+        mainVerticalStack.style.layoutPosition = CGPoint(x: CommentCellNode.Constants.imageWidth + 8.0, y: 0)
+        
+        if self.isReply {
+            insets = UIEdgeInsets(top: 4.0, left: 16.0, bottom: 6.0, right: 0.0)
         } else {
-            actionsRow.children?.append(commentButton)
-            mainVerticalStack.style.layoutPosition = CGPoint(x: CommentCellNode.Constants.imageWidth + 8.0, y: 0)
-            insets = UIEdgeInsets(top: 12.0, left: 16.0, bottom: 6.0, right: 0.0)
+            insets = UIEdgeInsets(top: 12.0, left: 16.0, bottom: 6.0, right: 6.0)
         }
         let mainInset = ASInsetLayoutSpec(insets: insets, child: abs)
+        let o = ASOverlayLayoutSpec(child: mainInset, overlay: replyLineAbs)
         let yoursaying = ASStackLayoutSpec.vertical()
-        yoursaying.children = [mainInset, dividerNode]
+        yoursaying.children = [dividerNode, o]
         yoursaying.spacing = 0.0
         return yoursaying
     
@@ -345,26 +345,17 @@ class CommentCellNode:ASCellNode {
     
     @objc func handleUpvote() {
         guard let reply = reply else { return }
-        guard let post = post else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        var votesRef:DocumentReference!
-        let postRef = firestore.collection("posts").document(post.key)
-        var commentRef:DocumentReference!
-        
-        if let replyTo = reply.replyTo {
-            commentRef = postRef.collection("comments").document(reply.key).collection("replies").document(replyTo)
-        } else {
-            commentRef = postRef.collection("comments").document(reply.key)
-        }
-       votesRef = commentRef.collection("votes").document(uid)
+        let replyRef = firestore.collection("replies").document(reply.key)
+        let votesRef = replyRef.collection("votes").document(uid)
         
         
         var countChange = 0
         if reply.vote == .upvoted {
             reply.vote = .notvoted
             countChange -= 1
-            reply.votes += countChange
+            //reply.votes += countChange
             //setNumVotes(reply.votes)
             votesRef.delete() { error in
             }
@@ -386,19 +377,16 @@ class CommentCellNode:ASCellNode {
             })
         }
         setVote(reply.vote, animated: true)
-//        reply.votes += countChange
-//        setNumVotes(reply.votes)
+        //reply.votes += countChange
+        //setNumVotes(reply.votes)
     }
     
     @objc func handleDownvote() {
         guard let reply = reply else { return }
-        guard let post = post else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        var votesRef:DocumentReference!
-        let postRef = firestore.collection("posts").document(post.key)
-        let commentRef = postRef.collection("comments").document(reply.key)
-        votesRef = commentRef.collection("votes").document(uid)
+        let replyRef = firestore.collection("replies").document(reply.key)
+        let votesRef = replyRef.collection("votes").document(uid)
         
         var countChange = 0
         if reply.vote == .downvoted {
@@ -417,7 +405,6 @@ class CommentCellNode:ASCellNode {
             
             countChange -= 1
             
-            //reply.votes += countChange
             //setNumVotes(reply.votes)
             
             reply.vote = .downvoted
@@ -429,6 +416,8 @@ class CommentCellNode:ASCellNode {
                 ], completion: { error in
             })
         }
+        //reply.votes += countChange
+        //setNumVotes(reply.votes)
         setVote(reply.vote, animated: true)
 
     }
@@ -459,8 +448,8 @@ class CommentCellNode:ASCellNode {
             likeButton.setImage(upvotedImage, for: .normal)
             dislikeButton.setImage(downvoteImage, for: .normal)
             votesColor = accentColor
-            likeButton.alpha = 1.0
-            dislikeButton.alpha = 0.75
+            likeButton.alpha = 0.80
+            dislikeButton.alpha = 0.80
             break
         case .downvoted:
             if animated && !isAnimatingDownvote {
@@ -482,19 +471,19 @@ class CommentCellNode:ASCellNode {
             likeButton.setImage(upvoteImage, for: .normal)
             dislikeButton.setImage(downvotedImage, for: .normal)
             votesColor = redColor
-            likeButton.alpha = 0.75
-            dislikeButton.alpha = 1.0
+            likeButton.alpha = 0.80
+            dislikeButton.alpha = 0.80
             break
         case .notvoted:
             likeButton.setImage(upvoteImage, for: .normal)
             dislikeButton.setImage(downvoteImage, for: .normal)
             votesColor = UIColor.gray
-            likeButton.alpha = 0.75
-            dislikeButton.alpha = 0.75 
+            likeButton.alpha = 0.80
+            dislikeButton.alpha = 0.80
             break
         }
         if reply != nil {
-            setNumVotes(reply!.votes)
+            //setNumVotes(reply!.votes)
         }
         
     }
@@ -505,7 +494,7 @@ class CommentCellNode:ASCellNode {
         paragraph.alignment = .center
         countLabel.attributedText = NSAttributedString(string: "\(votes)", attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: votesColor,
+            NSAttributedStringKey.foregroundColor: subtitleColor,
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
     }
@@ -516,19 +505,17 @@ class CommentCellNode:ASCellNode {
     var lexiconRefListener:ListenerRegistration?
     
     func listenToReply() {
-        guard let post = self.post else { return }
         guard let reply = self.reply else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let postRef = firestore.collection("posts").document(post.key)
-        let commentRef = postRef.collection("comments").document(reply.key)
-        let voteRef = commentRef.collection("votes").document(uid)
+        
+        listeningDict[reply.key] = true
+        let replyRef = firestore.collection("replies").document(reply.key)
+        let voteRef = replyRef.collection("votes").document(uid)
         //let lexiconRef = postRef.collection("lexicon").document(uid)
         print("RXC listenToReply")
         likedRefListener?.remove()
         let options = DocumentListenOptions()
         options.includeMetadataChanges(true)
-        
-        
         
         likedRefListener = voteRef.addSnapshotListener(options: options, listener: { snapshot, error in
             
@@ -553,14 +540,11 @@ class CommentCellNode:ASCellNode {
             
         })
         
-        commentVotesRef = database.child("posts/comments/\(post.key)/comments/\(reply.key)")
+        commentVotesRef = database.child("replies/meta/\(reply.key)/votes")
+        commentVotesRef?.keepSynced(true)
         commentVotesRef?.observe(.value, with: { snapshot in
-            if let dict = snapshot.value as? [String:Any] {
-                let votesUp = dict["votesUp"] as? Int ?? 0
-                let votesDown = dict["votesDown"] as? Int ?? 0
-                let votesSum = votesUp - votesDown
-                self.setNumVotes(votesSum)
-            }
+            let votesSum = snapshot.value as? Int ?? 0
+            self.setNumVotes(votesSum)
         })
 //        metaRefListener = metaVotesRef.addSnapshotListener { documentSnapshot, error in
 //            guard let document = documentSnapshot else {
@@ -578,7 +562,12 @@ class CommentCellNode:ASCellNode {
     
     func stopListeningToReply() {
         print("RXC stopListeningToReply")
+        if let reply = self.reply  {
+            listeningDict[reply.key] = nil
+        }
+        
         likedRefListener?.remove()
+        commentVotesRef?.keepSynced(false)
         commentVotesRef?.removeAllObservers()
         //metaRefListener?.remove()
         //lexiconRefListener?.remove()
@@ -587,13 +576,14 @@ class CommentCellNode:ASCellNode {
     override func didEnterVisibleState() {
         super.didEnterVisibleState()
         listenToReply()
+        
     }
     
     override func didExitVisibleState() {
         super.didExitVisibleState()
         stopListeningToReply()
-        setNumVotes(0)
-        setVote(.notvoted, animated: false)
+        //setNumVotes(0)
+        //setVote(.notvoted, animated: false)
         print("DID EXIT THAT VISIBLE STATE FAM")
     }
 }

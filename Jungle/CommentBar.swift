@@ -16,7 +16,6 @@ protocol CommentBarDelegate:class {
 }
 
 class CommentBar:UIView, UITextViewDelegate {
-    var topView: UIView!
     var midView: UIView!
     var botView: UIView!
     var stackView: UIStackView!
@@ -27,7 +26,7 @@ class CommentBar:UIView, UITextViewDelegate {
     
     var sendButton:UIButton!
     
-    static let topHeight:CGFloat = 22.0
+    static let topHeight:CGFloat = 0.0
     static let botHeight:CGFloat = 44.0
     static let textMarginHeight:CGFloat = 8.0
     
@@ -60,24 +59,7 @@ class CommentBar:UIView, UITextViewDelegate {
         stackView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
         stackView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
         stackView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
-        
-        topView = UIView(frame: CGRect(x: 0, y: 0, width: stackView.bounds.width, height: CommentBar.topHeight))
-        topView.backgroundColor = UIColor.white
-        topView.translatesAutoresizingMaskIntoConstraints = false
-        topHeightAnchor = topView.heightAnchor.constraint(equalToConstant: CommentBar.topHeight)
-        topHeightAnchor?.isActive = true
-        stackView.addArrangedSubview(topView)
-        
-        let topLayoutGuide = topView.safeAreaLayoutGuide
-        
-        replyLabel = ActiveTextNode()
-        topView.addSubview(replyLabel.view)
-        replyLabel.view.translatesAutoresizingMaskIntoConstraints = false
-        replyLabel.view.leadingAnchor.constraint(equalTo: topLayoutGuide.leadingAnchor, constant: 24.0).isActive = true
-        replyLabel.view.topAnchor.constraint(equalTo: topLayoutGuide.topAnchor, constant: 5.0).isActive = true
-        replyLabel.view.trailingAnchor.constraint(equalTo: topLayoutGuide.trailingAnchor).isActive = true
-        replyLabel.view.bottomAnchor.constraint(equalTo: topLayoutGuide.bottomAnchor).isActive = true
-        setReply("Replying to @Drizzy")
+
         
         midView = UIView(frame: CGRect(x: 0, y: 0, width: stackView.bounds.width, height: stackView.bounds.height - CommentBar.topHeight - CommentBar.botHeight))
         midView.backgroundColor = UIColor.white
@@ -88,8 +70,8 @@ class CommentBar:UIView, UITextViewDelegate {
         textBubble = UIView(frame: midView.bounds)
         textBubble.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
         midView.addSubview(textBubble)
-        textBubble.layer.borderWidth = 1.0
-        textBubble.layer.borderColor = UIColor(white: 0.90,alpha:1.0).cgColor
+        //textBubble.layer.borderWidth = 1.0
+        //textBubble.layer.borderColor = UIColor(white: 0.90,alpha:1.0).cgColor
         textBubble.translatesAutoresizingMaskIntoConstraints = false
         textBubble.leadingAnchor.constraint(equalTo: midLayoutGuide.leadingAnchor, constant: 12.0).isActive = true
         textBubble.topAnchor.constraint(equalTo: midLayoutGuide.topAnchor, constant: 4.0).isActive = true
@@ -115,7 +97,7 @@ class CommentBar:UIView, UITextViewDelegate {
         
         textView = UITextView(frame: textBubble.bounds)
         textView.backgroundColor = nil
-        textView.font = Fonts.medium(ofSize: 15.0)
+        textView.font = Fonts.regular(ofSize: 14.0)
         textView.textColor = UIColor.black
         textView.delegate = self
         textView.isScrollEnabled = false
@@ -175,13 +157,10 @@ class CommentBar:UIView, UITextViewDelegate {
     
     func setComposeMode(_ compose:Bool) {
         if compose {
-            stackView.insertArrangedSubview(topView, at: 0)
             stackView.addArrangedSubview(botView)
         } else {
             textView.text = ""
             textViewDidChange(textView)
-            stackView.removeArrangedSubview(topView)
-            topView.removeFromSuperview()
             stackView.removeArrangedSubview(botView)
             botView.removeFromSuperview()
         }
@@ -190,8 +169,7 @@ class CommentBar:UIView, UITextViewDelegate {
     var nonTextHeight:CGFloat {
         get {
             let botHeight = botView.superview != nil ? CommentBar.botHeight : 0
-            let topHeight = topView.superview != nil ? CommentBar.topHeight : 0
-            return CommentBar.textMarginHeight + botHeight + topHeight
+            return CommentBar.textMarginHeight + botHeight
         }
     }
     
@@ -217,7 +195,12 @@ class CommentBar:UIView, UITextViewDelegate {
     }
     
     func setReply(_ reply:Reply) {
-        setReply("Replying to @\(reply.anon.displayName)")
+        if let _ = reply.replyTo {
+            textView.text = "@\(reply.anon.displayName) "
+        } else {
+            textView.text = ""
+        }
+        textViewDidChange(textView)
         textView.becomeFirstResponder()
     }
 }

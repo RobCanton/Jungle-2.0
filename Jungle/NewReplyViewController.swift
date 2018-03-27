@@ -141,8 +141,6 @@ class EditTextCellNode:ASCellNode {
             NSAttributedStringKey.foregroundColor.rawValue: UIColor.darkGray
         ]
         
-        
-        
     }
     
     

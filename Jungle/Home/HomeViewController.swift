@@ -12,7 +12,7 @@ import AsyncDisplayKit
 import Firebase
 import SwiftMessages
 
-class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, HomeTitleDelegate {
+class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, HomeTitleDelegate, UIGestureRecognizerDelegate {
     
     var pagerNode:ASPagerNode!
     var navBar:UIView!
@@ -55,6 +55,9 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true;
+        navigationController?.interactivePopGestureRecognizer?.delegate = self;
+
         navigationController?.navigationBar.shadowImage = UIImage()
         navigationController?.setNavigationBarHidden(true, animated: animated)
         navigationController?.navigationBar.tintColor = UIColor.gray
@@ -183,6 +186,10 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         case .restricted:
             break
         }
+    }
+    
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 }
 

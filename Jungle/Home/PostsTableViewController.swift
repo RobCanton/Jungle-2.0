@@ -182,6 +182,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
             let indexPaths = (0..<state.posts.count).map { index in
                 IndexPath(row: index, section: 0)
             }
+
             state = .empty
             tableNode.performBatch(animated: false, updates: {
                 tableNode.deleteRows(at: indexPaths, with: .none)
@@ -209,11 +210,11 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
                 let oldState = self.state
                 self.state = PostsTableViewController.handleAction(action, fromState: oldState)
                 
-                self.tableNode.performBatchUpdates({
+                self.tableNode.performBatch(animated: false, updates: {
                     let indexPaths = (0..<_posts.count).map { index in
                         IndexPath(row: index, section: 0)
                     }
-                    self.tableNode.insertRows(at: indexPaths, with: .fade)
+                    self.tableNode.insertRows(at: indexPaths, with: .none)
                 }, completion: { _ in
                     if self.state.posts.count > 0 {
                         self.tableNode.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
@@ -228,7 +229,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
                 let oldState = self.state
                 self.state = PostsTableViewController.handleAction(action, fromState: oldState)
                 
-                self.tableNode.performBatchUpdates({
+                self.tableNode.performBatch(animated: false, updates: {
                     let indexPaths = (0..<_posts.count).map { index in
                         IndexPath(row: index, section: 0)
                     }

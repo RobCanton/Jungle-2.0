@@ -49,6 +49,7 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource,
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
         if let search = initialSearch {
+            backButton.isHidden = false
             textField.text = search
             let width = textWidth
             

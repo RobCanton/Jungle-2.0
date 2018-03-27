@@ -64,7 +64,18 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
                                                   NSAttributedStringKey.foregroundColor: color], range: element.range)
             
         }
-                self.attributedText = attrString
+        
+        let mentionElements = RegexParser.getElements(from: text, with: RegexParser.mentionPattern, range: textRange)
+        //print("ELEMENTS: \(elements)")
+        for element in mentionElements {
+            let range = Range(element.range, in: text)!
+            let str = text.substring(with: range)
+            attrString?.addAttributes([NSAttributedStringKey(rawValue: attrName): str,
+                                       NSAttributedStringKey.foregroundColor: color], range: element.range)
+            
+        }
+        
+        self.attributedText = attrString
     }
     
     func getElements(from text: String, with pattern: String, range: NSRange) -> [NSTextCheckingResult]{

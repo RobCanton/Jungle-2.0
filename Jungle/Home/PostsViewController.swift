@@ -30,7 +30,7 @@ class SearchPostsViewController: PostsViewController {
     
     override func fetchData(_ state: PostsViewController.State, completion: @escaping ([Post], Bool) -> ()) {
         if let searchText = searchText {
-            SearchService.searchFor(text: searchText, offset: state.posts.count) { documents in
+            SearchService.searchFor(text: searchText, limit: 15, offset: state.posts.count) { documents in
                 
                 var posts = [Post]()
                 var endReached = false

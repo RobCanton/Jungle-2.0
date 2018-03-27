@@ -12,7 +12,7 @@ import UIKit
 class Fonts {
     
     static func medium(ofSize size: CGFloat) -> UIFont {
-        return UIFont(name: "Montserrat-Medium", size: size)!
+         return UIFont(name: "Montserrat-Medium", size: size)!
     }
     
     static func regular(ofSize size: CGFloat) -> UIFont {

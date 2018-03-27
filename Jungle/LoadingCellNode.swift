@@ -37,6 +37,11 @@ final class LoadingCellNode: ASCellNode {
         addSubnode(spinner)
     }
     
+    override func didLoad() {
+        super.didLoad()
+        spinner.startAnimating()
+    }
+    
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
         return ASStackLayoutSpec(
@@ -44,7 +49,7 @@ final class LoadingCellNode: ASCellNode {
             spacing: 16,
             justifyContent: .center,
             alignItems: .center,
-            children: [ text, spinner ])
+            children: [ spinner, text ])
     }
 }
 
@@ -65,8 +70,16 @@ final class SpinnerNode: ASDisplayNode {
     
     override func didLoad() {
         super.didLoad()
-        
+        activityIndicatorView.hidesWhenStopped = true
+        //activityIndicatorView.startAnimating()
+    }
+    
+    func startAnimating() {
         activityIndicatorView.startAnimating()
+    }
+    
+    func stopAnimating() {
+        activityIndicatorView.stopAnimating()
     }
 }
 
