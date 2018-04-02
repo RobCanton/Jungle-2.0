@@ -71,7 +71,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         
         view.addSubview(tableNode.view)
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
-        
+        tableNode.contentInset = UIEdgeInsetsMake(12.0, 0.0, 0.0, 0.0)
         var layoutGuide:UILayoutGuide!
         
         layoutGuide = view.safeAreaLayoutGuide
@@ -84,7 +84,9 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         tableNode.delegate = self
         tableNode.dataSource = self
         tableNode.view.separatorStyle = .none
+        tableNode.view.showsVerticalScrollIndicator = false
         tableNode.view.delaysContentTouches = false
+        tableNode.view.backgroundColor = hexColor(from: "#F2F6EF")
         
         //tableNode.allowsSelection = false
         tableNode.reloadData()
@@ -115,7 +117,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         
         if let postCellNodes = tableNode.visibleNodes as? [PostCellNode] {
             for node in postCellNodes {
-                node.setSelected(false)
+                //node.setSelected(false)
             }
         }
     }
@@ -149,10 +151,14 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         }
         
         newPostsListener?.remove()
-        let postsRef = firestore.collection("posts").whereField("status", isEqualTo: "active").order(by: "createdAt", descending: true).limit(to: 1)
+        let postsRef = firestore.collection("posts")
+            .whereField("status", isEqualTo: "active")
+            .whereField("parent", isEqualTo: "NONE")
+            .order(by: "createdAt", descending: true).limit(to: 1)
         
         
         newPostsListener = postsRef.addSnapshotListener() { snapshot, err in
+            print("NEW POST TINGS!")
             if let err = err {
                 print("Error getting documents: \(err)")
             } else {
@@ -337,7 +343,6 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             if state.posts.count > 0 {
                 let lastPost = state.posts[state.posts.count - 1]
                 state.lastPostTimestamp = lastPost.createdAt.timeIntervalSince1970 * 1000
-                state.lastRank = lastPost.rank
             } else {
                 state.lastPostTimestamp = nil
                 state.lastRank = nil
@@ -362,7 +367,6 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             if state.posts.count > 0 {
                 let lastPost = state.posts[state.posts.count - 1]
                 state.lastPostTimestamp = lastPost.createdAt.timeIntervalSince1970 * 1000
-                state.lastRank = lastPost.rank
             } else {
                 state.lastPostTimestamp = nil
                 state.lastRank = nil
@@ -403,13 +407,13 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         
         let cell = PostCellNode(withPost: state.posts[indexPath.row], type: type)
         cell.selectionStyle = .none
-        cell.delegate = self
+        //cell.delegate = self
         return cell
     }
     
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
-        node.setSelected(true)
+        //node.setSelected(true)
         let controller = SinglePostViewController()
         controller.hidesBottomBarWhenPushed = true
         controller.post = state.posts[indexPath.row]
@@ -418,17 +422,17 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     
     func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
-        node.setSelected(false)
+        //node.setSelected(false)
     }
     
     func tableNode(_ tableNode: ASTableNode, didHighlightRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
-        node.setHighlighted(true)
+        //node.setHighlighted(true)
     }
     
     func tableNode(_ tableNode: ASTableNode, didUnhighlightRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
-        node.setHighlighted(false)
+        //node.setHighlighted(false)
     }
     
     
@@ -469,7 +473,7 @@ extension PostsTableViewController: PostCellDelegate {
                                         }
                                         let indexPath = IndexPath(row: i, section: 0)
                                         let cell = self.tableNode.nodeForRow(at: indexPath) as? PostCellNode
-                                        cell?.stopListeningToPost()
+                                        //cell?.stopListeningToPost()
                                         self.tableNode.performBatchUpdates({
                                             self.tableNode.deleteRows(at: [indexPath], with: .top)
                                         }, completion: { _ in

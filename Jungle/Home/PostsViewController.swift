@@ -270,7 +270,6 @@ extension PostsViewController: ASTableDelegate, ASTableDataSource {
             if state.posts.count > 0 {
                 let lastPost = state.posts[state.posts.count - 1]
                 state.lastPostTimestamp = lastPost.createdAt.timeIntervalSince1970 * 1000
-                state.lastRank = lastPost.rank
             } else {
                 state.lastPostTimestamp = nil
                 state.lastRank = nil
@@ -295,7 +294,6 @@ extension PostsViewController: ASTableDelegate, ASTableDataSource {
             if state.posts.count > 0 {
                 let lastPost = state.posts[state.posts.count - 1]
                 state.lastPostTimestamp = lastPost.createdAt.timeIntervalSince1970 * 1000
-                state.lastRank = lastPost.rank
             } else {
                 state.lastPostTimestamp = nil
                 state.lastRank = nil
@@ -336,7 +334,7 @@ extension PostsViewController: ASTableDelegate, ASTableDataSource {
         
         let cell = PostCellNode(withPost: state.posts[indexPath.row], type: .newest)
         cell.selectionStyle = .none
-        cell.delegate = self
+        //cell.delegate = self
         return cell
     }
     
@@ -381,7 +379,7 @@ extension PostsViewController: PostCellDelegate {
      
                                         let indexPath = IndexPath(row: i, section: 0)
                                         let cell = self.tableNode.nodeForRow(at: indexPath) as? PostCellNode
-                                        cell?.stopListeningToPost()
+                                        //cell?.stopListeningToPost()
                                         self.tableNode.performBatchUpdates({
                                             self.tableNode.deleteRows(at: [indexPath], with: .top)
                                         }, completion: { _ in

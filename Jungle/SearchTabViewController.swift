@@ -89,6 +89,7 @@ extension SearchTabViewController: TrendingHashtagsDelegate {
 
 
 class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
+    
     var tableNode = ASTableNode()
     var trendingHashtags = [TrendingHashtag]() {
         didSet {
@@ -96,6 +97,8 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
             tableNode.reloadData()
         }
     }
+    
+    var refreshControl:UIRefreshControl!
     
     var selectedRow:IndexPath?
     weak var delegate:TrendingHashtagsDelegate?
@@ -113,9 +116,12 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
         super.didLoad()
         //tableNode.view.separatorColor = subtitleColor.withAlphaComponent(0.25)
         tableNode.view.separatorStyle = .none
+        
+        refreshControl = UIRefreshControl()
+        tableNode.view.refreshControl = refreshControl
+        refreshControl.addTarget(self, action: #selector(getTrendingHastags), for: .valueChanged)
         //tableNode.view.delaysContentTouches = false
     }
-    
     
     func clearSelection() {
         if let row = selectedRow {
@@ -185,7 +191,7 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
         node.setSelected(false)
     }
     
-    func getTrendingHastags() {
+    @objc func getTrendingHastags() {
         let trendingRef = database.child("hashtags/trending")
         trendingRef.observeSingleEvent(of: .value, with: { snapshot in
             guard let dict = snapshot.value as? [String:[String:Int]] else { return }
@@ -214,6 +220,9 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
                     count += 1
                     
                     if count >= dict.count {
+                        if self.refreshControl.isRefreshing {
+                            self.refreshControl.endRefreshing()
+                        }
                         self.trendingHashtags = _trendingHashtags.sorted(by: { $0.score > $1.score })
                         self.tableNode.reloadData()
                         print("DICT!: \(self.trendingHashtags)")
@@ -362,7 +371,7 @@ class MiniPostContainerNode:ASCellNode {
     override func didLoad() {
         super.didLoad()
         view.clipsToBounds = false
-        view.applyShadow(radius: 8.0, opacity: 0.1, offset: CGSize(width: 0.0,height: 4.0), color: UIColor.black, shouldRasterize: false)
+        view.applyShadow(radius: 8.0, opacity: 0.15, offset: CGSize(width: 0.0,height: 4.0), color: UIColor.black, shouldRasterize: false)
         
     }
     
@@ -428,7 +437,7 @@ class MiniPostNode:ASDisplayNode {
             }
         }
         
-        let metaStr = "\(post.votes) points · \(post.comments) replies"
+        let metaStr = "\(post.votes) points · \(post.numReplies) replies"
         metaTextNode.attributedText = NSAttributedString(string: metaStr, attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 12.0),
             NSAttributedStringKey.foregroundColor: UIColor.white

@@ -51,10 +51,12 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
     }
     
     @objc func openNewPostVC() {
-        openLoginView()
-        return
-        let controller = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "NewPostNavController")
-        self.present(controller, animated: true, completion: nil)
+        if UserService.isSignedIn {
+            let controller = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "NewPostNavController")
+            self.present(controller, animated: true, completion: nil)
+        } else {
+            openLoginView()
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -74,6 +76,7 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
     
     
     func openLoginView() {
+        
         let loginVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "AuthViewController") as! AuthViewController
         self.present(loginVC, animated: true, completion: nil)
     }

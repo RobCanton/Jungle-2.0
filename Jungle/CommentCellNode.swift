@@ -12,7 +12,7 @@ import UIKit
 import Firebase
 
 protocol CommentCellDelegate:class {
-    func handleReply(_ reply:Reply)
+    func handleReply(_ reply:Post)
 }
 
 class CommentCellNode:ASCellNode {
@@ -44,7 +44,7 @@ class CommentCellNode:ASCellNode {
     
     var transitionManager = LightboxViewerTransitionManager()
     weak var delegate:CommentCellDelegate?
-    weak var reply:Reply?
+    weak var reply:Post?
     weak var post:Post?
     
     let gapNode = ASDisplayNode()
@@ -75,7 +75,7 @@ class CommentCellNode:ASCellNode {
     
 
     
-    required init(reply:Reply, toPost post:Post, isReply:Bool?=nil, hideDivider:Bool?=nil, hideReplyLine:Bool?=nil) {
+    required init(reply:Post, toPost post:Post, isReply:Bool?=nil, hideDivider:Bool?=nil, hideReplyLine:Bool?=nil) {
         super.init()
 
         self.reply = reply
@@ -346,57 +346,38 @@ class CommentCellNode:ASCellNode {
     @objc func handleUpvote() {
         guard let reply = reply else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        
-        let replyRef = firestore.collection("replies").document(reply.key)
-        let votesRef = replyRef.collection("votes").document(uid)
-        
-        
         var countChange = 0
         if reply.vote == .upvoted {
             reply.vote = .notvoted
             countChange -= 1
-            //reply.votes += countChange
-            //setNumVotes(reply.votes)
-            votesRef.delete() { error in
-            }
+            let postRef = database.child("posts/votes/\(reply.key)/\(uid)")
+            postRef.removeValue()
         } else {
             if reply.vote == .downvoted {
                 countChange += 1
             }
             
             countChange += 1
-            //reply.votes += countChange
-            //setNumVotes(reply.votes)
             reply.vote = .upvoted
-
-            votesRef.setData([
-                "uid": uid,
-                "val": true
-                ], completion: { error in
-                    
-            })
+            let postRef = database.child("posts/votes/\(reply.key)/\(uid)")
+            postRef.setValue(true)
         }
+        reply.votes += countChange
+        setNumVotes(reply.votes)
         setVote(reply.vote, animated: true)
-        //reply.votes += countChange
-        //setNumVotes(reply.votes)
     }
     
     @objc func handleDownvote() {
         guard let reply = reply else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        let replyRef = firestore.collection("replies").document(reply.key)
-        let votesRef = replyRef.collection("votes").document(uid)
-        
         var countChange = 0
         if reply.vote == .downvoted {
             countChange += 1
             reply.vote = .notvoted
-            //reply.votes += countChange
-            //setNumVotes(reply.votes)
             
-            votesRef.delete() { error in}
-            
+            let postRef = database.child("posts/votes/\(reply.key)/\(uid)")
+            postRef.removeValue()
         } else {
             
             if reply.vote == .upvoted {
@@ -405,21 +386,14 @@ class CommentCellNode:ASCellNode {
             
             countChange -= 1
             
-            //setNumVotes(reply.votes)
-            
             reply.vote = .downvoted
             
-            
-            votesRef.setData([
-                "uid": uid,
-                "val": false
-                ], completion: { error in
-            })
+            let postRef = database.child("posts/votes/\(reply.key)/\(uid)")
+            postRef.setValue(false)
         }
-        //reply.votes += countChange
-        //setNumVotes(reply.votes)
+        reply.votes += countChange
+        setNumVotes(reply.votes)
         setVote(reply.vote, animated: true)
-
     }
     
     var isAnimatingDownvote = false
@@ -499,92 +473,56 @@ class CommentCellNode:ASCellNode {
             ])
     }
     
-    var commentVotesRef:DatabaseReference?
-    var metaRefListener:ListenerRegistration?
-    var likedRefListener:ListenerRegistration?
-    var lexiconRefListener:ListenerRegistration?
-    
-    func listenToReply() {
+    var voteRef:DatabaseReference?
+    var metaRef:DatabaseReference?
+    func listenToPost() {
         guard let reply = self.reply else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        
-        listeningDict[reply.key] = true
-        let replyRef = firestore.collection("replies").document(reply.key)
-        let voteRef = replyRef.collection("votes").document(uid)
-        //let lexiconRef = postRef.collection("lexicon").document(uid)
-        print("RXC listenToReply")
-        likedRefListener?.remove()
-        let options = DocumentListenOptions()
-        options.includeMetadataChanges(true)
-        
-        likedRefListener = voteRef.addSnapshotListener(options: options, listener: { snapshot, error in
-            
+        print("listenToPost")
+        voteRef = database.child("posts/votes/\(reply.key)/\(uid)")
+        voteRef?.observe(.value, with: { snapshot in
             var vote = Vote.notvoted
-            
-            if let snapshot = snapshot {
-                
-            
-                let meta = snapshot.metadata
-                print("META hasPendingWrites: \(meta.hasPendingWrites) | fromCache: \(meta.isFromCache)")
-                //if (meta.isFromCache) { return }
-                if let data = snapshot.data(),
-                    let val = data["val"] as? Bool {
-                    vote = val ? .upvoted : .downvoted
-                }
-                print("META hasPendingWrites: \(meta.hasPendingWrites) | fromCache: \(meta.isFromCache) | vote: \(vote)")
+            if let _vote = snapshot.value as? Bool {
+                vote = _vote ? .upvoted : .downvoted
             }
-            
-
             reply.vote = vote
             self.setVote(reply.vote, animated: false)
-            
+        }, withCancel: { error in
+            reply.vote = .notvoted
+            self.setVote(reply.vote, animated: false)
         })
         
-        commentVotesRef = database.child("replies/meta/\(reply.key)/votes")
-        commentVotesRef?.keepSynced(true)
-        commentVotesRef?.observe(.value, with: { snapshot in
-            let votesSum = snapshot.value as? Int ?? 0
-            self.setNumVotes(votesSum)
+        metaRef = database.child("posts/meta/\(reply.key)")
+        metaRef?.keepSynced(true)
+        metaRef?.observe(.value, with: { snapshot in
+            if let data = snapshot.value as? [String:Any],
+                let votes = data["votes"] as? [String:Int] {
+                reply.votes = votes["votesSum"] ?? 0
+            } else {
+                reply.votes = 0
+            }
+            self.setNumVotes(reply.votes)
+        }, withCancel: { _ in
+            reply.votes = 0
+            self.setNumVotes(reply.votes)
         })
-//        metaRefListener = metaVotesRef.addSnapshotListener { documentSnapshot, error in
-//            guard let document = documentSnapshot else {
-//                print("Error fetching document: \(error!)")
-//                return
-//            }
-//            if let data = document.data() {
-//                post.votes = data["votesSum"] as? Int ?? 0
-//                post.comments = data["numComments"] as? Int ?? 0
-//                self.setNumVotes(post.votes)
-//                //self.setComments(count: post.comments)
-//            }
-//        }
     }
     
-    func stopListeningToReply() {
-        print("RXC stopListeningToReply")
-        if let reply = self.reply  {
-            listeningDict[reply.key] = nil
-        }
-        
-        likedRefListener?.remove()
-        commentVotesRef?.keepSynced(false)
-        commentVotesRef?.removeAllObservers()
-        //metaRefListener?.remove()
-        //lexiconRefListener?.remove()
+    func stopListeningToPost() {
+        print("stopListeningToPost")
+        voteRef?.removeAllObservers()
+        metaRef?.keepSynced(false)
+        metaRef?.removeAllObservers()
     }
     
     override func didEnterVisibleState() {
         super.didEnterVisibleState()
-        listenToReply()
-        
+        listenToPost()
     }
     
     override func didExitVisibleState() {
         super.didExitVisibleState()
-        stopListeningToReply()
-        //setNumVotes(0)
-        //setVote(.notvoted, animated: false)
-        print("DID EXIT THAT VISIBLE STATE FAM")
+        stopListeningToPost()
     }
 }
 

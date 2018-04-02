@@ -44,14 +44,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Override  for customization after application launch.
         FirebaseApp.configure()
         let settings = FirestoreSettings()
         settings.isPersistenceEnabled = false
         // Enable offline data persistence
         let db = Firestore.firestore()
         db.settings = settings
+        
+        let authHandler = Auth.auth().addStateDidChangeListener { (auth, user) in
+            if let user = user {
+                self.openMainView()
+            } else {
+                self.signInAnonymously()
+            }
+        }
         return true
+    }
+    
+    func signInAnonymously() {
+        Auth.auth().signInAnonymously() { (user, error) in
+            if user != nil && error == nil {
+                self.openMainView()
+            }
+        }
+    }
+    
+    func openMainView() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let controller = storyboard.instantiateViewController(withIdentifier: "MainTabBarController") as! MainTabBarController
+        self.window?.rootViewController = controller
+        self.window?.makeKeyAndVisible()
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

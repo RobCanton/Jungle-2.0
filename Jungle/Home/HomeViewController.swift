@@ -73,6 +73,8 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         } else {
             authorizeGPS()
         }
+        
+        print("Is User signed In : \(UserService.isSignedIn)")
     }
     
     func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {

@@ -194,7 +194,7 @@ class CommentBar:UIView, UITextViewDelegate {
         delegate?.commentSend(text: textView.text)
     }
     
-    func setReply(_ reply:Reply) {
+    func setReply(_ reply:Post) {
         if let _ = reply.replyTo {
             textView.text = "@\(reply.anon.displayName) "
         } else {

@@ -62,7 +62,6 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
             let str = text.substring(with: range)
             attrString?.addAttributes([NSAttributedStringKey(rawValue: attrName): str,
                                                   NSAttributedStringKey.foregroundColor: color], range: element.range)
-            
         }
         
         let mentionElements = RegexParser.getElements(from: text, with: RegexParser.mentionPattern, range: textRange)
@@ -76,19 +75,6 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         }
         
         self.attributedText = attrString
-    }
-    
-    func getElements(from text: String, with pattern: String, range: NSRange) -> [NSTextCheckingResult]{
-        guard let elementRegex = regularExpression(for: pattern) else { return [] }
-        return elementRegex.matches(in: text, options: [], range: range)
-    }
-    
-    func regularExpression(for pattern: String) -> NSRegularExpression? {
-        if let createdRegex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
-            return createdRegex
-        } else {
-            return nil
-        }
     }
     
     func textNode(_ textNode: ASTextNode, tappedLinkAttribute attribute: String, value: Any, at point: CGPoint, textRange: NSRange) {

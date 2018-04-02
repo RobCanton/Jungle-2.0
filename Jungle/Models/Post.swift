@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import Firebase
 
 enum Vote {
     case upvoted, downvoted, notvoted
@@ -18,26 +19,32 @@ class Post {
     private(set) var anon:Anon
     private(set) var text:String
     private(set) var createdAt:Date
-    var votes:Int
-    var comments:Int
-    var rank:Int?
     private(set) var attachments:Attachments?
     private(set) var location:LocationPair?
+    
+    var votes:Int
+    var numReplies:Int
+    var replies:[Post]
+    var parent:String?
+    var replyTo:String?
+    
     
     var vote = Vote.notvoted
     var isYou = false
     var myAnonKey = ""
     
-    init(key:String, anon:Anon, text:String, createdAt:Date, votes:Int, comments:Int,rank:Int?, attachments:Attachments?=nil, location:LocationPair?) {
+    init(key:String, anon:Anon, text:String, createdAt:Date, attachments:Attachments?=nil, location:LocationPair?, votes:Int, numReplies:Int, replies:[Post], parent:String?, replyTo:String?) {
         self.key = key
         self.anon = anon
         self.text = text
         self.createdAt = createdAt
-        self.votes = votes
-        self.comments = comments
-        self.rank = rank
         self.attachments = attachments
         self.location = location
+        self.votes = votes
+        self.numReplies = numReplies
+        self.replies = replies
+        self.parent = parent
+        self.replyTo = replyTo
     }
     
     static func parse(id:String, _ data:[String:Any]) -> Post? {
@@ -46,15 +53,60 @@ class Post {
             let text = data["text"] as? String,
             let createdAt = data["createdAt"] as? Double,
             let votes = data["votes"] as? Int,
-            let comments = data["numComments"] as? Int {
+            let numReplies = data["numComments"] as? Int {
             
-            let rank = data["rank"] as? Int
             let attachments = Attachments.parse(data)
             let location = LocationPair.parse(data)
             
-            post = Post(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), votes: votes, comments: comments, rank: rank, attachments: attachments, location:location)
+            var parent:String?
+            var replyTo:String?
+            
+            let _parent = data["parent"] as? String
+            let _replyTo = data["replyTo"] as? String
+            
+            if _parent != nil, _parent != "NONE" {
+                parent = _parent
+            }
+            if _replyTo != nil, _replyTo != "NONE" {
+                replyTo = _replyTo
+            }
+            
+            post = Post(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, votes: votes, numReplies: numReplies, replies:[], parent: parent, replyTo: replyTo )
         }
         return post
+    }
+    
+    func fetchReplies( completion:@escaping ()->()) {
+        let repliesRef = firestore.collection("posts")
+            .whereField("status", isEqualTo: "active")
+            .whereField("replyTo", isEqualTo: key)
+            .order(by: "createdAt", descending: true)
+        
+        var queryRef:Query!
+        if replies.count > 0 {
+            let lastReplyTimestamp = replies[0].createdAt.timeIntervalSince1970 * 1000
+            queryRef = repliesRef.start(after: [lastReplyTimestamp]).limit(to: 5)
+        } else{
+            queryRef = repliesRef.limit(to: 5)
+        }
+        
+        queryRef.getDocuments() { (querySnapshot, err) in
+            var _replies = [Post]()
+            if let err = err {
+                print("Error getting documents: \(err)")
+            } else {
+                let documents = querySnapshot!.documents
+                
+                for document in documents {
+                    if let reply = Post.parse(id: document.documentID, document.data()) {
+                        _replies.insert(reply, at: 0)
+                    }
+                }
+            }
+            self.replies.insert(contentsOf: _replies, at: 0)
+            //self.endReached = self.replies.count >= self.numReplies
+            completion()
+        }
     }
 }
 

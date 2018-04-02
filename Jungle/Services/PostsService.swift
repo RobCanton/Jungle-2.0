@@ -12,7 +12,6 @@ import Alamofire
 import MobileCoreServices
 import Photos
 import SwiftMessages
-import PromiseKit
 
 class PostsService {
     
@@ -21,7 +20,10 @@ class PostsService {
     }
 
     static func refreshNewPosts(existingKeys: [String:Bool], startAfter firstTimestamp: Double?, completion: @escaping (_ posts:[Post])->()) {
-        let postsRef = firestore.collection("posts").whereField("status", isEqualTo: "active").order(by: "createdAt", descending: false)
+        let postsRef = firestore.collection("posts")
+            .whereField("status", isEqualTo: "active")
+            .whereField("parent", isEqualTo: "NONE")
+            .order(by: "createdAt", descending: false)
         
         
         var queryRef:Query!
@@ -50,7 +52,9 @@ class PostsService {
     }
     
     static func getNewPosts(existingKeys: [String:Bool], lastPostID: Double?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
-            let rootPostRef = firestore.collection("posts").whereField("status", isEqualTo: "active")
+            let rootPostRef = firestore.collection("posts")
+                .whereField("status", isEqualTo: "active")
+                .whereField("parent", isEqualTo: "NONE")
             var postsRef:Query!
             var queryRef:Query!
 
@@ -104,7 +108,9 @@ class PostsService {
     }
     
     static func getPopularPosts(existingKeys: [String:Bool], lastRank: Int?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
-        let rootPostRef = firestore.collection("posts").whereField("status", isEqualTo: "active")
+        let rootPostRef = firestore.collection("posts")
+            .whereField("status", isEqualTo: "active")
+            .whereField("parent", isEqualTo: "NONE")
         var postsRef:Query!
         var queryRef:Query!
         
@@ -164,7 +170,7 @@ class PostsService {
     
     static func getReplyVote(replyID:String, completion: @escaping (_ replyID:String, _ vote: Vote)->()) {
         guard let uid = Auth.auth().currentUser?.uid else { return completion(replyID,.notvoted) }
-        let replyRef = firestore.collection("replies").document(replyID).collection("votes").document(uid)
+        let replyRef = firestore.collection("posts").document(replyID).collection("votes").document(uid)
         print("REPLY VOTE REF: \(replyRef.debugDescription)")
         replyRef.getDocument { snapshot, error in
             var vote = Vote.notvoted
@@ -182,11 +188,14 @@ class PostsService {
         
     }
     
-    static func getSubReplies(replyID:String, myAnonKey:String, completion: @escaping (_ replyID:String, _ replies:[Reply])->()) {
-        let repliesRef = firestore.collection("replies")
-        let postRepliesRef = repliesRef.whereField("replyTo", isEqualTo: replyID).order(by: "createdAt", descending: true).limit(to: 3)
+    static func getSubReplies(replyID:String, myAnonKey:String, completion: @escaping (_ replyID:String, _ replies:[Post])->()) {
+        let repliesRef = firestore.collection("posts")
+            .whereField("status", isEqualTo: "active")
+            .whereField("replyTo", isEqualTo: replyID)
+    
+        let postRepliesRef = repliesRef.order(by: "createdAt", descending: true).limit(to: 3)
         postRepliesRef.getDocuments { snapshot, error in
-            var replies = [Reply]()
+            var replies = [Post]()
             if let error = error {
                 print("Error: \(error.localizedDescription)")
             } else if let snapshot = snapshot {
@@ -194,7 +203,7 @@ class PostsService {
                 
                 for document in documents {
                     let data = document.data()
-                    if let reply = Reply.parse(id: document.documentID, data, replyTo: replyID) {
+                    if let reply = Post.parse(id: document.documentID, data) {
                         replies.insert(reply, at: 0)
                     }
                 }
@@ -220,9 +229,8 @@ class PostsService {
         }
     }
 
-    static func getReplies(postID:String, after:Double?, completion: @escaping (_ replies:[Reply])->()) {
+    static func getReplies(postID:String, after:Double?, completion: @escaping (_ replies:[Post])->()) {
         guard let uid = Auth.auth().currentUser?.uid else { return completion([]) }
-        let repliesRef = firestore.collection("replies")
         let postsRef = firestore.collection("posts")
         let lexiconRef = postsRef.document(postID).collection("lexicon").document(uid)
         
@@ -235,7 +243,10 @@ class PostsService {
                 myAnonKey = key
             }
             
-            let postRepliesRef = repliesRef.whereField("replyTo", isEqualTo: postID).order(by: "createdAt", descending: false)
+            let postRepliesRef = postsRef
+                .whereField("status", isEqualTo: "active")
+                .whereField("replyTo", isEqualTo: postID)
+                .order(by: "createdAt", descending: false)
             var postRepliesQuery:Query!
             if let after = after {
                 postRepliesQuery = postRepliesRef.start(after: [after]).limit(to: 12)
@@ -244,7 +255,7 @@ class PostsService {
             }
             
             postRepliesQuery.getDocuments { snapshot, error in
-                var replies = [Reply]()
+                var replies = [Post]()
                 
                 if let err = error {
                     print("Error getting documents: \(err)")
@@ -253,9 +264,7 @@ class PostsService {
                     
                     let documents = snapshot!.documents
                     for document in documents {
-                        let replyID = document.documentID
-                        if let reply = Reply.parse(id: replyID, document.data()) {
-                            print("ReplyID: \(replyID)")
+                        if let reply = Post.parse(id: document.documentID, document.data()) {
                             replies.append(reply)
                         }
                         
@@ -266,14 +275,13 @@ class PostsService {
                     
                     for reply in replies {
                         var _vote:Vote?
-                        var _subReplies:[Reply]?
+                        var _subReplies:[Post]?
                         reply.isYou = reply.anon.key == myAnonKey
                         
                         getReplyVote(replyID: reply.key) { _replyID, vote in
                             _vote = vote
                             
-                            if _subReplies != nil && _vote != nil {
-                                reply.replies = _subReplies!
+                            if _vote != nil, _subReplies != nil {
                                 reply.vote = _vote!
                                 
                                 count += 1
@@ -282,13 +290,12 @@ class PostsService {
                                 }
                             }
                         }
+                        
                         getSubReplies(replyID: reply.key, myAnonKey: myAnonKey) { _replyID, subReplies in
-                            
                             _subReplies = subReplies
                             
-                            if _subReplies != nil && _vote != nil {
+                            if _vote != nil, _subReplies != nil {
                                 reply.replies = _subReplies!
-                                reply.vote = _vote!
                                 
                                 count += 1
                                 if count >= replies.count {

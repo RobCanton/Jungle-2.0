@@ -50,13 +50,13 @@ class SinglePostViewController: UIViewController {
     var sortMode = SortMode.top
     var navView:JNavigationBar!
     
-    var focusedReply:Reply?
+    var focusedReply:Post?
     
     var tableTopAnchor:NSLayoutConstraint?
     var tableBottomAnchor:NSLayoutConstraint?
     
     struct State {
-        var replies: [Reply]
+        var replies: [Post]
         var fetchingMore: Bool
         var lastPostTimestamp:Double?
         var endReached:Bool
@@ -66,10 +66,10 @@ class SinglePostViewController: UIViewController {
     
     enum Action {
         case beginBatchFetch
-        case endBatchFetch(replies: [Reply])
+        case endBatchFetch(replies: [Post])
         case endReached()
-        case insert(reply:Reply)
-        case append(reply:Reply)
+        case insert(reply:Post)
+        case append(reply:Post)
         case firstLoadComplete()
     }
     
@@ -217,32 +217,32 @@ class SinglePostViewController: UIViewController {
         }
         
         
-        liveListener = query.addSnapshotListener({ snapshot, error in
-            var reply:Reply?
-            if let documents = snapshot?.documents {
-            
-                if documents.count > 0 {
-                    let firstDoc = documents[0]
-                    let data = firstDoc.data()
-                    if let anon = Anon.parse(data),
-                        let text = data["text"] as? String,
-                        let createdAt = data["createdAt"] as? Double {
-                        reply = Reply(key: firstDoc.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: 4,votes:0, replies:[])
-                        
-                    }
-                }
-            }
-            if let reply = reply {
-                let action = Action.insert(reply: reply)
-                let oldState = self.liveState
-                self.liveState = SinglePostViewController.handleAction(action, fromState: oldState)
-                let indexPath = IndexPath(row: 0, section: 2)
-
-                self.tableNode.performBatchUpdates({
-                    self.tableNode.insertRows(at: [indexPath], with: .top)
-                }, completion: nil)
-            }
-        })
+//        liveListener = query.addSnapshotListener({ snapshot, error in
+//            var reply:Reply?
+//            if let documents = snapshot?.documents {
+//
+//                if documents.count > 0 {
+//                    let firstDoc = documents[0]
+//                    let data = firstDoc.data()
+//                    if let anon = Anon.parse(data),
+//                        let text = data["text"] as? String,
+//                        let createdAt = data["createdAt"] as? Double {
+//                        reply = Reply(key: firstDoc.documentID, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), numReplies: 4,votes:0, replies:[])
+//
+//                    }
+//                }
+//            }
+//            if let reply = reply {
+//                let action = Action.insert(reply: reply)
+//                let oldState = self.liveState
+//                self.liveState = SinglePostViewController.handleAction(action, fromState: oldState)
+//                let indexPath = IndexPath(row: 0, section: 2)
+//
+//                self.tableNode.performBatchUpdates({
+//                    self.tableNode.insertRows(at: [indexPath], with: .top)
+//                }, completion: nil)
+//            }
+//        })
         
     }
     
@@ -250,40 +250,12 @@ class SinglePostViewController: UIViewController {
         liveListener?.remove()
     }
     
-    static func fetchData(state:State, post:Post, ref:Query, lastPostID: Double?, completion: @escaping (_ replies:[Reply], _ endReached:Bool)->()) {
+    static func fetchData(state:State, post:Post, ref:Query, lastPostID: Double?, completion: @escaping (_ replies:[Post], _ endReached:Bool)->()) {
         
         PostsService.getReplies(postID: post.key, after: lastPostID) { replies in
             print("REPLIES FETCHED: \(replies.count)")
             completion(replies, replies.count == 0)
         }
-//        var queryRef:Query!
-//        if let lastPostID = lastPostID {
-//            queryRef = ref.start(after: [lastPostID]).limit(to: 10)
-//        } else{
-//            queryRef = ref.limit(to: 10)
-//        }
-//
-//        queryRef.getDocuments() { (querySnapshot, err) in
-//            var _replies = [Reply]()
-//             var endReached = false
-//            if let err = err {
-//                print("Error getting documents: \(err)")
-//            } else {
-//                let documents = querySnapshot!.documents
-//
-//                if documents.count == 0 {
-//                    endReached = true
-//                }
-//
-//                for document in documents {
-//                    if let reply = Reply.parse(id: document.documentID, document.data()) {
-//                        _replies.append(reply)
-//                    }
-//                }
-//            }
-//            completion(_replies, endReached)
-//        }
-
     }
     
 }
@@ -424,7 +396,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                     let cell = tableNode.nodeForRow(at: indexPath) as? ViewRepliesCellNode
                     cell?.setFetchingMode()
                     reply.fetchReplies {
-                        
+
                         self.tableNode.performBatch(animated: false, updates: {
                             self.tableNode.reloadSections(IndexSet([indexPath.section]), with: .none)
                         }, completion: { _ in
@@ -434,7 +406,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
 //                                }
 //                            }
                         })
-                        
+
                     }
                 }
                 break
@@ -715,7 +687,8 @@ extension SinglePostViewController: CommentBarDelegate {
             ]
             
             if let focusedReply = self.focusedReply {
-                if let parentReply = focusedReply.replyTo {
+                if let parentReply = focusedReply.replyTo,
+                    parentReply != self.post.key {
                     parameters["replyTo"] = parentReply
                 } else {
                     parameters["replyTo"] = focusedReply.key
@@ -733,7 +706,7 @@ extension SinglePostViewController: CommentBarDelegate {
                 DispatchQueue.main.async {
                     if let dict = response.result.value as? [String:Any], let success = dict["success"] as? Bool, success, let replyData = dict["comment"] as? [String:Any], let id = dict["id"] as? String {
                         print("GOTTY: \(replyData)")
-                        if let reply = Reply.parse(id: id, replyData) {
+                        if let reply = Post.parse(id: id, replyData) {
                             reply.isYou = true
                             if let replyTo = dict["replyTo"] as? String {
                                 reply.replyTo = replyTo
@@ -780,7 +753,7 @@ extension SinglePostViewController: CommentBarDelegate {
 }
 
 extension SinglePostViewController: CommentCellDelegate {
-    func handleReply(_ reply:Reply) {
+    func handleReply(_ reply:Post) {
         self.focusedReply = reply
         commentBar.setReply(reply)
         

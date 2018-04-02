@@ -90,6 +90,5 @@ class Reply {
             self.endReached = self.replies.count >= self.numReplies
             completion()
         }
-
     }
 }
