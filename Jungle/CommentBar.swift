@@ -148,7 +148,7 @@ class CommentBar:UIView, UITextViewDelegate {
     
     
     fileprivate func setReply(_ text:String) {
-        replyLabel.setText(text: text, withFont: Fonts.medium(ofSize: 12.0), normalColor: UIColor.gray, activeColor: accentColor)
+        replyLabel.setText(text: text, withSize: 12, normalColor: UIColor.gray, activeColor: accentColor)
     }
     
     required init?(coder aDecoder: NSCoder) {

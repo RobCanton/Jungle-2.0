@@ -24,7 +24,9 @@ class SignUpViewController:UIViewController {
     
     @IBAction func handleSubmit() {
         guard let email = emailField.text else { return }
+        print("ASDWE")
         guard let pass = passField.text else { return }
+        print("ASD")
         guard let user = Auth.auth().currentUser else { return }
         print("Email: \(email) Pass: \(pass)")
         

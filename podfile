@@ -18,4 +18,6 @@ target 'Jungle' do
   pod 'AlgoliaSearch-Client-Swift'
   pod 'ScrollableGraphView', :git => 'https://github.com/barnaclejive/ScrollableGraphView', :branch => 'master'
   pod "PromiseKit", "~> 6.0"
+  pod "AlignedCollectionViewFlowLayout"
+  pod 'TagCellLayout', :git => 'https://github.com/riteshhgupta/TagCellLayout.git'
 end

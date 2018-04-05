@@ -163,7 +163,7 @@ class ComposerImagesView: UIView, UICollectionViewDelegate, UICollectionViewData
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if selectedImages.count == 1 {
-            return CGSize(width: collectionView.bounds.width - 24.0, height: 200.0)
+            return CGSize(width: collectionView.bounds.width - 32.0, height: 200.0)
         }
         return CGSize(width: 200.0, height: 200.0)
     }

@@ -77,7 +77,7 @@ class SinglePostViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = UIColor.white
         view.addSubview(tableNode.view)
-        
+        tableNode.contentInset = UIEdgeInsetsMake(8.0, 0.0, 0.0, 0.0)
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
         
         var layoutGuide:UILayoutGuide!
@@ -107,7 +107,7 @@ class SinglePostViewController: UIViewController {
         tableBottomAnchor?.isActive = true
         tableNode.view.contentInsetAdjustmentBehavior = .never
         tableNode.view.separatorStyle = .none
-        tableNode.view.backgroundColor = UIColor(white: 0.97, alpha: 1.0)
+        //tableNode.view.backgroundColor = UIColor(white: 0.97, alpha: 1.0)
         tableNode.delegate = self
         tableNode.dataSource = self
         tableNode.batchFetchingDelegate = self
@@ -286,7 +286,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
         case 0:
             return 1
         case 1:
-            return 1
+            return 0
         default:
             let replySection = section - 2
             switch sortMode {
@@ -329,7 +329,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                 let reply = topState.replies[section]
                 if indexPath.row == 0 {
                     let replyLine = reply.numReplies == 0 && reply.replies.count == 0
-                    let cell = CommentCellNode(reply: reply, toPost: post, isReply:false, hideDivider:false, hideReplyLine:replyLine)
+                    let cell = CommentCellNode(reply: reply, toPost: post, isReply:false, hideDivider: !replyLine, hideReplyLine:replyLine)
                     cell.selectionStyle = .none
                     cell.delegate = self
                     return cell

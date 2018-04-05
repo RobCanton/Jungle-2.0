@@ -1,6 +1,7 @@
 PODS:
   - Alamofire (4.6.0)
   - AlgoliaSearch-Client-Swift (5.1.2)
+  - AlignedCollectionViewFlowLayout (1.1.2)
   - BoringSSL (9.2):
     - BoringSSL/Implementation (= 9.2)
     - BoringSSL/Interface (= 9.2)
@@ -112,6 +113,7 @@ PODS:
   - Protobuf (3.5.0)
   - ScrollableGraphView (4.0.4)
   - SwiftMessages (4.1.0)
+  - TagCellLayout (1.0)
   - Texture (2.6):
     - Texture/PINRemoteImage (= 2.6)
   - Texture/Core (2.6)
@@ -123,6 +125,7 @@ PODS:
 DEPENDENCIES:
   - Alamofire (~> 4.5)
   - AlgoliaSearch-Client-Swift
+  - AlignedCollectionViewFlowLayout
   - Firebase/Auth
   - Firebase/Core
   - Firebase/Database
@@ -131,21 +134,28 @@ DEPENDENCIES:
   - PromiseKit (~> 6.0)
   - ScrollableGraphView (from `https://github.com/barnaclejive/ScrollableGraphView`, branch `master`)
   - SwiftMessages
+  - TagCellLayout (from `https://github.com/riteshhgupta/TagCellLayout.git`)
   - Texture
 
 EXTERNAL SOURCES:
   ScrollableGraphView:
     :branch: master
     :git: https://github.com/barnaclejive/ScrollableGraphView
+  TagCellLayout:
+    :git: https://github.com/riteshhgupta/TagCellLayout.git
 
 CHECKOUT OPTIONS:
   ScrollableGraphView:
     :commit: b13c6c43b0bd313269e14fb4f4665c4d3115a863
     :git: https://github.com/barnaclejive/ScrollableGraphView
+  TagCellLayout:
+    :commit: c8a143743b0761606fd36872808ea239c0215a60
+    :git: https://github.com/riteshhgupta/TagCellLayout.git
 
 SPEC CHECKSUMS:
   Alamofire: f41a599bd63041760b26d393ec1069d9d7b917f4
   AlgoliaSearch-Client-Swift: 6c88667420b02e57c24dc54cfcfa71848980c495
+  AlignedCollectionViewFlowLayout: ee2ef451e741ec08f8e0967d828001e2f051c20a
   BoringSSL: f3d6b8ce199b9c450a8cfc14895d07a2627fc232
   Firebase: 7d3b8cd837ad9fcd391657734c0d56dab8e9a5a3
   FirebaseAnalytics: 388b630c15713f5dbf364071f5f3d6077fb52f4e
@@ -170,8 +180,9 @@ SPEC CHECKSUMS:
   Protobuf: 8a9838fba8dae3389230e1b7f8c104aa32389c03
   ScrollableGraphView: abac54d3493a5a198ade4baf4879967183af8a2c
   SwiftMessages: 1bacc783c8f10bdfdc57c14860cae8a1f1fa6591
+  TagCellLayout: 2a6e3f022bb85a5fe8ccc71762d2e8ab1bbfd8a3
   Texture: 7249074582daf75e524e59df5428b66b8e8db0e4
 
-PODFILE CHECKSUM: 4237dc41f37a6ca4b9bce0f30150506a6480153c
+PODFILE CHECKSUM: 9045e8eb477746cbfc33714adeee71cf3f594682
 
 COCOAPODS: 1.4.0

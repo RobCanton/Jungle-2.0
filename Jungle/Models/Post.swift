@@ -18,9 +18,11 @@ class Post {
     private(set) var key:String
     private(set) var anon:Anon
     private(set) var text:String
+    private(set) var textClean:String
     private(set) var createdAt:Date
     private(set) var attachments:Attachments?
     private(set) var location:LocationPair?
+    private(set) var tags:[String]
     
     var votes:Int
     var numReplies:Int
@@ -33,13 +35,17 @@ class Post {
     var isYou = false
     var myAnonKey = ""
     
-    init(key:String, anon:Anon, text:String, createdAt:Date, attachments:Attachments?=nil, location:LocationPair?, votes:Int, numReplies:Int, replies:[Post], parent:String?, replyTo:String?) {
+    init(key:String, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments?=nil, location:LocationPair?, tags:[String], votes:Int,
+         numReplies:Int, replies:[Post], parent:String?, replyTo:String?) {
+        
         self.key = key
         self.anon = anon
         self.text = text
+        self.textClean = textClean
         self.createdAt = createdAt
         self.attachments = attachments
         self.location = location
+        self.tags = tags
         self.votes = votes
         self.numReplies = numReplies
         self.replies = replies
@@ -51,9 +57,11 @@ class Post {
         var post:Post?
         if let anon = Anon.parse(data),
             let text = data["text"] as? String,
+            let textClean = data["textClean"] as? String,
             let createdAt = data["createdAt"] as? Double,
             let votes = data["votes"] as? Int,
-            let numReplies = data["numComments"] as? Int {
+            let numReplies = data["numReplies"] as? Int,
+            let tags = data["hashtags"] as? [String] {
             
             let attachments = Attachments.parse(data)
             let location = LocationPair.parse(data)
@@ -71,7 +79,7 @@ class Post {
                 replyTo = _replyTo
             }
             
-            post = Post(key: id, anon: anon, text: text, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, votes: votes, numReplies: numReplies, replies:[], parent: parent, replyTo: replyTo )
+            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, votes: votes, numReplies: numReplies, replies:[], parent: parent, replyTo: replyTo )
         }
         return post
     }

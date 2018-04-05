@@ -24,7 +24,7 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
     var tapHandler:((_ type: ActiveTextType, _ value: String)->())?
     
     
-    public func setText(text: String, withFont font: UIFont, normalColor: UIColor, activeColor: UIColor) {
+    public func setText(text: String, withSize size: CGFloat, normalColor: UIColor, activeColor: UIColor) {
         self.delegate = self
         self.isUserInteractionEnabled = true
         self.passthroughNonlinkTouches = true
@@ -37,31 +37,28 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         self.attrString = attributedString
         self.textString = text
         
+        let font = Fonts.medium(ofSize: size)
         // Set initial font attributes for our string
         attrString?.addAttribute(NSAttributedStringKey.font, value: font, range: NSRange(location: 0, length: count))
         attrString?.addAttribute(NSAttributedStringKey.foregroundColor, value: normalColor, range: NSRange(location: 0, length: count))
         
         // Call a custom set Hashtag and Mention Attributes Function
-        setAttrWithName(attrName: ActiveTextType.hashtag.rawValue, wordPrefix: "#", color: activeColor, text: text, font: font)
-        setAttrWithName(attrName: ActiveTextType.mention.rawValue, wordPrefix: "@", color: activeColor, text: text, font: font)
-        setAttrWithName(attrName: ActiveTextType.link.rawValue, wordPrefix: "http://", color: activeColor, text: text, font: font)
-        setAttrWithName(attrName: ActiveTextType.link.rawValue, wordPrefix: "https://", color: activeColor, text: text, font: font)
+        setAttrWithName(color: activeColor, text: text, size: size)
         
     }
     
     
-    private func setAttrWithName(attrName: String, wordPrefix: String, color: UIColor, text: String, font: UIFont) {
+    private func setAttrWithName(color: UIColor, text: String, size: CGFloat) {
 
-        var textLength = text.utf16.count
-        var textRange = NSRange(location: 0, length: textLength)
+        let textLength = text.utf16.count
+        let textRange = NSRange(location: 0, length: textLength)
         
         let elements = RegexParser.getElements(from: text, with: RegexParser.hashtagPattern, range: textRange)
         //print("ELEMENTS: \(elements)")
         for element in elements {
             let range = Range(element.range, in: text)!
             let str = text.substring(with: range)
-            attrString?.addAttributes([NSAttributedStringKey(rawValue: attrName): str,
-                                                  NSAttributedStringKey.foregroundColor: color], range: element.range)
+            attrString?.addAttributes([NSAttributedStringKey.font: Fonts.semiBold(ofSize: size)], range: element.range)
         }
         
         let mentionElements = RegexParser.getElements(from: text, with: RegexParser.mentionPattern, range: textRange)
@@ -69,8 +66,7 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         for element in mentionElements {
             let range = Range(element.range, in: text)!
             let str = text.substring(with: range)
-            attrString?.addAttributes([NSAttributedStringKey(rawValue: attrName): str,
-                                       NSAttributedStringKey.foregroundColor: color], range: element.range)
+            attrString?.addAttributes([NSAttributedStringKey.foregroundColor: color], range: element.range)
             
         }
         

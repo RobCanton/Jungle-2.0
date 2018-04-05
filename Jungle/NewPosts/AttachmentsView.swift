@@ -230,6 +230,7 @@ class AttachmentCollectionCell: UICollectionViewCell {
                                                 // We update the UI only when it is still on the screen.
                                                 if self.representedAssetIdentifier == asset.asset.localIdentifier {
                                                     asset.image = image
+                                                    
                                                     self.imageView.image = image
                                                 }
         }

@@ -71,7 +71,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         
         view.addSubview(tableNode.view)
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
-        tableNode.contentInset = UIEdgeInsetsMake(12.0, 0.0, 0.0, 0.0)
+        tableNode.contentInset = UIEdgeInsetsMake(8.0, 0.0, 0.0, 0.0)
         var layoutGuide:UILayoutGuide!
         
         layoutGuide = view.safeAreaLayoutGuide
@@ -85,7 +85,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         tableNode.dataSource = self
         tableNode.view.separatorStyle = .none
         tableNode.view.showsVerticalScrollIndicator = false
-        tableNode.view.delaysContentTouches = false
+        //tableNode.view.delaysContentTouches = false
         tableNode.view.backgroundColor = hexColor(from: "#F2F6EF")
         
         //tableNode.allowsSelection = false
@@ -117,7 +117,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         
         if let postCellNodes = tableNode.visibleNodes as? [PostCellNode] {
             for node in postCellNodes {
-                //node.setSelected(false)
+                node.setSelected(false)
             }
         }
     }
@@ -144,6 +144,9 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         }, completion: nil)
     }
     
+    func shouldBatchFetch(for tableNode: ASTableNode) -> Bool {
+        return type == .newest
+    }
     
     func listenForNewPosts() {
         if type == .popular || type == .nearby {
@@ -166,11 +169,13 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
                     let firstDocument = snapshot!.documents[0]
                     let key = firstDocument.documentID
                     if self.state.postKeys[key] == nil {
-                        if let pendingPostKey = UploadService.pendingPostKey, key == pendingPostKey {
-                            UploadService.pendingPostKey = nil
-                            self.handleRefresh()
-                        } else {
-                            self.showSeeNewPosts(true)
+                        if let _ = Post.parse(id: key, firstDocument.data()) {
+                            if let pendingPostKey = UploadService.pendingPostKey, key == pendingPostKey {
+                                UploadService.pendingPostKey = nil
+                                self.handleRefresh()
+                            } else {
+                                self.showSeeNewPosts(true)
+                            }
                         }
                     }
                 }
@@ -413,7 +418,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
-        //node.setSelected(true)
+        node.setSelected(true)
         let controller = SinglePostViewController()
         controller.hidesBottomBarWhenPushed = true
         controller.post = state.posts[indexPath.row]
@@ -422,17 +427,17 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     
     func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
-        //node.setSelected(false)
+        node.setSelected(false)
     }
     
     func tableNode(_ tableNode: ASTableNode, didHighlightRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
-        //node.setHighlighted(true)
+        node.setHighlighted(true)
     }
     
     func tableNode(_ tableNode: ASTableNode, didUnhighlightRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
-        //node.setHighlighted(false)
+        node.setHighlighted(false)
     }
     
     

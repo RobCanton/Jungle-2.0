@@ -178,7 +178,7 @@ class UploadService {
     }
     
     
-    static func uploadPost(text:String, images:[SelectedImage], includeLocation:Bool?=nil) {
+    static func uploadPost(text:String, images:[SelectedImage], tags:[String], includeLocation:Bool?=nil) {
         
         Alerts.showInfoAlert(withMessage: "Uploading...")
         
@@ -187,7 +187,8 @@ class UploadService {
                
                 var parameters: [String: Any] = [
                     "uid" : uid,
-                    "text" : text
+                    "text" : text,
+                    "tags": tags
                 ]
                 
                 if includeLocation != nil, includeLocation!, let location = gpsService.getLastLocation() {

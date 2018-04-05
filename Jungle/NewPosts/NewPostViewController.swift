@@ -35,17 +35,23 @@ class NewPostViewController:UIViewController {
     
     var newPost:NewPost?
     @IBAction func handlePostButton() {
-        UploadService.uploadPost(text: composerView.textView.text,
-                                 images: composerView.imagesView.selectedImages,
-                                 includeLocation:true)
-        self.dismiss(animated: true, completion: nil)
+        newPost = NewPost(text: composerView.textView.text, attachments: composerView.imagesView.selectedImages)
+        self.performSegue(withIdentifier: "toTagsSelector", sender: self)
+////        PostsService.getSuggestedTags(forText: composerView.textView.text) {
+////            print("GOT EM!")
+////        }
+//        UploadService.uploadPost(text: composerView.textView.text,
+//                                 images: composerView.imagesView.selectedImages,
+//                                 includeLocation:true)
+//        self.dismiss(animated: true, completion: nil)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let newPost = newPost else { return }
-        if segue.identifier == "toGroupSelector" {
-            let dest = segue.destination as! PostGroupViewController
+        if segue.identifier == "toTagsSelector" {
+            let dest = segue.destination as! TagsSelectorViewController
             dest.newPost = newPost
+            
         }
     }
     

@@ -99,7 +99,7 @@ class CommentCellNode:ASCellNode {
         postImageNode.isUserInteractionEnabled = true
         
         titleNode.attributedText = NSAttributedString(string: reply.anon.displayName, attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: reply.anon.color
             ])
         
@@ -131,7 +131,7 @@ class CommentCellNode:ASCellNode {
         postTextNode.maximumNumberOfLines = 0
         postTextNode.truncationMode = .byWordWrapping
         
-        postTextNode.setText(text: reply.text, withFont: Fonts.regular(ofSize: 14.0), normalColor: UIColor.black, activeColor: accentColor)
+        postTextNode.setText(text: reply.text, withSize: 14.0, normalColor: UIColor.black, activeColor: accentColor)
         postTextNode.tapHandler = { type, textValue in
            
         }
@@ -144,8 +144,8 @@ class CommentCellNode:ASCellNode {
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
         
-        dividerNode.backgroundColor = subtitleColor.withAlphaComponent(0.25)
-        dividerNode.isHidden = self.isReply
+        dividerNode.backgroundColor = hexColor(from: "#F2F6EF")
+        dividerNode.isHidden = hideDivider ?? false
         replyLine.isHidden = hideReplyLine ?? true
         
         replyLine.backgroundColor = subtitleColor.withAlphaComponent(0.25)
@@ -205,7 +205,7 @@ class CommentCellNode:ASCellNode {
         selectionStyle = .none
         
         imageNode.clipsToBounds = true
-        imageNode.layer.cornerRadius = Constants.imageWidth / 2
+        imageNode.layer.cornerRadius = 10.0
         
         replyLine.cornerRadius = Constants.replyLineWidth / 2
         replyLine.clipsToBounds = true
@@ -221,8 +221,8 @@ class CommentCellNode:ASCellNode {
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        imageNode.style.width = ASDimension(unit: .points, value: Constants.imageWidth)
-        imageNode.style.height = ASDimension(unit: .points, value: Constants.imageWidth)
+        imageNode.style.width = ASDimension(unit: .points, value: 20.0)
+        imageNode.style.height = ASDimension(unit: .points, value: 20.0)
         
         
         likeButton.style.height = ASDimension(unit: .points, value: 32.0)
@@ -231,101 +231,73 @@ class CommentCellNode:ASCellNode {
         
         dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
         
+        
         subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
         
-        
+        let titleCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: titleNode)
         let subnameCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
+        let subtitleCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subtitleNode)
         
-        let nameStack = ASStackLayoutSpec.horizontal()
-        nameStack.children = [titleNode]
-        nameStack.spacing = 4.0
+        let hTitleStack = ASStackLayoutSpec.horizontal()
+        hTitleStack.children = [titleCenterY]
+        hTitleStack.spacing = 4.0
         
         if !subnameNode.isHidden {
-            nameStack.children?.append(subnameCenterY)
+            hTitleStack.children?.append(subnameCenterY)
         }
         
-        replyLine.style.width = ASDimension(unit: .points, value: Constants.replyLineWidth)
-        replyLine.style.flexGrow = 1.0
-        let replyLineXPos = Constants.mainInsets.left + Constants.imageWidth/2 - Constants.replyLineWidth/2
-        var top = Constants.mainInsets.top
-        if isReply {
-            top = ReplyConstants.mainInsets.top
-        }
-        replyLine.style.layoutPosition = CGPoint(x:replyLineXPos, y: Constants.imageWidth + 4.0 + top)
-        let replyLineAbs = ASAbsoluteLayoutSpec(children: [replyLine])
+        subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
         
-        let imageStack = ASStackLayoutSpec.vertical()
-        imageStack.children = [imageNode]
-        imageStack.style.layoutPosition = CGPoint(x: 0, y: 0)
+        let nameStack = ASStackLayoutSpec.horizontal()
+        nameStack.spacing = 1.0
+        nameStack.children = [hTitleStack, subtitleCenterY]
         
-        let subtitleCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subtitleNode)
-        let subtitleInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 0), child: subtitleCenterY)
+        let imageStack = ASStackLayoutSpec.horizontal()
+        imageStack.children = [imageNode, nameStack]
+        imageStack.spacing = 8.0
         
-        let titleStack = ASStackLayoutSpec.horizontal()
-        titleStack.children = [nameStack, subtitleInset]
-        titleStack.spacing = 0.0
+        let imageInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(12, 12, 0, 12), child: imageStack)
         
-        let titleRow = ASStackLayoutSpec.horizontal()
-        titleStack.style.flexGrow = 1.0
-        titleRow.children = [ titleStack]
+        let leftActions = ASStackLayoutSpec.horizontal()
+        leftActions.children = [ likeButton, dislikeButton, commentButton]
+        leftActions.spacing = 0.0
         
         let countCenterY = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: countLabel)
         let likeStack = ASStackLayoutSpec.horizontal()
         likeStack.children = [ likeButton, countCenterY, dislikeButton ]
-        likeStack.spacing = 4.0
+        likeStack.spacing = 0.0
         
-        countLabel.style.width = ASDimension(unit: .points, value: 24)
+        countLabel.style.width = ASDimension(unit: .points, value: 28.0)
         countLabel.style.flexGrow = 1.0
         likeButton.style.flexShrink = 1.0
         dislikeButton.style.flexShrink = 1.0
-//        likeStack.style.width = ASDimension(unit: .fraction, value: 0.35)
-//        commentButton.style.width = ASDimension(unit: .fraction, value: 0.35)
-//        moreButtonNode.style.width = ASDimension(unit: .fraction, value: 0.3)
-
-        gapNode.style.flexGrow = 1.0
+        likeStack.style.width = ASDimension(unit: .fraction, value: 0.35)
+        commentButton.style.width = ASDimension(unit: .fraction, value: 0.35)
         
         let actionsRow = ASStackLayoutSpec.horizontal()
-        actionsRow.children = [ likeStack]
-        actionsRow.spacing = 32.0
-        //actionsRow.justifyContent = .end
-        
+        actionsRow.style.flexGrow = 1.0
+        actionsRow.children = [ likeStack, commentButton]
+        actionsRow.spacing = 8.0
         
         let contentStack = ASStackLayoutSpec.vertical()
-        contentStack.children = [titleRow]
-        contentStack.spacing = 4.0
+        contentStack.children = [imageInset]
+        contentStack.spacing = 8.0
         
-        if let text = reply?.text, !text.isEmpty {
-            contentStack.children?.append(postTextNode)
+        let textInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12, 0, 12), child: postTextNode)
+        
+        if let text = post?.text, !text.isEmpty {
+            contentStack.children?.append(textInset)
         }
-        var ainsets = UIEdgeInsets.zero
         
-        ainsets = UIEdgeInsetsMake(0, -6.0, 0, -16.0)
+        if let attachments = post? .attachments {
+            if attachments.images.count > 0 {
+                contentStack.children?.append(postImageNode)
+            }
+        }
         
-        let actionsInset = ASInsetLayoutSpec(insets: ainsets, child: actionsRow)
+        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12, 12, 12), child: actionsRow)
         contentStack.children?.append(actionsInset)
-        
-        let mainVerticalStack = ASStackLayoutSpec.vertical()
-        mainVerticalStack.children = [contentStack]
-        mainVerticalStack.spacing = 0.0
-        
-        
-        let abs = ASAbsoluteLayoutSpec(children: [imageStack, mainVerticalStack])
-        
-        var insets:UIEdgeInsets!
-        actionsRow.children?.append(commentButton)
-        mainVerticalStack.style.layoutPosition = CGPoint(x: CommentCellNode.Constants.imageWidth + 8.0, y: 0)
-        
-        if self.isReply {
-            insets = UIEdgeInsets(top: 4.0, left: 16.0, bottom: 6.0, right: 0.0)
-        } else {
-            insets = UIEdgeInsets(top: 12.0, left: 16.0, bottom: 6.0, right: 6.0)
-        }
-        let mainInset = ASInsetLayoutSpec(insets: insets, child: abs)
-        let o = ASOverlayLayoutSpec(child: mainInset, overlay: replyLineAbs)
-        let yoursaying = ASStackLayoutSpec.vertical()
-        yoursaying.children = [dividerNode, o]
-        yoursaying.spacing = 0.0
-        return yoursaying
+        return contentStack
     
     }
 

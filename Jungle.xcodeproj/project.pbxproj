@@ -11,6 +11,7 @@
 		B00124642068560A00E5F2A6 /* SearchTabViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00124632068560A00E5F2A6 /* SearchTabViewController.swift */; };
 		B0017D8D204A10FB00E20DE8 /* PushTransitionAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0017D8C204A10FB00E20DE8 /* PushTransitionAnimation.swift */; };
 		B0017D8F204A1AAA00E20DE8 /* JNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0017D8E204A1AAA00E20DE8 /* JNavigationBar.swift */; };
+		B00409432074A2B9009344A0 /* PostTagsCollectionNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00409422074A2B9009344A0 /* PostTagsCollectionNode.swift */; };
 		B0058C6E203BCD7200510EEC /* LoadingCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */; };
 		B0058C70203BDACF00510EEC /* NewPostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0058C6F203BDACF00510EEC /* NewPostsView.swift */; };
 		B0058C72203BDB1300510EEC /* NewPostsView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B0058C71203BDB1300510EEC /* NewPostsView.xib */; };
@@ -64,7 +65,7 @@
 		B0E11B7A203A904500EF0814 /* UploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E11B79203A904500EF0814 /* UploadService.swift */; };
 		B0E4A21B2047E67D00037D0C /* GroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E4A2192047E67D00037D0C /* GroupCell.swift */; };
 		B0E4A21C2047E67D00037D0C /* GroupCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B0E4A21A2047E67D00037D0C /* GroupCell.xib */; };
-		B0E4A21E2047E8B500037D0C /* PostGroupSelectorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E4A21D2047E8B500037D0C /* PostGroupSelectorViewController.swift */; };
+		B0E4A21E2047E8B500037D0C /* TagsSelectorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E4A21D2047E8B500037D0C /* TagsSelectorViewController.swift */; };
 		B0E4A2202047F6A700037D0C /* Group.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E4A21F2047F6A700037D0C /* Group.swift */; };
 		B0F50ECC203775E900037343 /* ASRoundShadowedImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F50ECB203775E900037343 /* ASRoundShadowedImage.swift */; };
 		B0F50ECE20377B3400037343 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B0F50ECD20377B3400037343 /* GoogleService-Info.plist */; };
@@ -84,6 +85,7 @@
 		B00124632068560A00E5F2A6 /* SearchTabViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTabViewController.swift; sourceTree = "<group>"; };
 		B0017D8C204A10FB00E20DE8 /* PushTransitionAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushTransitionAnimation.swift; sourceTree = "<group>"; };
 		B0017D8E204A1AAA00E20DE8 /* JNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JNavigationBar.swift; sourceTree = "<group>"; };
+		B00409422074A2B9009344A0 /* PostTagsCollectionNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostTagsCollectionNode.swift; sourceTree = "<group>"; };
 		B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingCellNode.swift; sourceTree = "<group>"; };
 		B0058C6F203BDACF00510EEC /* NewPostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostsView.swift; sourceTree = "<group>"; };
 		B0058C71203BDB1300510EEC /* NewPostsView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NewPostsView.xib; sourceTree = "<group>"; };
@@ -140,7 +142,7 @@
 		B0E11B79203A904500EF0814 /* UploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadService.swift; sourceTree = "<group>"; };
 		B0E4A2192047E67D00037D0C /* GroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCell.swift; sourceTree = "<group>"; };
 		B0E4A21A2047E67D00037D0C /* GroupCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = GroupCell.xib; sourceTree = "<group>"; };
-		B0E4A21D2047E8B500037D0C /* PostGroupSelectorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostGroupSelectorViewController.swift; sourceTree = "<group>"; };
+		B0E4A21D2047E8B500037D0C /* TagsSelectorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsSelectorViewController.swift; sourceTree = "<group>"; };
 		B0E4A21F2047F6A700037D0C /* Group.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Group.swift; sourceTree = "<group>"; };
 		B0F50ECB203775E900037343 /* ASRoundShadowedImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRoundShadowedImage.swift; sourceTree = "<group>"; };
 		B0F50ECD20377B3400037343 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -280,7 +282,7 @@
 				B07F61082044983E005010B7 /* ComposerView.swift */,
 				B07F610A20449AE0005010B7 /* TopicsBarView.swift */,
 				B0E11B77203A13A000EF0814 /* AttachmentsView.swift */,
-				B0E4A21D2047E8B500037D0C /* PostGroupSelectorViewController.swift */,
+				B0E4A21D2047E8B500037D0C /* TagsSelectorViewController.swift */,
 				B0E4A2192047E67D00037D0C /* GroupCell.swift */,
 				B0E4A21A2047E67D00037D0C /* GroupCell.xib */,
 			);
@@ -297,6 +299,7 @@
 				B01E2A59203D5352006C8C2D /* HomeTitleView.xib */,
 				B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */,
 				B0B29DF7203768A700FBE5FF /* PostCellNode.swift */,
+				B00409422074A2B9009344A0 /* PostTagsCollectionNode.swift */,
 				B04D4E5320492737000A1033 /* SearchViewController.swift */,
 				B09CAFE1204938AB009C3901 /* PostsViewController.swift */,
 				B04D4E57204929FB000A1033 /* SearchBarView.swift */,
@@ -467,6 +470,7 @@
 				"${SRCROOT}/Pods/Target Support Files/Pods-Jungle/Pods-Jungle-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework",
 				"${BUILT_PRODUCTS_DIR}/AlgoliaSearch-Client-Swift/AlgoliaSearch.framework",
+				"${BUILT_PRODUCTS_DIR}/AlignedCollectionViewFlowLayout/AlignedCollectionViewFlowLayout.framework",
 				"${BUILT_PRODUCTS_DIR}/BoringSSL/openssl.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
 				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac/GoogleToolboxForMac.framework",
@@ -477,6 +481,7 @@
 				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
 				"${BUILT_PRODUCTS_DIR}/ScrollableGraphView/ScrollableGraphView.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftMessages/SwiftMessages.framework",
+				"${BUILT_PRODUCTS_DIR}/TagCellLayout/TagCellLayout.framework",
 				"${BUILT_PRODUCTS_DIR}/Texture/AsyncDisplayKit.framework",
 				"${BUILT_PRODUCTS_DIR}/gRPC/GRPCClient.framework",
 				"${BUILT_PRODUCTS_DIR}/gRPC-Core/grpc.framework",
@@ -489,6 +494,7 @@
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Alamofire.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AlgoliaSearch.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AlignedCollectionViewFlowLayout.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/openssl.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleToolboxForMac.framework",
@@ -499,6 +505,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ScrollableGraphView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftMessages.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/TagCellLayout.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AsyncDisplayKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GRPCClient.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/grpc.framework",
@@ -559,10 +566,11 @@
 				B0F50ED52037A6BA00037343 /* Post.swift in Sources */,
 				B0B29DF62037663D00FBE5FF /* HomeViewController.swift in Sources */,
 				B09CAFE2204938AB009C3901 /* PostsViewController.swift in Sources */,
-				B0E4A21E2047E8B500037D0C /* PostGroupSelectorViewController.swift in Sources */,
+				B0E4A21E2047E8B500037D0C /* TagsSelectorViewController.swift in Sources */,
 				B07F611620454461005010B7 /* ImageDismissAnimationController.swift in Sources */,
 				B01E2A56203D4B4F006C8C2D /* PostsTableViewController.swift in Sources */,
 				B07F610B20449AE0005010B7 /* TopicsBarView.swift in Sources */,
+				B00409432074A2B9009344A0 /* PostTagsCollectionNode.swift in Sources */,
 				B0E11B7A203A904500EF0814 /* UploadService.swift in Sources */,
 				B0B29DF42037607600FBE5FF /* NewPostViewController.swift in Sources */,
 				B0B29E032037717500FBE5FF /* Constants.swift in Sources */,

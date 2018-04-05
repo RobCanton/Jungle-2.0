@@ -49,7 +49,7 @@
                                 </button>
                             </subviews>
                         </stackView>
-                        <view alpha="0.25" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="UBN-sX-GKj">
+                        <view hidden="YES" alpha="0.25" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="UBN-sX-GKj">
                             <rect key="frame" x="0.0" y="43.5" width="334" height="0.5"/>
                             <color key="backgroundColor" red="0.4392156862745098" green="0.50196078431372548" blue="0.47058823529411764" alpha="1" colorSpace="calibratedRGB"/>
                             <constraints>

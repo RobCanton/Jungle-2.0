@@ -31,14 +31,26 @@ class PostCellNode:ASCellNode {
     override func didLoad() {
         super.didLoad()
         selectionStyle = .none
-        postCellNode.clipsToBounds = false
-        postCellNode.view.applyShadow(radius: 8.0, opacity: 0.20, offset: CGSize(width: 0, height: 6.0), color: hexColor(from: "#617660"), shouldRasterize: false)
+        postCellNode.layer.cornerRadius = 8.0
+        postCellNode.clipsToBounds = true
+        view.clipsToBounds = false
+        view.applyShadow(radius: 8.0, opacity: 0.25, offset: CGSize(width: 0, height: 6.0), color: hexColor(from: "#617660"), shouldRasterize: false)
         
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         let inset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0.0, 8.0, 12.0, 8.0), child: postCellNode)
         return inset
+    }
+    
+    func setHighlighted(_ highlighted:Bool) {
+        print("setHighlighted: \(highlighted)")
+        postCellNode.alpha = highlighted ? 0.67 : 1.0
+    }
+    
+    func setSelected(_ selected:Bool) {
+        print("setSelected: \(selected)")
+        postCellNode.alpha = selected ? 0.67 : 1.0
     }
 }
 
@@ -47,7 +59,7 @@ class PostContentCellNode:ASDisplayNode {
     let gradientColorTop = accentColor
     let gradientColorBot = hexColor(from: "#22D29F")
     
-    var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 20.0, imageShadowRadius: 0.0)
+    var imageNode = ASRoundShadowedImageNode(imageCornerRadius: 16.0, imageShadowRadius: 0.0)
     var titleNode = ASTextNode()
     var subnameNode = ASTextNode()
     var subtitleNode = ASTextNode()
@@ -64,10 +76,12 @@ class PostContentCellNode:ASDisplayNode {
     let groupNode = ASButtonNode()
     
     let countLabel = ASTextNode()
-    var postImageNode = ASRoundShadowedImageNode(imageCornerRadius: 16.0, imageShadowRadius: 8.0)
+    var postImageNode = ASNetworkImageNode()
     
     var transitionManager = LightboxViewerTransitionManager()
     weak var delegate:PostCellDelegate?
+    
+    var tagsCollectionNode = PostTagsCollectionNode()
     
     let gapNode = ASDisplayNode()
     
@@ -104,16 +118,16 @@ class PostContentCellNode:ASDisplayNode {
         commentImage = UIImage(named:"comment2")
         moreImage = UIImage(named:"more")
         
-        backgroundColor = UIColor.white
+        backgroundColor = post.anon.color//UIColor.white
         
-        imageNode.mainImageNode.backgroundColor = post.anon.color
+        imageNode.mainImageNode.backgroundColor = UIColor.white.withAlphaComponent(0.5)//post.anon.color
         
         postImageNode.addTarget(self, action: #selector(handleImageTap), forControlEvents: .touchUpInside)
         postImageNode.isUserInteractionEnabled = true
         
         titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: post.anon.color
+            NSAttributedStringKey.foregroundColor: UIColor.white//post.anon.color
             ])
         
         var subnameStr = ""
@@ -126,10 +140,10 @@ class PostContentCellNode:ASDisplayNode {
         
         subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
-            NSAttributedStringKey.foregroundColor: UIColor.white
+            NSAttributedStringKey.foregroundColor: post.anon.color//UIColor.white
             ])
         subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 0, right: 4.0)
-        subnameNode.backgroundColor = post.anon.color
+        subnameNode.backgroundColor = UIColor.white//post.anon.color
         
         var locationStr = ""
         if let location = post.location {
@@ -140,15 +154,15 @@ class PostContentCellNode:ASDisplayNode {
         
         subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: textColor
+            NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.75)//textColor
             ])
         
         postTextNode.maximumNumberOfLines = 0
         postTextNode.truncationMode = .byWordWrapping
         
-        let postFont = self.isSinglePost ? Fonts.regular(ofSize: 18.0) : Fonts.regular(ofSize: 16.0)
+        let fontSize:CGFloat = self.isSinglePost ? 18.0 : 16.0
         
-        postTextNode.setText(text: post.text, withFont: postFont, normalColor: UIColor.black, activeColor: accentColor)
+        postTextNode.setText(text: post.textClean, withSize: fontSize, normalColor: UIColor.white, activeColor: accentColor)
         postTextNode.tapHandler = { type, textValue in
             switch type {
             case .hashtag:
@@ -165,7 +179,7 @@ class PostContentCellNode:ASDisplayNode {
         paragraph.alignment = .center
         countLabel.attributedText = NSAttributedString(string: "\(post.votes)", attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: buttonColor,
+            NSAttributedStringKey.foregroundColor: UIColor.white,
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
         
@@ -174,10 +188,9 @@ class PostContentCellNode:ASDisplayNode {
             if attachments.images.count > 0 {
                 let image = attachments.images[0]
                 let color =  hexColor(from: image.colorHex)
-                postImageNode.mainImageNode.backgroundColor = color
-                postImageNode.mainImageNode.url = image.url
-                postImageNode.style.height = ASDimension(unit: .points, value: 192)
-                postImageNode.applyShadow(withColor: color, opacity: 0.5)
+                postImageNode.backgroundColor = color
+                postImageNode.url = image.url
+                postImageNode.style.height = ASDimension(unit: .points, value: UIScreen.main.bounds.width)
             }
         } else {
             postImageNode.style.height = ASDimension(unit: .points, value: 0.0)
@@ -213,18 +226,29 @@ class PostContentCellNode:ASDisplayNode {
         moreButtonNode.addTarget(self, action: #selector(handleMoreButton), forControlEvents: .touchUpInside)
         moreButtonNode.contentHorizontalAlignment = .right
         
-        let groupText = NSAttributedString(string: "Marvel Movies", attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: post.anon.color
-            ])
-        groupNode.setAttributedTitle(groupText, for: .normal)
-        groupNode.contentEdgeInsets = UIEdgeInsetsMake(0, 8.0, 0.0, 8.0)
-        groupNode.contentHorizontalAlignment = .left
-        groupNode.layer.cornerRadius = 12.0
-        groupNode.clipsToBounds = true
+        let textFont = Fonts.regular(ofSize: 12.0)
         
-        groupNode.layer.borderColor = post.anon.color.cgColor
-        groupNode.layer.borderWidth = 1.5
+        let maxWidth = UIScreen.main.bounds.width - 48.0
+        var numLines:Int = post.tags.count > 0 ? 1 : 0
+        var currentWidth:CGFloat = 0
+        for tag in post.tags {
+            
+            let textWidth = UILabel.size(text: tag, height: 24.0, font: textFont).width + 12
+            if currentWidth + textWidth < maxWidth {
+                currentWidth += textWidth
+            } else {
+                numLines += 1
+                currentWidth = 0
+            }
+        }
+        
+        var gaps:CGFloat = 0
+        if numLines > 0 {
+            gaps = CGFloat(numLines - 1) * 8.0
+        }
+        let tagsHeight = gaps + CGFloat(numLines) * 24.0
+        tagsCollectionNode.style.height = ASDimension(unit: .points, value: tagsHeight)
+        tagsCollectionNode.tags = post.tags
         
     }
     
@@ -242,18 +266,14 @@ class PostContentCellNode:ASDisplayNode {
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
-        
-        imageNode.style.width = ASDimension(unit: .points, value: 40.0)
-        imageNode.style.height = ASDimension(unit: .points, value: 40.0)
-        
+        imageNode.style.width = ASDimension(unit: .points, value: 32.0)
+        imageNode.style.height = ASDimension(unit: .points, value: 32.0)
         
         likeButton.style.height = ASDimension(unit: .points, value: 32.0)
         dislikeButton.style.height = ASDimension(unit: .points, value: 32.0)
         commentButton.style.height = ASDimension(unit: .points, value: 32.0)
         
         dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
-        
-        
         subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
         
         let subnameCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
@@ -266,117 +286,47 @@ class PostContentCellNode:ASDisplayNode {
             hTitleStack.children?.append(subnameCenterY)
         }
         
-        if isSinglePost {
-            subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
-            
-            
-            let nameStack = ASStackLayoutSpec.vertical()
-            nameStack.spacing = 2.0
-            nameStack.children = [hTitleStack, subtitleNode]
-            
-            let imageStack = ASStackLayoutSpec.horizontal()
-            imageStack.children = [imageNode, nameStack]
-            imageStack.spacing = 8.0
-            
-            let leftActions = ASStackLayoutSpec.horizontal()
-            leftActions.children = [ likeButton, dislikeButton, commentButton]
-            leftActions.spacing = 0.0
-            
-            let countCenterY = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: countLabel)
-            let likeStack = ASStackLayoutSpec.horizontal()
-            likeStack.children = [ likeButton, countCenterY, dislikeButton ]
-            likeStack.spacing = 0.0
-            
-            countLabel.style.width = ASDimension(unit: .points, value: 28.0)
-            countLabel.style.flexGrow = 1.0
-            likeButton.style.flexShrink = 1.0
-            dislikeButton.style.flexShrink = 1.0
-            likeStack.style.width = ASDimension(unit: .fraction, value: 0.35)
-            commentButton.style.width = ASDimension(unit: .fraction, value: 0.35)
-            
-            let actionsRow = ASStackLayoutSpec.horizontal()
-            actionsRow.style.flexGrow = 1.0
-            actionsRow.children = [ likeStack, commentButton]
-            actionsRow.spacing = 8.0
-            actionsRow.style.width = ASDimension(unit: .fraction, value: 1.0)
-            
-            
-            let contentStack = ASStackLayoutSpec.vertical()
-            contentStack.children = [imageStack]
-            contentStack.spacing = 10.0
-            
-            let textInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 0.0), child: postTextNode)
-            
-            if let text = post?.text, !text.isEmpty {
-                contentStack.children?.append(textInset)
-            }
-            
-            if let attachments = post? .attachments {
-                if attachments.images.count > 0 {
-                    contentStack.children?.append(postImageNode)
-                }
-            }
-            
-            let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 16.0), child: actionsRow)
-            contentStack.children?.append(actionsInset)
-            
-            let mainInset = ASInsetLayoutSpec(insets: PostContentCellNode.mainInsets, child: contentStack)
-            let mainVerticalStack = ASStackLayoutSpec.vertical()
-            mainVerticalStack.children = [mainInset, dividerNode]
-            mainVerticalStack.spacing = 4.0
-            return mainVerticalStack
-        }
+        subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
         
-        let imageStack = ASStackLayoutSpec.vertical()
-        imageStack.children = [imageNode]
-        imageStack.spacing = 6.0
-        imageStack.style.layoutPosition = CGPoint(x: 0, y: 0)
+        let nameStack = ASStackLayoutSpec.vertical()
+        nameStack.spacing = 1.0
+        nameStack.children = [hTitleStack, subtitleNode]
         
-        let titleStack = ASStackLayoutSpec.vertical()
-        titleStack.children = [hTitleStack, subtitleNode]
-        titleStack.spacing = 2.0
+        let imageStack = ASStackLayoutSpec.horizontal()
+        imageStack.children = [imageNode, nameStack]
+        imageStack.spacing = 10.0
         
-        //let rankCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: rankButton)
-        let titleRow = ASStackLayoutSpec.horizontal()
-        titleStack.style.flexGrow = 1.0
-        titleRow.children = [ titleStack, rankButton]
-        
+        let imageInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(12, 12, 0, 12), child: imageStack)
         
         let leftActions = ASStackLayoutSpec.horizontal()
         leftActions.children = [ likeButton, dislikeButton, commentButton]
         leftActions.spacing = 0.0
         
-    
         let countCenterY = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: countLabel)
         let likeStack = ASStackLayoutSpec.horizontal()
         likeStack.children = [ likeButton, countCenterY, dislikeButton ]
         likeStack.spacing = 0.0
-    
+        
         countLabel.style.width = ASDimension(unit: .points, value: 28.0)
         countLabel.style.flexGrow = 1.0
         likeButton.style.flexShrink = 1.0
         dislikeButton.style.flexShrink = 1.0
         likeStack.style.width = ASDimension(unit: .fraction, value: 0.35)
         commentButton.style.width = ASDimension(unit: .fraction, value: 0.35)
-        moreButtonNode.style.width = ASDimension(unit: .fraction, value: 0.3)
-        
-        let rightActions = ASStackLayoutSpec.horizontal()
-        rightActions.children = [  ]
-        rightActions.spacing = 8.0
-        
-        gapNode.style.flexGrow = 1.0
         
         let actionsRow = ASStackLayoutSpec.horizontal()
-
-        actionsRow.children = [ likeStack, commentButton, moreButtonNode]
+        actionsRow.style.flexGrow = 1.0
+        actionsRow.children = [ likeStack, commentButton]
         actionsRow.spacing = 8.0
         
         let contentStack = ASStackLayoutSpec.vertical()
-        contentStack.children = [titleRow]
-        contentStack.spacing = 8.0
+        contentStack.children = [imageInset]
+        contentStack.spacing = 10.0
         
+        let textInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12, 0, 12), child: postTextNode)
+            
         if let text = post?.text, !text.isEmpty {
-            contentStack.children?.append(postTextNode)
+            contentStack.children?.append(textInset)
         }
         
         if let attachments = post? .attachments {
@@ -384,23 +334,13 @@ class PostContentCellNode:ASDisplayNode {
                 contentStack.children?.append(postImageNode)
             }
         }
+        if let tags = post?.tags, tags.count > 0 {
+            contentStack.children?.append(tagsCollectionNode)
+        }
         
-        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, -4, 0, 16.0), child: actionsRow)
+        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12, 12, 12), child: actionsRow)
         contentStack.children?.append(actionsInset)
-        let contentWidth = constrainedSize.max.width - (PostContentCellNode.mainInsets.left + PostContentCellNode.mainInsets.right + 40.0 + 10.0)
-        contentStack.style.width = ASDimension(unit: .points, value: contentWidth)
-        let mainVerticalStack = ASStackLayoutSpec.vertical()
-        mainVerticalStack.children = [contentStack]
-        mainVerticalStack.spacing = 4.0
-        
-        mainVerticalStack.style.layoutPosition = CGPoint(x: 40.0 + 10.0, y: 0)
-        
-        let abs = ASAbsoluteLayoutSpec(children: [imageStack, mainVerticalStack])
-        let mainInset = ASInsetLayoutSpec(insets: PostContentCellNode.mainInsets, child: abs)
-        let dividerStack = ASStackLayoutSpec.vertical()
-        dividerStack.children = [mainInset, dividerNode]
-        dividerStack.spacing = 6.0
-        return dividerStack
+        return contentStack
     }
 
     func setComments(count:Int) {
@@ -568,7 +508,7 @@ class PostContentCellNode:ASDisplayNode {
         paragraph.alignment = .center
         countLabel.attributedText = NSAttributedString(string: "\(votes)", attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: buttonColor,
+            NSAttributedStringKey.foregroundColor: UIColor.white,
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
     }
@@ -619,17 +559,6 @@ class PostContentCellNode:ASDisplayNode {
         stopListeningToPost()
     }
     
-    
-    func setHighlighted(_ highlighted:Bool) {
-        print("setHighlighted: \(highlighted)")
-        backgroundColor = highlighted ? UIColor(white: 0.95, alpha: 1.0) : bgColor
-    }
-    
-    func setSelected(_ selected:Bool) {
-        print("setSelected: \(selected)")
-        backgroundColor = selected ? UIColor(white: 0.95, alpha: 1.0) : bgColor
-    }
-    
 }
 
 extension PostContentCellNode: LightboxTransitionSourceDelegate {
@@ -643,7 +572,7 @@ extension PostContentCellNode: LightboxTransitionSourceDelegate {
     
     func transitionSourceImage() -> UIImage? {
         
-        return postImageNode.mainImageNode.image
+        return postImageNode.image
     }
     
     func transitionSourceURL() -> URL? {
