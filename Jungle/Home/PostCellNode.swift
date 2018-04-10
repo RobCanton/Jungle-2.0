@@ -17,6 +17,34 @@ protocol PostCellDelegate:class {
     func postOpen(tag:String)
 }
 
+
+class SinglePostCellNode:ASCellNode {
+    var postCellNode:PostContentCellNode!
+    
+    required init(withPost post:Post, type: PostsTableType, isSinglePost:Bool?=nil) {
+        super.init()
+        backgroundColor = UIColor.clear//hexColor(from: "E8EBE0")
+        automaticallyManagesSubnodes = true
+        postCellNode = PostContentCellNode(withPost: post, type: type, isSinglePost: isSinglePost)
+        
+    }
+    
+    override func didLoad() {
+        super.didLoad()
+        selectionStyle = .none
+//        postCellNode.layer.cornerRadius = 8.0
+//        postCellNode.clipsToBounds = true
+//        view.clipsToBounds = false
+//        view.applyShadow(radius: 8.0, opacity: 0.25, offset: CGSize(width: 0, height: 6.0), color: hexColor(from: "#617660"), shouldRasterize: false)
+        
+    }
+    
+    override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
+        let inset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0.0, 0.0, 0.0, 0.0), child: postCellNode)
+        return inset
+    }
+}
+
 class PostCellNode:ASCellNode {
     var postCellNode:PostContentCellNode!
     
@@ -190,7 +218,7 @@ class PostContentCellNode:ASDisplayNode {
                 let color =  hexColor(from: image.colorHex)
                 postImageNode.backgroundColor = color
                 postImageNode.url = image.url
-                postImageNode.style.height = ASDimension(unit: .points, value: UIScreen.main.bounds.width)
+                postImageNode.style.height = ASDimension(unit: .points, value: (UIScreen.main.bounds.width - 16.0) / image.ratio)
             }
         } else {
             postImageNode.style.height = ASDimension(unit: .points, value: 0.0)
@@ -218,7 +246,8 @@ class PostContentCellNode:ASDisplayNode {
         commentButton.laysOutHorizontally = true
         commentButton.contentSpacing = 2.0
         commentButton.contentHorizontalAlignment = .middle
-
+        setComments(count: post.numReplies)
+        
         likeButton.addTarget(self, action: #selector(handleUpvote), forControlEvents: .touchUpInside)
         dislikeButton.addTarget(self, action: #selector(handleDownvote), forControlEvents: .touchUpInside)
         
@@ -346,8 +375,8 @@ class PostContentCellNode:ASDisplayNode {
     func setComments(count:Int) {
         let countStr = "\(count)"
         let str = NSMutableAttributedString(string: "\(countStr) Replies", attributes: [
-            NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: buttonColor
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white
             ])
         commentButton.setAttributedTitle(str, for: .normal)
     }
@@ -355,7 +384,15 @@ class PostContentCellNode:ASDisplayNode {
     
     @objc func handleUpvote() {
         guard let post = post else { return }
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let user = Auth.auth().currentUser else { return }
+        
+        if user.isAnonymous {
+            mainProtocol.openLoginView()
+            return
+        }
+        
+        let uid = user.uid
+        
         var countChange = 0
         if post.vote == .upvoted {
             post.vote = .notvoted
@@ -379,7 +416,14 @@ class PostContentCellNode:ASDisplayNode {
     
     @objc func handleDownvote() {
         guard let post = post else { return }
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let user = Auth.auth().currentUser else { return }
+        
+        if user.isAnonymous {
+            mainProtocol.openLoginView()
+            return
+        }
+        
+        let uid = user.uid
         
         var countChange = 0
         if post.vote == .downvoted {
@@ -507,7 +551,7 @@ class PostContentCellNode:ASDisplayNode {
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         countLabel.attributedText = NSAttributedString(string: "\(votes)", attributes: [
-            NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: UIColor.white,
             NSAttributedStringKey.paragraphStyle: paragraph
             ])

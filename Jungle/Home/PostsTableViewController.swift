@@ -86,7 +86,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         tableNode.view.separatorStyle = .none
         tableNode.view.showsVerticalScrollIndicator = false
         //tableNode.view.delaysContentTouches = false
-        tableNode.view.backgroundColor = hexColor(from: "#F2F6EF")
+        //tableNode.view.backgroundColor = hexColor(from: "#F2F6EF")
         
         //tableNode.allowsSelection = false
         tableNode.reloadData()
@@ -120,6 +120,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
                 node.setSelected(false)
             }
         }
+         
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -145,7 +146,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     }
     
     func shouldBatchFetch(for tableNode: ASTableNode) -> Bool {
-        return type == .newest
+        return type != .nearby
     }
     
     func listenForNewPosts() {
@@ -289,6 +290,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         PostsTableViewController.fetchData(state: state, type: type, lastPostID: state.lastPostTimestamp, lastRank: state.lastRank) { posts, endReached in
             
             if endReached {
+                print("MA BRUTHA> THE END IS REACHED")
                 let oldState = self.state
                 self.state = PostsTableViewController.handleAction(.endReached(), fromState: oldState)
             }

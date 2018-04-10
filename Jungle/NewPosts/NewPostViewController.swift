@@ -179,13 +179,16 @@ enum SelectedAssetType:String {
 class SelectedImage {
     var id:String
     var asset:PHAsset
+    var dimensions:CGSize
     var assetType:SelectedAssetType
     var sourceType:SelectedImageSourceType
     var image:UIImage?
     
-    init(id:String, asset:PHAsset, sourceType:SelectedImageSourceType) {
+    
+    init(id:String, asset:PHAsset, dimensions:CGSize, sourceType:SelectedImageSourceType) {
         self.id = id
         self.asset = asset
+        self.dimensions = dimensions
         self.sourceType = sourceType
         
         assetType = .jpg

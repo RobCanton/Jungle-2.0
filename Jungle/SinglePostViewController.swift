@@ -77,7 +77,7 @@ class SinglePostViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = UIColor.white
         view.addSubview(tableNode.view)
-        tableNode.contentInset = UIEdgeInsetsMake(8.0, 0.0, 0.0, 0.0)
+        tableNode.contentInset = UIEdgeInsetsMake(0.0, 0.0, 0.0, 0.0)
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
         
         var layoutGuide:UILayoutGuide!
@@ -94,6 +94,7 @@ class SinglePostViewController: UIViewController {
         navView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
         
         navView.leftButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
+        navView.leftButton.tintColor = post.anon.color
         
         let navLayoutGuide = navView.safeAreaLayoutGuide
         
@@ -106,12 +107,15 @@ class SinglePostViewController: UIViewController {
         tableBottomAnchor = tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -44.0)
         tableBottomAnchor?.isActive = true
         tableNode.view.contentInsetAdjustmentBehavior = .never
+        tableNode.view.separatorColor = UIColor.clear
         tableNode.view.separatorStyle = .none
+        
         //tableNode.view.backgroundColor = UIColor(white: 0.97, alpha: 1.0)
         tableNode.delegate = self
         tableNode.dataSource = self
         tableNode.batchFetchingDelegate = self
-
+        tableNode.view.showsVerticalScrollIndicator = false
+        tableNode.backgroundColor = hexColor(from: "#F2F6EF")
         tableNode.view.keyboardDismissMode = .onDrag
         tableNode.reloadSections(IndexSet(integer: 0), with: .none)
 
@@ -148,6 +152,26 @@ class SinglePostViewController: UIViewController {
         navigationController?.setNavigationBarHidden(true, animated: animated)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+        
+        if let user = Auth.auth().currentUser {
+            if user.isAnonymous {
+                self.commentBar.textView.isUserInteractionEnabled = false
+                let tap = UITapGestureRecognizer(target: self, action: #selector(showLoginView))
+                self.commentBar.addGestureRecognizer(tap)
+                self.commentBar.isUserInteractionEnabled = true
+            } else {
+                self.commentBar.textView.isUserInteractionEnabled = true
+                if let gestures = commentBar.gestureRecognizers {
+                    for gesture in gestures {
+                        commentBar.removeGestureRecognizer(gesture)
+                    }
+                }
+            }
+        }
+    }
+    
+    @objc func showLoginView() {
+        mainProtocol.openLoginView()
     }
 
     
@@ -252,7 +276,7 @@ class SinglePostViewController: UIViewController {
     
     static func fetchData(state:State, post:Post, ref:Query, lastPostID: Double?, completion: @escaping (_ replies:[Post], _ endReached:Bool)->()) {
         
-        PostsService.getReplies(postID: post.key, after: lastPostID) { replies in
+        PostsService.getReplies(post: post, after: lastPostID) { replies in
             print("REPLIES FETCHED: \(replies.count)")
             completion(replies, replies.count == 0)
         }
@@ -286,7 +310,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
         case 0:
             return 1
         case 1:
-            return 0
+            return 1
         default:
             let replySection = section - 2
             switch sortMode {
@@ -295,7 +319,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                     return 1
                 }
                 let reply = topState.replies[replySection]
-                var loadMore = reply.numReplies > reply.replies.count ? 1 : 0
+                let loadMore = reply.numReplies > reply.replies.count ? 1 : 0
                 return  1 + reply.replies.count + loadMore
             case .live:
                 return 1
@@ -329,7 +353,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                 let reply = topState.replies[section]
                 if indexPath.row == 0 {
                     let replyLine = reply.numReplies == 0 && reply.replies.count == 0
-                    let cell = CommentCellNode(reply: reply, toPost: post, isReply:false, hideDivider: !replyLine, hideReplyLine:replyLine)
+                    let cell = CommentCellNode(reply: reply, toPost: post)
                     cell.selectionStyle = .none
                     cell.delegate = self
                     return cell
@@ -345,8 +369,9 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                     }
                     let subReply = reply.replies[subReplyIndex]
                     let hideReplyLine = subReplyIndex == reply.replies.count - 1
-                    let cell = CommentCellNode(reply: subReply, toPost: post, isReply: true, hideDivider: true, hideReplyLine:hideReplyLine)
+                    let cell = CommentCellNode(reply: subReply, toPost: post, isReply: true, isLastReply: subReplyIndex == reply.replies.count - 1)
                     cell.selectionStyle = .none
+                    
                     cell.delegate = self
                     return cell
                 }

@@ -151,57 +151,64 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
         if indexPath.section == 0 {
             let cell = ASTextCellNode()
             cell.text = "Trending"
-            cell.textInsets = UIEdgeInsetsMake(16.0, 16.0, 16.0, 16.0)
+            cell.textInsets = UIEdgeInsetsMake(16.0, 16.0, 12.0, 16.0)
             cell.textAttributes = [
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 24.0),
                 NSAttributedStringKey.foregroundColor: UIColor.black
             ]
             return cell
         }
-        let cell = TrendingHastagCellNode(hashtag: trendingHashtags[indexPath.row])
-        cell.delegate = delegate
+        
+        let cell = ASTextCellNode()
+        cell.text = trendingHashtags[indexPath.row].hastag
+        cell.textInsets = UIEdgeInsetsMake(12.0, 16.0, 12.0, 16.0)
+        cell.textAttributes = [
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 18.0),
+            NSAttributedStringKey.foregroundColor: accentColor
+        ]
         cell.selectionStyle = .none
         return cell
     }
     
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
         if indexPath.section == 0 { return }
-        let node = tableNode.nodeForRow(at: indexPath) as! TrendingHastagCellNode
-        node.setSelected(true)
+//        let node = tableNode.nodeForRow(at: indexPath) as! TrendingHastagCellNode
+//        node.setSelected(true)
         selectedRow = indexPath
         delegate?.open(hashtag: "#\(trendingHashtags[indexPath.row].hastag)")
     }
     
     func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
         if indexPath.section == 0 { return }
-        let node = tableNode.nodeForRow(at: indexPath) as! TrendingHastagCellNode
-        node.setSelected(false)
+//        let node = tableNode.nodeForRow(at: indexPath) as! TrendingHastagCellNode
+//        node.setSelected(false)
         selectedRow = nil
     }
     
     func tableNode(_ tableNode: ASTableNode, didHighlightRowAt indexPath: IndexPath) {
         if indexPath.section == 0 { return }
-        let node = tableNode.nodeForRow(at: indexPath) as! TrendingHastagCellNode
-        node.setSelected(true)
+//        let node = tableNode.nodeForRow(at: indexPath) as! TrendingHastagCellNode
+//        node.setSelected(true)
     }
     
     func tableNode(_ tableNode: ASTableNode, didUnhighlightRowAt indexPath: IndexPath) {
         if indexPath.section == 0 { return }
-        let node = tableNode.nodeForRow(at: indexPath) as! TrendingHastagCellNode
-        node.setSelected(false)
+//        let node = tableNode.nodeForRow(at: indexPath) as! TrendingHastagCellNode
+//        node.setSelected(false)
     }
     
     @objc func getTrendingHastags() {
-        let trendingRef = database.child("hashtags/trending")
+        let trendingRef = database.child("hashtags/trending").queryOrdered(byChild: "score").queryLimited(toFirst: 12)
         trendingRef.observeSingleEvent(of: .value, with: { snapshot in
-            guard let dict = snapshot.value as? [String:[String:Int]] else { return }
+            guard let dict = snapshot.value as? [String:[String:Any]] else { return }
             var _trendingHashtags = [TrendingHashtag]()
             var count = 0
             for (hashtag, metadata) in dict {
                 SearchService.searchFor(text: "#\(hashtag)", limit: 5, offset: 0) { documents in
                     
-                    let totalCount = metadata["total"] ?? 0
-                    let todayCount = metadata["today"] ?? 0
+                    let totalCount = metadata["total"] as? Int ?? 0
+                    let todayCount = metadata["today"] as? Int ?? 0
+                    let score = metadata["score"] as? Double ?? 0.0
                     
                     var posts = [Post]()
                     
@@ -211,8 +218,6 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
                             posts.append(post)
                         }
                     }
-                    
-                    let score = Double(totalCount) + Double(todayCount) * 1.5
                     
                     let trendingHashtag = TrendingHashtag(hastag: hashtag, totalCount: totalCount, todayCount: todayCount, score: score, posts: posts)
                     _trendingHashtags.append(trendingHashtag)
@@ -225,7 +230,6 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
                         }
                         self.trendingHashtags = _trendingHashtags.sorted(by: { $0.score > $1.score })
                         self.tableNode.reloadData()
-                        print("DICT!: \(self.trendingHashtags)")
                     }
                 }
             }

@@ -165,13 +165,20 @@ class LocationPair {
 class ImageAttachment {
     var url:URL
     var order:Int
+    var dims:CGSize
     var source:String
     var type:String
     var colorHex:String
     
-    init(url:URL, order:Int, source:String, type:String, colorHex:String) {
+    
+    var ratio:CGFloat {
+        return dims.width / dims.height
+    }
+    
+    init(url:URL, order:Int, dims:CGSize, source:String, type:String, colorHex:String) {
         self.url = url
         self.order = order
+        self.dims = dims
         self.source = source
         self.type = type
         self.colorHex = colorHex
@@ -183,8 +190,12 @@ class ImageAttachment {
             let order = dict["order"] as? Int,
             let source = dict["source"] as? String,
             let type = dict["type"] as? String,
-            let color = dict["color"] as? String {
-                return ImageAttachment(url: url, order: order, source: source, type: type, colorHex: color)
+            let color = dict["color"] as? String,
+            let dimensions = dict["dimensions"] as? [String:Any],
+            let width = dimensions["width"] as? Double,
+            let height = dimensions["height"] as? Double {
+                let dims = CGSize(width: width, height: height)
+            return ImageAttachment(url: url, order: order, dims: dims, source: source, type: type, colorHex: color)
         }
         return nil
     }

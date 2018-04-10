@@ -15,7 +15,13 @@ protocol UploadProgressDelegate {
     func uploadedDidComplete()
 }
 
-class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTransitionSourceDelegate {
+protocol MainProtocol {
+    func openLoginView()
+}
+
+var mainProtocol:MainProtocol!
+
+class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTransitionSourceDelegate, MainProtocol {
     
     var messageWrapper = SwiftMessages()
     var postButtonContainer:UIView!
@@ -25,7 +31,7 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        mainProtocol = self
         postButtonContainer = UIView(frame: CGRect(x: 0, y: 0, width: tabBar.bounds.height * 0.80, height: tabBar.bounds.height * 0.80))
         postButtonContainer.center = CGPoint(x: tabBar.bounds.width / 2, y: tabBar.bounds.height / 2)
         tabBar.addSubview(postButtonContainer)

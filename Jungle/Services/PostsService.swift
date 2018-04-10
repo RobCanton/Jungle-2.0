@@ -106,6 +106,7 @@ class PostsService {
                 }
             }
     }
+
     
     static func getPopularPosts(existingKeys: [String:Bool], lastRank: Int?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
         let rootPostRef = firestore.collection("posts")
@@ -116,7 +117,7 @@ class PostsService {
         
         postsRef = rootPostRef.order(by: "score", descending: true)
         if let lastRank = lastRank {
-            queryRef = postsRef.start(after: [lastRank]).limit(to: 15)
+            queryRef = postsRef.start(at: [lastRank]).limit(to: 15)
         } else{
             queryRef = postsRef.limit(to: 15)
         }
@@ -134,6 +135,7 @@ class PostsService {
                 
                 if documents.count == 0 {
                     endReached = true
+                    print("END REACHED MAN!")
                 }
                 
                 for document in documents {
@@ -145,7 +147,21 @@ class PostsService {
                     }
                 }
             }
-            completion(_posts, endReached)
+            if _posts.count > 0 {
+                var count = 0
+                for post in _posts {
+                    getMyAnon(forPostID: post.key) { postID, anonKey in
+                        post.myAnonKey = anonKey
+                        
+                        count += 1
+                        if count >= _posts.count {
+                            completion(_posts, endReached)
+                        }
+                    }
+                }
+            } else {
+                completion(_posts, endReached)
+            }
         }
     }
     
@@ -229,88 +245,80 @@ class PostsService {
         }
     }
 
-    static func getReplies(postID:String, after:Double?, completion: @escaping (_ replies:[Post])->()) {
+    static func getReplies(post:Post, after:Double?, completion: @escaping (_ replies:[Post])->()) {
+        let postID = post.key
         guard let uid = Auth.auth().currentUser?.uid else { return completion([]) }
         let postsRef = firestore.collection("posts")
         let lexiconRef = postsRef.document(postID).collection("lexicon").document(uid)
+        let myAnonKey = post.myAnonKey
         
-        lexiconRef.getDocument { snapshot, error in
-            var myAnonKey:String = ""
-            if let error = error {
-                print("Error Getting Anon Key: \(error.localizedDescription)")
-            } else if let dict = snapshot,
-                let key = dict["key"] as? String {
-                myAnonKey = key
-            }
-            
-            let postRepliesRef = postsRef
-                .whereField("status", isEqualTo: "active")
-                .whereField("replyTo", isEqualTo: postID)
-                .order(by: "createdAt", descending: false)
-            var postRepliesQuery:Query!
-            if let after = after {
-                postRepliesQuery = postRepliesRef.start(after: [after]).limit(to: 12)
-            } else {
-                postRepliesQuery = postRepliesRef.limit(to: 12)
-            }
-            
-            postRepliesQuery.getDocuments { snapshot, error in
-                var replies = [Post]()
-                
-                if let err = error {
-                    print("Error getting documents: \(err)")
-                    return completion([])
-                } else {
-                    
-                    let documents = snapshot!.documents
-                    for document in documents {
-                        if let reply = Post.parse(id: document.documentID, document.data()) {
-                            replies.append(reply)
-                        }
-                        
-                    }
-                }
-                if replies.count > 0 {
-                    var count = 0
-                    
-                    for reply in replies {
-                        var _vote:Vote?
-                        var _subReplies:[Post]?
-                        reply.isYou = reply.anon.key == myAnonKey
-                        
-                        getReplyVote(replyID: reply.key) { _replyID, vote in
-                            _vote = vote
-                            
-                            if _vote != nil, _subReplies != nil {
-                                reply.vote = _vote!
-                                
-                                count += 1
-                                if count >= replies.count {
-                                    return completion(replies)
-                                }
-                            }
-                        }
-                        
-                        getSubReplies(replyID: reply.key, myAnonKey: myAnonKey) { _replyID, subReplies in
-                            _subReplies = subReplies
-                            
-                            if _vote != nil, _subReplies != nil {
-                                reply.replies = _subReplies!
-                                
-                                count += 1
-                                if count >= replies.count {
-                                    return completion(replies)
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    return completion([])
-                }
-            }
+        let postRepliesRef = postsRef
+            .whereField("status", isEqualTo: "active")
+            .whereField("replyTo", isEqualTo: postID)
+            .order(by: "createdAt", descending: false)
+        var postRepliesQuery:Query!
+        if let after = after {
+            postRepliesQuery = postRepliesRef.start(after: [after]).limit(to: 12)
+        } else {
+            postRepliesQuery = postRepliesRef.limit(to: 12)
         }
         
-        
+        postRepliesQuery.getDocuments { snapshot, error in
+            var replies = [Post]()
+            
+            if let err = error {
+                print("Error getting documents: \(err)")
+                return completion([])
+            } else {
+                
+                let documents = snapshot!.documents
+                for document in documents {
+                    print("REPLY DOCUMENT: \(document.data())")
+                    if let reply = Post.parse(id: document.documentID, document.data()) {
+                        replies.append(reply)
+                        print("REPLY OBJECT: \(reply)")
+                    }
+                    
+                }
+            }
+            if replies.count > 0 {
+                var count = 0
+                
+                for reply in replies {
+                    var _vote:Vote?
+                    var _subReplies:[Post]?
+                    reply.isYou = reply.anon.key == myAnonKey
+                    
+                    getReplyVote(replyID: reply.key) { _replyID, vote in
+                        _vote = vote
+                        
+                        if _vote != nil, _subReplies != nil {
+                            reply.vote = _vote!
+                            
+                            count += 1
+                            if count >= replies.count {
+                                return completion(replies)
+                            }
+                        }
+                    }
+                    
+                    getSubReplies(replyID: reply.key, myAnonKey: myAnonKey) { _replyID, subReplies in
+                        _subReplies = subReplies
+                        
+                        if _vote != nil, _subReplies != nil {
+                            reply.replies = _subReplies!
+                            
+                            count += 1
+                            if count >= replies.count {
+                                return completion(replies)
+                            }
+                        }
+                    }
+                }
+            } else {
+                return completion([])
+            }
+        }
     }
     
     static func getNearbyPosts(existingKeys: [String:Bool], lastTimestamp: Double?, isRefresh:Bool, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {

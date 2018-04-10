@@ -78,8 +78,8 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         for i in 0..<fetchedAssets.count {
             let fetchedAsset = fetchedAssets[i]
             let id = fetchedAsset.localIdentifier
-            
-            let asset = SelectedImage(id: id, asset: fetchedAsset, sourceType: .library)
+            let size = CGSize(width: fetchedAsset.pixelWidth, height: fetchedAsset.pixelHeight)
+            let asset = SelectedImage(id: id, asset: fetchedAsset, dimensions: size, sourceType: .library)
             assets.append(asset)
         }
         self.libraryAssets = assets

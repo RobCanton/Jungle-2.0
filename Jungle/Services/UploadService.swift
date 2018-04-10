@@ -110,7 +110,12 @@ class UploadService {
                             "source": attachment.source,
                             "order": order,
                             "color": attachment.colorHex,
-                            "type": attachment.type
+                            "type": attachment.type,
+                            "dimensions": [
+                                "width": images[order].dimensions.width,
+                                "height": images[order].dimensions.height,
+                                "ratio": images[order].dimensions.width / images[order].dimensions.height
+                                ] as [String:Any]
                             ])
                     }
                     completion(urls)

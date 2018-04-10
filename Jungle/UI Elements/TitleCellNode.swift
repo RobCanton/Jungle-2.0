@@ -18,7 +18,7 @@ class TitleCellNode: ASCellNode {
     required init(mode: SortMode) {
         super.init()
         automaticallyManagesSubnodes = true
-        backgroundColor = UIColor(white: 0.97, alpha: 1.0)
+        backgroundColor = hexColor(from: "#F2F6EF")//UIColor(white: 0.97, alpha: 1.0)
     
         titleButtonNode.tintColor = subtitleColor
         titleButtonNode.tintColorDidChange()
@@ -58,7 +58,7 @@ class TitleCellNode: ASCellNode {
     
     func setTitle(_ text:String) {
         let attrTitle = NSAttributedString(string: text, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 12.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
             NSAttributedStringKey.foregroundColor: subtitleColor
             ])
         titleButtonNode.setAttributedTitle(attrTitle, for: .normal)
@@ -70,7 +70,7 @@ class TitleCellNode: ASCellNode {
         let horizontalStack = ASStackLayoutSpec.horizontal()
         horizontalStack.children = [ titleButtonNode, centerDot ]
         
-        let mainInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 16, 4, 16), child: horizontalStack)
+        let mainInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 12, 4, 12), child: horizontalStack)
         let mainVerticalStack = ASStackLayoutSpec.vertical()
         mainVerticalStack.children = [mainInset]
         return mainVerticalStack

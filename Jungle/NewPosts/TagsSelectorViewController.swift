@@ -323,6 +323,7 @@ class SelectedTagsNode:ASDisplayNode, ASCollectionDelegate, ASCollectionDataSour
         self.clipsToBounds = false
         self.view.applyShadow(radius: 12.0, opacity: 0.18, offset: .zero, color: UIColor.black, shouldRasterize: false)
         collectionNode.view.showsHorizontalScrollIndicator = false
+        collectionNode.view.showsVerticalScrollIndicator = false
     }
     
     func numberOfSections(in collectionNode: ASCollectionNode) -> Int {

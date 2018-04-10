@@ -51,6 +51,7 @@ class CommentCellNode:ASCellNode {
     
     var replyLine = ASDisplayNode()
     var isReply = false
+    var isLastReply = false
 
     struct Constants {
         static let imageWidth:CGFloat = 36.0
@@ -75,19 +76,19 @@ class CommentCellNode:ASCellNode {
     
 
     
-    required init(reply:Post, toPost post:Post, isReply:Bool?=nil, hideDivider:Bool?=nil, hideReplyLine:Bool?=nil) {
+    required init(reply:Post, toPost post:Post, isReply:Bool?=nil, isLastReply:Bool?=nil) {
         super.init()
 
         self.reply = reply
         self.post = post
-        self.isReply = isReply != nil ? isReply! : false
-        
+        self.isReply = isReply ?? false
+        self.isLastReply = isLastReply ?? false
         automaticallyManagesSubnodes = true
         
-        upvoteImage = UIImage(named:"upvote")
-        upvotedImage = UIImage(named:"upvoted")
-        downvoteImage = UIImage(named:"downvote")
-        downvotedImage = UIImage(named:"downvoted")
+        upvoteImage = UIImage(named:"up_gray")
+        upvotedImage = UIImage(named:"up_gray")
+        downvoteImage = UIImage(named:"down_gray")
+        downvotedImage = UIImage(named:"down_gray")
         commentImage = UIImage(named:"reply")
         moreImage = UIImage(named:"more")
         
@@ -139,14 +140,14 @@ class CommentCellNode:ASCellNode {
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         countLabel.attributedText = NSAttributedString(string: "-", attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: subtitleColor,
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
         
         dividerNode.backgroundColor = hexColor(from: "#F2F6EF")
-        dividerNode.isHidden = hideDivider ?? false
-        replyLine.isHidden = hideReplyLine ?? true
+        dividerNode.isHidden = false//hideDivider ?? false
+        replyLine.isHidden = false //hideReplyLine ?? true
         
         replyLine.backgroundColor = subtitleColor.withAlphaComponent(0.25)
         
@@ -157,7 +158,7 @@ class CommentCellNode:ASCellNode {
         likeButton.contentEdgeInsets = .zero
         likeButton.tintColor = buttonColor
         likeButton.tintColorDidChange()
-        likeButton.alpha = 0.80
+        likeButton.alpha = 0.5
         
         dislikeButton.setImage(downvoteImage, for: .normal)
         dislikeButton.laysOutHorizontally = true
@@ -166,7 +167,7 @@ class CommentCellNode:ASCellNode {
         dislikeButton.contentEdgeInsets = .zero
         dislikeButton.tintColor = buttonColor
         dislikeButton.tintColorDidChange()
-        dislikeButton.alpha = 0.80
+        dislikeButton.alpha = 0.5
         
         likeButton.addTarget(self, action: #selector(handleUpvote), forControlEvents: .touchUpInside)
         dislikeButton.addTarget(self, action: #selector(handleDownvote), forControlEvents: .touchUpInside)
@@ -229,7 +230,7 @@ class CommentCellNode:ASCellNode {
         dislikeButton.style.height = ASDimension(unit: .points, value: 32.0)
         commentButton.style.height = ASDimension(unit: .points, value: 32.0)
         
-        dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
+        dividerNode.style.height = ASDimension(unit: .points, value: 4.0)
         
         
         subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
@@ -256,7 +257,10 @@ class CommentCellNode:ASCellNode {
         imageStack.children = [imageNode, nameStack]
         imageStack.spacing = 8.0
         
-        let imageInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(12, 12, 0, 12), child: imageStack)
+        let imageInsets = isReply ? UIEdgeInsetsMake(0.0, 12, 0, 12) : UIEdgeInsetsMake(4.0, 12, 0, 12)
+        let imageInset = ASInsetLayoutSpec(insets: imageInsets, child: imageStack)
+        
+        
         
         let leftActions = ASStackLayoutSpec.horizontal()
         leftActions.children = [ likeButton, dislikeButton, commentButton]
@@ -280,8 +284,14 @@ class CommentCellNode:ASCellNode {
         actionsRow.spacing = 8.0
         
         let contentStack = ASStackLayoutSpec.vertical()
-        contentStack.children = [imageInset]
+        contentStack.children = []
         contentStack.spacing = 8.0
+        
+        if !isReply {
+            contentStack.children?.append(dividerNode)
+        }
+        
+        contentStack.children?.append(imageInset)
         
         let textInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12, 0, 12), child: postTextNode)
         
@@ -295,9 +305,33 @@ class CommentCellNode:ASCellNode {
             }
         }
         
-        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12, 12, 12), child: actionsRow)
-        contentStack.children?.append(actionsInset)
-        return contentStack
+        
+        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 8, 8, 64), child: actionsRow)
+        
+        let fullStack = ASStackLayoutSpec.vertical()
+        fullStack.spacing = -2.0
+        fullStack.children = [contentStack, actionsInset]
+        
+        var contentInsets = UIEdgeInsets.zero
+        if isReply {
+            contentInsets = UIEdgeInsetsMake(0, 16, 0, 0)
+        }
+        dividerNode.isHidden = isReply
+        replyLine.isHidden = !isReply
+        
+        replyLine.style.width = ASDimension(unit: .points, value: 1.0)
+        replyLine.style.flexGrow = 1.0
+        //replyLine.style.height = ASDimension(unit: .points, value: constrainedSize.max.height - 50)
+        let replyLineXPos:Double = 12.0
+        
+        replyLine.style.layoutPosition = CGPoint(x:replyLineXPos, y: 0.0)
+        
+        let replyLineAbs = ASAbsoluteLayoutSpec(children: [replyLine])
+        let replyLineInsets = isLastReply ? UIEdgeInsetsMake(0, 0, 12, 0) : UIEdgeInsetsMake(0, 0, 0, 0)
+        let replyLineInset = ASInsetLayoutSpec(insets: replyLineInsets, child: replyLineAbs)
+        let yo = ASInsetLayoutSpec(insets: contentInsets, child: fullStack)
+        
+        return ASOverlayLayoutSpec(child: yo, overlay: replyLineInset)
     
     }
 
@@ -317,7 +351,15 @@ class CommentCellNode:ASCellNode {
     
     @objc func handleUpvote() {
         guard let reply = reply else { return }
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let user = Auth.auth().currentUser else { return }
+        
+        if user.isAnonymous {
+            mainProtocol.openLoginView()
+            return
+        }
+        
+        let uid = user.uid
+        
         var countChange = 0
         if reply.vote == .upvoted {
             reply.vote = .notvoted
@@ -341,7 +383,14 @@ class CommentCellNode:ASCellNode {
     
     @objc func handleDownvote() {
         guard let reply = reply else { return }
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let user = Auth.auth().currentUser else { return }
+        
+        if user.isAnonymous {
+            mainProtocol.openLoginView()
+            return
+        }
+        
+        let uid = user.uid
         
         var countChange = 0
         if reply.vote == .downvoted {
@@ -372,7 +421,6 @@ class CommentCellNode:ASCellNode {
     var isAnimatingUpVote = false
     
     func setVote(_ vote:Vote, animated:Bool) {
-        print("META SETVOTE: \(vote)")
         switch vote {
         case .upvoted:
             if animated && !isAnimatingUpVote {
@@ -394,8 +442,8 @@ class CommentCellNode:ASCellNode {
             likeButton.setImage(upvotedImage, for: .normal)
             dislikeButton.setImage(downvoteImage, for: .normal)
             votesColor = accentColor
-            likeButton.alpha = 0.80
-            dislikeButton.alpha = 0.80
+            likeButton.alpha = 1.0
+            dislikeButton.alpha = 0.5
             break
         case .downvoted:
             if animated && !isAnimatingDownvote {
@@ -417,15 +465,15 @@ class CommentCellNode:ASCellNode {
             likeButton.setImage(upvoteImage, for: .normal)
             dislikeButton.setImage(downvotedImage, for: .normal)
             votesColor = redColor
-            likeButton.alpha = 0.80
-            dislikeButton.alpha = 0.80
+            likeButton.alpha = 0.5
+            dislikeButton.alpha = 1.0
             break
         case .notvoted:
             likeButton.setImage(upvoteImage, for: .normal)
             dislikeButton.setImage(downvoteImage, for: .normal)
             votesColor = UIColor.gray
-            likeButton.alpha = 0.80
-            dislikeButton.alpha = 0.80
+            likeButton.alpha = 0.5
+            dislikeButton.alpha = 0.5
             break
         }
         if reply != nil {
