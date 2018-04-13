@@ -152,6 +152,7 @@ class PostContentCellNode:ASDisplayNode {
         
         postImageNode.addTarget(self, action: #selector(handleImageTap), forControlEvents: .touchUpInside)
         postImageNode.isUserInteractionEnabled = true
+        postImageNode.shouldCacheImage = true
         
         titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
@@ -278,7 +279,7 @@ class PostContentCellNode:ASDisplayNode {
         let tagsHeight = gaps + CGFloat(numLines) * 24.0
         tagsCollectionNode.style.height = ASDimension(unit: .points, value: tagsHeight)
         tagsCollectionNode.tags = post.tags
-        
+        tagsCollectionNode.delegate = self
     }
     
     override func didLoad() {
@@ -345,7 +346,7 @@ class PostContentCellNode:ASDisplayNode {
         
         let actionsRow = ASStackLayoutSpec.horizontal()
         actionsRow.style.flexGrow = 1.0
-        actionsRow.children = [ likeStack, commentButton]
+        actionsRow.children = [ likeStack, commentButton, moreButtonNode]
         actionsRow.spacing = 8.0
         
         let contentStack = ASStackLayoutSpec.vertical()
@@ -603,6 +604,12 @@ class PostContentCellNode:ASDisplayNode {
         stopListeningToPost()
     }
     
+}
+
+extension PostContentCellNode: TagsCollectionDelegate {
+    func postOpen(tag: String) {
+        delegate?.postOpen(tag: tag)
+    }
 }
 
 extension PostContentCellNode: LightboxTransitionSourceDelegate {

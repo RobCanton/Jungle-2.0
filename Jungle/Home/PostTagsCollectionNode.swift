@@ -11,6 +11,10 @@ import UIKit
 import AsyncDisplayKit
 import AlignedCollectionViewFlowLayout
 
+protocol TagsCollectionDelegate:class {
+    func postOpen(tag:String)
+}
+
 class PostTagsCollectionNode:ASDisplayNode, ASCollectionDelegate, ASCollectionDataSource {
     var collectionNode:ASCollectionNode!
     
@@ -20,6 +24,8 @@ class PostTagsCollectionNode:ASDisplayNode, ASCollectionDelegate, ASCollectionDa
             getNumLines()
         }
     }
+    
+    weak var delegate:TagsCollectionDelegate?
     
     override init() {
         super.init()
@@ -93,6 +99,9 @@ class PostTagsCollectionNode:ASDisplayNode, ASCollectionDelegate, ASCollectionDa
         return cell
     }
     
+    func collectionNode(_ collectionNode: ASCollectionNode, didSelectItemAt indexPath: IndexPath) {
+        delegate?.postOpen(tag: "#\(tags[indexPath.row])")
+    }
 //    func collectionNode(_ collectionNode: ASCollectionNode, constrainedSizeForItemAt indexPath: IndexPath) -> ASSizeRange {
 //        return ASSizeRangeMake(CGSize(width: 100.0, height: 24.0))
 //    }

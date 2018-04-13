@@ -8,10 +8,12 @@
 
 import Foundation
 import UIKit
+import AsyncDisplayKit
 import Photos
 import MobileCoreServices
 
 protocol AttachmentsDelegate:class {
+    func attachmentsOpenGIFs()
     func attachments(didSelect images: [SelectedImage])
 }
 
@@ -25,15 +27,20 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         }
     }
     
+    var buttonContainer:UIView!
+    var attachmentButton:UIButton!
+    
+    var collectionBottomAnchor:NSLayoutConstraint!
+    var buttonBottomAnchor:NSLayoutConstraint!
+    
     weak var delegate:AttachmentsDelegate?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        backgroundColor = nil
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 90, height: 90)
+        layout.itemSize = CGSize(width: 82, height: 82)
         layout.minimumLineSpacing = 8.0
         layout.minimumInteritemSpacing = 8.0
         layout.sectionInset = UIEdgeInsetsMake(0, 8.0, 0.0, 0.0)
@@ -41,7 +48,7 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         collectionView = UICollectionView(frame: bounds, collectionViewLayout: layout)
         addSubview(collectionView)
         
-        collectionView.contentInset = UIEdgeInsetsMake(0, 0, 0, 8.0)
+        collectionView.contentInset = UIEdgeInsetsMake(0, 0, 8.0, 8.0)
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.backgroundColor = nil
         collectionView.translatesAutoresizingMaskIntoConstraints = false
@@ -52,25 +59,16 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         let layoutGuide = safeAreaLayoutGuide
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        collectionView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        
         collectionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        collectionView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        collectionView.heightAnchor.constraint(equalToConstant: bounds.height).isActive = true
+        collectionBottomAnchor = collectionView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor)
+        collectionBottomAnchor.isActive = true
         
         collectionView.register(AttachmentCollectionCell.self, forCellWithReuseIdentifier: "attachmentCell")
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.reloadData()
-        
-        let collectionLayoutGuide = collectionView.safeAreaLayoutGuide
-        
-//        let bar = TopicsBarView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 40.0))
-//        addSubview(bar)
-//        bar.translatesAutoresizingMaskIntoConstraints = false
-//        bar.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-//        bar.topAnchor.constraint(equalTo: collectionLayoutGuide.bottomAnchor, constant: 8.0).isActive = true
-//        bar.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-//        bar.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
-//        bar.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
         
         let fetchedAssets = self.fetchLatestPhotos(forCount: 32)
     
@@ -84,7 +82,54 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         }
         self.libraryAssets = assets
         self.collectionView.reloadData()
+        
+        buttonContainer = UIView(frame: CGRect(x: 0, y: 0, width: 48, height: 48))
+        buttonContainer.backgroundColor = nil
+        buttonContainer.translatesAutoresizingMaskIntoConstraints = false
+        buttonContainer.applyShadow(radius: 6, opacity: 0.15, offset: .zero, color: .black, shouldRasterize: false)
+        self.addSubview(buttonContainer)
+        
+        buttonContainer.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        buttonContainer.widthAnchor.constraint(equalToConstant: 48).isActive = true
+        buttonContainer.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: -12).isActive = true
+        buttonBottomAnchor = buttonContainer.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: 48.0)
+        buttonBottomAnchor.isActive = true
+        attachmentButton = UIButton(frame: buttonContainer.bounds)
+        buttonContainer.addSubview(attachmentButton)
+        
+        attachmentButton.layer.cornerRadius = 24.0
+        attachmentButton.clipsToBounds = true
+        attachmentButton.backgroundColor = UIColor.white
+        attachmentButton.setImage(UIImage(named:"clip"), for: .normal)
+        attachmentButton.tintColor = UIColor(white: 0.6, alpha: 1.0)
+        attachmentButton.addTarget(self, action: #selector(handleAttachmentButton), for: .touchUpInside)
     }
+    
+    @objc func handleAttachmentButton() {
+        toggleAttachments(minimzed: false)
+    }
+    
+    var isMinimized = false
+    
+    func toggleAttachments(minimzed:Bool) {
+        if minimzed == self.isMinimized { return }
+        self.isMinimized = minimzed
+        print("MINIMIZE: \(minimzed)")
+        if minimzed {
+            UIView.animate(withDuration: 0.3, delay: 0.0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0.25, options: .curveEaseOut, animations: {
+                self.collectionBottomAnchor.constant = self.bounds.height
+                self.buttonBottomAnchor.constant = -12
+                self.layoutIfNeeded()
+            })
+        } else {
+            UIView.animate(withDuration: 0.3, delay: 0.0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0.25, options: .curveEaseOut, animations: {
+                self.collectionBottomAnchor.constant = 0
+                self.buttonBottomAnchor.constant = 48
+                self.layoutIfNeeded()
+            })
+        }
+    }
+    
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -115,7 +160,7 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if section == 0 {
-            return 0
+            return 1
         }
         return libraryAssets.count
     }
@@ -125,7 +170,9 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "attachmentCell", for: indexPath) as! AttachmentCollectionCell
         cell.backgroundColor = nil
         cell.imageView.image = nil
-        if indexPath.section == 1 {
+        if indexPath.section == 0 {
+            cell.setGIF()
+        } else if indexPath.section == 1 {
             let asset = libraryAssets[indexPath.row]
             cell.setAsset(asset, hideGIFTag: false)
         }
@@ -134,11 +181,14 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 90, height: 90)
+        return CGSize(width: 82, height: 82)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        if indexPath.section == 1 {
+        
+        if indexPath.section == 0 {
+            delegate?.attachmentsOpenGIFs()
+        } else if indexPath.section == 1 {
             let asset = libraryAssets[indexPath.row]
             delegate?.attachments(didSelect: [asset])
         }
@@ -212,6 +262,10 @@ class AttachmentCollectionCell: UICollectionViewCell {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    func setGIF() {
+        imageView.backgroundColor = UIColor.lightGray
     }
     
     func setAsset(_ asset: SelectedImage, hideGIFTag:Bool) {

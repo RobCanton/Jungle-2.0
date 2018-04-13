@@ -23,6 +23,8 @@
 		B01E2A5A203D5352006C8C2D /* HomeTitleView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B01E2A59203D5352006C8C2D /* HomeTitleView.xib */; };
 		B01E2A5C203D6C97006C8C2D /* TitleCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */; };
 		B01E2A5F203E0E66006C8C2D /* CommentBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A5E203E0E66006C8C2D /* CommentBar.swift */; };
+		B027651E2080993D00C9CA63 /* RCSearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B027651D2080993D00C9CA63 /* RCSearchBarView.swift */; };
+		B028F4A7207E9309007B7915 /* ComposerView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B028F4A6207E9309007B7915 /* ComposerView.xib */; };
 		B03291DA206A253C00B8A0C7 /* SignUpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03291D9206A253C00B8A0C7 /* SignUpViewController.swift */; };
 		B03291DC206A396100B8A0C7 /* VerificationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03291DB206A396100B8A0C7 /* VerificationViewController.swift */; };
 		B03291DE206AF12A00B8A0C7 /* UserService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03291DD206AF12A00B8A0C7 /* UserService.swift */; };
@@ -67,6 +69,11 @@
 		B0E4A21C2047E67D00037D0C /* GroupCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B0E4A21A2047E67D00037D0C /* GroupCell.xib */; };
 		B0E4A21E2047E8B500037D0C /* TagsSelectorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E4A21D2047E8B500037D0C /* TagsSelectorViewController.swift */; };
 		B0E4A2202047F6A700037D0C /* Group.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E4A21F2047F6A700037D0C /* Group.swift */; };
+		B0F4943D207C762E00C987D6 /* GIFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F4943C207C762E00C987D6 /* GIFService.swift */; };
+		B0F49442207C771100C987D6 /* GIFSelectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F4943E207C771000C987D6 /* GIFSelectionViewController.swift */; };
+		B0F49443207C771100C987D6 /* SearchResultsTableNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F4943F207C771100C987D6 /* SearchResultsTableNode.swift */; };
+		B0F49444207C771100C987D6 /* GIFCollectionNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F49440207C771100C987D6 /* GIFCollectionNode.swift */; };
+		B0F49445207C771100C987D6 /* MosaicCollectionViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F49441207C771100C987D6 /* MosaicCollectionViewLayout.swift */; };
 		B0F50ECC203775E900037343 /* ASRoundShadowedImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F50ECB203775E900037343 /* ASRoundShadowedImage.swift */; };
 		B0F50ECE20377B3400037343 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B0F50ECD20377B3400037343 /* GoogleService-Info.plist */; };
 		B0F50ED02037838400037343 /* InitialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F50ECF2037838400037343 /* InitialViewController.swift */; };
@@ -97,6 +104,8 @@
 		B01E2A59203D5352006C8C2D /* HomeTitleView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = HomeTitleView.xib; sourceTree = "<group>"; };
 		B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleCellNode.swift; sourceTree = "<group>"; };
 		B01E2A5E203E0E66006C8C2D /* CommentBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentBar.swift; sourceTree = "<group>"; };
+		B027651D2080993D00C9CA63 /* RCSearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RCSearchBarView.swift; sourceTree = "<group>"; };
+		B028F4A6207E9309007B7915 /* ComposerView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ComposerView.xib; sourceTree = "<group>"; };
 		B03291D8206A235100B8A0C7 /* Jungle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Jungle.entitlements; sourceTree = "<group>"; };
 		B03291D9206A253C00B8A0C7 /* SignUpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpViewController.swift; sourceTree = "<group>"; };
 		B03291DB206A396100B8A0C7 /* VerificationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationViewController.swift; sourceTree = "<group>"; };
@@ -144,6 +153,11 @@
 		B0E4A21A2047E67D00037D0C /* GroupCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = GroupCell.xib; sourceTree = "<group>"; };
 		B0E4A21D2047E8B500037D0C /* TagsSelectorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsSelectorViewController.swift; sourceTree = "<group>"; };
 		B0E4A21F2047F6A700037D0C /* Group.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Group.swift; sourceTree = "<group>"; };
+		B0F4943C207C762E00C987D6 /* GIFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFService.swift; sourceTree = "<group>"; };
+		B0F4943E207C771000C987D6 /* GIFSelectionViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GIFSelectionViewController.swift; sourceTree = "<group>"; };
+		B0F4943F207C771100C987D6 /* SearchResultsTableNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultsTableNode.swift; sourceTree = "<group>"; };
+		B0F49440207C771100C987D6 /* GIFCollectionNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GIFCollectionNode.swift; sourceTree = "<group>"; };
+		B0F49441207C771100C987D6 /* MosaicCollectionViewLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MosaicCollectionViewLayout.swift; sourceTree = "<group>"; };
 		B0F50ECB203775E900037343 /* ASRoundShadowedImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRoundShadowedImage.swift; sourceTree = "<group>"; };
 		B0F50ECD20377B3400037343 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		B0F50ECF2037838400037343 /* InitialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialViewController.swift; sourceTree = "<group>"; };
@@ -195,6 +209,7 @@
 				B07F61062043D05A005010B7 /* AlertService.swift */,
 				B07F610C2044C93B005010B7 /* GPSService.swift */,
 				B03291DD206AF12A00B8A0C7 /* UserService.swift */,
+				B0F4943C207C762E00C987D6 /* GIFService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -280,11 +295,16 @@
 			children = (
 				B0B29DF32037607600FBE5FF /* NewPostViewController.swift */,
 				B07F61082044983E005010B7 /* ComposerView.swift */,
+				B028F4A6207E9309007B7915 /* ComposerView.xib */,
 				B07F610A20449AE0005010B7 /* TopicsBarView.swift */,
 				B0E11B77203A13A000EF0814 /* AttachmentsView.swift */,
 				B0E4A21D2047E8B500037D0C /* TagsSelectorViewController.swift */,
 				B0E4A2192047E67D00037D0C /* GroupCell.swift */,
 				B0E4A21A2047E67D00037D0C /* GroupCell.xib */,
+				B0F49440207C771100C987D6 /* GIFCollectionNode.swift */,
+				B0F4943E207C771000C987D6 /* GIFSelectionViewController.swift */,
+				B0F49441207C771100C987D6 /* MosaicCollectionViewLayout.swift */,
+				B0F4943F207C771100C987D6 /* SearchResultsTableNode.swift */,
 			);
 			path = NewPosts;
 			sourceTree = "<group>";
@@ -302,6 +322,7 @@
 				B00409422074A2B9009344A0 /* PostTagsCollectionNode.swift */,
 				B04D4E5320492737000A1033 /* SearchViewController.swift */,
 				B09CAFE1204938AB009C3901 /* PostsViewController.swift */,
+				B027651D2080993D00C9CA63 /* RCSearchBarView.swift */,
 				B04D4E57204929FB000A1033 /* SearchBarView.swift */,
 				B04D4E552049289B000A1033 /* SearchBarView.xib */,
 			);
@@ -424,6 +445,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B028F4A7207E9309007B7915 /* ComposerView.xib in Resources */,
 				B0B29DE62037408900FBE5FF /* LaunchScreen.storyboard in Resources */,
 				B0058C72203BDB1300510EEC /* NewPostsView.xib in Resources */,
 				B0B29E012037703600FBE5FF /* Montserrat-SemiBold.otf in Resources */,
@@ -479,6 +501,7 @@
 				"${BUILT_PRODUCTS_DIR}/PINRemoteImage/PINRemoteImage.framework",
 				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
 				"${BUILT_PRODUCTS_DIR}/ScrollableGraphView/ScrollableGraphView.framework",
+				"${BUILT_PRODUCTS_DIR}/SwiftGifOrigin/SwiftGifOrigin.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftMessages/SwiftMessages.framework",
 				"${BUILT_PRODUCTS_DIR}/TagCellLayout/TagCellLayout.framework",
 				"${BUILT_PRODUCTS_DIR}/Texture/AsyncDisplayKit.framework",
@@ -502,6 +525,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINRemoteImage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ScrollableGraphView.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftGifOrigin.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftMessages.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/TagCellLayout.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AsyncDisplayKit.framework",
@@ -548,9 +572,11 @@
 				B07F61072043D05A005010B7 /* AlertService.swift in Sources */,
 				B09CAFE020492F34009C3901 /* SearchService.swift in Sources */,
 				B0E4A2202047F6A700037D0C /* Group.swift in Sources */,
+				B0F4943D207C762E00C987D6 /* GIFService.swift in Sources */,
 				B00124642068560A00E5F2A6 /* SearchTabViewController.swift in Sources */,
 				B007D5262049CC52009A6B84 /* RegexParser.swift in Sources */,
 				B07F611820454516005010B7 /* LightboxViewController.swift in Sources */,
+				B0F49445207C771100C987D6 /* MosaicCollectionViewLayout.swift in Sources */,
 				B07F610D2044C93B005010B7 /* GPSService.swift in Sources */,
 				B0C99BE6204E41A2000C2C90 /* ViewRepliesCellNode.swift in Sources */,
 				B0B29DDB2037408900FBE5FF /* AuthViewController.swift in Sources */,
@@ -579,15 +605,19 @@
 				B0E11B78203A13A000EF0814 /* AttachmentsView.swift in Sources */,
 				B00F66AA203F3475002FCDA0 /* ActiveTextNode.swift in Sources */,
 				B04D4E58204929FB000A1033 /* SearchBarView.swift in Sources */,
+				B0F49442207C771100C987D6 /* GIFSelectionViewController.swift in Sources */,
 				B0F50ECC203775E900037343 /* ASRoundShadowedImage.swift in Sources */,
 				B0B29DD92037408900FBE5FF /* AppDelegate.swift in Sources */,
 				B04D4E5420492737000A1033 /* SearchViewController.swift in Sources */,
 				B0058C70203BDACF00510EEC /* NewPostsView.swift in Sources */,
 				B07F610F2044ECFF005010B7 /* PostsService.swift in Sources */,
 				B0F50EDF203809F900037343 /* NewReplyViewController.swift in Sources */,
+				B0F49443207C771100C987D6 /* SearchResultsTableNode.swift in Sources */,
+				B0F49444207C771100C987D6 /* GIFCollectionNode.swift in Sources */,
 				B0017D8D204A10FB00E20DE8 /* PushTransitionAnimation.swift in Sources */,
 				B07F611420454438005010B7 /* ImagePresentAnimationController.swift in Sources */,
 				B0B29DF020374BC800FBE5FF /* LoginViewController.swift in Sources */,
+				B027651E2080993D00C9CA63 /* RCSearchBarView.swift in Sources */,
 				B0058C6E203BCD7200510EEC /* LoadingCellNode.swift in Sources */,
 				B01E2A58203D520D006C8C2D /* HomeTitleView.swift in Sources */,
 				B0F50ED72037A6E100037343 /* Anon.swift in Sources */,

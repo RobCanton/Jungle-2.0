@@ -33,10 +33,11 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         var postKeys:[String:Bool]
         var fetchingMore: Bool
         var lastPostTimestamp:Double?
-        var lastRank:Int?
+        var lastScore:Double?
+        
         var endReached:Bool
         var isFirstLoad:Bool
-        static let empty = State(posts: [], postKeys: [:], fetchingMore: false, lastPostTimestamp: nil, lastRank:nil, endReached: false, isFirstLoad: true)
+        static let empty = State(posts: [], postKeys: [:], fetchingMore: false, lastPostTimestamp: nil, lastScore:nil, endReached: false, isFirstLoad: true)
     }
     
     var state = State.empty
@@ -256,17 +257,17 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     }
     
     
-    static func fetchData(state:State, type:PostsTableType, lastPostID: Double?, lastRank:Int?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
+    static func fetchData(state:State, type:PostsTableType,  completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
         
         switch type {
         case .newest:
-            PostsService.getNewPosts(existingKeys: state.postKeys, lastPostID: lastPostID, completion: completion)
+            PostsService.getNewPosts(existingKeys: state.postKeys, lastPostID: state.lastPostTimestamp, completion: completion)
             return
         case .popular:
-            PostsService.getPopularPosts(existingKeys: state.postKeys, lastRank: lastRank, completion: completion)
+            PostsService.getPopularPosts(existingKeys: state.postKeys, lastScore: state.lastScore, completion: completion)
             return
         case .nearby:
-            PostsService.getNearbyPosts(existingKeys: state.postKeys, lastTimestamp: lastPostID, isRefresh: false, completion: completion)
+            PostsService.getNearbyPosts(existingKeys: state.postKeys, lastTimestamp: state.lastPostTimestamp, isRefresh: false, completion: completion)
         }
 
     }
@@ -287,10 +288,9 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             self.renderDiff(oldState)
         }
         
-        PostsTableViewController.fetchData(state: state, type: type, lastPostID: state.lastPostTimestamp, lastRank: state.lastRank) { posts, endReached in
+        PostsTableViewController.fetchData(state: state, type: type) { posts, endReached in
             
             if endReached {
-                print("MA BRUTHA> THE END IS REACHED")
                 let oldState = self.state
                 self.state = PostsTableViewController.handleAction(.endReached(), fromState: oldState)
             }
@@ -350,9 +350,10 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             if state.posts.count > 0 {
                 let lastPost = state.posts[state.posts.count - 1]
                 state.lastPostTimestamp = lastPost.createdAt.timeIntervalSince1970 * 1000
+                state.lastScore = lastPost.score
             } else {
                 state.lastPostTimestamp = nil
-                state.lastRank = nil
+                state.lastScore = nil
             }
             
             state.postKeys = [:]
@@ -374,11 +375,11 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             if state.posts.count > 0 {
                 let lastPost = state.posts[state.posts.count - 1]
                 state.lastPostTimestamp = lastPost.createdAt.timeIntervalSince1970 * 1000
+                state.lastScore = lastPost.score
             } else {
                 state.lastPostTimestamp = nil
-                state.lastRank = nil
+                state.lastScore = nil
             }
-            
             
             break
         case .endReached:
@@ -414,7 +415,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         
         let cell = PostCellNode(withPost: state.posts[indexPath.row], type: type)
         cell.selectionStyle = .none
-        //cell.delegate = self
+        cell.postCellNode.delegate = self
         return cell
     }
     
@@ -461,7 +462,7 @@ extension PostsTableViewController: PostCellDelegate {
     func postOptions(_ post: Post) {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        if post.isYou {
+        if post.myAnonKey == post.anon.key {
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
                 self.newPostsListener?.remove()
                 UploadService.userHTTPHeaders { _ , headers in

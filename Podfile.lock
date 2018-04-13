@@ -103,6 +103,7 @@ PODS:
     - PINRemoteImage/Core
   - Protobuf (3.5.0)
   - ScrollableGraphView (4.0.4)
+  - SwiftGifOrigin (1.6.1)
   - SwiftMessages (4.1.0)
   - TagCellLayout (1.0)
   - Texture (2.6):
@@ -123,6 +124,7 @@ DEPENDENCIES:
   - Firebase/Firestore
   - Firebase/Storage
   - ScrollableGraphView (from `https://github.com/barnaclejive/ScrollableGraphView`, branch `master`)
+  - SwiftGifOrigin (~> 1.6.1)
   - SwiftMessages
   - TagCellLayout (from `https://github.com/riteshhgupta/TagCellLayout.git`)
   - Texture
@@ -168,10 +170,11 @@ SPEC CHECKSUMS:
   PINRemoteImage: d6d51c5d2adda55f1ce30c96e850b6c4ebd2856a
   Protobuf: 8a9838fba8dae3389230e1b7f8c104aa32389c03
   ScrollableGraphView: abac54d3493a5a198ade4baf4879967183af8a2c
+  SwiftGifOrigin: d6679d3ebe9df2e049a84bc52582635107b581f6
   SwiftMessages: 1bacc783c8f10bdfdc57c14860cae8a1f1fa6591
   TagCellLayout: 2a6e3f022bb85a5fe8ccc71762d2e8ab1bbfd8a3
   Texture: 7249074582daf75e524e59df5428b66b8e8db0e4
 
-PODFILE CHECKSUM: 6d154b91fe207f5790469cfc0aeda7859c56632d
+PODFILE CHECKSUM: 8b85c063247c6f17219a32d0cade7cb9e570fdcb
 
 COCOAPODS: 1.4.0

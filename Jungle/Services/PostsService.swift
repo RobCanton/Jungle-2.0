@@ -108,7 +108,7 @@ class PostsService {
     }
 
     
-    static func getPopularPosts(existingKeys: [String:Bool], lastRank: Int?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
+    static func getPopularPosts(existingKeys: [String:Bool], lastScore: Double?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
         let rootPostRef = firestore.collection("posts")
             .whereField("status", isEqualTo: "active")
             .whereField("parent", isEqualTo: "NONE")
@@ -116,8 +116,8 @@ class PostsService {
         var queryRef:Query!
         
         postsRef = rootPostRef.order(by: "score", descending: true)
-        if let lastRank = lastRank {
-            queryRef = postsRef.start(at: [lastRank]).limit(to: 15)
+        if let lastScore = lastScore {
+            queryRef = postsRef.start(at: [lastScore]).limit(to: 15)
         } else{
             queryRef = postsRef.limit(to: 15)
         }
@@ -131,7 +131,14 @@ class PostsService {
                 completion([], false)
             } else {
                 
-                let documents = querySnapshot!.documents
+                let allDocuments = querySnapshot!.documents
+                var documents = [QueryDocumentSnapshot]()
+                
+                for doc in allDocuments {
+                    if existingKeys[doc.documentID] == nil {
+                        documents.append(doc)
+                    }
+                }
                 
                 if documents.count == 0 {
                     endReached = true
@@ -141,9 +148,8 @@ class PostsService {
                 for document in documents {
                     let data = document.data()
                     if let post = Post.parse(id: document.documentID, data) {
-                        if existingKeys[post.key] == nil {
-                            _posts.append(post)
-                        }
+                        //post.documentSnapshot = document
+                        _posts.append(post)
                     }
                 }
             }

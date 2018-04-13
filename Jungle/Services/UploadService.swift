@@ -183,7 +183,7 @@ class UploadService {
     }
     
     
-    static func uploadPost(text:String, images:[SelectedImage], tags:[String], includeLocation:Bool?=nil) {
+    static func uploadPost(text:String, image:SelectedImage?, tags:[String], gif:GIF?=nil, includeLocation:Bool?=nil) {
         
         Alerts.showInfoAlert(withMessage: "Uploading...")
         
@@ -208,17 +208,49 @@ class UploadService {
                         pendingPostKey = postID
                         parameters["postID"] = postID
                         
-                        UploadService.uploadPostImages(postID: postID, images: images) { urlAttachments in
-                            if urlAttachments.count > 0 {
-                                
-                                parameters["attachments"] = [
-                                    "images": urlAttachments
+                        if let gif = gif {
+                            parameters["attachments"] = [
+                                "images": [
+                                    [
+                                    "url": gif.original_url.absoluteString,
+                                    "source": "GIF",
+                                    "order": 0,
+                                    "color": "0xFFFFFF",
+                                    "type": "GIF",
+                                    "dimensions": [
+                                        "width": gif.contentSize.width,
+                                        "height": gif.contentSize.height,
+                                        "ratio": gif.contentSize.width / gif.contentSize.height
+                                        ] as [String:Any]
+                                    ]
                                 ]
-                            }
+                            ]
+                            
                             UploadService.addNewPost(headers, withID: postID, parameters: parameters) { success in
                                 if success {
                                     Alerts.showSuccessAlert(withMessage: "Uploaded!")
                                     
+                                }
+                            }
+                        } else if let image = image {
+                            UploadService.uploadPostImages(postID: postID, images: [image]) { urlAttachments in
+                                if urlAttachments.count > 0 {
+                                    
+                                    parameters["attachments"] = [
+                                        "images": urlAttachments
+                                    ]
+                                }
+                                UploadService.addNewPost(headers, withID: postID, parameters: parameters) { success in
+                                    if success {
+                                        Alerts.showSuccessAlert(withMessage: "Uploaded!")
+                                        
+                                    }
+                                }
+                            }
+                        } else {
+                            UploadService.addNewPost(headers, withID: postID, parameters: parameters) { success in
+                                if success {
+                                    Alerts.showSuccessAlert(withMessage: "Uploaded!")
                                 }
                             }
                         }

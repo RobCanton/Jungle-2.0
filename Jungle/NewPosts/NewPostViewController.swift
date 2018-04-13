@@ -17,33 +17,98 @@ import MobileCoreServices
 
 class NewPost {
     var text:String
-    var attachments:[SelectedImage]
-    
-    init(text:String, attachments:[SelectedImage]) {
+    var attachments:SelectedImage?
+    var gif:GIF?
+    init(text:String, attachments:SelectedImage?, gif:GIF?) {
         self.text = text
         self.attachments = attachments
+        self.gif = gif
     }
 }
 
-class NewPostViewController:UIViewController {
+class NewPostViewController:UIViewController, UITextViewDelegate {
     
+    @IBOutlet weak var scrollView: UIScrollView!
+    @IBOutlet weak var contentView: UIView!
+    @IBOutlet weak var textView: UITextView!
+    @IBOutlet weak var textViewHeightAnchor:NSLayoutConstraint!
+    @IBOutlet weak var imageView: UIImageView!
+    @IBOutlet weak var removeImageButton: UIButton!
     @IBOutlet weak var cancelButton: UIBarButtonItem!
     @IBOutlet weak var doneButton: UIButton!
-    
-    var composerView = ComposerView()
+    @IBOutlet weak var contentHeightAnchor: NSLayoutConstraint!
     var isImagesRowHidden = false
     
     var newPost:NewPost?
+    
+    var selectedImage:SelectedImage? {
+        didSet {
+            if let image = selectedImage {
+                selectedGIF = nil
+                self.removeImageButton.isHidden = false
+                let option = PHImageRequestOptions()
+                option.isSynchronous = true
+                
+                PHImageManager.default().requestImageData(for: image.asset, options: option, resultHandler: { imageData, UTI, _, _ in
+                    
+                    if let data = imageData {
+                        if let uti = UTI, UTTypeConformsTo(uti as CFString, kUTTypeGIF) {
+                            // save data here
+                            self.imageView.image = UIImage.gif(data: data)
+                        } else {
+                            self.imageView.image = UIImage(data: data)
+                        }
+                    }
+                    
+                })
+            } else {
+                self.imageView.image = nil
+                self.removeImageButton.isHidden = true
+            }
+        }
+    }
+    var selectedGIF:GIF? {
+        didSet {
+            if let gif = selectedGIF {
+                selectedImage = nil
+                self.removeImageButton.isHidden = false
+                let thumbnailDataTask = URLSession.shared.dataTask(with: gif.thumbnail_url) { data, _, _ in
+                    DispatchQueue.main.async {
+                        if let data = data, self.imageView.image == nil {
+                            let gifImage = UIImage.gif(data: data)
+                            self.imageView.image = gifImage
+                        }
+                    }
+                }
+                thumbnailDataTask.resume()
+                
+                let dataTask = URLSession.shared.dataTask(with: gif.original_url) { data, _, _ in
+                    DispatchQueue.main.async {
+                        if let data = data {
+                            let gifImage = UIImage.gif(data: data)
+                            self.imageView.image = gifImage
+                        }
+                    }
+                }
+                
+                dataTask.resume()
+            } else {
+                self.imageView.image = nil
+                self.removeImageButton.isHidden = true
+            }
+        }
+    }
+    
+    func addGIF(_ gif:GIF) {
+        selectedGIF = gif
+        attachmentsView.toggleAttachments(minimzed: true)
+    }
+    
+    
+    
     @IBAction func handlePostButton() {
-        newPost = NewPost(text: composerView.textView.text, attachments: composerView.imagesView.selectedImages)
+        newPost = NewPost(text: textView.text, attachments: selectedImage, gif: selectedGIF)
         self.performSegue(withIdentifier: "toTagsSelector", sender: self)
-////        PostsService.getSuggestedTags(forText: composerView.textView.text) {
-////            print("GOT EM!")
-////        }
-//        UploadService.uploadPost(text: composerView.textView.text,
-//                                 images: composerView.imagesView.selectedImages,
-//                                 includeLocation:true)
-//        self.dismiss(animated: true, completion: nil)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -59,12 +124,17 @@ class NewPostViewController:UIViewController {
         self.dismiss(animated: true, completion: nil)
     }
     
+    @IBAction func handleRemoveAttachment(_ sender: Any) {
+        selectedGIF = nil
+        selectedImage = nil
+        attachmentsView.toggleAttachments(minimzed: false)
+    }
     
     var attachmentsBottomAnchor:NSLayoutConstraint?
     
     
     override func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
-        composerView.textView.resignFirstResponder()
+        //composerView.textView.resignFirstResponder()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: {
             super.dismiss(animated: flag, completion: completion)
         })
@@ -74,42 +144,43 @@ class NewPostViewController:UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        composerView.frame = view.bounds
-        
-        view.addSubview(composerView)
-        
-//        cancelButton.tintColor = secondaryColor 
-//        
-//        doneButton.backgroundColor = secondaryColor
         doneButton.layer.cornerRadius = doneButton.bounds.height / 2
         doneButton.clipsToBounds = true
         doneButton.backgroundColor = accentColor
         
+        textView.backgroundColor = nil
+        textView.isEditable = true
+        textView.contentInset  = .zero
+        textView.text = ""
+        textView.keyboardType = .twitter
+        textView.delegate = self
+        textView.isScrollEnabled = false
+        textView.font = Fonts.regular(ofSize: 16.0)
+        updateContentConstraints()
+        
+        imageView.layer.cornerRadius = 12.0
+        imageView.clipsToBounds = true
+        
         let layoutGuide = view.safeAreaLayoutGuide
-        
-        composerView.translatesAutoresizingMaskIntoConstraints = false
-        composerView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        composerView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
-        composerView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        composerView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
-        composerView.setup()
-        
-        attachmentsView = AttachmentsView(frame: CGRect(x: 0, y: view.bounds.height, width: view.bounds.width, height: 90.0 + 40.0 + 8.0))
+        attachmentsView = AttachmentsView(frame: CGRect(x: 0, y: view.bounds.height, width: view.bounds.width, height: 90.0))
         view.addSubview(attachmentsView)
         attachmentsView.translatesAutoresizingMaskIntoConstraints = false
         attachmentsView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         attachmentsView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        attachmentsBottomAnchor = attachmentsView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -8.0)
+        attachmentsBottomAnchor = attachmentsView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: 0.0)
         attachmentsBottomAnchor?.isActive = true
         attachmentsView.heightAnchor.constraint(equalToConstant: 90).isActive = true
         attachmentsView.delegate = self
+        
+        contentHeightAnchor.constant = scrollView.bounds.height
+        view.layoutIfNeeded()
         
     }
     var attachmentsView:AttachmentsView!
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        composerView.textView.becomeFirstResponder()
+        textView.becomeFirstResponder()
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
         
@@ -125,14 +196,16 @@ class NewPostViewController:UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
     
-    
+    var keyboardHeight:CGFloat?
     @objc func keyboardWillShow(notification:Notification) {
         if isImagesRowHidden { return }
         
         guard let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return }
+
         
+        keyboardHeight = keyboardSize.height
         UIView.animate(withDuration: 0.1, animations: {
-            self.attachmentsBottomAnchor?.constant = -keyboardSize.height - 8.0
+            self.attachmentsBottomAnchor?.constant = -keyboardSize.height
             self.view.layoutIfNeeded()
         }, completion: { _ in
             
@@ -143,27 +216,41 @@ class NewPostViewController:UIViewController {
         if isImagesRowHidden { return }
         print("keyboardWillHide")
         UIView.animate(withDuration: 0.1, animations: {
-            self.attachmentsBottomAnchor?.constant = -8.0
+            self.attachmentsBottomAnchor?.constant = 0
             self.view.layoutIfNeeded()
         }, completion: { _ in
             
         })
     }
+    
+    func textViewDidChange(_ textView: UITextView) {
+        attachmentsView.toggleAttachments(minimzed: true)
+        updateContentConstraints()
+    }
+    
+    func updateContentConstraints() {
+        textViewHeightAnchor.constant = textView.sizeThatFits(CGSize(width: textView.bounds.width, height: CGFloat.infinity)).height
+        let contentHeight = textViewHeightAnchor.constant + 8.0 + 200.0
+        
+        contentHeightAnchor.constant = contentHeight > view.bounds.height ? contentHeight : view.bounds.height
+        view.layoutIfNeeded()
+    }
 }
 
 extension NewPostViewController: AttachmentsDelegate {
-    func attachments(didSelect images: [SelectedImage]) {
-        composerView.imagesView.selectedImages = images
-        isImagesRowHidden = true
-        UIView.animate(withDuration: 0.35, animations: {
-            self.attachmentsView.alpha = 0.0
-
-            self.attachmentsBottomAnchor?.constant = -8.0
-            self.view.layoutIfNeeded()
-        }, completion: { _ in
-
-        })
+    func attachmentsOpenGIFs() {
+        print("HELLO RENEE!!! ")
+        
+        let controller = GIFSelectionViewController()
+        controller.addGIF = addGIF
+        self.present(controller, animated: true, completion: nil)
     }
+    
+    func attachments(didSelect images: [SelectedImage]) {
+        selectedImage = images[0]
+        attachmentsView.toggleAttachments(minimzed: true)
+    }
+
 }
 
 enum SelectedImageSourceType:String {

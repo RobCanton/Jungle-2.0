@@ -194,8 +194,9 @@ class TagsSelectorViewController:UIViewController, ASCollectionDelegate, ASColle
     @IBAction func handlePostButton(_ sender: Any) {
         
         UploadService.uploadPost(text: newPost.text,
-                                 images: newPost.attachments,
+                                 image: newPost.attachments,
                                  tags: selectedTags,
+                                 gif: newPost.gif,
                                  includeLocation:true)
         self.dismiss(animated: true, completion: nil)
     }

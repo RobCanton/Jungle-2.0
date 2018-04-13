@@ -19,4 +19,5 @@ target 'Jungle' do
   pod 'ScrollableGraphView', :git => 'https://github.com/barnaclejive/ScrollableGraphView', :branch => 'master'
   pod "AlignedCollectionViewFlowLayout"
   pod 'TagCellLayout', :git => 'https://github.com/riteshhgupta/TagCellLayout.git'
+  pod 'SwiftGifOrigin', '~> 1.6.1'
 end
