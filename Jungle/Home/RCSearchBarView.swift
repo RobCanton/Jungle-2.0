@@ -109,8 +109,8 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
         textBubble.clipsToBounds = true
         textField.font = Fonts.regular(ofSize: 16.0)
         textField.delegate = self
-        textField.placeholder = "Search..."
-        textField.text = "Search..."
+        textField.placeholder = "Search"
+        textField.text = "Search"
         let width = textWidth
         
         var leadingConstant:CGFloat = 12.0

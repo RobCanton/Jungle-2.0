@@ -62,12 +62,12 @@ class PostCellNode:ASCellNode {
         postCellNode.layer.cornerRadius = 8.0
         postCellNode.clipsToBounds = true
         view.clipsToBounds = false
-        view.applyShadow(radius: 8.0, opacity: 0.25, offset: CGSize(width: 0, height: 6.0), color: hexColor(from: "#617660"), shouldRasterize: false)
+        view.applyShadow(radius: 8.0, opacity: 0.35, offset: CGSize(width: 0, height: 6.0), color: hexColor(from: "#617660"), shouldRasterize: false)
         
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        let inset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0.0, 8.0, 12.0, 8.0), child: postCellNode)
+        let inset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0.0, 10.0, 15.0, 10.0), child: postCellNode)
         return inset
     }
     

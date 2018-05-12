@@ -113,6 +113,7 @@ PODS:
     - PINRemoteImage/iOS (= 3.0.0-beta.13)
     - PINRemoteImage/PINCache
     - Texture/Core
+  - UICircularProgressRing (1.8.2)
 
 DEPENDENCIES:
   - Alamofire (~> 4.5)
@@ -128,6 +129,7 @@ DEPENDENCIES:
   - SwiftMessages
   - TagCellLayout (from `https://github.com/riteshhgupta/TagCellLayout.git`)
   - Texture
+  - UICircularProgressRing
 
 EXTERNAL SOURCES:
   ScrollableGraphView:
@@ -174,7 +176,8 @@ SPEC CHECKSUMS:
   SwiftMessages: 1bacc783c8f10bdfdc57c14860cae8a1f1fa6591
   TagCellLayout: 2a6e3f022bb85a5fe8ccc71762d2e8ab1bbfd8a3
   Texture: 7249074582daf75e524e59df5428b66b8e8db0e4
+  UICircularProgressRing: e737881c0dcc9cc1e4d0ea7db0c16d4b0f260082
 
-PODFILE CHECKSUM: 8b85c063247c6f17219a32d0cade7cb9e570fdcb
+PODFILE CHECKSUM: bf79f1744fcf6a0d9fde6e663a63753311bb013b
 
 COCOAPODS: 1.4.0

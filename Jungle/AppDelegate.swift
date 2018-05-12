@@ -59,6 +59,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 self.signInAnonymously()
             }
         }
+        
+        GIFService.getTopTrendingGif { _gif in
+            if let gif = _gif {
+                let thumbnailDataTask = URLSession.shared.dataTask(with: gif.thumbnail_url) { data, _, _ in
+                    DispatchQueue.main.async {
+                        if let data = data {
+                            GIFService.tendingGIFImage = UIImage.gif(data: data)
+                            
+                        }
+                    }
+                }
+                thumbnailDataTask.resume()
+            }
+        }
         return true
     }
     

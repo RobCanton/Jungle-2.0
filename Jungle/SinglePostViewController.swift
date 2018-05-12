@@ -115,7 +115,7 @@ class SinglePostViewController: UIViewController {
         tableNode.dataSource = self
         tableNode.batchFetchingDelegate = self
         tableNode.view.showsVerticalScrollIndicator = false
-        tableNode.backgroundColor = hexColor(from: "#F2F6EF")
+        //tableNode.backgroundColor = hexColor(from: "#F2F6EF")
         tableNode.view.keyboardDismissMode = .onDrag
         tableNode.reloadSections(IndexSet(integer: 0), with: .none)
 
@@ -332,6 +332,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
         case 0:
             let cell = PostCellNode(withPost: post, type: .newest, isSinglePost: true)
             cell.selectionStyle = .none
+            cell.backgroundColor = UIColor.white
             return cell
         case 1:
             let cell = TitleCellNode(mode: sortMode)

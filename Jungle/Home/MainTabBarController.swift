@@ -45,8 +45,8 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         postButton.addTarget(self, action: #selector(openNewPostVC), for: .touchUpInside)
         
         postButtonContainer.addSubview(postButton)
-        tabBar.shadowImage = UIImage()
-        tabBar.backgroundImage = UIImage()
+        //tabBar.shadowImage = UIImage()
+        //tabBar.backgroundImage = UIImage()
         
 //        let divider = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 0.5))
 //        divider.backgroundColor = hexColor(from: "708078").withAlphaComponent(0.25)

@@ -20,4 +20,5 @@ target 'Jungle' do
   pod "AlignedCollectionViewFlowLayout"
   pod 'TagCellLayout', :git => 'https://github.com/riteshhgupta/TagCellLayout.git'
   pod 'SwiftGifOrigin', '~> 1.6.1'
+  pod 'UICircularProgressRing'
 end

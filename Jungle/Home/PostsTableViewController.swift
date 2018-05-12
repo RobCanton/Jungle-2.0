@@ -87,10 +87,12 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         tableNode.view.separatorStyle = .none
         tableNode.view.showsVerticalScrollIndicator = false
         //tableNode.view.delaysContentTouches = false
-        //tableNode.view.backgroundColor = hexColor(from: "#F2F6EF")
+        tableNode.view.backgroundColor = UIColor.white//hexColor(from: "#F2F6EF")
         
         //tableNode.allowsSelection = false
         tableNode.reloadData()
+        tableNode.clipsToBounds = false
+        self.view.clipsToBounds = false
         
         refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)

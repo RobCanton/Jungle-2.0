@@ -49,6 +49,36 @@ class GIFService {
         dataTask.resume()
     }
     
+    static var tendingGIFImage:UIImage?
+    
+    static func getTopTrendingGif(completion: @escaping(_ gif:GIF?)->()) {
+        var urlStr = "\(API_ROOT)trending?key=\(API_KEY)&media_filter=minimal&limit=1"
+        let url = URL(string:urlStr)!
+        currentDataTask?.cancel()
+        currentDataTask = URLSession.shared.dataTask(with: url) { data, responseURL, error in
+            var gif:GIF?
+            if let data = data {
+                
+                do {
+                    //create json object from data
+                    if let json = try JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String: Any] {
+                        if let resultsArray = json["results"] as? [[String:Any]] {
+                            for gifData in resultsArray {
+                                gif = GIF.parse(from: gifData)
+                                break
+                            }
+                        }
+                    }
+                } catch let error {
+                    print(error.localizedDescription)
+                }
+                DispatchQueue.main.async {
+                    completion(gif)
+                }
+            }
+        }
+        currentDataTask?.resume()
+    }
     
     static func getTrendingGIFs(next:String?, completion: @escaping(_ gifs:[GIF], _ next:String?)->()) {
         var urlStr = "\(API_ROOT)trending?key=\(API_KEY)&media_filter=minimal"

@@ -18,6 +18,18 @@ class PostsService {
     static func refreshNearbyPosts(existingKeys: [String:Bool], startAfter firstTimestamp: Double?, completion: @escaping (_ posts:[Post])->()) {
         
     }
+    
+    static func getPost(_ postID:String, completion: @escaping (_ post:Post?)->()) {
+        let postRef = firestore.collection("posts").document(postID)
+        postRef.getDocument { snapshot, error in
+            if let snapshot = snapshot,
+                let data = snapshot.data(),
+                let post = Post.parse(id: snapshot.documentID, data) {
+                return completion(post)
+            }
+            return completion(nil)
+        }
+    }
 
     static func refreshNewPosts(existingKeys: [String:Bool], startAfter firstTimestamp: Double?, completion: @escaping (_ posts:[Post])->()) {
         let postsRef = firestore.collection("posts")
@@ -207,8 +219,9 @@ class PostsService {
             
             completion(replyID, vote)
         }
-        
     }
+    
+    
     
     static func getSubReplies(replyID:String, myAnonKey:String, completion: @escaping (_ replyID:String, _ replies:[Post])->()) {
         let repliesRef = firestore.collection("posts")

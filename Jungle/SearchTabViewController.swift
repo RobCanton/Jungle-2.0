@@ -19,34 +19,37 @@ struct TrendingHashtag {
     var posts:[Post]
 }
 
-class SearchTabViewController:UIViewController {
-    
-    
+class SearchTabViewController:UIViewController, RCSearchBarDelegate {
     @IBOutlet weak var topContainerView:UIView!
     @IBOutlet weak var contentView: UIView!
     
-    var trendingHashtagsNode = TrendingHashtagsNode()
-    
+    var trendingHashtagsNode:TrendingHashtagsNode!
+    var searchBar:RCSearchBarView!
     override func viewDidLoad() {
         super.viewDidLoad()
+        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44.0))
+        view.addSubview(searchBar)
+        searchBar.translatesAutoresizingMaskIntoConstraints = false
         
+        let layout = view.safeAreaLayoutGuide
+        searchBar.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
+        searchBar.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
+        searchBar.topAnchor.constraint(equalTo: layout.topAnchor).isActive = true
+        searchBar.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
         
-        let searchBar = UINib(nibName: "SearchBarView", bundle: nil).instantiate(withOwner: nil, options: nil)[0] as! SearchBarView
-        searchBar.frame = topContainerView.bounds
-        topContainerView.addSubview(searchBar)
-        searchBar.setup()
-        contentView.backgroundColor = UIColor.clear
-        trendingHashtagsNode.view.frame = contentView.bounds
-        contentView.addSubview(trendingHashtagsNode.view)
+        trendingHashtagsNode = TrendingHashtagsNode()
+        view.addSubview(trendingHashtagsNode.view)
         
-        let contentLayoutGuide = contentView.safeAreaLayoutGuide
         trendingHashtagsNode.view.translatesAutoresizingMaskIntoConstraints = false
-        trendingHashtagsNode.view.leadingAnchor.constraint(equalTo: contentLayoutGuide.leadingAnchor).isActive = true
-        trendingHashtagsNode.view.trailingAnchor.constraint(equalTo: contentLayoutGuide.trailingAnchor).isActive = true
-        trendingHashtagsNode.view.topAnchor.constraint(equalTo: contentLayoutGuide.topAnchor).isActive = true
-        trendingHashtagsNode.view.bottomAnchor.constraint(equalTo: contentLayoutGuide.bottomAnchor).isActive = true
+        trendingHashtagsNode.view.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
+        trendingHashtagsNode.view.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
+        trendingHashtagsNode.view.topAnchor.constraint(equalTo: layout.topAnchor, constant: 44.0).isActive = true
+        trendingHashtagsNode.view.bottomAnchor.constraint(equalTo: layout.bottomAnchor).isActive = true
         trendingHashtagsNode.getTrendingHastags()
         trendingHashtagsNode.delegate = self
+        view.layoutIfNeeded()
+        
+        searchBar.setup(withDelegate: self)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -59,6 +62,25 @@ class SearchTabViewController:UIViewController {
         trendingHashtagsNode.clearSelection()
     }
     
+    func handleLeftButton() {
+        
+    }
+    
+    func searchTextDidChange(_ text: String?) {
+        
+    }
+    
+    func searchDidBegin() {
+        
+    }
+    
+    func searchDidEnd() {
+        
+    }
+    
+    func searchTapped(_ text: String) {
+        
+    }
     
 }
 
@@ -115,6 +137,7 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
     override func didLoad() {
         super.didLoad()
         //tableNode.view.separatorColor = subtitleColor.withAlphaComponent(0.25)
+        
         tableNode.view.separatorStyle = .none
         
         refreshControl = UIRefreshControl()
@@ -198,41 +221,27 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
     }
     
     @objc func getTrendingHastags() {
-        let trendingRef = database.child("hashtags/trending").queryOrdered(byChild: "score").queryLimited(toFirst: 12)
+        let trendingRef = database.child("hashtags/trending").queryOrdered(byChild: "score").queryLimited(toFirst: 7)
         trendingRef.observeSingleEvent(of: .value, with: { snapshot in
             guard let dict = snapshot.value as? [String:[String:Any]] else { return }
             var _trendingHashtags = [TrendingHashtag]()
-            var count = 0
+            
             for (hashtag, metadata) in dict {
-                SearchService.searchFor(text: "#\(hashtag)", limit: 5, offset: 0) { documents in
-                    
-                    let totalCount = metadata["total"] as? Int ?? 0
-                    let todayCount = metadata["today"] as? Int ?? 0
-                    let score = metadata["score"] as? Double ?? 0.0
-                    
-                    var posts = [Post]()
-                    
-                    for document in documents {
-                        if let postID = document["objectID"] as? String,
-                            let post = Post.parse(id: postID, document) {
-                            posts.append(post)
-                        }
-                    }
-                    
-                    let trendingHashtag = TrendingHashtag(hastag: hashtag, totalCount: totalCount, todayCount: todayCount, score: score, posts: posts)
-                    _trendingHashtags.append(trendingHashtag)
-                    
-                    count += 1
-                    
-                    if count >= dict.count {
-                        if self.refreshControl.isRefreshing {
-                            self.refreshControl.endRefreshing()
-                        }
-                        self.trendingHashtags = _trendingHashtags.sorted(by: { $0.score > $1.score })
-                        self.tableNode.reloadData()
-                    }
-                }
+                let totalCount = metadata["total"] as? Int ?? 0
+                let todayCount = metadata["today"] as? Int ?? 0
+                let score = metadata["score"] as? Double ?? 0.0
+                
+                let trendingHashtag = TrendingHashtag(hastag: hashtag, totalCount: totalCount, todayCount: todayCount, score: score, posts: [])
+                _trendingHashtags.append(trendingHashtag)
             }
+            
+            
+            
+            if self.refreshControl.isRefreshing {
+                self.refreshControl.endRefreshing()
+            }
+            self.trendingHashtags = _trendingHashtags.sorted(by: { $0.score > $1.score })
+            self.tableNode.reloadData()
             
         })
     }

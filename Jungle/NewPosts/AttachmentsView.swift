@@ -66,6 +66,7 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         collectionBottomAnchor.isActive = true
         
         collectionView.register(AttachmentCollectionCell.self, forCellWithReuseIdentifier: "attachmentCell")
+        collectionView.register(GIFSelectorCell.self, forCellWithReuseIdentifier: "gifCell")
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.reloadData()
@@ -167,17 +168,20 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "attachmentCell", for: indexPath) as! AttachmentCollectionCell
-        cell.backgroundColor = nil
-        cell.imageView.image = nil
         if indexPath.section == 0 {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "gifCell", for: indexPath) as! GIFSelectorCell
             cell.setGIF()
+            return cell
         } else if indexPath.section == 1 {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "attachmentCell", for: indexPath) as! AttachmentCollectionCell
+            cell.backgroundColor = nil
+            cell.imageView.image = nil
             let asset = libraryAssets[indexPath.row]
             cell.setAsset(asset, hideGIFTag: false)
+            return cell
         }
+        return UICollectionViewCell()
         
-        return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -197,6 +201,71 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
 
 }
 
+class GIFSelectorCell: UICollectionViewCell {
+    var imageView:UIImageView!
+
+    var gifButton:UIButton!
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        self.translatesAutoresizingMaskIntoConstraints = false
+        imageView = UIImageView(frame: bounds)
+        addSubview(imageView)
+        
+        imageView.contentMode = .scaleAspectFill
+        let layoutGuide = safeAreaLayoutGuide
+        imageView.translatesAutoresizingMaskIntoConstraints = true
+        
+        imageView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        imageView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        imageView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        imageView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        
+        imageView.layer.cornerRadius = 16.0
+        imageView.clipsToBounds = true
+        
+        imageView.layer.borderColor = UIColor(white: 0.80, alpha: 1.0).cgColor
+        imageView.layer.borderWidth = 0.5
+
+        gifButton = UIButton(frame: bounds)
+        addSubview(gifButton)
+        gifButton.setImage(UIImage(named:"Search"), for: .normal)
+        gifButton.tintColor = UIColor.white
+        gifButton.translatesAutoresizingMaskIntoConstraints = false
+        gifButton.backgroundColor = UIColor(white: 0.0, alpha: 0.25)
+        gifButton.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        gifButton.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        gifButton.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        gifButton.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        gifButton.layer.cornerRadius = 16.0
+        gifButton.clipsToBounds = true
+        gifButton.alpha = 0.75
+        gifButton.isUserInteractionEnabled = false
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    var gifImage:UIImage?
+    func setGIF() {
+        GIFService.getTopTrendingGif { _gif in
+            if let gif = _gif {
+                let thumbnailDataTask = URLSession.shared.dataTask(with: gif.thumbnail_url) { data, _, _ in
+                    DispatchQueue.main.async {
+                        if let data = data {
+                            self.gifImage = UIImage.gif(data: data)
+                            self.imageView.image = self.gifImage
+                        }
+                    }
+                }
+                thumbnailDataTask.resume()
+            }
+        }
+
+    }
+}
 
 class AttachmentCollectionCell: UICollectionViewCell {
     
@@ -266,6 +335,19 @@ class AttachmentCollectionCell: UICollectionViewCell {
     
     func setGIF() {
         imageView.backgroundColor = UIColor.lightGray
+        GIFService.getTopTrendingGif { _gif in
+            if let gif = _gif {
+                let thumbnailDataTask = URLSession.shared.dataTask(with: gif.thumbnail_url) { data, _, _ in
+                    DispatchQueue.main.async {
+                        if let data = data, self.imageView.image == nil {
+                            let gifImage = UIImage.gif(data: data)
+                            self.imageView.image = gifImage
+                        }
+                    }
+                }
+                thumbnailDataTask.resume()
+            }
+        }
     }
     
     func setAsset(_ asset: SelectedImage, hideGIFTag:Bool) {
