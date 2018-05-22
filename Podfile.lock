@@ -113,6 +113,7 @@ PODS:
     - PINRemoteImage/iOS (= 3.0.0-beta.13)
     - PINRemoteImage/PINCache
     - Texture/Core
+  - TGPControls (4.0.0)
   - UICircularProgressRing (1.8.2)
 
 DEPENDENCIES:
@@ -129,6 +130,7 @@ DEPENDENCIES:
   - SwiftMessages
   - TagCellLayout (from `https://github.com/riteshhgupta/TagCellLayout.git`)
   - Texture
+  - TGPControls
   - UICircularProgressRing
 
 EXTERNAL SOURCES:
@@ -176,8 +178,9 @@ SPEC CHECKSUMS:
   SwiftMessages: 1bacc783c8f10bdfdc57c14860cae8a1f1fa6591
   TagCellLayout: 2a6e3f022bb85a5fe8ccc71762d2e8ab1bbfd8a3
   Texture: 7249074582daf75e524e59df5428b66b8e8db0e4
+  TGPControls: d7ab5a338746c100b2ae57f6b6cedee7151f116a
   UICircularProgressRing: e737881c0dcc9cc1e4d0ea7db0c16d4b0f260082
 
-PODFILE CHECKSUM: bf79f1744fcf6a0d9fde6e663a63753311bb013b
+PODFILE CHECKSUM: 591ae4f17c40307be5e7359ed991eb58e885a2b7
 
 COCOAPODS: 1.4.0

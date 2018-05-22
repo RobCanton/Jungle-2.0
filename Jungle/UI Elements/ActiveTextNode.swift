@@ -24,6 +24,20 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
     var tapHandler:((_ type: ActiveTextType, _ value: String)->())?
     
     
+    public func setBlockedText() {
+        let title = "Content Blocked"
+        let subtitle = "Contains muted word(s)."
+        let str = "\(title)\n\(subtitle)"
+        
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        let text = NSMutableAttributedString(string: str)
+        text.addAttribute(NSAttributedStringKey.paragraphStyle, value: paragraph, range: NSRange(location: 0, length: str.count))
+        text.addAttribute(NSAttributedStringKey.font, value: Fonts.semiBold(ofSize: 15.0), range: NSRange(location: 0, length: title.count))
+        text.addAttribute(NSAttributedStringKey.font, value: Fonts.regular(ofSize: 15.0), range: NSRange(location: title.count + 1, length: subtitle.count))
+        self.attributedText = text
+    }
+    
     public func setText(text: String, withSize size: CGFloat, normalColor: UIColor, activeColor: UIColor) {
         self.delegate = self
         self.isUserInteractionEnabled = true
@@ -37,7 +51,7 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         self.attrString = attributedString
         self.textString = text
         
-        let font = Fonts.medium(ofSize: size)
+        let font = Fonts.regular(ofSize: size)
         // Set initial font attributes for our string
         attrString?.addAttribute(NSAttributedStringKey.font, value: font, range: NSRange(location: 0, length: count))
         attrString?.addAttribute(NSAttributedStringKey.foregroundColor, value: normalColor, range: NSRange(location: 0, length: count))
@@ -58,7 +72,10 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         for element in elements {
             let range = Range(element.range, in: text)!
             let str = text.substring(with: range)
-            attrString?.addAttributes([NSAttributedStringKey.font: Fonts.semiBold(ofSize: size)], range: element.range)
+            attrString?.addAttributes([
+                NSAttributedStringKey(rawValue: ActiveTextType.hashtag.rawValue): str,
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: size)
+                ], range: element.range)
         }
         
         let mentionElements = RegexParser.getElements(from: text, with: RegexParser.mentionPattern, range: textRange)
@@ -66,15 +83,17 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         for element in mentionElements {
             let range = Range(element.range, in: text)!
             let str = text.substring(with: range)
-            attrString?.addAttributes([NSAttributedStringKey.foregroundColor: color], range: element.range)
-            
+            attrString?.addAttributes([
+                NSAttributedStringKey(rawValue: ActiveTextType.mention.rawValue): str,
+                NSAttributedStringKey.foregroundColor: color
+                ], range: element.range)
         }
         
         self.attributedText = attrString
     }
     
     func textNode(_ textNode: ASTextNode, tappedLinkAttribute attribute: String, value: Any, at point: CGPoint, textRange: NSRange) {
-        
+        print("LETS GET IT!")
         guard let textValue = value as? String else { return }
         switch attribute {
         case ActiveTextType.hashtag.rawValue:

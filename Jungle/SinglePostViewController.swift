@@ -39,7 +39,7 @@ class SinglePostViewController: UIViewController {
     
     var post:Post!
     let tableNode = ASTableNode()
-    var commentBar:CommentBar!
+    var commentBar:JCommentBar!
     var commentBarBottomAnchor:NSLayoutConstraint?
     var commentBarHeightAnchor:NSLayoutConstraint?
     var topState = State.empty
@@ -75,36 +75,37 @@ class SinglePostViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor.white
+        view.backgroundColor = hexColor(from: "#eff0e9")
         view.addSubview(tableNode.view)
         tableNode.contentInset = UIEdgeInsetsMake(0.0, 0.0, 0.0, 0.0)
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
         
         var layoutGuide:UILayoutGuide!
         
-        navView = JNavigationBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
-        
+
         layoutGuide = view.safeAreaLayoutGuide
         
-        view.addSubview(navView)
-        navView.translatesAutoresizingMaskIntoConstraints = false
-        navView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        navView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        navView.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: -20.0).isActive = true
-        navView.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
+        let tv = SinglePostNavigationBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
+        view.addSubview(tv)
+        tv.translatesAutoresizingMaskIntoConstraints = false
+        tv.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        tv.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
+        tv.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        tv.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
+        tv.setPost(post)
+        tv.backButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
         
-        navView.leftButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
-        navView.leftButton.tintColor = post.anon.color
-        
-        let navLayoutGuide = navView.safeAreaLayoutGuide
+        tv.clipsToBounds = false
+        //tv.applyShadow(radius: 5.0, opacity: 0.05, offset: CGSize(width:0,height:5.0), color: UIColor.black, shouldRasterize: false)
         
         tableNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         
-        tableTopAnchor = tableNode.view.topAnchor.constraint(equalTo: navLayoutGuide.bottomAnchor)
+        
+        tableTopAnchor = tableNode.view.topAnchor.constraint(equalTo: tv.bottomAnchor)
         tableTopAnchor?.isActive = true
         tableNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
         tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -44.0)
-        tableBottomAnchor = tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -44.0)
+        tableBottomAnchor = tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: 0)
         tableBottomAnchor?.isActive = true
         tableNode.view.contentInsetAdjustmentBehavior = .never
         tableNode.view.separatorColor = UIColor.clear
@@ -115,27 +116,25 @@ class SinglePostViewController: UIViewController {
         tableNode.dataSource = self
         tableNode.batchFetchingDelegate = self
         tableNode.view.showsVerticalScrollIndicator = false
-        //tableNode.backgroundColor = hexColor(from: "#F2F6EF")
+        tableNode.backgroundColor = hexColor(from: "#eff0e9")
         tableNode.view.keyboardDismissMode = .onDrag
         tableNode.reloadSections(IndexSet(integer: 0), with: .none)
 
-        let height:CGFloat = 50.0
-        commentBar = CommentBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: height))
+        commentBar = JCommentBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 50))
         
         view.addSubview(commentBar)
-        commentBar.backgroundColor = UIColor.white
+        
         commentBar.translatesAutoresizingMaskIntoConstraints = false
         commentBar.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         commentBar.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
         commentBarBottomAnchor  = commentBar.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: 0)
         commentBarBottomAnchor?.isActive = true
-        commentBarHeightAnchor = commentBar.heightAnchor.constraint(equalToConstant: height)
-        commentBarHeightAnchor?.isActive = true
+        commentBar.activeColor = post.anon.color
         commentBar.delegate = self
         commentBar.prepareTextView()
+        tableBottomAnchor?.constant = -commentBar.minimumHeight
         
-        commentBar.setComposeMode(false)
-        self.commentBarHeightAnchor?.constant = commentBar.textHeight + CommentBar.textMarginHeight + 4
+        //commentBar.setComposeMode(false)
         self.view.layoutIfNeeded()
     }
     
@@ -155,18 +154,24 @@ class SinglePostViewController: UIViewController {
         
         if let user = Auth.auth().currentUser {
             if user.isAnonymous {
-                self.commentBar.textView.isUserInteractionEnabled = false
+                //self.commentBar.textView.isUserInteractionEnabled = false
                 let tap = UITapGestureRecognizer(target: self, action: #selector(showLoginView))
                 self.commentBar.addGestureRecognizer(tap)
                 self.commentBar.isUserInteractionEnabled = true
             } else {
-                self.commentBar.textView.isUserInteractionEnabled = true
+                //self.commentBar.textView.isUserInteractionEnabled = true
                 if let gestures = commentBar.gestureRecognizers {
                     for gesture in gestures {
                         commentBar.removeGestureRecognizer(gesture)
                     }
                 }
             }
+        }
+    }
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        get {
+            return .lightContent
         }
     }
     
@@ -330,7 +335,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
         switch indexPath.section {
         case 0:
-            let cell = PostCellNode(withPost: post, type: .newest, isSinglePost: true)
+            let cell = PostCellNode(withPost: post, isSinglePost: true)
             cell.selectionStyle = .none
             cell.backgroundColor = UIColor.white
             return cell
@@ -626,9 +631,8 @@ extension SinglePostViewController: KeyboardAccessoryProtocol {
     @objc func keyboardWillShow(notification:Notification) {
 
         guard let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return }
-        commentBar.setComposeMode(true)
-        self.commentBarHeightAnchor?.constant = commentBar.textHeight + commentBar.nonTextHeight
-        self.view.layoutIfNeeded()
+        //self.commentBarHeightAnchor?.constant = commentBar.textHeight + 8.0
+        //self.view.layoutIfNeeded()
         var rect:CGRect?
         var offsetPoint:CGFloat?
         if let focusedReply = focusedReply {
@@ -661,7 +665,7 @@ extension SinglePostViewController: KeyboardAccessoryProtocol {
             }
         }
         
-        let keyboardTop = view.bounds.height - keyboardSize.height - commentBarHeightAnchor!.constant
+        let keyboardTop = view.bounds.height - keyboardSize.height - commentBar.calculatedHeight
 
         if rect != nil {
             offsetPoint = rect!.origin.y  + rect!.height + 64.0 - keyboardTop
@@ -681,12 +685,8 @@ extension SinglePostViewController: KeyboardAccessoryProtocol {
     
     @objc func keyboardWillHide(notification:Notification) {
         print("keyboardWillHide")
-        commentBar.setComposeMode(false)
         focusedReply = nil
-        
-        self.commentBarHeightAnchor?.constant = commentBar.textHeight + CommentBar.textMarginHeight + 4
-        self.commentBarHeightAnchor?.isActive = true
-        self.view.layoutIfNeeded()
+
         UIView.animate(withDuration: 0.15, animations: {
             self.commentBarBottomAnchor?.constant = 0.0
             self.view.layoutIfNeeded()
@@ -697,10 +697,6 @@ extension SinglePostViewController: KeyboardAccessoryProtocol {
 }
 
 extension SinglePostViewController: CommentBarDelegate {
-    func commentTextDidChange(height: CGFloat) {
-        commentBarHeightAnchor?.constant = height + commentBar.nonTextHeight
-        self.view.layoutIfNeeded()
-    }
     
     func commentSend(text: String) {
         guard let user = Auth.auth().currentUser else { return }
@@ -725,7 +721,7 @@ extension SinglePostViewController: CommentBarDelegate {
             self.commentBar.textView.text = ""
             self.commentBar.textViewDidChange(self.commentBar.textView)
             self.commentBar.textView.resignFirstResponder()
-            self.commentBar.placeHolderTextView.isHidden = false
+            //self.commentBar.placeHolderTextView.isHidden = false
             let headers: HTTPHeaders = ["Authorization": "Bearer \(token!)", "Accept": "application/json", "Content-Type" :"application/json"]
             
             Alamofire.request("\(API_ENDPOINT)/addComment/\(self.post.key)", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
@@ -781,7 +777,7 @@ extension SinglePostViewController: CommentBarDelegate {
 extension SinglePostViewController: CommentCellDelegate {
     func handleReply(_ reply:Post) {
         self.focusedReply = reply
-        commentBar.setReply(reply)
+        //commentBar.setReply(reply)
         
     }
 }

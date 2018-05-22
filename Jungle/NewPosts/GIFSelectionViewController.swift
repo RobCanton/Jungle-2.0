@@ -21,27 +21,29 @@ class GIFSelectionViewController:UIViewController, GIFCollectionDelegate {
         super.viewDidLoad()
         view.backgroundColor = UIColor.white
         print("GIFSelectionViewController")
-        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44.0))
+        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0))
         view.addSubview(searchBar)
+        
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         
         let layout = view.safeAreaLayoutGuide
         searchBar.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
         searchBar.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
-        searchBar.topAnchor.constraint(equalTo: layout.topAnchor).isActive = true
-        searchBar.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+        searchBar.topAnchor.constraint(equalTo: layout.topAnchor, constant: -20).isActive = true
+        searchBar.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
         
         view.addSubview(collectionNode.view)
         collectionNode.delegate = self
         collectionNode.view.translatesAutoresizingMaskIntoConstraints = false
         collectionNode.view.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
         collectionNode.view.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
-        collectionNode.view.topAnchor.constraint(equalTo: layout.topAnchor,constant: 44.0).isActive = true
+        collectionNode.view.topAnchor.constraint(equalTo: layout.topAnchor,constant: 50).isActive = true
         collectionNode.view.bottomAnchor.constraint(equalTo: layout.bottomAnchor).isActive = true
         view.layoutIfNeeded()
         
         searchBar.setup(withDelegate: self)
         searchBar.leftButtonItem.setImage(UIImage(named:"back"), for: .normal)
+        searchBar.leftButtonItem.tintColor = UIColor.white
     }
     
     override func viewWillAppear(_ animated: Bool) {

@@ -31,9 +31,27 @@ class Post {
     var replyTo:String?
     var documentSnapshot:DocumentSnapshot?
     
+    var topComment:Post?
     var vote = Vote.notvoted
     var isYou = false
     var myAnonKey = ""
+    var offenses:[String]
+    var offensesStr:String {
+        var str = ""
+        for i in 0..<offenses.count {
+            if i < 3 {
+                if i == 0 {
+                    str += "\(offenses[i])"
+                } else {
+                    str += ", \(offenses[i])"
+                }
+            }
+        }
+        return str
+    }
+    var isOffensive:Bool {
+        return offenses.count > 0 && !isYou
+    }
     
     init(key:String, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments?=nil, location:LocationPair?, tags:[String], score:Double, votes:Int,
          numReplies:Int, replies:[Post], parent:String?, replyTo:String?) {
@@ -52,6 +70,7 @@ class Post {
         self.replies = replies
         self.parent = parent
         self.replyTo = replyTo
+        self.offenses = ContentSettings.checkContent(ofText: text)
     }
     
     static func parse(id:String, _ data:[String:Any]) -> Post? {

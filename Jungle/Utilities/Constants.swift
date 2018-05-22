@@ -26,4 +26,7 @@ class Fonts {
     static func semiBold(ofSize size: CGFloat) -> UIFont {
         return UIFont(name: "Montserrat-SemiBold", size: size)!
     }
+    static func bold(ofSize size: CGFloat) -> UIFont {
+        return UIFont(name: "Montserrat-Bold", size: size)!
+    }
 }

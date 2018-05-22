@@ -21,4 +21,5 @@ target 'Jungle' do
   pod 'TagCellLayout', :git => 'https://github.com/riteshhgupta/TagCellLayout.git'
   pod 'SwiftGifOrigin', '~> 1.6.1'
   pod 'UICircularProgressRing'
+  pod 'TGPControls'
 end

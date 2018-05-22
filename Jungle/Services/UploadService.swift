@@ -198,8 +198,8 @@ class UploadService {
                 
                 if includeLocation != nil, includeLocation!, let location = gpsService.getLastLocation() {
                     parameters["location"] = [
-                        "lat": location.coordinate.latitude,
-                        "lon": location.coordinate.longitude
+                        "lat": SearchService.myCoords.lat,//location.coordinate.latitude,
+                        "lon": SearchService.myCoords.lng//location.coordinate.longitude
                     ]
                 }
                 

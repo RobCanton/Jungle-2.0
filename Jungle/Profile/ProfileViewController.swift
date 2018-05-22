@@ -12,48 +12,45 @@ import AsyncDisplayKit
 
 class ProfileViewController:UIViewController, ASTableDelegate, ASTableDataSource {
 
-    var tableNode = ASTableNode()
+    var postsVC:MyRecentPostsTableViewController!
     
-    var profileHeader:ProfileHeaderView!
-    var headerTopAnchor:NSLayoutConstraint!
-    var headerHeightAnchor:NSLayoutConstraint!
-    
-    private let headerHeight:CGFloat = 350.0
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = UIColor.white
+        postsVC = MyRecentPostsTableViewController()
+        
+        postsVC.willMove(toParentViewController: self)
+        view.addSubview(postsVC.view)
+        addChildViewController(postsVC)
+        postsVC.didMove(toParentViewController: self)
+        
         let layoutGuide = view.safeAreaLayoutGuide
-        view.addSubview(tableNode.view)
-        tableNode.view.translatesAutoresizingMaskIntoConstraints = false
-        tableNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        tableNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        tableNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: -20.0).isActive = true
-        tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
-        tableNode.view.showsVerticalScrollIndicator = false
-        tableNode.delegate = self
-        tableNode.dataSource = self
-        tableNode.view.contentInsetAdjustmentBehavior = .never
+        postsVC.view.translatesAutoresizingMaskIntoConstraints = false
+        postsVC.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        postsVC.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: -20).isActive = true
+        postsVC.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        postsVC.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
         
-        tableNode.reloadData()
-        
-        let tableGuide = tableNode.view.safeAreaLayoutGuide
-        
-        profileHeader = ProfileHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: headerHeight))
-        tableNode.view.tableHeaderView = nil
-        tableNode.view.addSubview(profileHeader)
-        
-        profileHeader.leadingAnchor.constraint(equalTo: tableGuide.leadingAnchor).isActive = true
-        profileHeader.trailingAnchor.constraint(equalTo: tableGuide.trailingAnchor).isActive = true
-        headerTopAnchor = profileHeader.topAnchor.constraint(equalTo: tableGuide.topAnchor, constant: -20.0)
-        headerTopAnchor.isActive = true
-        headerHeightAnchor = profileHeader.heightAnchor.constraint(equalToConstant: headerHeight)
-        headerHeightAnchor.isActive = true
-        
-        tableNode.contentInset = UIEdgeInsetsMake(headerHeight, 0, 0, 0)
-        tableNode.contentOffset = CGPoint(x: 0, y: -headerHeight)
-        tableNode.view.separatorStyle = .none
-        updateHeader()
+//        let layoutGuide = view.safeAreaLayoutGuide
+//        view.addSubview(tableNode.view)
+//        tableNode.view.translatesAutoresizingMaskIntoConstraints = false
+//        tableNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+//        tableNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+//        tableNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: -20.0).isActive = true
+//        tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+//        tableNode.view.showsVerticalScrollIndicator = false
+//        tableNode.delegate = self
+//        tableNode.dataSource = self
+////        tableNode.view.delaysContentTouches = false
+////        tableNode.view.panGestureRecognizer.delaysTouchesBegan = false
+//        tableNode.view.contentInsetAdjustmentBehavior = .never
+//
+//        tableNode.reloadData()
+//
+//        tableNode.view.separatorStyle = .none
+//        //tableNode.view.bounces = false
+//        updateHeader()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -63,7 +60,13 @@ class ProfileViewController:UIViewController, ASTableDelegate, ASTableDataSource
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        profileHeader.setLevelProgress(0.67)
+        //profileHeader.setLevelProgress(0.67)
+        
+        SearchService.searchMyPosts(offset: 0) { posts, endReached in
+            for post in posts {
+                print("TEXT: \(post.text)")
+            }
+        }
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -91,40 +94,17 @@ class ProfileViewController:UIViewController, ASTableDelegate, ASTableDataSource
     }
     
     func updateHeader() {
-        var progress:CGFloat = 1.0
-        if tableNode.contentOffset.y < -headerHeight {
-            
-            headerHeightAnchor.constant = -tableNode.contentOffset.y
-        } else {
-            //print("Offset: \(-tableNode.contentOffset.y)")
-            progress = (-tableNode.contentOffset.y - 108) / (headerHeight - 108)
-            headerHeightAnchor.constant = max(-tableNode.contentOffset.y, 108)
-            
-        }
-        print("HEADERHEIGHT: \(headerHeightAnchor.constant)")
-        profileHeader.updateProgress(max(progress,0))
-        //let progress =
-    }
-}
-
-class ProfileCellNode:ASCellNode {
-    
-    var imageContainer = ASDisplayNode()
-    
-    override init() {
-        super.init()
-        automaticallyManagesSubnodes = true
-        backgroundColor = accentColor
-        imageContainer.backgroundColor = UIColor.blue
-        imageContainer.layer.cornerRadius = 24
-    }
-
-    override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        style.height = ASDimension(unit: .points, value: 240.0)
-        imageContainer.style.width = ASDimension(unit: .points, value: 48.0)
-        imageContainer.style.height = ASDimension(unit: .points, value: 48.0)
-        let centerImage = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: imageContainer)
-        let inset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(23, 0, 23, 0), child: centerImage)
-        return inset
+//        var progress:CGFloat = 1.0
+//        if tableNode.contentOffset.y < -headerHeight {
+//
+//            headerHeightAnchor.constant = -tableNode.contentOffset.y
+//        } else {
+//            //print("Offset: \(-tableNode.contentOffset.y)")
+//            progress = (-tableNode.contentOffset.y - 108) / (headerHeight - 108)
+//            headerHeightAnchor.constant = max(-tableNode.contentOffset.y, 108)
+//
+//        }
+//        profileHeader.updateProgress(max(progress,0))
+//        //let progress =
     }
 }

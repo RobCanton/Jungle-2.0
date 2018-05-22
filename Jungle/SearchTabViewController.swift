@@ -27,15 +27,18 @@ class SearchTabViewController:UIViewController, RCSearchBarDelegate {
     var searchBar:RCSearchBarView!
     override func viewDidLoad() {
         super.viewDidLoad()
-        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44.0))
+        view.backgroundColor = bgColor
+        
+        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0))
         view.addSubview(searchBar)
+        
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         
         let layout = view.safeAreaLayoutGuide
         searchBar.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
         searchBar.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
-        searchBar.topAnchor.constraint(equalTo: layout.topAnchor).isActive = true
-        searchBar.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+        searchBar.topAnchor.constraint(equalTo: layout.topAnchor, constant: -20).isActive = true
+        searchBar.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
         
         trendingHashtagsNode = TrendingHashtagsNode()
         view.addSubview(trendingHashtagsNode.view)
@@ -43,13 +46,24 @@ class SearchTabViewController:UIViewController, RCSearchBarDelegate {
         trendingHashtagsNode.view.translatesAutoresizingMaskIntoConstraints = false
         trendingHashtagsNode.view.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
         trendingHashtagsNode.view.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
-        trendingHashtagsNode.view.topAnchor.constraint(equalTo: layout.topAnchor, constant: 44.0).isActive = true
+        trendingHashtagsNode.view.topAnchor.constraint(equalTo: layout.topAnchor, constant: 50).isActive = true
         trendingHashtagsNode.view.bottomAnchor.constraint(equalTo: layout.bottomAnchor).isActive = true
         trendingHashtagsNode.getTrendingHastags()
         trendingHashtagsNode.delegate = self
         view.layoutIfNeeded()
         
         searchBar.setup(withDelegate: self)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        searchBar.addGradient()
+    }
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        get {
+            return .lightContent
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -171,13 +185,17 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
     }
     
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
         if indexPath.section == 0 {
             let cell = ASTextCellNode()
             cell.text = "Trending"
             cell.textInsets = UIEdgeInsetsMake(16.0, 16.0, 12.0, 16.0)
+            
             cell.textAttributes = [
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 24.0),
-                NSAttributedStringKey.foregroundColor: UIColor.black
+                NSAttributedStringKey.foregroundColor: UIColor.black,
+                NSAttributedStringKey.paragraphStyle: paragraphStyle
             ]
             return cell
         }
@@ -187,7 +205,8 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
         cell.textInsets = UIEdgeInsetsMake(12.0, 16.0, 12.0, 16.0)
         cell.textAttributes = [
             NSAttributedStringKey.font: Fonts.medium(ofSize: 18.0),
-            NSAttributedStringKey.foregroundColor: accentColor
+            NSAttributedStringKey.foregroundColor: accentColor,
+            NSAttributedStringKey.paragraphStyle: paragraphStyle
         ]
         cell.selectionStyle = .none
         return cell

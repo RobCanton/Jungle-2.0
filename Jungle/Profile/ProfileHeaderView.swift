@@ -63,7 +63,7 @@ class ProfileHeaderView:UIView {
         imageContainer.widthAnchor.constraint(equalToConstant: 128.0).isActive = true
         imageContainer.heightAnchor.constraint(equalTo: imageContainer.widthAnchor, multiplier: 1.0).isActive = true
         imageContainer.centerXAnchor.constraint(equalTo: contentContainer.centerXAnchor).isActive = true
-        imageContainer.centerYAnchor.constraint(equalTo: contentContainer.centerYAnchor).isActive = true
+        imageContainer.centerYAnchor.constraint(equalTo: contentContainer.centerYAnchor, constant: 16).isActive = true
         
         progressRing = UICircularProgressRingView(frame: imageContainer.bounds)
         // Change any of the properties you'd like
@@ -164,33 +164,33 @@ class ProfileHeaderView:UIView {
         levelButton.layer.cornerRadius = 4
         levelButton.clipsToBounds = true
         
-        tabBar = UIStackView()
-        contentContainer.addSubview(tabBar)
-        contentContainer.clipsToBounds = true
-        tabBar.translatesAutoresizingMaskIntoConstraints = false
-        tabBar.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
-        tabBar.leadingAnchor.constraint(equalTo: contentContainer.leadingAnchor, constant:16.0).isActive = true
-        tabBar.trailingAnchor.constraint(equalTo: contentContainer.trailingAnchor, constant:-16.0).isActive = true
-        tabBar.bottomAnchor.constraint(equalTo: contentContainer.bottomAnchor).isActive = true
-        
-        let postsButton = UIButton(type: .custom)
-        postsButton.setTitle("POSTS", for: .normal)
-        postsButton.setTitleColor(.white, for: .normal)
-        postsButton.titleLabel?.font = Fonts.semiBold(ofSize: 13.0)
-
-        let commentsButton = UIButton(type: .custom)
-        commentsButton.setTitle("COMMENTS", for: .normal)
-        commentsButton.setTitleColor(.white, for: .normal)
-        commentsButton.titleLabel?.font = Fonts.semiBold(ofSize: 13.0)
-
-        let historyButton = UIButton(type: .custom)
-        historyButton.setTitle("HISTORY", for: .normal)
-        historyButton.setTitleColor(.white, for: .normal)
-        historyButton.titleLabel?.font = Fonts.semiBold(ofSize: 13.0)
-
-        tabBar.addArrangedSubview(postsButton)
-        tabBar.addArrangedSubview(commentsButton)
-        tabBar.addArrangedSubview(historyButton)
+//        tabBar = UIStackView()
+//        contentContainer.addSubview(tabBar)
+//        contentContainer.clipsToBounds = true
+//        tabBar.translatesAutoresizingMaskIntoConstraints = false
+//        tabBar.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+//        tabBar.leadingAnchor.constraint(equalTo: contentContainer.leadingAnchor, constant:16.0).isActive = true
+//        tabBar.trailingAnchor.constraint(equalTo: contentContainer.trailingAnchor, constant:-16.0).isActive = true
+//        tabBar.bottomAnchor.constraint(equalTo: contentContainer.bottomAnchor).isActive = true
+//        
+//        let postsButton = UIButton(type: .custom)
+//        postsButton.setTitle("POSTS", for: .normal)
+//        postsButton.setTitleColor(.white, for: .normal)
+//        postsButton.titleLabel?.font = Fonts.semiBold(ofSize: 13.0)
+//
+//        let commentsButton = UIButton(type: .custom)
+//        commentsButton.setTitle("COMMENTS", for: .normal)
+//        commentsButton.setTitleColor(.white, for: .normal)
+//        commentsButton.titleLabel?.font = Fonts.semiBold(ofSize: 13.0)
+//
+//        let historyButton = UIButton(type: .custom)
+//        historyButton.setTitle("HISTORY", for: .normal)
+//        historyButton.setTitleColor(.white, for: .normal)
+//        historyButton.titleLabel?.font = Fonts.semiBold(ofSize: 13.0)
+//
+//        tabBar.addArrangedSubview(postsButton)
+//        tabBar.addArrangedSubview(commentsButton)
+//        tabBar.addArrangedSubview(historyButton)
         
     }
     

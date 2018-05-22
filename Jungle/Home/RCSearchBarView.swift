@@ -34,57 +34,59 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
+        backgroundColor = accentColor
         self.translatesAutoresizingMaskIntoConstraints = false
-        let layoutGuide = safeAreaLayoutGuide
+        self.preservesSuperviewLayoutMargins = false
+        self.insetsLayoutMarginsFromSafeArea = false
         
         leftButtonItem = UIButton(type: .custom)
         leftButtonItem.tintColor = UIColor.black
         addSubview(leftButtonItem)
         leftButtonItem.translatesAutoresizingMaskIntoConstraints = false
-        leftButtonItem.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        leftButtonItem.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
-        leftButtonItem.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        leftButtonItem.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        leftButtonItem.topAnchor.constraint(equalTo: topAnchor, constant: 20).isActive = true
+        leftButtonItem.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
         leftButtonItem.widthAnchor.constraint(equalToConstant: 44.0).isActive = true
         leftButtonItem.addTarget(self, action: #selector(handleLeftButton), for: .touchUpInside)
         
         cancelButton = UIButton(type: .custom)
         cancelButton.setTitle("Cancel", for: .normal)
-        cancelButton.setTitleColor(UIColor.black, for: .normal)
+        cancelButton.setTitleColor(UIColor.white, for: .normal)
         cancelButton.titleLabel?.font = Fonts.medium(ofSize: 16.0)
         addSubview(cancelButton)
         cancelButton.sizeToFit()
         cancelButton.translatesAutoresizingMaskIntoConstraints = false
-        cancelButton.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
-        cancelButton.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
-        cancelButton.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: -12.0).isActive = true
+        cancelButton.topAnchor.constraint(equalTo: topAnchor, constant: 20).isActive = true
+        cancelButton.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        cancelButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12.0).isActive = true
         cancelButton.addTarget(self, action: #selector(handleCancelButton), for: .touchUpInside)
         cancelButton.alpha = 0.0
         
         textFieldContainer = UIView()
         addSubview(textFieldContainer)
         textFieldContainer.translatesAutoresizingMaskIntoConstraints = false
-        containerLeadingAnchor = textFieldContainer.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor, constant: 44.0)
+        containerLeadingAnchor = textFieldContainer.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 44.0)
         containerLeadingAnchor.isActive = true
         
-        containerTrailingAnchor = textFieldContainer.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: -44.0)
+        containerTrailingAnchor = textFieldContainer.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -44.0)
         containerTrailingAnchor.isActive = true
         
-        textFieldContainer.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
-        textFieldContainer.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
-        
+        textFieldContainer.topAnchor.constraint(equalTo: topAnchor, constant: 20).isActive = true
+        textFieldContainer.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
         
         textBubble = UIView()
         textFieldContainer.addSubview(textBubble)
+        textFieldContainer.clipsToBounds = false
+        textFieldContainer.applyShadow(radius: 4.0, opacity: 0.05, offset: CGSize(width: 0, height: 4), color: UIColor.black, shouldRasterize: false)
         
         let containerLayout = textFieldContainer.safeAreaLayoutGuide
         
-        textBubble.backgroundColor = UIColor(white: 0.90, alpha: 1.0)
+        textBubble.backgroundColor = UIColor.white//UIColor(white: 0.90, alpha: 1.0)
         textBubble.translatesAutoresizingMaskIntoConstraints = false
         textBubble.leadingAnchor.constraint(equalTo: containerLayout.leadingAnchor, constant: 0.0).isActive = true
         textBubble.trailingAnchor.constraint(equalTo: containerLayout.trailingAnchor, constant: 0.0).isActive = true
-        textBubble.topAnchor.constraint(equalTo: containerLayout.topAnchor, constant: 4.0).isActive = true
-        textBubble.bottomAnchor.constraint(equalTo: containerLayout.bottomAnchor, constant: -4.0).isActive = true
+        textBubble.topAnchor.constraint(equalTo: containerLayout.topAnchor, constant: 8.0).isActive = true
+        textBubble.bottomAnchor.constraint(equalTo: containerLayout.bottomAnchor, constant: -8.0).isActive = true
         
         textField = UITextField(frame: .zero)
         textBubble.addSubview(textField)
@@ -98,7 +100,33 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
         textField.topAnchor.constraint(equalTo: bubbleLayout.topAnchor, constant: 0.0).isActive = true
         textField.bottomAnchor.constraint(equalTo: bubbleLayout.bottomAnchor, constant: 0.0).isActive = true
         
+        gradient = CAGradientLayer()
+        let botColor = hexColor(from: "a4e078")
+        let topColor = hexColor(from: "81d892")
+        gradient!.colors = [topColor.cgColor, botColor.cgColor]
+        gradient!.locations = [0.0 , 1.0]
+        gradient!.startPoint = CGPoint(x: 0.0, y: 1.0)
+        gradient!.endPoint = CGPoint(x: 1.0, y: 1.0)
+        gradient!.frame = self.bounds
         
+        self.layer.insertSublayer(gradient!, at: 0)
+        
+        textBubble.isUserInteractionEnabled = true
+        
+        let bubbleTap = UITapGestureRecognizer(target: self, action: #selector(beginEditing))
+        textBubble.addGestureRecognizer(bubbleTap)
+    }
+    
+    var gradient:CAGradientLayer?
+    
+    func addGradient() {
+        gradient?.frame = self.bounds
+    }
+    
+    @objc func beginEditing() {
+        if !textField.isFirstResponder {
+            textField.becomeFirstResponder()
+        }
     }
     
     var defaultTextLeadingConstant:CGFloat = 0.0
@@ -107,7 +135,7 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
         self.delegate = delegate
         textBubble.layer.cornerRadius = textBubble.bounds.height / 2
         textBubble.clipsToBounds = true
-        textField.font = Fonts.regular(ofSize: 16.0)
+        textField.font = Fonts.medium(ofSize: 16.0)
         textField.delegate = self
         textField.placeholder = "Search"
         textField.text = "Search"

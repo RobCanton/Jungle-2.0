@@ -28,26 +28,15 @@ class SearchPostsViewController: PostsViewController {
         self.tableNode.reloadSections(IndexSet(integer: 0), with: .none)
     }
     
-    override func fetchData(_ state: PostsViewController.State, completion: @escaping ([Post], Bool) -> ()) {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        tableNode.backgroundColor = bgColor
+        tableNode.contentInset = UIEdgeInsetsMake(10, 0, 0, 0)
+    }
+    
+    override func fetchData(_ state: PostsViewController.State, completion: @escaping (_ posts:[Post], _ endReached: Bool) -> ()) {
         if let searchText = searchText {
-            SearchService.searchFor(text: searchText, limit: 15, offset: state.posts.count) { documents in
-                
-                var posts = [Post]()
-                var endReached = false
-                
-                if documents.count == 0 {
-                    endReached = true
-                    print("SEARCH: \(searchText) | END REACHED!")
-                }
-                
-                for document in documents {
-                    if let postID = document["objectID"] as? String,
-                        let post = Post.parse(id: postID, document) {
-                        if state.postKeys[post.key] == nil {
-                            posts.append(post)
-                        }
-                    }
-                }
+            SearchService.searchFor(text: searchText, limit: 15, offset: state.posts.count) { posts, endReached in
                 
                 completion(posts, endReached)
             }
@@ -332,7 +321,7 @@ extension PostsViewController: ASTableDelegate, ASTableDataSource {
             return node;
         }
         
-        let cell = PostCellNode(withPost: state.posts[indexPath.row], type: .newest)
+        let cell = PostCellNode(withPost: state.posts[indexPath.row])
         cell.selectionStyle = .none
         //cell.delegate = self
         return cell

@@ -14,65 +14,64 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource,
     
     var initialSearch:String?
     var pagerNode:ASPagerNode!
-    @IBOutlet weak var contentView: UIView!
-    @IBOutlet weak var backButton: UIButton!
-    @IBOutlet weak var cancelButton: UIButton!
-    @IBOutlet weak var bubbleView: UIView!
-    @IBOutlet weak var textField: UITextField!
-    @IBOutlet weak var searchLeadingAnchor: NSLayoutConstraint!
-    @IBOutlet weak var searchTrailingAnchor: NSLayoutConstraint!
-    
-    @IBOutlet weak var textFieldLeadingAnchor: NSLayoutConstraint!
     var latestPostsVC:SearchPostsViewController!
+    var searchBar:RCSearchBarView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = bgColor
         
-        bubbleView.layer.cornerRadius = bubbleView.bounds.height / 2
-        bubbleView.clipsToBounds = true
-        textField.delegate = self
+        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0))
+        view.addSubview(searchBar)
+        
+        searchBar.translatesAutoresizingMaskIntoConstraints = false
+        
+        let layout = view.safeAreaLayoutGuide
+        searchBar.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
+        searchBar.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
+        searchBar.topAnchor.constraint(equalTo: layout.topAnchor, constant: -20).isActive = true
+        searchBar.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
+        
+        view.layoutIfNeeded()
+        
         pagerNode = ASPagerNode()
+        pagerNode.backgroundColor = bgColor
+        view.addSubview(pagerNode.view)
         pagerNode.setDelegate(self)
         pagerNode.setDataSource(self)
-        pagerNode.backgroundColor = nil
-        contentView.addSubview(pagerNode.view)
-        
-        let layoutGuide = contentView.safeAreaLayoutGuide
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
-        pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        pagerNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        pagerNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
-        pagerNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: 0.0).isActive = true
+        pagerNode.view.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
+        pagerNode.view.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
+        pagerNode.view.topAnchor.constraint(equalTo: searchBar.bottomAnchor).isActive = true
+        pagerNode.view.bottomAnchor.constraint(equalTo: layout.bottomAnchor).isActive = true
         pagerNode.reloadData()
+        
+        searchBar.setup(withDelegate: self)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
         if let search = initialSearch {
-            backButton.isHidden = false
-            textField.text = search
-            let width = textWidth
-            
-            var leadingConstant:CGFloat = 12.0
-            let bubbleWidth = bubbleView.bounds.width - 24.0
-            if width < bubbleWidth {
-                leadingConstant += (bubbleWidth - width) / 2
-            }
-            self.textFieldLeadingAnchor.constant = leadingConstant
-            self.view.layoutIfNeeded()
+            searchBar.textField.text = search
             latestPostsVC?.setSearch(text: search)
             initialSearch = nil
         }
     }
     
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        get {
+            return .lightContent
+        }
+    }
+    
     func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
         let cellNode = ASCellNode()
-        cellNode.frame = contentView.bounds
-        
+        cellNode.backgroundColor = bgColor
         latestPostsVC = SearchPostsViewController()
+        latestPostsVC.view.backgroundColor = bgColor
         latestPostsVC.willMove(toParentViewController: self)
         self.addChildViewController(latestPostsVC)
-        latestPostsVC.view.frame = contentView.bounds
         cellNode.addSubnode(latestPostsVC.node)
         let layoutGuide = cellNode.view.safeAreaLayoutGuide
         latestPostsVC.view.translatesAutoresizingMaskIntoConstraints = false
@@ -90,52 +89,30 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource,
     @IBAction func handleDismiss(_ sender: Any) {
         self.navigationController?.popViewController(animated: true)
     }
-    @IBAction func handleCancel(_ sender: Any) {
-        self.textField.endEditing(true)
-    }
-    
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-        //textField.textAlignment = .left
-        UIView.animate(withDuration: 0.25, delay: 0.0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.2, options: .curveEaseOut, animations: {
-            self.searchLeadingAnchor.constant = 12.0
-            self.searchTrailingAnchor.constant = 72.0
-            self.textFieldLeadingAnchor.constant = 12.0
-            self.view.layoutIfNeeded()
-            self.backButton.alpha = 0.0
-            self.cancelButton.alpha = 1.0
-        }, completion: nil)
+}
 
+
+extension SearchViewController: RCSearchBarDelegate {
+    func handleLeftButton() {
+        self.navigationController?.popViewController(animated: true)
     }
     
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        //textField.textAlignment = .center
+    func searchTextDidChange(_ text: String?) {
         
-        let width = textWidth
+    }
+    
+    func searchDidBegin() {
         
-        var leadingConstant:CGFloat = 12.0
-        let bubbleWidth = bubbleView.bounds.width - 24.0
-        if width < bubbleWidth {
-            leadingConstant += (bubbleWidth - width) / 2
-        }
-        UIView.animate(withDuration: 0.25, delay: 0.0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.2, options: .curveEaseOut, animations: {
-            self.searchLeadingAnchor.constant = 44.0
-            self.searchTrailingAnchor.constant = 44.0
-            self.textFieldLeadingAnchor.constant = leadingConstant
-            self.view.layoutIfNeeded()
-            self.backButton.alpha = 1.0
-            self.cancelButton.alpha = 0.0
-        }, completion: nil)
     }
     
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.endEditing(true)
-        latestPostsVC?.setSearch(text: textField.text)
-        return true
+    func searchDidEnd() {
+        
     }
     
-    var textWidth:CGFloat {
-        return UILabel.size(text: textField.text ?? "", height: 44.0, font: Fonts.regular(ofSize: 16.0)).width
+    func searchTapped(_ text: String) {
+        latestPostsVC.setSearch(text: text)
     }
+    
     
 }
 

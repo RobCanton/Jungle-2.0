@@ -14,7 +14,7 @@
             buildForArchiving = "YES">
             <BuildableReference
                BuildableIdentifier = 'primary'
-               BlueprintIdentifier = '99EB1D654CFEDA85BD5AD5078E423935'
+               BlueprintIdentifier = 'E28904555CD5133369335955B5A295EA'
                BlueprintName = 'ScrollableGraphView'
                ReferencedContainer = 'container:Pods.xcodeproj'
                BuildableName = 'ScrollableGraphView.framework'>

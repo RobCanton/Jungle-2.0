@@ -109,6 +109,13 @@
 			<key>orderHint</key>
 			<integer>20</integer>
 		</dict>
+		<key>TGPControls.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>24</integer>
+		</dict>
 		<key>TagCellLayout.xcscheme</key>
 		<dict>
 			<key>isShown</key>
@@ -128,7 +135,7 @@
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
-			<integer>24</integer>
+			<integer>25</integer>
 		</dict>
 		<key>gRPC-Core.xcscheme</key>
 		<dict>

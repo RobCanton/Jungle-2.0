@@ -11,47 +11,95 @@ import UIKit
 import AsyncDisplayKit
 import Firebase
 import SwiftMessages
+import AlgoliaSearch
 
-class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, HomeTitleDelegate, UIGestureRecognizerDelegate {
+class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, UIGestureRecognizerDelegate {
     
     var pagerNode:ASPagerNode!
     var navBar:UIView!
-    var titleView:HomeTitleView!
     
     var sm = SwiftMessages()
     
+    var titleView:JTitleView!
     var messageWrapper = SwiftMessages()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        view.backgroundColor = UIColor.blue
         pagerNode = ASPagerNode()
         pagerNode.setDelegate(self)
         pagerNode.setDataSource(self)
-        pagerNode.backgroundColor = nil
+        pagerNode.backgroundColor = hexColor(from: "#eff0e9")
         view.addSubview(pagerNode.view)
-        let layoutGuide = view.safeAreaLayoutGuide
-       
-        navBar = UIView(frame: CGRect(x: 0, y: 20, width: view.bounds.width, height: 44.0))
-        navBar.backgroundColor = UIColor.red
-        view.addSubview(navBar)
         
-        titleView = UINib(nibName: "HomeTitleView", bundle: nil).instantiate(withOwner: nil, options: nil)[0] as! HomeTitleView
-        titleView.frame = navBar.bounds
-        titleView.layoutIfNeeded()
-        titleView.delegate = self
-        titleView.backgroundColor = UIColor.red
-        navBar.addSubview(titleView)
+        let layoutGuide = view.safeAreaLayoutGuide
+        
+        titleView = JTitleView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0))
+        view.addSubview(titleView)
+        titleView.translatesAutoresizingMaskIntoConstraints = false
+        titleView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        titleView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
+        titleView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        titleView.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
+        
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
         pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         pagerNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        pagerNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: 44).isActive = true
+        pagerNode.view.topAnchor.constraint(equalTo: titleView.bottomAnchor).isActive = true
         pagerNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
         pagerNode.view.delaysContentTouches = false
+        //pagerNode.view.isScrollEnabled = false
+        pagerNode.view.panGestureRecognizer.delaysTouchesBegan = false
         pagerNode.reloadData()
         
+        titleView.sortingButton.addTarget(self, action: #selector(locationPicker), for: .touchUpInside)
+        
+        titleView.rightButton.addTarget(self, action: #selector(openContentSettings), for: .touchUpInside)
     }
     
+    @objc func openContentSettings() {
+        let controller = ContentSettingsViewController()
+        let nav = UINavigationController(rootViewController: controller)
+        self.present(nav, animated: true, completion: nil)
+    }
+    
+    @objc func locationPicker() {
+        //print("IM SO COLD LIKE YAH")
+        let alert = UIAlertController(title: "Set Location", message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Markham", style: .default, handler: { _ in
+            SearchService.myCoords = LatLng(lat: 43.9050531135017, lng: -79.27830310499503)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Toronto", style: .default, handler: { _ in
+            SearchService.myCoords = LatLng(lat: 43.6532, lng: -79.3832)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "New York", style: .default, handler: { _ in
+            SearchService.myCoords = LatLng(lat: 40.7128, lng: -74.0060)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "San Francisco", style: .default, handler: { _ in
+            SearchService.myCoords = LatLng(lat: 37.7749, lng: -122.4194)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "London", style: .default, handler: { _ in
+            SearchService.myCoords = LatLng(lat: 51.5074, lng: -0.1278)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Tokyo", style: .default, handler: { _ in
+            SearchService.myCoords = LatLng(lat: 35.6895, lng: 139.6917)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Mexico City", style: .default, handler: { _ in
+            SearchService.myCoords = LatLng(lat: 19.4326, lng: 99.1332)
+        }))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.titleView.addGradient()
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -63,7 +111,11 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         navigationController?.navigationBar.tintColor = UIColor.gray
         navigationItem.backBarButtonItem = UIBarButtonItem(image: UIImage(named:"Back"), style: .plain, target: nil, action: nil)
         
-        
+        if ContentSettings.recentlyUpdated {
+            pagerNode.reloadData()
+            ContentSettings.recentlyUpdated = false
+        }
+    
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -77,26 +129,28 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         print("Is User signed In : \(UserService.isSignedIn)")
     }
     
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        get {
+            return .lightContent
+        }
+    }
+    
     func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
         let cellNode = ASCellNode()
         cellNode.frame = pagerNode.bounds
         cellNode.backgroundColor = index % 2 == 0 ? UIColor.blue : UIColor.yellow
-        
-        var type:PostsTableType!
+        var controller:PostsTableViewController!
         switch index {
         case 0:
-            type = .newest
+            controller = RecentPostsTableViewController()
             break
         case 1:
-            type = .popular
-            break
-        case 2:
-            type = .nearby
+            controller = PopularPostsTableViewController()
             break
         default:
-            return cellNode
+            controller = NearbyPostsTableViewController()
+            break
         }
-        let controller = PostsTableViewController(type: type)
         controller.willMove(toParentViewController: self)
         self.addChildViewController(controller)
         controller.view.frame = cellNode.bounds
@@ -117,22 +171,31 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard scrollView == pagerNode.view else { return }
-        let progress = scrollView.contentOffset.x / scrollView.contentSize.width
-        titleView.setProgress(progress)
+        let offsetX = scrollView.contentOffset.x
+        let viewWidth = view.bounds.width
+        if offsetX < viewWidth {
+            let progress = offsetX / viewWidth
+            titleView.setProgress(progress, index: 0)
+        } else {
+            let progress = (offsetX - viewWidth) / viewWidth
+            titleView.setProgress(progress, index: 1)
+        }
+        
+        
     }
     
-    func scrollTo(header: HomeHeader) {
-        switch header {
-        case .home:
-            pagerNode.scrollToPage(at: 0, animated: true)
-            break
-        case .popular:
-            pagerNode.scrollToPage(at: 1, animated: true)
-            break
-        case .nearby:
-            pagerNode.scrollToPage(at: 2, animated: true)
-            break
-        }
+    func scrollTo() {
+//        switch header {
+//        case .home:
+//            pagerNode.scrollToPage(at: 0, animated: true)
+//            break
+//        case .popular:
+//            pagerNode.scrollToPage(at: 1, animated: true)
+//            break
+//        case .nearby:
+//            pagerNode.scrollToPage(at: 2, animated: true)
+//            break
+//        }
     }
     
     func authorizeGPS() {

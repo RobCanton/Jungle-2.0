@@ -19,6 +19,8 @@ class PostsService {
         
     }
     
+    
+    
     static func getPost(_ postID:String, completion: @escaping (_ post:Post?)->()) {
         let postRef = firestore.collection("posts").document(postID)
         postRef.getDocument { snapshot, error in
@@ -31,6 +33,26 @@ class PostsService {
         }
     }
 
+    
+    static func getTopComment(forPost post:Post, completion: @escaping ((_ comment:Post?)->())) {
+        let ref = firestore.collection("posts")
+            .whereField("status", isEqualTo: "active")
+            .whereField("parent", isEqualTo: post.key)
+        
+        let queryRef = ref.limit(to: 1)
+        queryRef.getDocuments { querySnapshot, err in
+            var comment:Post?
+            if let err = err {
+                print("Error getting documents: \(err)")
+            } else if let documents = querySnapshot?.documents,
+                let first = documents.first,
+                let post = Post.parse(id: first.documentID, first.data()) {
+                comment = post
+            }
+            completion(comment)
+        }
+    }
+    
     static func refreshNewPosts(existingKeys: [String:Bool], startAfter firstTimestamp: Double?, completion: @escaping (_ posts:[Post])->()) {
         let postsRef = firestore.collection("posts")
             .whereField("status", isEqualTo: "active")
@@ -59,7 +81,9 @@ class PostsService {
                     }
                 }
             }
-            completion(posts)
+            PostsService.fetchAdditionalInfo(forPosts: posts) { _posts in
+                completion(_posts)
+            }
         }
     }
     
@@ -78,7 +102,7 @@ class PostsService {
             }
         
             queryRef.getDocuments() { (querySnapshot, err) in
-                var _posts = [Post]()
+                var posts = [Post]()
                 var endReached = false
                 
                 if let err = err {
@@ -96,27 +120,50 @@ class PostsService {
                         let data = document.data()
                         if let post = Post.parse(id: document.documentID, data) {
                             if existingKeys[post.key] == nil {
-                                _posts.append(post)
+                                posts.append(post)
                             }
                         }
                     }
                 }
-                if _posts.count > 0 {
-                    var count = 0
-                    for post in _posts {
-                        getMyAnon(forPostID: post.key) { postID, anonKey in
-                            post.myAnonKey = anonKey
-                            
-                            count += 1
-                            if count >= _posts.count {
-                                completion(_posts, endReached)
-                            }
-                        }
-                    }
-                } else {
+                PostsService.fetchAdditionalInfo(forPosts: posts) { _posts in
                     completion(_posts, endReached)
                 }
             }
+    }
+    
+    static func fetchAdditionalInfo(forPosts _posts:[Post], completion: @escaping((_ posts:[Post])->())) {
+        var posts = _posts
+        if posts.count > 0 {
+            var count = 0
+            for i in 0..<posts.count {
+                let post = posts[i]
+                PostsService.getAdditionalPostInfo(post) { post in
+                    posts[i] = post
+                    count += 1
+                    if count >= posts.count {
+                        completion(posts)
+                    }
+                }
+            }
+        } else {
+            completion(posts)
+        }
+    }
+    
+    static func getAdditionalPostInfo(_ post: Post, completion: @escaping ((_ post:Post)->())) {
+        getMyAnon(forPostID: post.key) { postID, anonKey in
+            post.myAnonKey = anonKey
+            getTopComment(forPost: post) { _topComment in
+                if let topComment = _topComment {
+                    print("MY ANONKEY: \(anonKey) | \(topComment.anon.key)")
+                    topComment.isYou = anonKey == topComment.anon.key
+                    post.topComment = topComment
+                    completion(post)
+                } else {
+                    completion(post)
+                }
+            }
+        }
     }
 
     
@@ -135,7 +182,7 @@ class PostsService {
         }
         
         queryRef.getDocuments() { (querySnapshot, err) in
-            var _posts = [Post]()
+            var posts = [Post]()
             var endReached = false
             
             if let err = err {
@@ -161,23 +208,11 @@ class PostsService {
                     let data = document.data()
                     if let post = Post.parse(id: document.documentID, data) {
                         //post.documentSnapshot = document
-                        _posts.append(post)
+                        posts.append(post)
                     }
                 }
             }
-            if _posts.count > 0 {
-                var count = 0
-                for post in _posts {
-                    getMyAnon(forPostID: post.key) { postID, anonKey in
-                        post.myAnonKey = anonKey
-                        
-                        count += 1
-                        if count >= _posts.count {
-                            completion(_posts, endReached)
-                        }
-                    }
-                }
-            } else {
+            PostsService.fetchAdditionalInfo(forPosts: posts) { _posts in
                 completion(_posts, endReached)
             }
         }

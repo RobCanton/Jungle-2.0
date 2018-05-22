@@ -15,6 +15,122 @@ protocol CommentCellDelegate:class {
     func handleReply(_ reply:Post)
 }
 
+class CommentPreviewNode:ASDisplayNode {
+    var imageNode = ASNetworkImageNode()
+    var titleNode = ASTextNode()
+    var subnameNode = ASTextNode()
+    var subtitleNode = ASTextNode()
+    var postTextNode = ActiveTextNode()
+    
+    var hasText = false
+    
+    required init(reply:Post?, toPost post: Post) {
+        super.init()
+        automaticallyManagesSubnodes = true
+        guard let reply = reply else { return }
+        hasText = post.text != ""
+        
+        imageNode.backgroundColor = reply.anon.color
+
+        titleNode.attributedText = NSAttributedString(string: reply.anon.displayName, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: UIColor.black
+            ])
+        
+        var subnameStr = ""
+        if reply.isYou {
+            subnameStr = "YOU"
+            subnameNode.isHidden = false
+        } else if reply.anon.key == post.anon.key {
+            subnameStr = "OP"
+            subnameNode.isHidden = false
+        } else {
+            subnameNode.isHidden = true
+        }
+        
+        print("\(reply.text) IT IS YOU: \(reply.isYou)")
+        subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white
+            ])
+        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 0, right: 4.0)
+        subnameNode.backgroundColor = reply.anon.color
+        
+        let subtitleStr = ""//" · \(reply.createdAt.timeSinceNow())"
+        
+        subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
+            NSAttributedStringKey.font: Fonts.regular(ofSize: 12.0),
+            NSAttributedStringKey.foregroundColor: subtitleColor
+            ])
+        
+        postTextNode.maximumNumberOfLines = 0
+        postTextNode.truncationMode = .byWordWrapping
+        
+        postTextNode.setText(text: reply.text, withSize: 14.0, normalColor: UIColor.black, activeColor: accentColor)
+        postTextNode.tapHandler = { type, textValue in
+            
+        }
+    }
+    
+    override func didLoad() {
+        super.didLoad()
+        subnameNode.layer.cornerRadius = 4
+        subnameNode.clipsToBounds = true
+        
+        imageNode.clipsToBounds = true
+        imageNode.layer.cornerRadius = 10.0
+    }
+    
+    override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
+        imageNode.style.width = ASDimension(unit: .points, value: 20.0)
+        imageNode.style.height = ASDimension(unit: .points, value: 20.0)
+        
+        subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
+        
+        let titleCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: titleNode)
+        let subnameCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
+        let subtitleCenterY = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subtitleNode)
+        
+        let hTitleStack = ASStackLayoutSpec.horizontal()
+        hTitleStack.children = [titleCenterY]
+        hTitleStack.spacing = 4.0
+        
+        if !subnameNode.isHidden {
+            hTitleStack.children?.append(subnameCenterY)
+        }
+        
+        subnameNode.style.height = ASDimension(unit: .points, value: 16.0)
+        
+        let nameStack = ASStackLayoutSpec.horizontal()
+        nameStack.spacing = 1.0
+        nameStack.children = [hTitleStack, subtitleCenterY]
+        
+        let imageStack = ASStackLayoutSpec.horizontal()
+        imageStack.children = [imageNode, nameStack]
+        imageStack.spacing = 8.0
+        
+        let imageInsets = UIEdgeInsetsMake(4.0, 12, 0, 12)
+        let imageInset = ASInsetLayoutSpec(insets: imageInsets, child: imageStack)
+        
+        let contentStack = ASStackLayoutSpec.vertical()
+        contentStack.children = []
+        contentStack.spacing = 8.0
+        
+        contentStack.children?.append(imageInset)
+        
+        let textInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12, 0, 12), child: postTextNode)
+        
+        if hasText {
+            contentStack.children?.append(textInset)
+        }
+        
+        let contentInsets = UIEdgeInsets.zero
+        
+        return ASInsetLayoutSpec(insets: contentInsets, child: contentStack)
+        
+    }
+}
+
 class CommentCellNode:ASCellNode {
     
     let gradientColorTop = accentColor
@@ -145,7 +261,7 @@ class CommentCellNode:ASCellNode {
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
         
-        dividerNode.backgroundColor = hexColor(from: "#F2F6EF")
+        dividerNode.backgroundColor = hexColor(from: "#eff0e9")
         dividerNode.isHidden = false//hideDivider ?? false
         replyLine.isHidden = false //hideReplyLine ?? true
         
@@ -158,7 +274,6 @@ class CommentCellNode:ASCellNode {
         likeButton.contentEdgeInsets = .zero
         likeButton.tintColor = buttonColor
         likeButton.tintColorDidChange()
-        likeButton.alpha = 0.5
         
         dislikeButton.setImage(downvoteImage, for: .normal)
         dislikeButton.laysOutHorizontally = true
@@ -167,21 +282,14 @@ class CommentCellNode:ASCellNode {
         dislikeButton.contentEdgeInsets = .zero
         dislikeButton.tintColor = buttonColor
         dislikeButton.tintColorDidChange()
-        dislikeButton.alpha = 0.5
         
         likeButton.addTarget(self, action: #selector(handleUpvote), forControlEvents: .touchUpInside)
         dislikeButton.addTarget(self, action: #selector(handleDownvote), forControlEvents: .touchUpInside)
         
-        let commentStr = NSAttributedString(string: "Reply", attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: subtitleColor
-            ])
-        commentButton.setAttributedTitle(commentStr, for: .normal)
+        commentButton.setImage(UIImage(named:"comment"), for: .normal)
         commentButton.laysOutHorizontally = true
-        commentButton.contentSpacing = 8.0
+        commentButton.contentSpacing = 2.0
         commentButton.contentHorizontalAlignment = .middle
-        commentButton.alpha = 0.80
-        countLabel.alpha = 0.80
        
         moreButtonNode.setImage(moreImage, for: .normal)
         moreButtonNode.contentHorizontalAlignment = .right
@@ -195,6 +303,7 @@ class CommentCellNode:ASCellNode {
         titleNode.tintColorDidChange()
         
         setTitle("SillyDeer Replied · \(reply.numReplies) Replies")
+        self.setComments(count: reply.numReplies)
         self.setNumVotes(reply.votes)
         self.setVote(reply.vote, animated: false)
     }
@@ -347,6 +456,15 @@ class CommentCellNode:ASCellNode {
     
     func setSelected(_ selected:Bool) {
         backgroundColor = selected ? UIColor(white: 0.95, alpha: 1.0) : bgColor
+    }
+    
+    func setComments(count:Int) {
+        let countStr = "\(count)"
+        let str = NSMutableAttributedString(string: "\(countStr)", attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: buttonColor
+            ])
+        commentButton.setAttributedTitle(str, for: .normal)
     }
     
     @objc func handleUpvote() {
