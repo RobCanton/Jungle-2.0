@@ -34,7 +34,7 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         let text = NSMutableAttributedString(string: str)
         text.addAttribute(NSAttributedStringKey.paragraphStyle, value: paragraph, range: NSRange(location: 0, length: str.count))
         text.addAttribute(NSAttributedStringKey.font, value: Fonts.semiBold(ofSize: 15.0), range: NSRange(location: 0, length: title.count))
-        text.addAttribute(NSAttributedStringKey.font, value: Fonts.regular(ofSize: 15.0), range: NSRange(location: title.count + 1, length: subtitle.count))
+        text.addAttribute(NSAttributedStringKey.font, value: Fonts.medium(ofSize: 15.0), range: NSRange(location: title.count + 1, length: subtitle.count))
         self.attributedText = text
     }
     

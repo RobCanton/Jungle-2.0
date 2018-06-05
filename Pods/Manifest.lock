@@ -2,84 +2,90 @@ PODS:
   - Alamofire (4.6.0)
   - AlgoliaSearch-Client-Swift (5.1.2)
   - AlignedCollectionViewFlowLayout (1.1.2)
-  - BoringSSL (9.2):
-    - BoringSSL/Implementation (= 9.2)
-    - BoringSSL/Interface (= 9.2)
-  - BoringSSL/Implementation (9.2):
-    - BoringSSL/Interface (= 9.2)
-  - BoringSSL/Interface (9.2)
-  - Firebase/Auth (4.8.2):
-    - Firebase/Core
-    - FirebaseAuth (= 4.4.2)
-  - Firebase/Core (4.8.2):
-    - FirebaseAnalytics (= 4.0.9)
-    - FirebaseCore (= 4.0.14)
-  - Firebase/Database (4.8.2):
-    - Firebase/Core
-    - FirebaseDatabase (= 4.1.4)
-  - Firebase/Firestore (4.8.2):
-    - Firebase/Core
-    - FirebaseFirestore (= 0.10.0)
-  - Firebase/Storage (4.8.2):
-    - Firebase/Core
-    - FirebaseStorage (= 2.1.2)
-  - FirebaseAnalytics (4.0.9):
-    - FirebaseCore (~> 4.0)
-    - FirebaseInstanceID (~> 2.0)
+  - BoringSSL (10.0.2):
+    - BoringSSL/Implementation (= 10.0.2)
+    - BoringSSL/Interface (= 10.0.2)
+  - BoringSSL/Implementation (10.0.2):
+    - BoringSSL/Interface (= 10.0.2)
+  - BoringSSL/Interface (10.0.2)
+  - CameraManager (4.1.1)
+  - DeckTransition (2.0.0)
+  - Firebase/Auth (5.0.1):
+    - Firebase/CoreOnly
+    - FirebaseAuth (= 5.0.0)
+  - Firebase/Core (5.0.1):
+    - Firebase/CoreOnly
+    - FirebaseAnalytics (= 5.0.0)
+  - Firebase/CoreOnly (5.0.1):
+    - FirebaseCore (= 5.0.1)
+  - Firebase/Database (5.0.1):
+    - Firebase/CoreOnly
+    - FirebaseDatabase (= 5.0.0)
+  - Firebase/Firestore (5.0.1):
+    - Firebase/CoreOnly
+    - FirebaseFirestore (= 0.12.1)
+  - Firebase/Functions (5.0.1):
+    - Firebase/CoreOnly
+    - FirebaseFunctions (= 2.0.0)
+  - Firebase/Storage (5.0.1):
+    - Firebase/CoreOnly
+    - FirebaseStorage (= 3.0.0)
+  - FirebaseAnalytics (5.0.0):
+    - FirebaseCore (~> 5.0)
+    - FirebaseInstanceID (~> 3.0)
     - GoogleToolboxForMac/NSData+zlib (~> 2.1)
     - nanopb (~> 0.3)
-  - FirebaseAuth (4.4.2):
-    - FirebaseAnalytics (~> 4.0)
-    - GoogleToolboxForMac/NSDictionary+URLArguments (~> 2.1)
+  - FirebaseAuth (5.0.0):
+    - FirebaseCore (~> 5.0)
     - GTMSessionFetcher/Core (~> 1.1)
-  - FirebaseCore (4.0.14):
+  - FirebaseCore (5.0.1):
     - GoogleToolboxForMac/NSData+zlib (~> 2.1)
-  - FirebaseDatabase (4.1.4):
-    - FirebaseAnalytics (~> 4.0)
-    - FirebaseCore (~> 4.0)
+  - FirebaseDatabase (5.0.0):
+    - FirebaseCore (~> 5.0)
     - leveldb-library (~> 1.18)
-  - FirebaseFirestore (0.10.0):
-    - FirebaseAnalytics (~> 4.0)
-    - FirebaseCore (~> 4.0)
+  - FirebaseFirestore (0.12.1):
+    - FirebaseCore (~> 5.0)
+    - FirebaseFirestore/abseil-cpp (= 0.12.1)
     - gRPC-ProtoRPC (~> 1.0)
     - leveldb-library (~> 1.18)
     - Protobuf (~> 3.1)
-  - FirebaseInstanceID (2.0.8):
-    - FirebaseCore (~> 4.0)
-  - FirebaseStorage (2.1.2):
-    - FirebaseAnalytics (~> 4.0)
-    - FirebaseCore (~> 4.0)
+  - FirebaseFirestore/abseil-cpp (0.12.1):
+    - FirebaseCore (~> 5.0)
+    - gRPC-ProtoRPC (~> 1.0)
+    - leveldb-library (~> 1.18)
+    - Protobuf (~> 3.1)
+  - FirebaseFunctions (2.0.0):
+    - FirebaseCore (~> 5.0)
     - GTMSessionFetcher/Core (~> 1.1)
-  - GoogleToolboxForMac/DebugUtils (2.1.3):
-    - GoogleToolboxForMac/Defines (= 2.1.3)
-  - GoogleToolboxForMac/Defines (2.1.3)
-  - GoogleToolboxForMac/NSData+zlib (2.1.3):
-    - GoogleToolboxForMac/Defines (= 2.1.3)
-  - GoogleToolboxForMac/NSDictionary+URLArguments (2.1.3):
-    - GoogleToolboxForMac/DebugUtils (= 2.1.3)
-    - GoogleToolboxForMac/Defines (= 2.1.3)
-    - GoogleToolboxForMac/NSString+URLArguments (= 2.1.3)
-  - GoogleToolboxForMac/NSString+URLArguments (2.1.3)
-  - gRPC (1.9.1):
-    - gRPC-RxLibrary (= 1.9.1)
-    - gRPC/Main (= 1.9.1)
-  - gRPC-Core (1.9.1):
-    - gRPC-Core/Implementation (= 1.9.1)
-    - gRPC-Core/Interface (= 1.9.1)
-  - gRPC-Core/Implementation (1.9.1):
-    - BoringSSL (~> 9.0)
-    - gRPC-Core/Interface (= 1.9.1)
+  - FirebaseInstanceID (3.0.0):
+    - FirebaseCore (~> 5.0)
+  - FirebaseStorage (3.0.0):
+    - FirebaseCore (~> 5.0)
+    - GTMSessionFetcher/Core (~> 1.1)
+  - GoogleToolboxForMac/Defines (2.1.4)
+  - GoogleToolboxForMac/NSData+zlib (2.1.4):
+    - GoogleToolboxForMac/Defines (= 2.1.4)
+  - gRPC (1.12.0):
+    - gRPC-RxLibrary (= 1.12.0)
+    - gRPC/Main (= 1.12.0)
+  - gRPC-Core (1.12.0):
+    - gRPC-Core/Implementation (= 1.12.0)
+    - gRPC-Core/Interface (= 1.12.0)
+  - gRPC-Core/Implementation (1.12.0):
+    - BoringSSL (~> 10.0)
+    - gRPC-Core/Interface (= 1.12.0)
     - nanopb (~> 0.3)
-  - gRPC-Core/Interface (1.9.1)
-  - gRPC-ProtoRPC (1.9.1):
-    - gRPC (= 1.9.1)
-    - gRPC-RxLibrary (= 1.9.1)
+  - gRPC-Core/Interface (1.12.0)
+  - gRPC-ProtoRPC (1.12.0):
+    - gRPC (= 1.12.0)
+    - gRPC-RxLibrary (= 1.12.0)
     - Protobuf (~> 3.0)
-  - gRPC-RxLibrary (1.9.1)
-  - gRPC/Main (1.9.1):
-    - gRPC-Core (= 1.9.1)
-    - gRPC-RxLibrary (= 1.9.1)
-  - GTMSessionFetcher/Core (1.1.13)
+  - gRPC-RxLibrary (1.12.0)
+  - gRPC/Main (1.12.0):
+    - gRPC-Core (= 1.12.0)
+    - gRPC-RxLibrary (= 1.12.0)
+  - GTMSessionFetcher/Core (1.1.15)
+  - Hero (1.2.0)
   - leveldb-library (1.20)
   - nanopb (0.3.8):
     - nanopb/decode (= 0.3.8)
@@ -102,6 +108,7 @@ PODS:
     - PINCache (= 3.0.1-beta.6)
     - PINRemoteImage/Core
   - Protobuf (3.5.0)
+  - Regift (1.5.0)
   - ScrollableGraphView (4.0.4)
   - SwiftGifOrigin (1.6.1)
   - SwiftMessages (4.1.0)
@@ -120,11 +127,16 @@ DEPENDENCIES:
   - Alamofire (~> 4.5)
   - AlgoliaSearch-Client-Swift
   - AlignedCollectionViewFlowLayout
+  - CameraManager (~> 4.1)
+  - DeckTransition (~> 2.0)
   - Firebase/Auth
   - Firebase/Core
   - Firebase/Database
   - Firebase/Firestore
+  - Firebase/Functions
   - Firebase/Storage
+  - Hero
+  - Regift
   - ScrollableGraphView (from `https://github.com/barnaclejive/ScrollableGraphView`, branch `master`)
   - SwiftGifOrigin (~> 1.6.1)
   - SwiftMessages
@@ -152,27 +164,32 @@ SPEC CHECKSUMS:
   Alamofire: f41a599bd63041760b26d393ec1069d9d7b917f4
   AlgoliaSearch-Client-Swift: 6c88667420b02e57c24dc54cfcfa71848980c495
   AlignedCollectionViewFlowLayout: ee2ef451e741ec08f8e0967d828001e2f051c20a
-  BoringSSL: f3d6b8ce199b9c450a8cfc14895d07a2627fc232
-  Firebase: 7d3b8cd837ad9fcd391657734c0d56dab8e9a5a3
-  FirebaseAnalytics: 388b630c15713f5dbf364071f5f3d6077fb52f4e
-  FirebaseAuth: bd2738c5c1e92b108ba5f7f7335908097a4e50bb
-  FirebaseCore: 2e0b98fb2d64ca8140136beff15772bdd14d2dd7
-  FirebaseDatabase: de4446507ccd3257fca37d16f40e1540324571fd
-  FirebaseFirestore: 713f0c555e7af5ac03d0fec0e2477c48857f4977
-  FirebaseInstanceID: 81df5805a08001e69138664bdd02c6719a9ac80f
-  FirebaseStorage: 181bb543d39ee3c53e0558de7ba86b1286a0427f
-  GoogleToolboxForMac: 2501e2ad72a52eb3dfe7bd9aee7dad11b858bd20
-  gRPC: 58828d611419d49da19ad02a60679ffa10a10a87
-  gRPC-Core: 66413bf1f2d038a6221bc7bfcbeeaa5a117cee29
-  gRPC-ProtoRPC: f29e8b7445e0d3c0311678ab121e6c164da4ca5e
-  gRPC-RxLibrary: 8e0067bfe8a054022c7a81470baace4f2f633b48
-  GTMSessionFetcher: 5bb1eae636127de695590f50e7d248483eb891e6
+  BoringSSL: 60dd24df4af296bf41d78e5841dbb95d75f88c0d
+  CameraManager: 796c7ef95401e8c8b6bd299f3399fe6abc841041
+  DeckTransition: 2300694f94fbeca2c103f365dc9dc09ffae14a4f
+  Firebase: d6861c2059d8c32d1e6dd8932e22ada346d90a3a
+  FirebaseAnalytics: 19812b49fa5f283dd6b23edf8a14b5d477029ab8
+  FirebaseAuth: acbeef02fe7c3a26624e309849f3fe30c84115af
+  FirebaseCore: cafc814b2d84fc8733f09e653041cc2165332ad7
+  FirebaseDatabase: 697eb53e5b4fe7cd4fa8756c1f82a9fca011345f
+  FirebaseFirestore: f686b8e83f3cf8bbc37db6e98e01029a14f01f55
+  FirebaseFunctions: 141da172b7491276d9da8715b8ca88f9e439ffb6
+  FirebaseInstanceID: 83e0040351565df711a5db3d8ebe5ea21aca998a
+  FirebaseStorage: 7ca4bb7b58a25fa647b04f524033fc7cb7eb272b
+  GoogleToolboxForMac: 91c824d21e85b31c2aae9bb011c5027c9b4e738f
+  gRPC: 9362451032695e2dfb7bafcd3740e3a27939e4ff
+  gRPC-Core: 9696b220565b283e021cf2722d473a4a74b7622a
+  gRPC-ProtoRPC: a1bd56fb1991a8dae4581250d7259eddabb66779
+  gRPC-RxLibrary: 1ed5314e8b38cd6e55c9bfa048387136ae925ce9
+  GTMSessionFetcher: 5fa5b80fd20e439ef5f545fb2cb3ca6c6714caa2
+  Hero: 33dadf2cd1c98af71e213dcbc2902e6e03622a4e
   leveldb-library: 08cba283675b7ed2d99629a4bc5fd052cd2bb6a5
   nanopb: 5601e6bca2dbf1ed831b519092ec110f66982ca3
   PINCache: d195fdba255283f7e9900a55e3cced377f431f9b
   PINOperation: 7f042fa6df5b606deb4bd5997654cf7033d5be1d
   PINRemoteImage: d6d51c5d2adda55f1ce30c96e850b6c4ebd2856a
   Protobuf: 8a9838fba8dae3389230e1b7f8c104aa32389c03
+  Regift: d097afd401021f4f42b102ee125ceeb125a38caf
   ScrollableGraphView: abac54d3493a5a198ade4baf4879967183af8a2c
   SwiftGifOrigin: d6679d3ebe9df2e049a84bc52582635107b581f6
   SwiftMessages: 1bacc783c8f10bdfdc57c14860cae8a1f1fa6591
@@ -181,6 +198,6 @@ SPEC CHECKSUMS:
   TGPControls: d7ab5a338746c100b2ae57f6b6cedee7151f116a
   UICircularProgressRing: e737881c0dcc9cc1e4d0ea7db0c16d4b0f260082
 
-PODFILE CHECKSUM: 591ae4f17c40307be5e7359ed991eb58e885a2b7
+PODFILE CHECKSUM: fc29544b2f4d90a3a39ced5e90a4edd81d126176
 
 COCOAPODS: 1.4.0

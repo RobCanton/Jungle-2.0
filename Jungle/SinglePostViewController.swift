@@ -698,85 +698,173 @@ extension SinglePostViewController: KeyboardAccessoryProtocol {
 
 extension SinglePostViewController: CommentBarDelegate {
     
-    func commentSend(text: String) {
-        guard let user = Auth.auth().currentUser else { return }
+    func callFunction(text:String, completion:@escaping ((_ success:Bool, _ reply:Post?, _ replyTo:String?)->())) {
+        var parameters: [String: Any] = [
+                            "text" : text,
+                            "postID": post.key
+                        ]
         
-        user.getIDToken() { token, error in
-            
-            var parameters: [String: Any] = [
-                "uid" : user.uid,
-                "text" : text,
-            ]
-            
-            if let focusedReply = self.focusedReply {
-                if let parentReply = focusedReply.replyTo,
-                    parentReply != self.post.key {
-                    parameters["replyTo"] = parentReply
-                } else {
-                    parameters["replyTo"] = focusedReply.key
-                }
+        if let focusedReply = self.focusedReply {
+            if let parentReply = focusedReply.replyTo,
+                parentReply != self.post.key {
+                parameters["replyTo"] = parentReply
+            } else {
+                parameters["replyTo"] = focusedReply.key
             }
+        }
+        
+        functions.httpsCallable("addComment").call(parameters) { result, error in
+            if let error = error as NSError? {
+                print("FUNCTION ERROR")
+                completion(false, nil, nil)
+                if error.domain == FunctionsErrorDomain {
+                    let code = FunctionsErrorCode(rawValue: error.code)
+                    let message = error.localizedDescription
+                    let details = error.userInfo[FunctionsErrorDetailsKey]
+                }
+                // ...
+            }
+            if let data = result?.data as? [String: Any],
+                let success = data["success"] as? Bool,
+                let replyData = data["comment"] as? [String:Any],
+                let id = data["id"] as? String,
+                let reply = Post.parse(id: id, replyData) {
             
-            print("SEND PARAMS: \(parameters)")
-            self.commentBar.textView.text = ""
-            self.commentBar.textViewDidChange(self.commentBar.textView)
-            self.commentBar.textView.resignFirstResponder()
-            //self.commentBar.placeHolderTextView.isHidden = false
-            let headers: HTTPHeaders = ["Authorization": "Bearer \(token!)", "Accept": "application/json", "Content-Type" :"application/json"]
-            
-            Alamofire.request("\(API_ENDPOINT)/addComment/\(self.post.key)", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
-                DispatchQueue.main.async {
-                    if let dict = response.result.value as? [String:Any], let success = dict["success"] as? Bool, success, let replyData = dict["comment"] as? [String:Any], let id = dict["id"] as? String {
-                        print("GOTTY: \(replyData)")
-                        if let reply = Post.parse(id: id, replyData) {
-                            reply.isYou = true
-                            if let replyTo = dict["replyTo"] as? String {
-                                reply.replyTo = replyTo
-                                
-                                print("Added reply to: \(replyTo)")
-                                for i in 0..<self.topState.replies.count {
-                                    let stateReply = self.topState.replies[i]
-                                    if stateReply.numReplies <= stateReply.replies.count {
-                                        if stateReply.key == replyTo {
-                                            stateReply.replies.append(reply)
-                                            self.tableNode.performBatch(animated: false, updates: {
-                                                let indexSet = IndexSet(integer: i + 2)
-                                                self.tableNode.reloadSections(indexSet, with: .none)
-                                            }, completion: nil)
-                                        }
-                                    }
-                                }
-                            } else {
-                                switch self.sortMode {
-                                case .top:
-                                    if self.topState.endReached {
-                                        let action = Action.append(reply: reply)
-                                        let oldState = self.topState
-                                        self.topState = SinglePostViewController.handleAction(action, fromState: oldState)
-                                        let section = 2 + self.topState.replies.count - 1
-                                        let indexSet = IndexSet([section])
-                                        self.tableNode.performBatchUpdates({
-                                            self.tableNode.insertSections(indexSet, with: .top)
-                                        }, completion: { _ in
-                                            self.tableNode.scrollToRow(at: IndexPath(row: 0, section: section), at: .bottom, animated: true)
-                                        })
-                                    }
-                                    break
-                                case .live:
-                                    break
-                                }
-                            }
+                let replyTo = data["replyTo"] as? String
+                completion(success, reply, replyTo)
+            } else {
+                completion(false, nil, nil)
+            }
+        }
+    }
+    
+    func commentSend(text: String) {
+        commentBar.isUserInteractionEnabled = false
+        callFunction(text: text) { success, _reply, _replyTo in
+            print("SUCCESS: \(success)")
+            guard success, let reply = _reply else { return }
+            self.commentBar.isUserInteractionEnabled = true
+            reply.isYou = true
+            if let replyTo = _replyTo {
+                reply.replyTo = replyTo
+
+                print("Added reply to: \(replyTo)")
+                for i in 0..<self.topState.replies.count {
+                    let stateReply = self.topState.replies[i]
+                    if stateReply.numReplies <= stateReply.replies.count {
+                        if stateReply.key == replyTo {
+                            stateReply.replies.append(reply)
+                            self.tableNode.performBatch(animated: false, updates: {
+                                let indexSet = IndexSet(integer: i + 2)
+                                self.tableNode.reloadSections(indexSet, with: .none)
+                            }, completion: nil)
                         }
                     }
                 }
+            } else {
+                switch self.sortMode {
+                case .top:
+                    if self.topState.endReached {
+                        let action = Action.append(reply: reply)
+                        let oldState = self.topState
+                        self.topState = SinglePostViewController.handleAction(action, fromState: oldState)
+                        let section = 2 + self.topState.replies.count - 1
+                        let indexSet = IndexSet([section])
+                        
+                        self.tableNode.performBatchUpdates({
+                            self.tableNode.insertSections(indexSet, with: .top)
+                        }, completion: { _ in
+                            self.tableNode.scrollToRow(at: IndexPath(row: 0, section: section), at: .bottom, animated: true)
+                        })
+                    }
+                    break
+                case .live:
+                    break
+                }
             }
         }
+        commentBar.textView.text = ""
+        commentBar.textViewDidChange(self.commentBar.textView)
+        commentBar.textView.resignFirstResponder()
+        return
+        
+//        user.getIDToken() { token, error in
+//
+//            var parameters: [String: Any] = [
+//                "uid" : user.uid,
+//                "text" : text,
+//            ]
+//
+//            if let focusedReply = self.focusedReply {
+//                if let parentReply = focusedReply.replyTo,
+//                    parentReply != self.post.key {
+//                    parameters["replyTo"] = parentReply
+//                } else {
+//                    parameters["replyTo"] = focusedReply.key
+//                }
+//            }
+//
+//            print("SEND PARAMS: \(parameters)")
+//            self.commentBar.textView.text = ""
+//            self.commentBar.textViewDidChange(self.commentBar.textView)
+//            self.commentBar.textView.resignFirstResponder()
+//            //self.commentBar.placeHolderTextView.isHidden = false
+//            let headers: HTTPHeaders = ["Authorization": "Bearer \(token!)", "Accept": "application/json", "Content-Type" :"application/json"]
+//
+//            Alamofire.request("\(API_ENDPOINT)/addComment/\(self.post.key)", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
+//                DispatchQueue.main.async {
+//                    if let dict = response.result.value as? [String:Any], let success = dict["success"] as? Bool, success, let replyData = dict["comment"] as? [String:Any], let id = dict["id"] as? String {
+//                        print("GOTTY: \(replyData)")
+//                        if let reply = Post.parse(id: id, replyData) {
+//                            reply.isYou = true
+//                            if let replyTo = dict["replyTo"] as? String {
+//                                reply.replyTo = replyTo
+//
+//                                print("Added reply to: \(replyTo)")
+//                                for i in 0..<self.topState.replies.count {
+//                                    let stateReply = self.topState.replies[i]
+//                                    if stateReply.numReplies <= stateReply.replies.count {
+//                                        if stateReply.key == replyTo {
+//                                            stateReply.replies.append(reply)
+//                                            self.tableNode.performBatch(animated: false, updates: {
+//                                                let indexSet = IndexSet(integer: i + 2)
+//                                                self.tableNode.reloadSections(indexSet, with: .none)
+//                                            }, completion: nil)
+//                                        }
+//                                    }
+//                                }
+//                            } else {
+//                                switch self.sortMode {
+//                                case .top:
+//                                    if self.topState.endReached {
+//                                        let action = Action.append(reply: reply)
+//                                        let oldState = self.topState
+//                                        self.topState = SinglePostViewController.handleAction(action, fromState: oldState)
+//                                        let section = 2 + self.topState.replies.count - 1
+//                                        let indexSet = IndexSet([section])
+//                                        self.tableNode.performBatchUpdates({
+//                                            self.tableNode.insertSections(indexSet, with: .top)
+//                                        }, completion: { _ in
+//                                            self.tableNode.scrollToRow(at: IndexPath(row: 0, section: section), at: .bottom, animated: true)
+//                                        })
+//                                    }
+//                                    break
+//                                case .live:
+//                                    break
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 }
 
 extension SinglePostViewController: CommentCellDelegate {
     func handleReply(_ reply:Post) {
         self.focusedReply = reply
+        self.commentBar.textView.becomeFirstResponder()
         //commentBar.setReply(reply)
         
     }

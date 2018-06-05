@@ -134,7 +134,7 @@ class PostContentCellNode:ASDisplayNode {
     let countLabel = ASTextNode()
     var postImageNode = ASNetworkImageNode()
     
-    var transitionManager = LightboxViewerTransitionManager()
+    //var transitionManager = LightboxViewerTransitionManager()
     weak var delegate:PostCellDelegate?
     
     var tagsCollectionNode = PostTagsCollectionNode()
@@ -174,7 +174,7 @@ class PostContentCellNode:ASDisplayNode {
         upvotedImage = UIImage(named:"upvoted")
         downvoteImage = UIImage(named:"downvote")
         downvotedImage = UIImage(named:"downvoted")
-        commentImage = UIImage(named:"comment2")
+        commentImage = UIImage(named:"comment")
         moreImage = UIImage(named:"more")
         
         backgroundColor = UIColor.white
@@ -244,10 +244,20 @@ class PostContentCellNode:ASDisplayNode {
             commentButton.alpha = 1.0
             moreButtonNode.alpha = 1.0
             
+            var fontSize:CGFloat
+            if self.isSinglePost {
+                fontSize = 16.0
+                postTextNode.maximumNumberOfLines = 0
+                postTextNode.truncationMode = .byWordWrapping
+            } else {
+                fontSize = 16.0
+                postTextNode.maximumNumberOfLines = 3
+                postTextNode.truncationMode = .byWordWrapping
+            }
             postTextNode.maximumNumberOfLines = 0
             postTextNode.truncationMode = .byWordWrapping
             
-            let fontSize:CGFloat = self.isSinglePost ? 16.0 : 15.0
+            
             postTextNode.setText(text: post.textClean, withSize: fontSize, normalColor: UIColor.black, activeColor: accentColor)
             postTextNode.tapHandler = { type, textValue in
                 print("ACTIVE TEXT TAPPED")
@@ -265,14 +275,14 @@ class PostContentCellNode:ASDisplayNode {
             
             postImageNode.backgroundColor = buttonColor
             if let attachments = post.attachments {
-                if attachments.images.count > 0 {
-                    let image = attachments.images[0]
-                    postImageNode.url = image.url
-                    let imageWidth = UIScreen.main.bounds.width - 20
-                    let imageHeight = imageWidth / image.ratio
-                    let minImageHeight = min(imageHeight, imageWidth)
-                    postImageNode.style.height = ASDimension(unit: .points, value: minImageHeight)
-                }
+//                if attachments.images.count > 0 {
+//                    let image = attachments.images[0]
+//                    postImageNode.url = image.url
+//                    let imageWidth = UIScreen.main.bounds.width - 20
+//                    let imageHeight = imageWidth / image.ratio
+//                    let minImageHeight = min(imageHeight, imageWidth)
+//                    postImageNode.style.height = ASDimension(unit: .points, value: minImageHeight)
+//                }
             } else {
                 postImageNode.style.height = ASDimension(unit: .points, value: 0.0)
             }
@@ -305,7 +315,7 @@ class PostContentCellNode:ASDisplayNode {
         }
         
         commentButton.laysOutHorizontally = true
-        commentButton.setImage(UIImage(named:"comment"), for: .normal)
+        commentButton.setImage(commentImage, for: .normal)
         commentButton.contentSpacing = 2.0
         commentButton.contentHorizontalAlignment = .middle
         commentButton.imageNode.imageModificationBlock = { image in
@@ -392,21 +402,12 @@ class PostContentCellNode:ASDisplayNode {
         
         let imageInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(12, 12, 0, 12), child: imageStack)
         
-        let leftActions = ASStackLayoutSpec.horizontal()
-        leftActions.children = [ likeButton, dislikeButton, commentButton]
-        leftActions.spacing = 0.0
-        
         let countCenterY = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: countLabel)
         let likeStack = ASStackLayoutSpec.horizontal()
         likeStack.children = [ likeButton, countCenterY, dislikeButton ]
         likeStack.spacing = 0.0
         
-//        countLabel.style.width = ASDimension(unit: .points, value: 28.0)
         countLabel.style.flexGrow = 1.0
-        //countLabel.style.minWidth = ASDimension(unit: .points, value: 30)
-//        likeButton.style.flexShrink = 1.0
-//        dislikeButton.style.flexShrink = 1.0
-        
         
         let actionsRow = ASStackLayoutSpec.horizontal()
         actionsRow.style.flexGrow = 1.0
@@ -436,9 +437,9 @@ class PostContentCellNode:ASDisplayNode {
         }
         
         if let attachments = post? .attachments {
-            if attachments.images.count > 0 {
-                contentStack.children?.append(postImageNode)
-            }
+//            if attachments.images.count > 0 {
+//                contentStack.children?.append(postImageNode)
+//            }
         }
         if let tags = post?.tags, tags.count > 0 {
             //contentStack.children?.append(tagsCollectionNode)
@@ -683,16 +684,16 @@ class PostContentCellNode:ASDisplayNode {
     @objc func handleImageTap() {
         guard let post = post,
             let parentVC = delegate?.postParentVC() else { return }
-        
-        
-        let lightBoxVC = LightboxViewController()
-        lightBoxVC.post = post
-        
-        
-        //transitionManager.sourceDelegate = self
-        //transitionManager.destinationDelegate = lightBoxVC
-        //lightBoxVC.transitioningDelegate = transitionManager
-        parentVC.present(lightBoxVC, animated: true, completion: nil)
+//        
+//        
+//        let lightBoxVC = LightboxViewController()
+//        lightBoxVC.post = post
+//        
+//        
+//        //transitionManager.sourceDelegate = self
+//        //transitionManager.destinationDelegate = lightBoxVC
+//        //lightBoxVC.transitioningDelegate = transitionManager
+//        parentVC.present(lightBoxVC, animated: true, completion: nil)
         
     }
     
@@ -712,31 +713,4 @@ extension PostContentCellNode: TagsCollectionDelegate {
     func postOpen(tag: String) {
         delegate?.postOpen(tag: tag)
     }
-}
-
-extension PostContentCellNode: LightboxTransitionSourceDelegate {
-    func transitionWillBegin(_ isPresenting: Bool) {
-        postImageNode.alpha = 0.0
-    }
-    
-    func transitionDidEnd(_ isPresenting: Bool) {
-        postImageNode.alpha = 1.0
-    }
-    
-    func transitionSourceImage() -> UIImage? {
-        
-        return postImageNode.image
-    }
-    
-    func transitionSourceURL() -> URL? {
-        return post?.attachments?.images[0].url
-    }
-    
-    func transitionSourceFrame(_ parentView: UIView) -> CGRect {
-        let frame = view.convert(postImageNode.view.frame, to: parentView)
-
-        return frame
-    }
-    
-    
 }

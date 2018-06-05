@@ -141,22 +141,36 @@ class Post {
 }
 
 class Attachments {
-    var images:[ImageAttachment]
     
-    init(images:[ImageAttachment]) {
+    var images:[ImageAttachment]?
+    var video:VideoAttachment?
+    init(images:[ImageAttachment]?, video:VideoAttachment?) {
         self.images = images
+        self.video = video
     }
     
     static func parse(_ data:[String:Any]) -> Attachments? {
-        if let attachments = data["attachments"] as? [String:Any],
-            let imagesArray = attachments["images"] as? [[String:Any]] {
-            let images = ImageAttachment.parse(imagesArray)
-            return Attachments(images: images)
+        if let attachments = data["attachments"] as? [String:Any] {
+            var images:[ImageAttachment]?
+            var video:VideoAttachment?
+            
+//            if let imagesArray = attachments["images"] as? [[String:Any]] {
+//                images = ImageAttachment.parse(imagesArray)
+//            }
+            
+            if let videoData = attachments["video"] as? [String:Any] {
+                video = VideoAttachment.parse(videoData)
+            }
+            
+            
+            return Attachments(images: images, video: video)
         } else {
             return nil
         }
     }
 }
+
+
 
 class LocationPair {
     var city:String
@@ -181,6 +195,25 @@ class LocationPair {
         get {
             return "\(city), \(country)"
         }
+    }
+}
+
+class VideoAttachment {
+    var url:URL
+    var thumbnail_url:URL
+    init(url:URL, thumbnail_url:URL) {
+        self.url = url
+        self.thumbnail_url = thumbnail_url
+    }
+    
+    static func parse(_ dict:[String:Any]) -> VideoAttachment? {
+        if let urlStr = dict["url"] as? String,
+            let url = URL(string: urlStr),
+            let turlStr = dict["thumbnail_url"] as? String,
+            let turl = URL(string: turlStr) {
+            return VideoAttachment(url: url, thumbnail_url: turl)
+        }
+        return nil
     }
 }
 

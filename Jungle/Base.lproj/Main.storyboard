@@ -374,7 +374,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="nBm-pB-GNb" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3089" y="-1119"/>
+            <point key="canvasLocation" x="3089" y="-1114"/>
         </scene>
         <!--Search View Controller-->
         <scene sceneID="Ood-o8-Gu3">
@@ -702,6 +702,7 @@
                         <outlet property="contentView" destination="6nV-Ks-OPT" id="jP5-vR-rlJ"/>
                         <outlet property="doneButton" destination="w9d-fa-16S" id="Ep1-qC-G53"/>
                         <outlet property="imageView" destination="59O-E0-jvf" id="ysE-EL-rK2"/>
+                        <outlet property="previewView" destination="kOB-fA-LVM" id="TXg-Pz-d6M"/>
                         <outlet property="removeImageButton" destination="bDj-H8-1H0" id="PWg-0c-D6E"/>
                         <outlet property="scrollView" destination="2Xi-Bp-KAd" id="zRO-Le-iSg"/>
                         <outlet property="textView" destination="O9Y-C2-y4g" id="7E6-3E-C9v"/>
@@ -1078,19 +1079,49 @@
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                             </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="sU4-T3-G7H">
-                                <rect key="frame" x="24" y="343" width="327" height="226"/>
+                                <rect key="frame" x="24" y="249" width="327" height="320"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Rc9-so-EF0">
-                                        <rect key="frame" x="0.0" y="0.0" width="327" height="226"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="327" height="320"/>
                                         <subviews>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="EMAIL" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FIu-4G-LIc">
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="USERNAME" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="v6D-pi-Srx">
                                                 <rect key="frame" x="0.0" y="0.0" width="327" height="20"/>
                                                 <fontDescription key="fontDescription" name="Montserrat-SemiBold" family="Montserrat" pointSize="16"/>
                                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="reneely94@gmail.com" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="h8w-SO-go9">
+                                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="EUb-5q-9PS">
                                                 <rect key="frame" x="0.0" y="28" width="327" height="24"/>
+                                                <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="24" id="YS0-1M-30a"/>
+                                                </constraints>
+                                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <fontDescription key="fontDescription" name="Montserrat-Medium" family="Montserrat" pointSize="18"/>
+                                                <textInputTraits key="textInputTraits" autocorrectionType="no" textContentType="name"/>
+                                            </textField>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="60I-Xn-uOA">
+                                                <rect key="frame" x="0.0" y="60" width="327" height="2"/>
+                                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="2" id="q1N-Us-1AF"/>
+                                                </constraints>
+                                            </view>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4fo-03-Fdb">
+                                                <rect key="frame" x="0.0" y="70" width="327" height="16"/>
+                                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="16" id="yn6-qg-Fhs"/>
+                                                </constraints>
+                                            </view>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="EMAIL" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FIu-4G-LIc">
+                                                <rect key="frame" x="0.0" y="94" width="327" height="20"/>
+                                                <fontDescription key="fontDescription" name="Montserrat-SemiBold" family="Montserrat" pointSize="16"/>
+                                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="kanyewest@gmail.com" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="h8w-SO-go9">
+                                                <rect key="frame" x="0.0" y="122" width="327" height="24"/>
                                                 <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="24" id="nE7-SP-Vq2"/>
@@ -1100,27 +1131,27 @@
                                                 <textInputTraits key="textInputTraits" autocorrectionType="no" keyboardType="emailAddress" textContentType="email"/>
                                             </textField>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rJ4-5E-yYp">
-                                                <rect key="frame" x="0.0" y="60" width="327" height="2"/>
+                                                <rect key="frame" x="0.0" y="154" width="327" height="2"/>
                                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="2" id="bfK-go-hbC"/>
                                                 </constraints>
                                             </view>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="XlZ-V9-POH">
-                                                <rect key="frame" x="0.0" y="70" width="327" height="16"/>
+                                                <rect key="frame" x="0.0" y="164" width="327" height="16"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="16" id="ysc-F7-jmC"/>
                                                 </constraints>
                                             </view>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="PASSWORD" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="afy-Ve-TdS">
-                                                <rect key="frame" x="0.0" y="94" width="327" height="20"/>
+                                                <rect key="frame" x="0.0" y="188" width="327" height="20"/>
                                                 <fontDescription key="fontDescription" name="Montserrat-SemiBold" family="Montserrat" pointSize="16"/>
                                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="gJb-ng-VgK">
-                                                <rect key="frame" x="0.0" y="122" width="327" height="24"/>
+                                                <rect key="frame" x="0.0" y="216" width="327" height="24"/>
                                                 <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="24" id="qnj-un-4EI"/>
@@ -1130,21 +1161,21 @@
                                                 <textInputTraits key="textInputTraits" secureTextEntry="YES" textContentType="password"/>
                                             </textField>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qzK-j2-YwS">
-                                                <rect key="frame" x="0.0" y="154" width="327" height="2"/>
+                                                <rect key="frame" x="0.0" y="248" width="327" height="2"/>
                                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="2" id="WuI-nv-Gw5"/>
                                                 </constraints>
                                             </view>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="h4b-4Y-a7d">
-                                                <rect key="frame" x="0.0" y="164" width="327" height="4"/>
+                                                <rect key="frame" x="0.0" y="258" width="327" height="4"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="4" id="KMz-CO-mwO"/>
                                                 </constraints>
                                             </view>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="OnF-sf-7Je">
-                                                <rect key="frame" x="0.0" y="176" width="327" height="50"/>
+                                                <rect key="frame" x="0.0" y="270" width="327" height="50"/>
                                                 <subviews>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4eX-FS-BrK">
                                                         <rect key="frame" x="0.0" y="0.0" width="327" height="50"/>
@@ -1279,6 +1310,7 @@
                         <outlet property="stackBottomConstraint" destination="agU-Tf-YdV" id="OqR-pD-yS5"/>
                         <outlet property="submitButton" destination="4eX-FS-BrK" id="dDP-jp-2qJ"/>
                         <outlet property="submitContainer" destination="OnF-sf-7Je" id="JOA-Xw-riT"/>
+                        <outlet property="usernameField" destination="EUb-5q-9PS" id="z4A-y4-eYv"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="r1H-cy-MDR" userLabel="First Responder" sceneMemberID="firstResponder"/>

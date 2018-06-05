@@ -13,6 +13,7 @@ import Photos
 import MobileCoreServices
 
 protocol AttachmentsDelegate:class {
+    func attachmentsOpenCamera()
     func attachmentsOpenGIFs()
     func attachments(didSelect images: [SelectedImage])
 }
@@ -161,7 +162,7 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if section == 0 {
-            return 1
+            return 2
         }
         return libraryAssets.count
     }
@@ -170,7 +171,11 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
         
         if indexPath.section == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "gifCell", for: indexPath) as! GIFSelectorCell
-            cell.setGIF()
+            if indexPath.row == 0 {
+                cell.setCamera()
+            } else {
+                cell.setGIF()
+            }
             return cell
         } else if indexPath.section == 1 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "attachmentCell", for: indexPath) as! AttachmentCollectionCell
@@ -191,7 +196,12 @@ class AttachmentsView:UIView, UICollectionViewDelegate, UICollectionViewDataSour
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
         if indexPath.section == 0 {
-            delegate?.attachmentsOpenGIFs()
+            if indexPath.row == 0 {
+                delegate?.attachmentsOpenCamera()
+            } else {
+                delegate?.attachmentsOpenGIFs()
+            }
+            
         } else if indexPath.section == 1 {
             let asset = libraryAssets[indexPath.row]
             delegate?.attachments(didSelect: [asset])
@@ -225,7 +235,7 @@ class GIFSelectorCell: UICollectionViewCell {
         imageView.layer.cornerRadius = 16.0
         imageView.clipsToBounds = true
         
-        imageView.layer.borderColor = UIColor(white: 0.80, alpha: 1.0).cgColor
+        imageView.layer.borderColor = UIColor(white: 0.75, alpha: 1.0).cgColor
         imageView.layer.borderWidth = 0.5
 
         gifButton = UIButton(frame: bounds)
@@ -264,6 +274,14 @@ class GIFSelectorCell: UICollectionViewCell {
             }
         }
 
+    }
+    
+    func setCamera() {
+        gifButton.setImage(UIImage(named:"camera"), for: .normal)
+        gifButton.alpha = 1.0
+        //gifButton.backgroundColor = UIColor.white
+        imageView.backgroundColor = UIColor.white
+        gifButton.backgroundColor = UIColor.clear
     }
 }
 

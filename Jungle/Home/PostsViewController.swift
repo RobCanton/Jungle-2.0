@@ -55,7 +55,7 @@ class PostsViewController: ASViewController<ASDisplayNode>, NewPostsButtonDelega
     var refreshControl:UIRefreshControl!
     var context:ASBatchContext?
     
-    var transitionManager = LightboxViewerTransitionManager()
+    //var transitionManager = LightboxViewerTransitionManager()
     
     struct State {
         var posts: [Post]

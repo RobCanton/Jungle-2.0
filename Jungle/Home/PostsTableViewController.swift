@@ -23,7 +23,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     
     var refreshControl:UIRefreshControl!
     
-    var transitionManager = LightboxViewerTransitionManager()
+    var transitionManager = LightboxTransitionManager()
     
     var pushTransitionManager = PushTransitionManager()
     
@@ -434,10 +434,13 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             return node;
         }
         
-        let cell = PostCellNode(withPost: state.posts[indexPath.row])
+        let cell = NewPostCellNode(post: state.posts[indexPath.row])
         cell.selectionStyle = .none
-        cell.postCellNode.delegate = self
         return cell
+//        let cell = PostCellNode(withPost: state.posts[indexPath.row])
+//        cell.selectionStyle = .none
+//        cell.postCellNode.delegate = self
+//        return cell
     }
     
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
@@ -445,37 +448,42 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             return
         }
         
-        let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
-        node.setSelected(true)
+//        let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
+//        node.setSelected(true)
         
         let post = state.posts[indexPath.row]
-        if post.isOffensive {
-            let alert = UIAlertController(title: "This post may contain offensive content.", message: "Contains muted word(s): \(post.offensesStr)", preferredStyle: .actionSheet)
-            
-            alert.addAction(UIAlertAction(title: "Open Anyways", style: .destructive, handler: { _ in
-                self.openSinglePost(post)
-            }))
-            
-            alert.addAction(UIAlertAction(title: "Change Content Settings", style: .default, handler: { _ in
-                
-                let controller = ContentSettingsViewController()
-                let nav = UINavigationController(rootViewController: controller)
-                self.present(nav, animated: true, completion: nil)
-            }))
-            
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-            self.present(alert, animated: true, completion: nil)
-            return
-        }
+//        if post.isOffensive {
+//            let alert = UIAlertController(title: "This post may contain offensive content.", message: "Contains muted word(s): \(post.offensesStr)", preferredStyle: .actionSheet)
+//
+//            alert.addAction(UIAlertAction(title: "Open Anyways", style: .destructive, handler: { _ in
+//                self.openSinglePost(post)
+//            }))
+//
+//            alert.addAction(UIAlertAction(title: "Change Content Settings", style: .default, handler: { _ in
+//
+//                let controller = ContentSettingsViewController()
+//                let nav = UINavigationController(rootViewController: controller)
+//                self.present(nav, animated: true, completion: nil)
+//            }))
+//
+//            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+//            self.present(alert, animated: true, completion: nil)
+//            return
+//        }
         
-        openSinglePost(post)
+        openSinglePost(post, index: indexPath.row)
     }
     
-    func openSinglePost(_ post:Post) {
-        let controller = SinglePostViewController()
-        controller.hidesBottomBarWhenPushed = true
-        controller.post = post
-        self.navigationController?.pushViewController(controller, animated: true)
+    func openSinglePost(_ post:Post, index:Int) {
+        let controller = LightboxViewController()
+        controller.posts = state.posts
+        controller.initialIndex = index
+        controller.transitioningDelegate = transitionManager
+        self.present(controller, animated: true, completion: nil)
+//        let controller = SinglePostViewController()
+//        controller.hidesBottomBarWhenPushed = true
+//        controller.post = post
+//        self.navigationController?.pushViewController(controller, animated: true)
     }
     
     func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {

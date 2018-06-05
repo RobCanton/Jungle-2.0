@@ -63,8 +63,8 @@ class CommentPreviewNode:ASDisplayNode {
             NSAttributedStringKey.foregroundColor: subtitleColor
             ])
         
-        postTextNode.maximumNumberOfLines = 0
-        postTextNode.truncationMode = .byWordWrapping
+        postTextNode.maximumNumberOfLines = 2
+        postTextNode.truncationMode = .byTruncatingTail
         
         postTextNode.setText(text: reply.text, withSize: 14.0, normalColor: UIColor.black, activeColor: accentColor)
         postTextNode.tapHandler = { type, textValue in
@@ -158,7 +158,7 @@ class CommentCellNode:ASCellNode {
     let countLabel = ASTextNode()
     var postImageNode = ASRoundShadowedImageNode(imageCornerRadius: 18.0, imageShadowRadius: 8.0)
     
-    var transitionManager = LightboxViewerTransitionManager()
+    //var transitionManager = LightboxViewerTransitionManager()
     weak var delegate:CommentCellDelegate?
     weak var reply:Post?
     weak var post:Post?
@@ -181,8 +181,8 @@ class CommentCellNode:ASCellNode {
     }
     
     private(set) var bgColor = UIColor.white
-    private(set) var textColor = UIColor.gray
-    private(set) var buttonColor = grayColor
+    private(set) var textColor = hexColor(from: "708078")
+    private(set) var buttonColor = hexColor(from: "BEBEBE")
     private(set) var upvoteImage:UIImage!
     private(set) var upvotedImage:UIImage!
     private(set) var downvoteImage:UIImage!
@@ -201,13 +201,12 @@ class CommentCellNode:ASCellNode {
         self.isLastReply = isLastReply ?? false
         automaticallyManagesSubnodes = true
         
-        upvoteImage = UIImage(named:"up_gray")
-        upvotedImage = UIImage(named:"up_gray")
-        downvoteImage = UIImage(named:"down_gray")
-        downvotedImage = UIImage(named:"down_gray")
+        upvoteImage = UIImage(named:"upvote")
+        upvotedImage = UIImage(named:"upvoted")
+        downvoteImage = UIImage(named:"downvote")
+        downvotedImage = UIImage(named:"downvoted")
         commentImage = UIImage(named:"reply")
         moreImage = UIImage(named:"more")
-        
     
         backgroundColor = bgColor
         
@@ -256,7 +255,7 @@ class CommentCellNode:ASCellNode {
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         countLabel.attributedText = NSAttributedString(string: "-", attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
             NSAttributedStringKey.foregroundColor: subtitleColor,
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
@@ -272,8 +271,10 @@ class CommentCellNode:ASCellNode {
         likeButton.contentSpacing = 6.0
         likeButton.contentHorizontalAlignment = .middle
         likeButton.contentEdgeInsets = .zero
-        likeButton.tintColor = buttonColor
-        likeButton.tintColorDidChange()
+        likeButton.imageNode.imageModificationBlock = { image in
+            return image.maskWithColor(color: self.buttonColor) ?? image
+        }
+        //likeButton.imageNode.tintColor = UIColor.red
         
         dislikeButton.setImage(downvoteImage, for: .normal)
         dislikeButton.laysOutHorizontally = true
@@ -283,12 +284,30 @@ class CommentCellNode:ASCellNode {
         dislikeButton.tintColor = buttonColor
         dislikeButton.tintColorDidChange()
         
+        dislikeButton.imageNode.imageModificationBlock = { image in
+            return image.maskWithColor(color: self.buttonColor) ?? image
+        }
+        
+        commentButton.laysOutHorizontally = true
+        commentButton.setImage(commentImage, for: .normal)
+        commentButton.contentSpacing = 2.0
+        commentButton.contentHorizontalAlignment = .middle
+        commentButton.imageNode.imageModificationBlock = { image in
+            return image.maskWithColor(color: self.buttonColor) ?? image
+        }
+        
+        let str = NSMutableAttributedString(string: "Reply", attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
+            NSAttributedStringKey.foregroundColor: buttonColor
+            ])
+        commentButton.setAttributedTitle(str, for: .normal)
+        
         likeButton.addTarget(self, action: #selector(handleUpvote), forControlEvents: .touchUpInside)
         dislikeButton.addTarget(self, action: #selector(handleDownvote), forControlEvents: .touchUpInside)
         
-        commentButton.setImage(UIImage(named:"comment"), for: .normal)
+        commentButton.setImage(commentImage, for: .normal)
         commentButton.laysOutHorizontally = true
-        commentButton.contentSpacing = 2.0
+        commentButton.contentSpacing = 0.0
         commentButton.contentHorizontalAlignment = .middle
        
         moreButtonNode.setImage(moreImage, for: .normal)
@@ -303,7 +322,6 @@ class CommentCellNode:ASCellNode {
         titleNode.tintColorDidChange()
         
         setTitle("SillyDeer Replied · \(reply.numReplies) Replies")
-        self.setComments(count: reply.numReplies)
         self.setNumVotes(reply.votes)
         self.setVote(reply.vote, animated: false)
     }
@@ -369,28 +387,22 @@ class CommentCellNode:ASCellNode {
         let imageInsets = isReply ? UIEdgeInsetsMake(0.0, 12, 0, 12) : UIEdgeInsetsMake(4.0, 12, 0, 12)
         let imageInset = ASInsetLayoutSpec(insets: imageInsets, child: imageStack)
         
-        
-        
-        let leftActions = ASStackLayoutSpec.horizontal()
-        leftActions.children = [ likeButton, dislikeButton, commentButton]
-        leftActions.spacing = 0.0
-        
         let countCenterY = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: countLabel)
         let likeStack = ASStackLayoutSpec.horizontal()
         likeStack.children = [ likeButton, countCenterY, dislikeButton ]
         likeStack.spacing = 0.0
         
-        countLabel.style.width = ASDimension(unit: .points, value: 28.0)
         countLabel.style.flexGrow = 1.0
-        likeButton.style.flexShrink = 1.0
-        dislikeButton.style.flexShrink = 1.0
-        likeStack.style.width = ASDimension(unit: .fraction, value: 0.35)
-        commentButton.style.width = ASDimension(unit: .fraction, value: 0.35)
         
         let actionsRow = ASStackLayoutSpec.horizontal()
         actionsRow.style.flexGrow = 1.0
-        actionsRow.children = [ likeStack, commentButton]
-        actionsRow.spacing = 8.0
+        actionsRow.children = [ likeStack, commentButton, moreButtonNode]
+        actionsRow.spacing = 0.0
+        actionsRow.alignContent = .spaceBetween
+        actionsRow.justifyContent = .spaceBetween
+        likeStack.style.width = ASDimension(unit: .fraction, value: 0.3333)
+        commentButton.style.width = ASDimension(unit: .fraction, value: 0.3333)
+        moreButtonNode.style.width = ASDimension(unit: .fraction, value: 0.3333)
         
         let contentStack = ASStackLayoutSpec.vertical()
         contentStack.children = []
@@ -409,13 +421,13 @@ class CommentCellNode:ASCellNode {
         }
         
         if let attachments = post? .attachments {
-            if attachments.images.count > 0 {
-                contentStack.children?.append(postImageNode)
-            }
+//            if attachments.images.count > 0 {
+//                contentStack.children?.append(postImageNode)
+//            }
         }
         
         
-        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 8, 8, 64), child: actionsRow)
+        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12, 12, 12), child: actionsRow)
         
         let fullStack = ASStackLayoutSpec.vertical()
         fullStack.spacing = -2.0
@@ -456,15 +468,6 @@ class CommentCellNode:ASCellNode {
     
     func setSelected(_ selected:Bool) {
         backgroundColor = selected ? UIColor(white: 0.95, alpha: 1.0) : bgColor
-    }
-    
-    func setComments(count:Int) {
-        let countStr = "\(count)"
-        let str = NSMutableAttributedString(string: "\(countStr)", attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: buttonColor
-            ])
-        commentButton.setAttributedTitle(str, for: .normal)
     }
     
     @objc func handleUpvote() {
@@ -539,76 +542,88 @@ class CommentCellNode:ASCellNode {
     var isAnimatingUpVote = false
     
     func setVote(_ vote:Vote, animated:Bool) {
+        guard let reply = reply else {return}
         switch vote {
         case .upvoted:
-            if animated && !isAnimatingUpVote {
-                isAnimatingUpVote = true
-                UIView.animate(withDuration: 0.15, delay: 0.0, options: [.curveEaseOut], animations: {
-                    var frame = self.likeButton.view.frame
-                    frame.origin.y -= 16.0
-                    self.likeButton.view.frame = frame
-                }, completion: { _ in
-                    UIView.animate(withDuration: 0.50, delay: 0.0, usingSpringWithDamping: 0.4, initialSpringVelocity: 0.6, options: [.curveEaseIn], animations: {
-                        var frame = self.likeButton.view.frame
-                        frame.origin.y += 16.0
-                        self.likeButton.view.frame = frame
-                    }, completion: { _ in
-                        self.isAnimatingUpVote = false
-                    })
-                })
+//            if animated && !isAnimatingUpVote {
+//                isAnimatingUpVote = true
+//                UIView.animate(withDuration: 0.15, delay: 0.0, options: [.curveEaseOut], animations: {
+//                    var frame = self.likeButton.view.frame
+//                    frame.origin.y -= 16.0
+//                    self.likeButton.view.frame = frame
+//                }, completion: { _ in
+//                    UIView.animate(withDuration: 0.50, delay: 0.0, usingSpringWithDamping: 0.4, initialSpringVelocity: 0.6, options: [.curveEaseIn], animations: {
+//                        var frame = self.likeButton.view.frame
+//                        frame.origin.y += 16.0
+//                        self.likeButton.view.frame = frame
+//                    }, completion: { _ in
+//                        self.isAnimatingUpVote = false
+//                    })
+//                })
+//            }
+            likeButton.imageNode.imageModificationBlock = { image in
+                return image.maskWithColor(color: reply.anon.color) ?? image
             }
-            likeButton.setImage(upvotedImage, for: .normal)
-            dislikeButton.setImage(downvoteImage, for: .normal)
-            votesColor = accentColor
-            likeButton.alpha = 1.0
-            dislikeButton.alpha = 0.5
+            likeButton.imageNode.setNeedsDisplayWithCompletion(nil)
+            dislikeButton.imageNode.imageModificationBlock = { image in
+                return image.maskWithColor(color: self.buttonColor) ?? image
+            }
+            dislikeButton.imageNode.setNeedsDisplayWithCompletion(nil)
             break
         case .downvoted:
-            if animated && !isAnimatingDownvote {
-                isAnimatingDownvote = true
-                UIView.animate(withDuration: 0.1, delay: 0.0, options: [.curveEaseOut], animations: {
-                    var frame = self.dislikeButton.view.frame
-                    frame.origin.y += 10.0
-                    self.dislikeButton.view.frame = frame
-                }, completion: { _ in
-                    UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.4, initialSpringVelocity: 0.6, options: [.curveEaseIn], animations: {
-                        var frame = self.dislikeButton.view.frame
-                        frame.origin.y -= 10.0
-                        self.dislikeButton.view.frame = frame
-                    }, completion: { _ in
-                        self.isAnimatingDownvote = false
-                    })
-                })
+//            if animated && !isAnimatingDownvote {
+//                isAnimatingDownvote = true
+//                UIView.animate(withDuration: 0.1, delay: 0.0, options: [.curveEaseOut], animations: {
+//                    var frame = self.dislikeButton.view.frame
+//                    frame.origin.y += 10.0
+//                    self.dislikeButton.view.frame = frame
+//                }, completion: { _ in
+//                    UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.4, initialSpringVelocity: 0.6, options: [.curveEaseIn], animations: {
+//                        var frame = self.dislikeButton.view.frame
+//                        frame.origin.y -= 10.0
+//                        self.dislikeButton.view.frame = frame
+//                    }, completion: { _ in
+//                        self.isAnimatingDownvote = false
+//                    })
+//                })
+//            }
+            likeButton.imageNode.imageModificationBlock = { image in
+                return image.maskWithColor(color: self.buttonColor) ?? image
             }
-            likeButton.setImage(upvoteImage, for: .normal)
-            dislikeButton.setImage(downvotedImage, for: .normal)
-            votesColor = redColor
-            likeButton.alpha = 0.5
-            dislikeButton.alpha = 1.0
+            likeButton.imageNode.setNeedsDisplayWithCompletion(nil)
+            dislikeButton.imageNode.imageModificationBlock = { image in
+                return image.maskWithColor(color: reply.anon.color) ?? image
+            }
+            dislikeButton.imageNode.setNeedsDisplayWithCompletion(nil)
             break
         case .notvoted:
-            likeButton.setImage(upvoteImage, for: .normal)
-            dislikeButton.setImage(downvoteImage, for: .normal)
-            votesColor = UIColor.gray
-            likeButton.alpha = 0.5
-            dislikeButton.alpha = 0.5
+            likeButton.imageNode.imageModificationBlock = { image in
+                return image.maskWithColor(color: self.buttonColor) ?? image
+            }
+            likeButton.imageNode.setNeedsDisplayWithCompletion(nil)
+            dislikeButton.imageNode.imageModificationBlock = { image in
+                return image.maskWithColor(color: self.buttonColor) ?? image
+            }
+            dislikeButton.imageNode.setNeedsDisplayWithCompletion(nil)
             break
-        }
-        if reply != nil {
-            //setNumVotes(reply!.votes)
         }
         
     }
     
     var votesColor = UIColor.gray
     func setNumVotes(_ votes:Int) {
+        guard let post = self.post else { return }
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
-        countLabel.attributedText = NSAttributedString(string: "\(votes)", attributes: [
+        countLabel.attributedText = NSAttributedString(string: "\(post.votes)", attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: subtitleColor,
+            NSAttributedStringKey.foregroundColor: post.vote == .notvoted ? buttonColor : post.anon.color,
             NSAttributedStringKey.paragraphStyle: paragraph
             ])
+        let labelWidth = UILabel.size(text: "\(post.votes)", height: 50.0, font: Fonts.semiBold(ofSize: 14.0)).width
+        countLabel.style.width = ASDimension(unit: .points, value: labelWidth + 5.0)
+        self.setNeedsLayout()
+        self.layoutIfNeeded()
     }
     
     var voteRef:DatabaseReference?

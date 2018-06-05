@@ -11,8 +11,9 @@ target 'Jungle' do
   pod 'Firebase/Core'
   pod 'Firebase/Auth'
   pod 'Firebase/Database'
-  pod 'Firebase/Storage'
-  pod 'Firebase/Firestore' 
+  pod 'Firebase/Storage' 
+  pod 'Firebase/Firestore'
+  pod 'Firebase/Functions'
   pod 'Texture'
   pod 'SwiftMessages'
   pod 'AlgoliaSearch-Client-Swift'
@@ -22,4 +23,8 @@ target 'Jungle' do
   pod 'SwiftGifOrigin', '~> 1.6.1'
   pod 'UICircularProgressRing'
   pod 'TGPControls'
+  pod 'CameraManager', '~> 4.1'
+  pod 'Hero'
+  pod 'DeckTransition', '~> 2.0'
+  pod "Regift"
 end

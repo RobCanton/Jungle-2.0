@@ -14,15 +14,18 @@ import Firebase
 import AsyncDisplayKit
 import Photos
 import MobileCoreServices
+import AVFoundation
 
 class NewPost {
     var text:String
     var attachments:SelectedImage?
     var gif:GIF?
-    init(text:String, attachments:SelectedImage?, gif:GIF?) {
+    var video:URL?
+    init(text:String, attachments:SelectedImage?, gif:GIF?, video:URL?) {
         self.text = text
         self.attachments = attachments
         self.gif = gif
+        self.video = video
     }
 }
 
@@ -33,6 +36,7 @@ class NewPostViewController:UIViewController, UITextViewDelegate {
     @IBOutlet weak var textView: UITextView!
     @IBOutlet weak var textViewHeightAnchor:NSLayoutConstraint!
     @IBOutlet weak var imageView: UIImageView!
+    @IBOutlet weak var previewView: UIView!
     @IBOutlet weak var removeImageButton: UIButton!
     @IBOutlet weak var cancelButton: UIBarButtonItem!
     @IBOutlet weak var doneButton: UIButton!
@@ -45,6 +49,7 @@ class NewPostViewController:UIViewController, UITextViewDelegate {
         didSet {
             if let image = selectedImage {
                 selectedGIF = nil
+                videoURL = nil
                 self.removeImageButton.isHidden = false
                 let option = PHImageRequestOptions()
                 option.isSynchronous = true
@@ -71,6 +76,7 @@ class NewPostViewController:UIViewController, UITextViewDelegate {
         didSet {
             if let gif = selectedGIF {
                 selectedImage = nil
+                videoURL = nil
                 self.removeImageButton.isHidden = false
                 let thumbnailDataTask = URLSession.shared.dataTask(with: gif.thumbnail_url) { data, _, _ in
                     DispatchQueue.main.async {
@@ -99,15 +105,52 @@ class NewPostViewController:UIViewController, UITextViewDelegate {
         }
     }
     
+    var videoURL:URL? {
+        didSet {
+            if let url = videoURL {
+                selectedImage = nil
+                selectedGIF = nil
+                removeImageButton.isHidden = false
+                
+                let item = AVPlayerItem(url: url)
+                
+                let videoPlayer = AVPlayer()
+                videoPlayer.replaceCurrentItem(with: item)
+                
+                playerLayer = AVPlayerLayer(player: videoPlayer)
+                playerLayer!.videoGravity = .resizeAspectFill
+                playerLayer!.frame = previewView.bounds
+                previewView.layer.insertSublayer(playerLayer!, at: 0)
+                
+                playerLayer!.player?.play()
+                playerLayer!.player?.actionAtItemEnd = .none
+                
+                loopVideo()
+                
+            } else {
+                endLoopVideo()
+                playerLayer?.removeFromSuperlayer()
+            }
+        }
+    }
+    
     func addGIF(_ gif:GIF) {
         selectedGIF = gif
         attachmentsView.toggleAttachments(minimzed: true)
     }
     
+    var playerLayer:AVPlayerLayer?
+    func addVideo(_ url:URL) {
+        print("ADD VIDEO")
+        selectedGIF = nil
+        selectedImage = nil
+        videoURL = url
+    }
+    
     
     
     @IBAction func handlePostButton() {
-        newPost = NewPost(text: textView.text, attachments: selectedImage, gif: selectedGIF)
+        newPost = NewPost(text: textView.text, attachments: selectedImage, gif: selectedGIF, video: videoURL)
         self.performSegue(withIdentifier: "toTagsSelector", sender: self)
     }
     
@@ -127,6 +170,8 @@ class NewPostViewController:UIViewController, UITextViewDelegate {
     @IBAction func handleRemoveAttachment(_ sender: Any) {
         selectedGIF = nil
         selectedImage = nil
+        playerLayer?.removeFromSuperlayer()
+        endLoopVideo()
         attachmentsView.toggleAttachments(minimzed: false)
     }
     
@@ -158,8 +203,8 @@ class NewPostViewController:UIViewController, UITextViewDelegate {
         textView.font = Fonts.regular(ofSize: 16.0)
         updateContentConstraints()
         
-        imageView.layer.cornerRadius = 12.0
-        imageView.clipsToBounds = true
+        previewView.layer.cornerRadius = 8.0
+        previewView.clipsToBounds = true
         
         let layoutGuide = view.safeAreaLayoutGuide
         attachmentsView = AttachmentsView(frame: CGRect(x: 0, y: view.bounds.height, width: view.bounds.width, height: 90.0))
@@ -235,9 +280,28 @@ class NewPostViewController:UIViewController, UITextViewDelegate {
         contentHeightAnchor.constant = contentHeight > view.bounds.height ? contentHeight : view.bounds.height
         view.layoutIfNeeded()
     }
+    
+    func loopVideo() {
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil, queue: nil) { notification in
+            self.playerLayer?.player?.seek(to: kCMTimeZero)
+            self.playerLayer?.player?.play()
+        }
+    }
+    
+    func endLoopVideo() {
+        NotificationCenter.default.removeObserver(NSNotification.Name.AVPlayerItemDidPlayToEndTime, name: nil, object: nil)
+    }
 }
 
 extension NewPostViewController: AttachmentsDelegate {
+    
+    func attachmentsOpenCamera() {
+        
+        let controller = CameraViewController()
+        controller.addVideo = addVideo
+        let nav = UINavigationController(rootViewController: controller)
+        self.present(nav, animated: true, completion: nil)
+    }
     func attachmentsOpenGIFs() {
         print("HELLO RENEE!!! ")
         

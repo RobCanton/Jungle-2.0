@@ -23,8 +23,6 @@ class SinglePostNavigationBar:UIView {
         self.insetsLayoutMarginsFromSafeArea = false
         self.preservesSuperviewLayoutMargins = false
         
-        
-        
         contentBox = UIView()
         addSubview(contentBox)
         contentBox.translatesAutoresizingMaskIntoConstraints = false

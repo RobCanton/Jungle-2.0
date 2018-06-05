@@ -22,6 +22,8 @@ var storage:StorageReference {
     return Storage.storage().reference()
 }
 
+var functions = Functions.functions()
+
 var gpsService = GPSService()
 
 let API_ENDPOINT = "https://us-central1-jungle-anonymous.cloudfunctions.net/app"
@@ -38,6 +40,7 @@ var listeningDict = [String:Bool]() {
         print("NEWFOUNDLAND: \(listeningDict)")
     }
 }
+var currentUser:User?
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -51,12 +54,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let settings = FirestoreSettings()
         settings.isPersistenceEnabled = false
         // Enable offline data persistence
+        
+        createDirectory("user_content")
+        
         let db = Firestore.firestore()
         db.settings = settings
-        
+        //try! Auth.auth().signOut()
         let authHandler = Auth.auth().addStateDidChangeListener { (auth, user) in
             if let user = user {
-                self.openMainView()
+                print("WE ARE HERE DUDE")
+                let ref = firestore.collection("users").document(user.uid)
+                ref.getDocument { snapshot, error in
+                    if let snapshot = snapshot {
+                        let data = snapshot.data()
+                        guard let username = data?["username"] as? String else { return }
+                        currentUser = User(uid: user.uid, username: username)
+                        print("GOT THE USERNAME: \(username)")
+                        self.openMainView()
+                    }
+                }
+
             } else {
                 self.signInAnonymously()
             }

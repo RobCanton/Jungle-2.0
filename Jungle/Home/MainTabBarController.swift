@@ -58,6 +58,10 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
     
     @objc func openNewPostVC() {
         if UserService.isSignedIn {
+            
+//            let controller = CameraViewController()
+//            let nav = UINavigationController(rootViewController: controller)
+//            self.present(nav, animated: true, completion: nil)
             let controller = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "NewPostNavController")
             self.present(controller, animated: true, completion: nil)
         } else {

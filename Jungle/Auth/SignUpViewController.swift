@@ -12,6 +12,7 @@ import Firebase
 
 class SignUpViewController:UIViewController {
     
+    @IBOutlet weak var usernameField: UITextField!
     @IBOutlet weak var emailField:UITextField!
     @IBOutlet weak var passField:UITextField!
     @IBOutlet weak var stackBottomConstraint: NSLayoutConstraint!
@@ -23,6 +24,7 @@ class SignUpViewController:UIViewController {
     }
     
     @IBAction func handleSubmit() {
+        guard let username = usernameField.text else { return }
         guard let email = emailField.text else { return }
         print("ASDWE")
         guard let pass = passField.text else { return }
@@ -35,6 +37,8 @@ class SignUpViewController:UIViewController {
         user.link(with: credential) { user, error in
             if let user = user, error == nil {
                 print("WE GUCCI!")
+                let ref = firestore.collection("users").document(user.uid)
+                ref.setData(["username":username])
             } else {
                 print("WE NO GUCCI!: error\(error?.localizedDescription)")
             

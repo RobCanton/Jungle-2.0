@@ -459,14 +459,14 @@ class MiniPostNode:ASDisplayNode {
             ])
         
         if let attachments = post.attachments {
-            if attachments.images.count > 0 {
-                let image = attachments.images[0]
-                let color =  hexColor(from: image.colorHex)
-                postImageNode.backgroundColor = color
-
-                postImageNode.url = image.url
-                
-            }
+//            if attachments.images.count > 0 {
+//                let image = attachments.images[0]
+//                let color =  hexColor(from: image.colorHex)
+//                postImageNode.backgroundColor = color
+//
+//                postImageNode.url = image.url
+//                
+//            }
         }
         
         let metaStr = "\(post.votes) points · \(post.numReplies) replies"
@@ -531,15 +531,15 @@ class MiniPostNode:ASDisplayNode {
             contentStack.children?.append(textInset)
         }
         
-        if let attachments = post?.attachments,
-            attachments.images.count > 0 {
-                contentStack.children?.append(postImageNode)
-            postImageNode.style.flexGrow = 1.0
-            postTextNode.maximumNumberOfLines = 2
-        } else {
-            textInset.style.flexGrow = 1.0
-            postTextNode.maximumNumberOfLines = 6
-        }
+//        if let attachments = post?.attachments,
+////            attachments.images.count > 0 {
+////                contentStack.children?.append(postImageNode)
+////            postImageNode.style.flexGrow = 1.0
+////            postTextNode.maximumNumberOfLines = 2
+//        } else {
+//            textInset.style.flexGrow = 1.0
+//            postTextNode.maximumNumberOfLines = 6
+//        }
         
         contentStack.children?.append(metaInset)
         return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(8.0, 0.0, 8.0, 0.0), child: contentStack)

@@ -326,6 +326,7 @@ class PostsService {
             } else {
                 
                 let documents = snapshot!.documents
+                print("Got something nah mean dawg: \(documents)")
                 for document in documents {
                     print("REPLY DOCUMENT: \(document.data())")
                     if let reply = Post.parse(id: document.documentID, document.data()) {

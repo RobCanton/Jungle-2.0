@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>For recording audio in videos.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>For taking Photos &amp; Videos.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -39,6 +43,21 @@
 	<string>This app needs it bro</string>
 	<key>UIAppFonts</key>
 	<array>
+		<string>AzoSans-Light.otf</string>
+		<string>AzoSans-Bold.otf</string>
+		<string>AzoSans-Medium.otf</string>
+		<string>AzoSans-Regular.otf</string>
+		<string>BioSans-SemiBold.otf</string>
+		<string>BioSans-Regular.otf</string>
+		<string>BioSans-Light.otf</string>
+		<string>BentonSans-Regular.otf</string>
+		<string>BentonSans-Medium.otf</string>
+		<string>BentonSans-Bold.otf</string>
+		<string>BentonSans-Light.otf</string>
+		<string>Usual-Regular.otf</string>
+		<string>Usual-Bold.otf</string>
+		<string>Usual-Medium.otf</string>
+		<string>Usual-Light.otf</string>
 		<string>Montserrat-Bold.otf</string>
 		<string>Montserrat-SemiBold.otf</string>
 		<string>Montserrat-Regular.otf</string>
