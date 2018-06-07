@@ -31,7 +31,7 @@ class JTitleView:UIView {
         super.init(frame: frame)
         self.insetsLayoutMarginsFromSafeArea = false
         self.preservesSuperviewLayoutMargins = false
-        backgroundColor = UIColor.red
+        backgroundColor = accentColor
         //self.clipsToBounds = false
         //self.applyShadow(radius: 5.0, opacity: 0.08, offset: CGSize(width:0,height:5.0), color: UIColor.black, shouldRasterize: false)
         
@@ -113,16 +113,16 @@ class JTitleView:UIView {
         barLeadingAnchor.isActive = true
         barView.bottomAnchor.constraint(equalTo: tabBox.bottomAnchor, constant: 0).isActive = true
         
-        gradient = CAGradientLayer()
-        let botColor = hexColor(from: "a4e078")
-        let topColor = hexColor(from: "81d892")
-        gradient!.colors = [topColor.cgColor, botColor.cgColor]
-        gradient!.locations = [0.0 , 1.0]
-        gradient!.startPoint = CGPoint(x: 0.0, y: 1.0)
-        gradient!.endPoint = CGPoint(x: 1.0, y: 1.0)
-        gradient!.frame = self.bounds
-        
-        self.layer.insertSublayer(gradient!, at: 0)
+//        gradient = CAGradientLayer()
+//        let botColor = hexColor(from: "a4e078")
+//        let topColor = hexColor(from: "81d892")
+//        gradient!.colors = [topColor.cgColor, botColor.cgColor]
+//        gradient!.locations = [0.0 , 1.0]
+//        gradient!.startPoint = CGPoint(x: 0.0, y: 1.0)
+//        gradient!.endPoint = CGPoint(x: 1.0, y: 1.0)
+//        gradient!.frame = self.bounds
+//        
+//        self.layer.insertSublayer(gradient!, at: 0)
     }
     
     required init?(coder aDecoder: NSCoder) {

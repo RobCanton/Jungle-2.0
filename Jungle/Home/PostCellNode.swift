@@ -123,6 +123,7 @@ class PostContentCellNode:ASDisplayNode {
     var actionsNode = ASDisplayNode()
     var dividerNode = ASDisplayNode()
     var rankButton = ASButtonNode()
+    var videoNode = ASVideoNode()
     
     let likeButton = ASButtonNode()
     let dislikeButton = ASButtonNode()
@@ -275,14 +276,35 @@ class PostContentCellNode:ASDisplayNode {
             
             postImageNode.backgroundColor = buttonColor
             if let attachments = post.attachments {
-//                if attachments.images.count > 0 {
-//                    let image = attachments.images[0]
-//                    postImageNode.url = image.url
-//                    let imageWidth = UIScreen.main.bounds.width - 20
-//                    let imageHeight = imageWidth / image.ratio
-//                    let minImageHeight = min(imageHeight, imageWidth)
-//                    postImageNode.style.height = ASDimension(unit: .points, value: minImageHeight)
-//                }
+                print("WEVE GOT ATTACHMENTS")
+                if let images = attachments.images, images.count > 0 {
+                    print("BUT WE HAVE NO IMAGES")
+                    let image = images[0]
+                    postImageNode.url = image.url
+                    let imageWidth = UIScreen.main.bounds.width - 20
+                    let imageHeight = imageWidth / image.ratio
+                    let minImageHeight = min(imageHeight, imageWidth)
+                    postImageNode.style.height = ASDimension(unit: .points, value: minImageHeight)
+                } else if let video = attachments.video {
+                    UploadService.retrieveVideo(withKey: post.key, url: video.url) { vidURL, fromFile in
+                        if let url = vidURL {
+                            let videoHeight = UIScreen.main.bounds.width / video.ratio
+                            self.videoNode.style.height = ASDimension(unit: .points, value: videoHeight)
+                            DispatchQueue.main.async {
+                                
+                                self.videoNode.shouldAutoplay = true
+                                self.videoNode.shouldAutorepeat = true
+                                self.videoNode.asset = AVAsset(url: url)
+                                self.videoNode.play()
+                                
+                                self.videoNode.gravity = AVLayerVideoGravity.resizeAspectFill.rawValue
+                            }
+                            
+                        } else{
+                            print("NO VIDEO DATA")
+                        }
+                    }
+                }
             } else {
                 postImageNode.style.height = ASDimension(unit: .points, value: 0.0)
             }
@@ -431,18 +453,16 @@ class PostContentCellNode:ASDisplayNode {
             textInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 12, 0, 12), child: postTextNode)
         }
         
-            
-        if let text = post?.text, !text.isEmpty {
-            contentStack.children?.append(textInset)
+        if let attachments = post?.attachments {
+            if let images = attachments.images, images.count > 0 {
+                contentStack.children?.append(postImageNode)
+            } else if let _ = attachments.video {
+                contentStack.children?.append(videoNode)
+            }
         }
         
-        if let attachments = post? .attachments {
-//            if attachments.images.count > 0 {
-//                contentStack.children?.append(postImageNode)
-//            }
-        }
-        if let tags = post?.tags, tags.count > 0 {
-            //contentStack.children?.append(tagsCollectionNode)
+        if let text = post?.text, !text.isEmpty {
+            contentStack.children?.append(textInset)
         }
         
         if !isSinglePost, post?.topComment != nil {

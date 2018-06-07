@@ -63,6 +63,8 @@
 		B0932E8320A557F1004E62E2 /* ProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0932E8220A557F1004E62E2 /* ProfileHeaderView.swift */; };
 		B09CAFE020492F34009C3901 /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09CAFDF20492F34009C3901 /* SearchService.swift */; };
 		B09CAFE2204938AB009C3901 /* PostsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09CAFE1204938AB009C3901 /* PostsViewController.swift */; };
+		B0A5F55920C6F534002D3D95 /* StickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A5F55820C6F534002D3D95 /* StickerViewController.swift */; };
+		B0A5F55B20C705F6002D3D95 /* StickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A5F55A20C705F6002D3D95 /* StickerView.swift */; };
 		B0A94AF52046730D009445C2 /* LightboxCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A94AF32046730D009445C2 /* LightboxCell.swift */; };
 		B0A94AF62046730D009445C2 /* LightboxCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B0A94AF42046730D009445C2 /* LightboxCell.xib */; };
 		B0B29DD92037408900FBE5FF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B29DD82037408900FBE5FF /* AppDelegate.swift */; };
@@ -110,6 +112,7 @@
 		B0F50EDF203809F900037343 /* NewReplyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F50EDE203809F900037343 /* NewReplyViewController.swift */; };
 		B0F50EE12038233900037343 /* Reply.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F50EE02038233900037343 /* Reply.swift */; };
 		B0FA754520AD6F0500987CA4 /* LocationHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = B0FA754420AD6F0500987CA4 /* LocationHeader.xib */; };
+		B0FFAA1720C6465E0065E75F /* CameraHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0FFAA1620C6465E0065E75F /* CameraHUDView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -171,6 +174,8 @@
 		B0932E8220A557F1004E62E2 /* ProfileHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileHeaderView.swift; sourceTree = "<group>"; };
 		B09CAFDF20492F34009C3901 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
 		B09CAFE1204938AB009C3901 /* PostsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsViewController.swift; sourceTree = "<group>"; };
+		B0A5F55820C6F534002D3D95 /* StickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerViewController.swift; sourceTree = "<group>"; };
+		B0A5F55A20C705F6002D3D95 /* StickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerView.swift; sourceTree = "<group>"; };
 		B0A94AF32046730D009445C2 /* LightboxCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightboxCell.swift; sourceTree = "<group>"; };
 		B0A94AF42046730D009445C2 /* LightboxCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LightboxCell.xib; sourceTree = "<group>"; };
 		B0B29DD52037408900FBE5FF /* Jungle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jungle.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -220,6 +225,7 @@
 		B0F50EDE203809F900037343 /* NewReplyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewReplyViewController.swift; sourceTree = "<group>"; };
 		B0F50EE02038233900037343 /* Reply.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reply.swift; sourceTree = "<group>"; };
 		B0FA754420AD6F0500987CA4 /* LocationHeader.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LocationHeader.xib; sourceTree = "<group>"; };
+		B0FFAA1620C6465E0065E75F /* CameraHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraHUDView.swift; sourceTree = "<group>"; };
 		D619470CA6EAA1F65F3DFF24 /* Pods-Jungle.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Jungle.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Jungle/Pods-Jungle.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -271,6 +277,7 @@
 			isa = PBXGroup;
 			children = (
 				B0338C9720C1DD5C00B1E1DF /* CameraViewController.swift */,
+				B0FFAA1620C6465E0065E75F /* CameraHUDView.swift */,
 				B0338CA720C32DF200B1E1DF /* CaptionView.swift */,
 				B0338CA520C3209100B1E1DF /* ConfigurePostViewController.swift */,
 				B0338CA120C267F800B1E1DF /* CaptureSessionView.swift */,
@@ -289,6 +296,8 @@
 				B06C0CE420C5B3480017EA6B /* CommentsViewController.swift */,
 				B06C0CE620C5D25B0017EA6B /* PostCommentCellNode.swift */,
 				B06C0CE820C5DC640017EA6B /* GlassCommentBar.swift */,
+				B0A5F55820C6F534002D3D95 /* StickerViewController.swift */,
+				B0A5F55A20C705F6002D3D95 /* StickerView.swift */,
 			);
 			name = NewDesign;
 			path = Auth/NewDesign;
@@ -615,6 +624,7 @@
 				"${BUILT_PRODUCTS_DIR}/PINOperation/PINOperation.framework",
 				"${BUILT_PRODUCTS_DIR}/PINRemoteImage/PINRemoteImage.framework",
 				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
+				"${BUILT_PRODUCTS_DIR}/Pulley/Pulley.framework",
 				"${BUILT_PRODUCTS_DIR}/Regift/Regift.framework",
 				"${BUILT_PRODUCTS_DIR}/ScrollableGraphView/ScrollableGraphView.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftGifOrigin/SwiftGifOrigin.framework",
@@ -645,6 +655,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINOperation.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINRemoteImage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Pulley.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Regift.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ScrollableGraphView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftGifOrigin.framework",
@@ -728,6 +739,7 @@
 				B0338CA820C32DF200B1E1DF /* CaptionView.swift in Sources */,
 				B0E2335D2083FE660072B1B3 /* Notification.swift in Sources */,
 				B07F610B20449AE0005010B7 /* TopicsBarView.swift in Sources */,
+				B0A5F55B20C705F6002D3D95 /* StickerView.swift in Sources */,
 				B00409432074A2B9009344A0 /* PostTagsCollectionNode.swift in Sources */,
 				B0E11B7A203A904500EF0814 /* UploadService.swift in Sources */,
 				B0B29DF42037607600FBE5FF /* NewPostViewController.swift in Sources */,
@@ -746,6 +758,7 @@
 				B00F66AA203F3475002FCDA0 /* ActiveTextNode.swift in Sources */,
 				B06C0CE720C5D25B0017EA6B /* PostCommentCellNode.swift in Sources */,
 				B04D4E58204929FB000A1033 /* SearchBarView.swift in Sources */,
+				B0FFAA1720C6465E0065E75F /* CameraHUDView.swift in Sources */,
 				B0F49442207C771100C987D6 /* GIFSelectionViewController.swift in Sources */,
 				B0F50ECC203775E900037343 /* ASRoundShadowedImage.swift in Sources */,
 				B028FFD020B16A87006FAA4B /* NearbyPostsTableViewController.swift in Sources */,
@@ -768,6 +781,7 @@
 				B028FFCC20B163FF006FAA4B /* RecentPostsTableViewController.swift in Sources */,
 				B0F50ED72037A6E100037343 /* Anon.swift in Sources */,
 				B07F61092044983E005010B7 /* ComposerView.swift in Sources */,
+				B0A5F55920C6F534002D3D95 /* StickerViewController.swift in Sources */,
 				B028FFCE20B16953006FAA4B /* PopularPostsTableViewController.swift in Sources */,
 				B03291DC206A396100B8A0C7 /* VerificationViewController.swift in Sources */,
 				B0B29DEE2037454200FBE5FF /* Extensions.swift in Sources */,

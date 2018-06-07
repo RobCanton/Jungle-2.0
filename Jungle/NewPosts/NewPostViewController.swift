@@ -15,6 +15,7 @@ import AsyncDisplayKit
 import Photos
 import MobileCoreServices
 import AVFoundation
+import Pulley
 
 class NewPost {
     var text:String
@@ -299,8 +300,13 @@ extension NewPostViewController: AttachmentsDelegate {
         
         let controller = CameraViewController()
         controller.addVideo = addVideo
-        let nav = UINavigationController(rootViewController: controller)
-        self.present(nav, animated: true, completion: nil)
+        let drawerVC = StickerViewController()
+        let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
+        
+        pulleyController.drawerBackgroundVisualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
+        
+        //let nav = UINavigationController(rootViewController: controller)
+        self.present(pulleyController, animated: true, completion: nil)
     }
     func attachmentsOpenGIFs() {
         print("HELLO RENEE!!! ")

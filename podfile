@@ -27,4 +27,5 @@ target 'Jungle' do
   pod 'Hero'
   pod 'DeckTransition', '~> 2.0'
   pod "Regift"
+  pod 'Pulley'
 end

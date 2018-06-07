@@ -11,6 +11,7 @@ import UIKit
 import AsyncDisplayKit
 import Firebase
 import Alamofire
+import Pulley
 
 enum PostsTableType {
     case newest, popular, nearby
@@ -82,7 +83,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         
         view.addSubview(tableNode.view)
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
-        tableNode.contentInset = UIEdgeInsetsMake(8.0, 0.0, 0.0, 0.0)
+        tableNode.contentInset = UIEdgeInsetsMake(0.0, 0.0, 0.0, 0.0)
         var layoutGuide:UILayoutGuide!
         
         layoutGuide = view.safeAreaLayoutGuide
@@ -94,7 +95,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         tableNode.view.contentInsetAdjustmentBehavior = .never
         tableNode.delegate = self
         tableNode.dataSource = self
-        tableNode.view.separatorStyle = .none
+        tableNode.view.separatorColor = UIColor(white: 0.85, alpha: 1.0)
         tableNode.view.showsVerticalScrollIndicator = false
         tableNode.view.delaysContentTouches = false
         tableNode.view.backgroundColor = hexColor(from: "#eff0e9")
@@ -447,7 +448,8 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         if indexPath.section == 0 {
             return
         }
-        
+        let node = tableNode.nodeForRow(at: indexPath) as? NewPostCellNode
+        node?.setHighlighted(true)
 //        let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
 //        node.setSelected(true)
         
@@ -475,29 +477,46 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     }
     
     func openSinglePost(_ post:Post, index:Int) {
-        let controller = LightboxViewController()
-        controller.posts = state.posts
-        controller.initialIndex = index
-        controller.transitioningDelegate = transitionManager
-        self.present(controller, animated: true, completion: nil)
-//        let controller = SinglePostViewController()
-//        controller.hidesBottomBarWhenPushed = true
-//        controller.post = post
-//        self.navigationController?.pushViewController(controller, animated: true)
+        
+        if let _ = post.attachments?.video {
+            let controller = LightboxViewController()
+            controller.hidesBottomBarWhenPushed = true
+            controller.posts = self.state.posts
+            controller.initialIndex = index
+            let drawerVC = CommentsViewController()
+            drawerVC.post = post
+            let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
+
+            pulleyController.drawerBackgroundVisualEffectView = nil
+            pulleyController.backgroundDimmingOpacity = 0.35
+            pulleyController.topInset = 24
+            pulleyController.hidesBottomBarWhenPushed = true
+
+            pulleyController.transitioningDelegate = transitionManager
+            self.present(pulleyController, animated: true, completion: nil)
+            return
+        }
+        
+        //controller.transitioningDelegate = transitionManager
+        //self.present(controller, animated: true, completion: nil)
+        let controller = SinglePostViewController()
+        controller.hidesBottomBarWhenPushed = true
+        controller.post = post
+        self.navigationController?.pushViewController(controller, animated: true)
     }
     
     func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
-        let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
-        node?.setSelected(false)
+        let node = tableNode.nodeForRow(at: indexPath) as? NewPostCellNode
+        node?.setHighlighted(false)
     }
     
     func tableNode(_ tableNode: ASTableNode, didHighlightRowAt indexPath: IndexPath) {
-        let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
+        let node = tableNode.nodeForRow(at: indexPath) as? NewPostCellNode
         node?.setHighlighted(true)
     }
     
     func tableNode(_ tableNode: ASTableNode, didUnhighlightRowAt indexPath: IndexPath) {
-        let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
+        let node = tableNode.nodeForRow(at: indexPath) as? NewPostCellNode
         node?.setHighlighted(false)
     }
     

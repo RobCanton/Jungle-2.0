@@ -11,13 +11,11 @@ import UIKit
 import AsyncDisplayKit
 import DeckTransition
 import Firebase
+import Pulley
 
 class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSource {
     
     var post:Post!
-    var closeButton:UIButton!
-    var titleNode:UIButton!
-    var dividerNode:UIView!
     
     var tableNode = ASTableNode()
     var topState = State.empty
@@ -48,57 +46,66 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     
     var focusedReply:Post?
     
+    var blurView:UIVisualEffectView!
+    var animator:UIViewPropertyAnimator?
+    var contentHeight:CGFloat = 0.0
     
+    var closeButton:UIButton!
     override func viewDidLoad() {
         super.viewDidLoad()
-        let t = transitioningDelegate as! DeckTransitioningDelegate
-        view.backgroundColor = UIColor.clear
-        let v = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
-        v.frame = view.bounds
-        view.addSubview(v)
         
-        let layoutGuide = view.safeAreaLayoutGuide
+        let name = post.anon.displayName
+        let text = "\(name)  \(post.textClean)"
         
-        closeButton = UIButton(frame: CGRect(x: 0, y: 0, width: 64.0, height: 64.0))
-        closeButton.setImage(UIImage(named:"close"), for: .normal)
-        closeButton.tintColor = UIColor.white
+        let width = UIScreen.main.bounds.width - 60.0
+        let textHeight = UILabel.size(text: text, width: width, font: Fonts.regular(ofSize: 15.0)).height
+        contentHeight = max(textHeight, 28) + 24.0
+        
+        closeButton = UIButton(type: .custom)
+        closeButton.setImage(UIImage(named:"Remove2"), for: .normal)
+        closeButton.tintColor = UIColor.gray
         view.addSubview(closeButton)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
-        closeButton.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        closeButton.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: 0).isActive = true
-        closeButton.widthAnchor.constraint(equalToConstant: 64.0).isActive = true
-        closeButton.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
-        closeButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
+        closeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        closeButton.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        closeButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        closeButton.widthAnchor.constraint(equalTo: closeButton.heightAnchor, multiplier: 1.0).isActive = true
         
-        titleNode = UIButton(type: .custom)
-        titleNode.setTitle("Comments", for: .normal)
-        titleNode.titleLabel?.font = Fonts.semiBold(ofSize: 15.0)
-        titleNode.setTitleColor(UIColor.white, for: .normal)
-        view.addSubview(titleNode)
-        titleNode.translatesAutoresizingMaskIntoConstraints = false
-        titleNode.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        titleNode.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        titleNode.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
-        dividerNode = UIView()
-        dividerNode.backgroundColor = UIColor.white
-        view.addSubview(dividerNode)
-        dividerNode.translatesAutoresizingMaskIntoConstraints = false
-        dividerNode.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
-        dividerNode.topAnchor.constraint(equalTo: view.topAnchor, constant: 64).isActive = true
-        dividerNode.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12.0).isActive = true
-        dividerNode.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12.0).isActive = true
+        
+        let title = UILabel(frame: .zero)
+        title.text = "COMMENTS"
+        title.font = Fonts.semiBold(ofSize: 13.0)
+        title.textColor = UIColor.gray
+        view.addSubview(title)
+        title.translatesAutoresizingMaskIntoConstraints = false
+        title.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        title.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        title.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+        view.backgroundColor = UIColor.white
+        
+        let divider = UIView()
+        divider.backgroundColor = UIColor.lightGray
+        view.addSubview(divider)
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        divider.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+        divider.topAnchor.constraint(equalTo: view.topAnchor, constant: 43.5).isActive = true
+        divider.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        divider.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        
+        let layoutGuide = view.safeAreaLayoutGuide
         
         let tableView = tableNode.view
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        tableView.topAnchor.constraint(equalTo: dividerNode.bottomAnchor).isActive = true
+        tableView.topAnchor.constraint(equalTo: view.topAnchor, constant: 44).isActive = true
         
         tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         tableNode.delegate = self
         tableNode.dataSource = self
-        tableNode.backgroundColor = UIColor.clear
-        tableView.separatorColor = UIColor.clear
+        tableNode.backgroundColor = UIColor(white: 0.92, alpha: 1.0)
+        tableView.tableFooterView = UIView()
+        tableView.separatorInset = UIEdgeInsetsMake(0, 40, 0, 0)
         ///tableView.separatorStyle = .none
         tableNode.performBatch(animated: false, updates: {
             self.tableNode.reloadData()
@@ -110,7 +117,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         commentBar.translatesAutoresizingMaskIntoConstraints = false
         commentBar.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         commentBar.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        commentBarBottomAnchor  = commentBar.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: 0)
+        commentBarBottomAnchor  = commentBar.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -20)
         commentBarBottomAnchor?.isActive = true
         //commentBar.activeColor = //post.anon.color
         //commentBar.delegate = self
@@ -136,14 +143,12 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         NotificationCenter.default.removeObserver(self)
+        animator?.stopAnimation(true)
     }
     
-    @objc func handleDismiss() {
-        self.dismiss(animated: true, completion: nil)
-    }
     
     func numberOfSections(in tableNode: ASTableNode) -> Int {
-        var sections = 0
+        var sections = 1
         sections += topState.replies.count
         if topState.fetchingMore {
             sections += 1
@@ -152,18 +157,26 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     }
     
     func tableNode(_ tableNode: ASTableNode, numberOfRowsInSection section: Int) -> Int {
-        if topState.fetchingMore, section == topState.replies.count {
+        if section == 0 {
             return 1
         }
-        let reply = topState.replies[section]
+        if topState.fetchingMore, section == topState.replies.count + 1 {
+            return 1
+        }
+        let reply = topState.replies[section - 1]
         let loadMore = reply.numReplies > reply.replies.count ? 1 : 0
         return  1 + reply.replies.count + loadMore
     }
     
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
-        
+        if indexPath.section == 0 {
+            let cell = PostCommentCellNode(post: post)
+            cell.selectionStyle = .none
+            cell.timeNode.isHidden = true
+            return cell
+        }
         let rowCount = topState.replies.count
-        let section = indexPath.section
+        let section = indexPath.section - 1
         if topState.fetchingMore && section == rowCount {
             let node = LoadingCellNode()
             node.style.height = ASDimensionMake(44.0)
@@ -173,7 +186,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         
         let reply = topState.replies[section]
         if indexPath.row == 0 {
-            let replyLine = reply.numReplies == 0 && reply.replies.count == 0
+            
             let cell = PostCommentCellNode(post: reply)
             cell.selectionStyle = .none
             return cell
@@ -193,7 +206,12 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
             
             return cell
         }
-        return ASCellNode()
+    }
+    
+    func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
+        if indexPath.section == 0 {
+            pulleyViewController?.setDrawerPosition(position: .open, animated: true)
+        }
     }
     
     func shouldBatchFetch(for tableNode: ASTableNode) -> Bool {
@@ -248,7 +266,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
             // Add or remove items
             let rowCountChange = topState.replies.count - oldState.replies.count
             if rowCountChange > 0 {
-                let indices = IndexSet(oldState.replies.count..<topState.replies.count)
+                let indices = IndexSet(oldState.replies.count + 1..<topState.replies.count + 1)
                 tableNode.insertSections(indices, with: .fade)
             } else if rowCountChange < 0 {
                 assertionFailure("Deleting rows is not implemented. YAGNI.")
@@ -258,11 +276,11 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
             if topState.fetchingMore != oldState.fetchingMore {
                 if topState.fetchingMore {
                     // Add spinner.
-                    let indexSet = IndexSet([topState.replies.count])
+                    let indexSet = IndexSet([topState.replies.count + 1])
                     tableNode.insertSections(indexSet, with: .fade)
                 } else {
                     // Remove spinner.
-                    let indexSet = IndexSet([oldState.replies.count])
+                    let indexSet = IndexSet([oldState.replies.count + 1])
                     tableNode.deleteSections(indexSet, with: .fade)
                 }
             }
@@ -310,8 +328,8 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
 
 extension CommentsViewController: KeyboardAccessoryProtocol {
     @objc func keyboardWillShow(notification:Notification) {
-        let t = transitioningDelegate as! DeckTransitioningDelegate
-        t.isSwipeToDismissEnabled = false
+        //let t = transitioningDelegate as! DeckTransitioningDelegate
+        //t.isSwipeToDismissEnabled = false
         //transitioningDelegate?.isSwipeToDismissEnabled = false
         guard let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return }
         //self.commentBarHeightAnchor?.constant = commentBar.textHeight + 8.0
@@ -358,18 +376,18 @@ extension CommentsViewController: KeyboardAccessoryProtocol {
             self.tableNode.contentOffset = CGPoint(x:0,y: offsetPoint!)
         }
         
-        self.commentBarBottomAnchor?.constant = -keyboardSize.height
+        self.commentBarBottomAnchor?.constant = -keyboardSize.height - 20.0
         self.view.layoutIfNeeded()
     }
     
     @objc func keyboardWillHide(notification:Notification) {
-        self.commentBarBottomAnchor?.constant = 0.0
+        self.commentBarBottomAnchor?.constant = -20
         self.view.layoutIfNeeded()
     }
     
     @objc func keyboardDidHide(notification:Notification) {
-        let t = transitioningDelegate as! DeckTransitioningDelegate
-        t.isSwipeToDismissEnabled = true
+        //let t = transitioningDelegate as! DeckTransitioningDelegate
+        //t.isSwipeToDismissEnabled = true
 
     }
 }
@@ -462,4 +480,46 @@ extension CommentsViewController: CommentBarDelegate {
         return
 
     }
+    
+    override var prefersStatusBarHidden: Bool {
+        get { return true }
+    }
+}
+
+
+extension CommentsViewController: PulleyDrawerViewControllerDelegate {
+    
+    func collapsedDrawerHeight(bottomSafeArea: CGFloat) -> CGFloat
+    {
+        // For devices with a bottom safe area, we want to make our drawer taller. Your implementation may not want to do that. In that case, disregard the bottomSafeArea value.
+        return 0.0
+    }
+    
+    func partialRevealDrawerHeight(bottomSafeArea: CGFloat) -> CGFloat
+    {
+        // For devices with a bottom safe area, we want to make our drawer taller. Your implementation may not want to do that. In that case, disregard the bottomSafeArea value.
+        return view.bounds.height * 3/5 + bottomSafeArea
+    }
+    
+    
+    
+    func supportedDrawerPositions() -> [PulleyPosition] {
+        return [.open, .collapsed] // You can specify the drawer positions you support. This is the same as: [.open, .partiallyRevealed, .collapsed, .closed]
+    }
+    
+    func drawerPositionDidChange(drawer: PulleyViewController, bottomSafeArea: CGFloat) {
+        print("drawerPositionDidChange: \(drawer)")
+    }
+    
+    func drawerChangedDistanceFromBottom(drawer: PulleyViewController, distance: CGFloat, bottomSafeArea: CGFloat) {
+        print("Distance: \(distance - contentHeight) : Max\(view.bounds.height/2)")
+        
+        let progress = (distance - contentHeight) / (view.bounds.height / 2)
+        if (distance - contentHeight) < (view.bounds.height) {
+            self.commentBar.textView.resignFirstResponder()
+        }
+        
+        
+    }
+    
 }

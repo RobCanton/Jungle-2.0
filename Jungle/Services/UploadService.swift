@@ -262,8 +262,7 @@ class UploadService {
                             } catch {
                                 print (error)
                             }
-                            compressVideo(inputURL: url, outputURL: outputUrl) { _ in
-                                UploadService.cropVideo(sourceURL: url, startTime: 0.0, endTime: 3.0) { thumbnailOutputURL in
+                            compressVideo(inputURL: url, outputURL: outputUrl) { size in
                                     UploadService.uploadVideo(pathName: "video.mp4", videoURL: outputUrl, postID: postID) { _vidURL, _vidLength in
                                         if let vidURL = _vidURL,
                                             let vidLength = _vidLength {
@@ -274,7 +273,12 @@ class UploadService {
                                                         "video": [
                                                             "url": vidURL.absoluteString,
                                                             "thumbnail_url": gifURL.absoluteString,
-                                                            "length": "\(vidLength)"
+                                                            "length": "\(vidLength)",
+                                                            "size": [
+                                                                "width": size.width,
+                                                                "height": size.height,
+                                                                "ratio": size.width / size.height
+                                                            ]
                                                         ]
                                                     ]
                                                     
@@ -289,31 +293,8 @@ class UploadService {
                                                 }
                                             }
                                         }
-//                                        UploadService.uploadVideo(pathName: "thumbnail.mp4", videoURL: thumbnailOutputURL, postID: postID) { _tvidURL, _ in
-//
-//                                            if let vidURL = _vidURL,
-//                                                let vidLength = _vidLength,
-//                                                let thumbVidURL = _tvidURL {
-//                                                parameters["attachments"] = [
-//                                                    "video": [
-//                                                        "url": vidURL.absoluteString,
-//                                                        "thumbnail_url": thumbVidURL.absoluteString,
-//                                                        "length": "\(vidLength)"
-//                                                    ]
-//                                                ]
-//
-//                                            }
-//
-//                                            UploadService.addNewPost(headers, withID: postID, parameters: parameters) { success in
-//                                                if success {
-//                                                    Alerts.showSuccessAlert(withMessage: "Uploaded!")
-//
-//                                                }
-//                                            }
-//                                        }
-                                
                                     }
-                                }
+                                
                                 
                             }
                         } else {
@@ -421,16 +402,19 @@ class UploadService {
         }
     }
     
-    static func compressVideo(inputURL: URL, outputURL: URL, handler:@escaping (_ session: AVAssetExportSession)-> Void) {
+    static func compressVideo(inputURL: URL, outputURL: URL, handler:@escaping (_ size:CGSize)-> Void) {
         
         let urlAsset = AVURLAsset(url: inputURL, options: nil)
+        let track =  urlAsset.tracks(withMediaType: AVMediaType.video)
+        let videoTrack:AVAssetTrack = track[0] as AVAssetTrack
+        let size = videoTrack.naturalSize
         if let exportSession = AVAssetExportSession(asset: urlAsset, presetName: AVAssetExportPresetMediumQuality) {
             exportSession.outputURL = outputURL
             exportSession.outputFileType = AVFileType.mp4
             exportSession.shouldOptimizeForNetworkUse = true
             
             exportSession.exportAsynchronously {
-                handler(exportSession)
+                handler(size)
             }
         }
     }
@@ -439,7 +423,7 @@ class UploadService {
         let frameCount = 16
         let delayTime  = Float(0.0)
         let loopCount  = 0    // 0 means loop forever
-        let size = CGSize(width: 175, height: 175)
+        let size = CGSize(width: 300, height: 300)
         let fileManager = FileManager.default
         let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let outputURL = documentDirectory.appendingPathComponent("output-thumbnail.gif")

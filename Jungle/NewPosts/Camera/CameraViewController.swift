@@ -10,6 +10,8 @@ import Foundation
 import UIKit
 import AVFoundation
 import Hero
+import Photos
+import Pulley
 
 enum CameraState {
     case running, videoCaptured
@@ -18,11 +20,7 @@ enum CameraState {
 class CameraViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate {
     
     var captureView:CaptureSessionView!
-    var hudView:UIView!
-    var closeButton:UIButton!
-    var nextButton:UIButton!
-    
-    var recordButton:RecordButton!
+    var hudView:CameraHUDView!
     
     var previewView:UIView!
     var videoPlayer: AVPlayer = AVPlayer()
@@ -58,59 +56,25 @@ class CameraViewController: UIViewController, AVCaptureVideoDataOutputSampleBuff
         previewView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         previewView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
-        pageView = UIScrollView(frame: view.bounds)
-        pageView.contentSize = CGSize(width: view.bounds.width * 2, height: view.bounds.height)
-        pageView.isPagingEnabled = true
-        pageView.showsHorizontalScrollIndicator = false
-        view.addSubview(pageView)
+        hudView = CameraHUDView(frame: view.bounds)
         
-        hudView = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: view.bounds.height))
-        pageView.addSubview(hudView)
-        
-        let captionView = CaptionView(frame: CGRect(x: view.bounds.width, y: 0, width: view.bounds.width, height: view.bounds.height))
-        captionView.backButton.addTarget(self, action: #selector(handleCaptionBack), for: .touchUpInside)
-        pageView.addSubview(captionView)
-        
-        closeButton = UIButton(type: .custom)
-        closeButton.setImage(UIImage(named:"Remove2"), for: .normal)
-        hudView.addSubview(closeButton)
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        closeButton.leadingAnchor.constraint(equalTo: hudView.leadingAnchor, constant: 0).isActive = true
-        closeButton.topAnchor.constraint(equalTo: hudView.topAnchor, constant: 0).isActive = true
-        closeButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
-        closeButton.heightAnchor.constraint(equalToConstant: 64).isActive = true
-        closeButton.addTarget(self, action: #selector(handleClose), for: .touchUpInside)
-        closeButton.tintColor = UIColor.white
-        
-        nextButton = UIButton(type: .custom)
-        nextButton.setTitle("Use", for: .normal)
-        nextButton.backgroundColor = UIColor.white
-        nextButton.titleLabel?.font = Fonts.semiBold(ofSize: 15)
-        nextButton.setTitleColor(UIColor.gray, for: .normal)
-        hudView.addSubview(nextButton)
-        nextButton.translatesAutoresizingMaskIntoConstraints = false
-        nextButton.sizeToFit()
-        
-        nextButton.trailingAnchor.constraint(equalTo: hudView.trailingAnchor, constant: -24).isActive = true
-        nextButton.bottomAnchor.constraint(equalTo: hudView.bottomAnchor, constant: -24).isActive = true
-        nextButton.heightAnchor.constraint(equalToConstant: 36).isActive = true
-        nextButton.widthAnchor.constraint(equalToConstant: 90).isActive = true
-        nextButton.layer.cornerRadius = 36/2
-        nextButton.clipsToBounds = true
-        nextButton.isHidden = true
-        nextButton.addTarget(self, action: #selector(handleNext), for: .touchUpInside)
-        
-        recordButton = RecordButton(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
-        hudView.addSubview(recordButton)
-        recordButton.translatesAutoresizingMaskIntoConstraints = false
-        recordButton.centerXAnchor.constraint(equalTo: hudView.centerXAnchor).isActive = true
-        recordButton.bottomAnchor.constraint(equalTo: hudView.bottomAnchor, constant: -60).isActive = true
-        recordButton.widthAnchor.constraint(equalToConstant: 50.0).isActive = true
-        recordButton.heightAnchor.constraint(equalToConstant: 50.0).isActive = true
+        view.addSubview(hudView)
+        //hudView.isHidden = true
         
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleRecordPress))
-        recordButton.isUserInteractionEnabled = true
-        recordButton.addGestureRecognizer(longPress)
+        longPress.minimumPressDuration = 0.0
+        hudView.recordButton.isUserInteractionEnabled = true
+        hudView.recordButton.addGestureRecognizer(longPress)
+        hudView.isUserInteractionEnabled = true
+        hudView.translatesAutoresizingMaskIntoConstraints = false
+        hudView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        hudView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        hudView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        hudView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        
+        hudView.closeButton.addTarget(self, action: #selector(handleClose), for: .touchUpInside)
+        hudView.nextButton.addTarget(self, action: #selector(handleNext), for: .touchUpInside)
+        hudView.stickerButton.addTarget(self, action: #selector(handleStickers), for: .touchUpInside)
         
     }
     
@@ -146,10 +110,11 @@ class CameraViewController: UIViewController, AVCaptureVideoDataOutputSampleBuff
         case .videoCaptured:
             destroyCaptured()
             endLoopVideo()
-            recordButton.reset()
-            recordButton.isHidden = false
-            nextButton.isHidden = true
+            hudView.recordButton.reset()
+            hudView.recordButton.isHidden = false
+            hudView.nextButton.isHidden = true
             captureView.isHidden = false
+            //hudView.isHidden = true
             state = .running
             break
         }
@@ -157,8 +122,177 @@ class CameraViewController: UIViewController, AVCaptureVideoDataOutputSampleBuff
     
     @objc func handleNext() {
         guard let url = videoURL else {return}
-        addVideo?(url)
-        self.dismiss(animated: true, completion: nil)
+        processVideoWithWatermark(videoURL: url) { _compressedVideoURL in
+            DispatchQueue.main.async {
+                if let compressedVideoURL = _compressedVideoURL {
+                    self.addVideo?(compressedVideoURL)
+                    self.dismiss(animated: true, completion: nil)
+                }
+            }
+        }
+    }
+    
+    @objc func handleStickers() {
+        print("Open stickers!")
+        if let x = pulleyViewController?.drawerContentViewController as? StickerViewController {
+            print("WE GOOD MAN WE GOOODD!!!")
+            x.addSticker = hudView.addSticker
+        }
+        pulleyViewController?.setDrawerPosition(position: .partiallyRevealed, animated: true)
+    }
+    
+    func processVideoWithWatermark(videoURL: URL, completion: @escaping (_ url:URL?) -> Void) {
+        
+    
+        let composition = AVMutableComposition()
+        let asset = AVURLAsset(url: videoURL, options: nil)
+        
+        let track =  asset.tracks(withMediaType: AVMediaType.video)
+        let videoTrack:AVAssetTrack = track[0] as AVAssetTrack
+        let timerange = CMTimeRangeMake(kCMTimeZero, asset.duration)
+        
+        let compositionVideoTrack:AVMutableCompositionTrack = composition.addMutableTrack(withMediaType: AVMediaType.video, preferredTrackID: CMPersistentTrackID())!
+        
+        do {
+            try compositionVideoTrack.insertTimeRange(timerange, of: videoTrack, at: kCMTimeZero)
+            compositionVideoTrack.preferredTransform = videoTrack.preferredTransform
+        } catch {
+            print(error)
+        }
+        
+        let size = videoTrack.naturalSize
+        
+//        watermarklayer.frame = CGRect(x: hudView.sticker.frame.origin.x * m,
+//                                      y: hudView.sticker.frame.origin.y * m,
+//                                      width: hudView.sticker.frame.width * m,
+//                                      height: hudView.sticker.frame.height * m)
+        
+        
+        let videolayer = CALayer()
+        videolayer.frame = CGRect(x: 0, y: 0, width: size.height, height: size.width)
+        
+        let parentlayer = CALayer()
+        parentlayer.frame = CGRect(x: 0, y: 0, width: size.height, height: size.width)
+        parentlayer.addSublayer(videolayer)
+        
+        for i in 0..<hudView.stickersOverlay.subviews.count {
+            let s = hudView.stickersOverlay.subviews[i] as! StickerView
+            //let sFrame = s.frame
+            let imageView = s.imageNode!
+            let watermarkImage = imageView.image!
+            
+            let watermark = watermarkImage.cgImage
+        
+            let currentTransform = s.transform
+            s.transform = .identity
+            let originalFrame = s.frame
+            s.transform = currentTransform
+            let sFrame = originalFrame
+        
+            let watermarklayer = CALayer()
+            watermarklayer.contents = watermark
+            
+            let screenSize = UIScreen.main.bounds.size
+            let m = size.height / screenSize.width
+            let y = view.bounds.height - sFrame.origin.y - sFrame.height
+            watermarklayer.frame = CGRect(x: sFrame.origin.x * m,
+                                            y: y * m,
+                                            width: sFrame.width * m,
+                          
+                                            height: sFrame.height * m )
+            
+            let radians = atan2(currentTransform.b, currentTransform.a)
+            let degrees:CGFloat = radians * (CGFloat(180) / CGFloat(Double.pi) )
+
+            var shift = 0.0
+            
+            if degrees > 0 {
+                shift = -Double(degrees * 2).degreesToRadians
+            } else {
+                let absDegrees = abs(degrees)
+                shift = Double(absDegrees * 2).degreesToRadians
+            }
+            
+            
+            let shiftedTransform = currentTransform.concatenating(CGAffineTransform(rotationAngle: CGFloat(shift)))
+            watermarklayer.opacity = 1
+            watermarklayer.setAffineTransform(shiftedTransform)
+            parentlayer.addSublayer(watermarklayer)
+        }
+        
+        let layercomposition = AVMutableVideoComposition()
+        layercomposition.frameDuration = CMTimeMake(1, 30)
+        layercomposition.renderSize = CGSize(width: size.height, height: size.width)
+        layercomposition.renderScale = 1.0
+        layercomposition.animationTool = AVVideoCompositionCoreAnimationTool(postProcessingAsVideoLayer: videolayer, in: parentlayer)
+        
+        let instruction = AVMutableVideoCompositionInstruction()
+        instruction.timeRange = CMTimeRangeMake(kCMTimeZero, composition.duration)
+        
+        let videotrack = composition.tracks(withMediaType: AVMediaType.video)[0] as AVAssetTrack
+        let layerinstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videotrack)
+        
+        layerinstruction.setTransform(videoTrack.preferredTransform, at: kCMTimeZero)
+        
+        instruction.layerInstructions = [layerinstruction]
+        layercomposition.instructions = [instruction]
+        
+        let fileManager = FileManager.default
+        let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let movieUrl = documentDirectory.appendingPathComponent("watermarktest.mp4")
+        
+        do {
+            try fileManager.removeItem(at: movieUrl)
+        } catch {
+            
+        }
+        
+        guard let assetExport = AVAssetExportSession(asset: composition, presetName:AVAssetExportPresetMediumQuality) else {return}
+        assetExport.videoComposition = layercomposition
+        assetExport.outputFileType = AVFileType.mp4
+        assetExport.outputURL = movieUrl
+        assetExport.shouldOptimizeForNetworkUse = true
+        
+        assetExport.exportAsynchronously(completionHandler: {
+            
+            switch assetExport.status {
+            case .completed:
+                print("success")
+                
+                
+//                PHPhotoLibrary.shared().performChanges({
+//                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: movieUrl)
+//                }) { saved, error in
+//                    if saved {
+//                        let alertController = UIAlertController(title: "Your video was successfully saved", message: nil, preferredStyle: .alert)
+//                        let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+//                        alertController.addAction(defaultAction)
+//                        self.present(alertController, animated: true, completion: nil)
+//                    }
+//                }
+                
+                return completion(movieUrl)
+                
+                break
+            case .cancelled:
+                print("cancelled")
+                break
+            case .exporting:
+                print("exporting")
+                break
+            case .failed:
+                print("failed: \(assetExport.error!)")
+                break
+            case .unknown:
+                print("unknown")
+                break
+            case .waiting:
+                print("waiting")
+                break
+            }
+        })
+        return completion(nil)
+        
     }
     
     @objc func handleCaptionBack() {
@@ -174,11 +308,11 @@ class CameraViewController: UIViewController, AVCaptureVideoDataOutputSampleBuff
         switch gesture.state {
         case .began:
             print("BEGAN")
-            recordButton.initiateRecordingAnimation()
+            hudView.recordButton.initiateRecordingAnimation()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                 self.recordVideo()
             })
-            closeButton.isHidden = true
+            //closeButton.isHidden = true
             break
         case .changed:
             break
@@ -195,7 +329,7 @@ class CameraViewController: UIViewController, AVCaptureVideoDataOutputSampleBuff
             let documentsURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
             let filePath = documentsURL.appendingPathComponent("temp.mp4")
             captureView.videoFileOutput?.startRecording(to: filePath, recordingDelegate: recordingDelegate!)
-            recordButton.startRecording()
+            hudView.recordButton.startRecording()
         } catch {
             print("OH DAMN")
         }
@@ -226,9 +360,9 @@ class CameraViewController: UIViewController, AVCaptureVideoDataOutputSampleBuff
         playerLayer!.player?.actionAtItemEnd = .none
         
         captureView.isHidden = true
-        recordButton.isHidden = true
-        closeButton.isHidden = false
-        nextButton.isHidden = false
+        hudView.recordButton.isHidden = true
+        hudView.closeButton.isHidden = false
+        hudView.nextButton.isHidden = false
         state = .videoCaptured
         
         loopVideo()

@@ -15,7 +15,7 @@ class LightboxPresentAnimationController: NSObject, UIViewControllerAnimatedTran
    
     
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
-        return 0.35
+        return 0.45
     }
     
     
@@ -23,7 +23,7 @@ class LightboxPresentAnimationController: NSObject, UIViewControllerAnimatedTran
     func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
         // get reference to our fromView, toView and the container view that we should perform the transition in
         let container = transitionContext.containerView
-        let toVC = transitionContext.viewController(forKey: .to) as! UIViewController
+        let toVC = transitionContext.viewController(forKey: .to)
         let fromView = transitionContext.view(forKey: .from)!
         let toView = transitionContext.view(forKey: .to)!
         

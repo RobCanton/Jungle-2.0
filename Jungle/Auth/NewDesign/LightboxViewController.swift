@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import DeckTransition
+import Pulley
 
 class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSource {
     
@@ -19,30 +20,42 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     var posts = [Post]()
     
     var initialIndex = 0
+    
+    var dimView:UIView!
+    var contentView:UIView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.black
-
+        contentView = UIView(frame: view.bounds)
+        view.addSubview(contentView)
+        
         pagerNode = ASPagerNode()
+        pagerNode.backgroundColor = UIColor.black
         pagerNode.setDelegate(self)
         pagerNode.setDataSource(self)
         pagerNode.isHidden = true
         let pagerView = pagerNode.view
-        view.addSubview(pagerView)
+        contentView.addSubview(pagerView)
         pagerView.translatesAutoresizingMaskIntoConstraints = false
-        pagerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        pagerView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        pagerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        pagerView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        pagerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
+        pagerView.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
+        pagerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
+        pagerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
         pagerNode.reloadData()
         
-        let layoutGuide = view.safeAreaLayoutGuide
+        let layoutGuide = contentView.safeAreaLayoutGuide
+        
+        dimView = UIView(frame:contentView.bounds)
+        dimView.backgroundColor = UIColor.black
+        contentView.addSubview(dimView)
+        dimView.isUserInteractionEnabled = false
+        dimView.alpha = 0.0
         
         closeButton = UIButton(frame: CGRect(x: 0, y: 0, width: 64.0, height: 64.0))
         closeButton.setImage(UIImage(named:"close"), for: .normal)
         closeButton.tintColor = UIColor.white
-        view.addSubview(closeButton)
+        contentView.addSubview(closeButton)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         closeButtonAnchor = closeButton.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: 0)
@@ -116,11 +129,22 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
 
 extension LightboxViewController : SinglePostDelegate {
     func openComments(_ post:Post) {
-        let modal = CommentsViewController()
-        modal.post = post
-        let transitionDelegate = DeckTransitioningDelegate()
-        modal.transitioningDelegate = transitionDelegate
-        modal.modalPresentationStyle = .custom
-        present(modal, animated: true, completion: nil)
+        self.pulleyViewController?.setDrawerPosition(position: .open, animated: true)
+    }
+}
+
+extension LightboxViewController: PulleyPrimaryContentControllerDelegate {
+    func drawerChangedDistanceFromBottom(drawer: PulleyViewController, distance: CGFloat, bottomSafeArea: CGFloat) {
+        let progress = (distance) / (view.bounds.height / 2)
+        //        //view.backgroundColor = UIColor(white: 0.0, alpha: 0.75 * progress)
+        //        print("PROGRESS: \(progress)")
+        //
+        closeButton.alpha = 1 - progress
+        let scale = 1 - 0.02 * progress
+        contentView.clipsToBounds = true
+        contentView.layer.cornerRadius = 8 * progress
+        contentView.transform = CGAffineTransform(scaleX: scale, y: scale)
+        //dimView.alpha = 0.25 * progress
+        
     }
 }

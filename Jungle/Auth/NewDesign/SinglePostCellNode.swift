@@ -78,14 +78,14 @@ class ContentOverlayNode:ASControlNode {
     required init(post:Post) {
         super.init()
         automaticallyManagesSubnodes = true
-        postTextNode.maximumNumberOfLines = 3
+        postTextNode.maximumNumberOfLines = 0
         postTextNode.attributedText = NSAttributedString(string: post.textClean, attributes: [
             NSAttributedStringKey.font: Fonts.light(ofSize: 15.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
         
         usernameNode.attributedText = NSAttributedString(string: "KANYEWEST" , attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
         
@@ -106,7 +106,7 @@ class ContentOverlayNode:ASControlNode {
         
         let contentStack = ASStackLayoutSpec.vertical()
         contentStack.children = [titleStack, postTextNode]
-        contentStack.spacing = 6.0
+        contentStack.spacing = 8.0
         
         let mainInsets = UIEdgeInsetsMake(12, 12, 12, 12)
         return ASInsetLayoutSpec(insets: mainInsets, child: contentStack)
@@ -123,6 +123,8 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource {
     var contentOverlay:ContentOverlayNode!
     weak var delegate:SinglePostDelegate?
     var post:Post?
+    
+    var commentNode:PostCommentCellNode!
     required init(post:Post) {
         super.init()
         self.post = post

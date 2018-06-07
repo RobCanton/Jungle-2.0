@@ -108,6 +108,7 @@ PODS:
     - PINCache (= 3.0.1-beta.6)
     - PINRemoteImage/Core
   - Protobuf (3.5.0)
+  - Pulley (2.4.0)
   - Regift (1.5.0)
   - ScrollableGraphView (4.0.4)
   - SwiftGifOrigin (1.6.1)
@@ -136,6 +137,7 @@ DEPENDENCIES:
   - Firebase/Functions
   - Firebase/Storage
   - Hero
+  - Pulley
   - Regift
   - ScrollableGraphView (from `https://github.com/barnaclejive/ScrollableGraphView`, branch `master`)
   - SwiftGifOrigin (~> 1.6.1)
@@ -189,6 +191,7 @@ SPEC CHECKSUMS:
   PINOperation: 7f042fa6df5b606deb4bd5997654cf7033d5be1d
   PINRemoteImage: d6d51c5d2adda55f1ce30c96e850b6c4ebd2856a
   Protobuf: 8a9838fba8dae3389230e1b7f8c104aa32389c03
+  Pulley: 604066ea5d24339a8701b0167a2c8131a589e705
   Regift: d097afd401021f4f42b102ee125ceeb125a38caf
   ScrollableGraphView: abac54d3493a5a198ade4baf4879967183af8a2c
   SwiftGifOrigin: d6679d3ebe9df2e049a84bc52582635107b581f6
@@ -198,6 +201,6 @@ SPEC CHECKSUMS:
   TGPControls: d7ab5a338746c100b2ae57f6b6cedee7151f116a
   UICircularProgressRing: e737881c0dcc9cc1e4d0ea7db0c16d4b0f260082
 
-PODFILE CHECKSUM: fc29544b2f4d90a3a39ced5e90a4edd81d126176
+PODFILE CHECKSUM: 03ca746bb56260fb18894072d4d912069bf6cf42
 
 COCOAPODS: 1.4.0

@@ -38,19 +38,19 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         self.insetsLayoutMarginsFromSafeArea = false
         self.preservesSuperviewLayoutMargins = false
         
-        let dividerNode = UIView()
-        dividerNode.backgroundColor = UIColor.white
-        addSubview(dividerNode)
-        dividerNode.translatesAutoresizingMaskIntoConstraints = false
-        dividerNode.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
-        dividerNode.topAnchor.constraint(equalTo: topAnchor).isActive = true
-        dividerNode.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12.0).isActive = true
-        dividerNode.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12.0).isActive = true
+//        let dividerNode = UIView()
+//        dividerNode.backgroundColor = UIColor.white
+//        addSubview(dividerNode)
+//        dividerNode.translatesAutoresizingMaskIntoConstraints = false
+//        dividerNode.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+//        dividerNode.topAnchor.constraint(equalTo: topAnchor).isActive = true
+//        dividerNode.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12.0).isActive = true
+//        dividerNode.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12.0).isActive = true
         
         textBox = UIView()
         addSubview(textBox)
         textBox.translatesAutoresizingMaskIntoConstraints = false
-        textBox.backgroundColor = UIColor.clear//UIColor(white: 0.92, alpha: 1.0)
+        textBox.backgroundColor = UIColor(white: 1.0, alpha: 0.2)
         textBox.layer.cornerRadius = 4.0
         textBox.clipsToBounds = true
         textBox.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4.0).isActive = true
@@ -61,7 +61,7 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         placeHolderLabel.textColor = UIColor.white.withAlphaComponent(0.5)
         textBox.addSubview(placeHolderLabel)
         placeHolderLabel.translatesAutoresizingMaskIntoConstraints = false
-        placeHolderLabel.font = Fonts.light(ofSize: 14.0)
+        placeHolderLabel.font = Fonts.regular(ofSize: 15.0)
         placeHolderLabel.text = "Reply..."
         placeHolderLabel.leadingAnchor.constraint(equalTo: textBox.leadingAnchor, constant: 9).isActive = true
         placeHolderLabel.topAnchor.constraint(equalTo: textBox.topAnchor, constant: 0).isActive = true
@@ -71,7 +71,7 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         textView = UITextView(frame: .zero)
         textView.backgroundColor = .clear
         textView.textColor = UIColor.white
-        textView.font = Fonts.light(ofSize: 14.0)
+        textView.font = Fonts.regular(ofSize: 15.0)
         textBox.addSubview(textView)
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.leadingAnchor.constraint(equalTo: textBox.leadingAnchor, constant: 4).isActive = true

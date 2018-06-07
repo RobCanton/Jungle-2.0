@@ -191,3 +191,40 @@ extension UIColor {
     }
 }
 
+extension UIVisualEffectView {
+    
+    public func pauseAnimation(delay: Double) {
+        let time = delay + CFAbsoluteTimeGetCurrent()
+        let timer = CFRunLoopTimerCreateWithHandler(kCFAllocatorDefault, time, 0, 0, 0, { timer in
+            let layer = self.layer
+            let pausedTime = layer.convertTime(CACurrentMediaTime(), from: nil)
+            layer.speed = 0.0
+            layer.timeOffset = pausedTime
+        })
+        CFRunLoopAddTimer(CFRunLoopGetCurrent(), timer, CFRunLoopMode.commonModes)
+    }
+    
+    public func resumeAnimation() {
+        let pausedTime  = layer.timeOffset
+        
+        layer.speed = 1.0
+        layer.timeOffset = 0.0
+        layer.beginTime = layer.convertTime(CACurrentMediaTime(), from: nil) - pausedTime
+    }
+    
+    public func removeAnimation() {
+        layer.removeAllAnimations()
+        layer.speed = 1.0
+        layer.timeOffset = 0.0
+        layer.beginTime = 0.0
+    }
+}
+
+extension BinaryInteger {
+    var degreesToRadians: CGFloat { return CGFloat(Int(self)) * .pi / 180 }
+}
+
+extension FloatingPoint {
+    var degreesToRadians: Self { return self * .pi / 180 }
+    var radiansToDegrees: Self { return self * 180 / .pi }
+}

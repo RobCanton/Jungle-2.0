@@ -154,9 +154,9 @@ class Attachments {
             var images:[ImageAttachment]?
             var video:VideoAttachment?
             
-//            if let imagesArray = attachments["images"] as? [[String:Any]] {
-//                images = ImageAttachment.parse(imagesArray)
-//            }
+            if let imagesArray = attachments["images"] as? [[String:Any]] {
+                images = ImageAttachment.parse(imagesArray)
+            }
             
             if let videoData = attachments["video"] as? [String:Any] {
                 video = VideoAttachment.parse(videoData)
@@ -201,17 +201,27 @@ class LocationPair {
 class VideoAttachment {
     var url:URL
     var thumbnail_url:URL
-    init(url:URL, thumbnail_url:URL) {
+    var size:CGSize
+    var ratio:CGFloat
+    init(url:URL, thumbnail_url:URL, size:CGSize, ratio:CGFloat) {
         self.url = url
         self.thumbnail_url = thumbnail_url
+        self.size = size
+        self.ratio = ratio
     }
     
     static func parse(_ dict:[String:Any]) -> VideoAttachment? {
         if let urlStr = dict["url"] as? String,
             let url = URL(string: urlStr),
             let turlStr = dict["thumbnail_url"] as? String,
-            let turl = URL(string: turlStr) {
-            return VideoAttachment(url: url, thumbnail_url: turl)
+            let turl = URL(string: turlStr),
+            let sizeData = dict["size"] as? [String:Any],
+            let width = sizeData["width"] as? Double,
+            let height = sizeData["height"] as? Double,
+            let ratio = sizeData["ratio"] as? Double {
+            let size = CGSize(width: width, height: height)
+            
+            return VideoAttachment(url: url, thumbnail_url: turl, size: size, ratio: CGFloat(ratio))
         }
         return nil
     }

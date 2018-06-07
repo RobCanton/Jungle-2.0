@@ -55,6 +55,9 @@ class SinglePostViewController: UIViewController {
     var tableTopAnchor:NSLayoutConstraint?
     var tableBottomAnchor:NSLayoutConstraint?
     
+    var navBar:SinglePostNavigationBar!
+    var navBarTopAnchor:NSLayoutConstraint!
+    var navBarHeightAnchor:NSLayoutConstraint!
     struct State {
         var replies: [Post]
         var fetchingMore: Bool
@@ -85,23 +88,45 @@ class SinglePostViewController: UIViewController {
 
         layoutGuide = view.safeAreaLayoutGuide
         
-        let tv = SinglePostNavigationBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
-        view.addSubview(tv)
-        tv.translatesAutoresizingMaskIntoConstraints = false
-        tv.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        tv.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
-        tv.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        tv.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
-        tv.setPost(post)
-        tv.backButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
+        if let _ = post.attachments?.video {
+            let gradient = CAGradientLayer()
+            gradient.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 96)
+            gradient.colors = [UIColor(white: 0.0, alpha: 0.35).cgColor, UIColor.clear.cgColor]
+            gradient.locations = [0.0, 1.0]
+            gradient.startPoint = CGPoint(x: 0.0, y: 0.0)
+            gradient.endPoint = CGPoint(x: 0.0, y: 1.0)
+            view.layer.addSublayer(gradient)
+        }
         
-        tv.clipsToBounds = false
-        //tv.applyShadow(radius: 5.0, opacity: 0.05, offset: CGSize(width:0,height:5.0), color: UIColor.black, shouldRasterize: false)
+        navBar = SinglePostNavigationBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0))
+        view.addSubview(navBar)
+        navBar.translatesAutoresizingMaskIntoConstraints = false
+        navBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        navBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        navBarHeightAnchor = navBar.heightAnchor.constraint(equalToConstant: 70.0)
+        navBarHeightAnchor.isActive = true
+        navBar.backButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
+        
+        navBar.clipsToBounds = false
         
         tableNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         
         
-        tableTopAnchor = tableNode.view.topAnchor.constraint(equalTo: tv.bottomAnchor)
+        if let _ = post.attachments?.video {
+            tableNode.backgroundColor = UIColor(white: 0.075, alpha: 1.0)
+            navBarTopAnchor = navBar.topAnchor.constraint(equalTo: view.topAnchor, constant: 0)
+            navBarTopAnchor.isActive = true
+            tableTopAnchor = tableNode.view.topAnchor.constraint(equalTo: view.topAnchor)
+            navBar.setPost(post, transparent: true)
+            tableNode.contentInset = UIEdgeInsetsMake(0, 0, 54, 0)
+            
+        } else {
+            tableNode.backgroundColor = hexColor(from: "#eff0e9")
+            navBar.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
+            tableTopAnchor = tableNode.view.topAnchor.constraint(equalTo: navBar.bottomAnchor)
+            navBar.setPost(post, transparent: false)
+        }
+        
         tableTopAnchor?.isActive = true
         tableNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
         tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -44.0)
@@ -116,7 +141,7 @@ class SinglePostViewController: UIViewController {
         tableNode.dataSource = self
         tableNode.batchFetchingDelegate = self
         tableNode.view.showsVerticalScrollIndicator = false
-        tableNode.backgroundColor = hexColor(from: "#eff0e9")
+        
         tableNode.view.keyboardDismissMode = .onDrag
         tableNode.reloadSections(IndexSet(integer: 0), with: .none)
 
@@ -132,10 +157,14 @@ class SinglePostViewController: UIViewController {
         commentBar.activeColor = post.anon.color
         commentBar.delegate = self
         commentBar.prepareTextView()
-        tableBottomAnchor?.constant = -commentBar.minimumHeight
+        
+        //commentBar.alpha = 0.0
+        //5tableBottomAnchor?.constant = -commentBar.minimumHeight
         
         //commentBar.setComposeMode(false)
         self.view.layoutIfNeeded()
+        
+        
     }
     
     @objc func openReplyVC() {
@@ -169,9 +198,40 @@ class SinglePostViewController: UIViewController {
         }
     }
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        
+        if let _ = post.attachments?.video {
+            let offsetY = scrollView.contentOffset.y
+            let maxedOffset = max(offsetY, 0)
+            let progress = min(maxedOffset / 64.0, 1.0)
+            if offsetY < 0 {
+                navBarTopAnchor.constant = offsetY * -1
+                
+            } else {
+                navBarTopAnchor.constant = 0
+                
+            }
+            navBarHeightAnchor.constant = 64 - 20 * progress
+            //commentBar.alpha = progress
+            navBar.animator?.fractionComplete = progress
+            //navBar.backgroundColor = post.anon.color.withAlphaComponent(progress)
+            view.layoutIfNeeded()
+        }
+    }
+    
     override var preferredStatusBarStyle: UIStatusBarStyle {
         get {
             return .lightContent
+        }
+    }
+    
+    override var prefersStatusBarHidden: Bool {
+        get {
+            if let _ = post.attachments?.video {
+                return true
+            }
+            
+            return false
         }
     }
     
@@ -315,7 +375,7 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
         case 0:
             return 1
         case 1:
-            return 1
+            return 0
         default:
             let replySection = section - 2
             switch sortMode {
@@ -335,10 +395,18 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
         switch indexPath.section {
         case 0:
+            if let _ = post.attachments?.video {
+                let cell = SinglePostCellNode(post: post)
+                cell.style.height = ASDimension(unit: .points, value: view.bounds.height)
+                cell.selectionStyle = .none
+                return cell
+            }
+            
             let cell = PostCellNode(withPost: post, isSinglePost: true)
             cell.selectionStyle = .none
             cell.backgroundColor = UIColor.white
             return cell
+            
         case 1:
             let cell = TitleCellNode(mode: sortMode)
             cell.selectionStyle = .none
@@ -358,10 +426,9 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                 }
                 let reply = topState.replies[section]
                 if indexPath.row == 0 {
-                    let replyLine = reply.numReplies == 0 && reply.replies.count == 0
-                    let cell = CommentCellNode(reply: reply, toPost: post)
+                    let cell = PostCommentCellNode(post: reply)
                     cell.selectionStyle = .none
-                    cell.delegate = self
+                    //cell.delegate = self
                     return cell
                 } else {
                     var subReplyIndex = indexPath.row - 1
@@ -374,11 +441,10 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
                         return cell
                     }
                     let subReply = reply.replies[subReplyIndex]
-                    let hideReplyLine = subReplyIndex == reply.replies.count - 1
-                    let cell = CommentCellNode(reply: subReply, toPost: post, isReply: true, isLastReply: subReplyIndex == reply.replies.count - 1)
+                    let cell = PostCommentCellNode(post: subReply)
                     cell.selectionStyle = .none
                     
-                    cell.delegate = self
+                    //cell.delegate = self
                     return cell
                 }
             case .live:
@@ -635,41 +701,42 @@ extension SinglePostViewController: KeyboardAccessoryProtocol {
         //self.view.layoutIfNeeded()
         var rect:CGRect?
         var offsetPoint:CGFloat?
-        if let focusedReply = focusedReply {
-            
-            if let replyTo = focusedReply.replyTo {
-                print("Reply to: \(replyTo)")
-                for i in 0..<topState.replies.count {
-                    let reply = topState.replies[i]
-                    if replyTo == reply.key {
-                        
-                        for j in 0..<reply.replies.count {
-                            let subReply = reply.replies[j]
-                            if focusedReply.key == subReply.key {
-                                rect = tableNode.rectForRow(at: IndexPath(row: 1 + j, section: i + 2))
-                                break
-                            }
-                        }
-                        break
-                        //rect = tableNode.rectForRow(at: IndexPath(row: 0, section: i + 2))
-                    }
-                }
-            } else {
-                for i in 0..<topState.replies.count {
-                    let reply = topState.replies[i]
-                    if focusedReply.key == reply.key {
-                        
-                        rect = tableNode.rectForRow(at: IndexPath(row: 0, section: i + 2))
-                    }
-                }
-            }
-        }
+//        if let focusedReply = focusedReply {
+//
+//            if let replyTo = focusedReply.replyTo {
+//                print("Reply to: \(replyTo)")
+//                for i in 0..<topState.replies.count {
+//                    let reply = topState.replies[i]
+//                    if replyTo == reply.key {
+//
+//                        for j in 0..<reply.replies.count {
+//                            let subReply = reply.replies[j]
+//                            if focusedReply.key == subReply.key {
+//                                rect = tableNode.rectForRow(at: IndexPath(row: 1 + j, section: i + 2))
+//                                break
+//                            }
+//                        }
+//                        break
+//                        //rect = tableNode.rectForRow(at: IndexPath(row: 0, section: i + 2))
+//                    }
+//                }
+//            } else {
+//                for i in 0..<topState.replies.count {
+//                    let reply = topState.replies[i]
+//                    if focusedReply.key == reply.key {
+//
+//                        rect = tableNode.rectForRow(at: IndexPath(row: 0, section: i + 2))
+//                    }
+//                }
+//            }
+//        }
         
         let keyboardTop = view.bounds.height - keyboardSize.height - commentBar.calculatedHeight
 
         if rect != nil {
             offsetPoint = rect!.origin.y  + rect!.height + 64.0 - keyboardTop
         }
+        offsetPoint = keyboardSize.height + commentBar.calculatedHeight
 
         UIView.animate(withDuration: 0.15, animations: {
             if offsetPoint != nil {

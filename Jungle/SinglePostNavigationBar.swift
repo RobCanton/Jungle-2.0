@@ -57,7 +57,7 @@ class SinglePostNavigationBar:UIView {
         contentBox.addSubview(nameLabel)
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         nameLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 10.0).isActive = true
-        nameLabel.topAnchor.constraint(equalTo: contentBox.topAnchor, constant: 8.0).isActive = true
+        nameLabel.centerYAnchor.constraint(equalTo: contentBox.centerYAnchor, constant: -8).isActive = true
         
         subtitleLabel = UILabel(frame:.zero)
         subtitleLabel.text = "23m   Markham, CA"
@@ -74,11 +74,9 @@ class SinglePostNavigationBar:UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setPost(_ post:Post) {
-        backgroundColor = post.anon.color
-        backButton.tintColor = UIColor.white//post.anon.color
-        avatarImageView.backgroundColor = UIColor.white//post.anon.color
-        
+    
+    var animator:UIViewPropertyAnimator?
+    func setPost(_ post:Post, transparent:Bool) {
         nameLabel.text = post.anon.displayName
         
         var locationStr = ""
@@ -87,7 +85,41 @@ class SinglePostNavigationBar:UIView {
         }
         
         subtitleLabel.text = "\(post.createdAt.timeSinceNow())\(locationStr)"
-        self.clipsToBounds = false
-        self.applyShadow(radius: 5.0, opacity: 0.25, offset: CGSize(width:0,height:5.0), color: post.anon.color, shouldRasterize: false)
+        if transparent {
+            let blurView = UIVisualEffectView(effect: nil)
+            blurView.frame = bounds
+            blurView.effect = nil
+            blurView.layer.cornerRadius = 0.0
+            blurView.clipsToBounds = true
+            self.insertSubview(blurView, at: 0)
+            blurView.translatesAutoresizingMaskIntoConstraints = false
+            blurView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+            blurView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+            blurView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+            blurView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+            
+            let blur =  UIBlurEffect(style: .light)
+            animator = UIViewPropertyAnimator(duration: 5, curve: .linear) {
+                blurView.effect = blur
+            }
+            animator?.pausesOnCompletion = true
+            animator?.fractionComplete = 0.0
+            //animator?.startAnimation()
+            backgroundColor = UIColor.clear
+            backButton.tintColor = UIColor.white//post.anon.color
+            avatarImageView.backgroundColor = UIColor.white//post.anon.color
+//            let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
+//            blurView.frame = bounds
+//            insertSubview(blurView, at: 0)
+            contentBox.topAnchor.constraint(equalTo: topAnchor, constant: 0).isActive = true
+        } else {
+            backgroundColor = post.anon.color
+            backButton.tintColor = UIColor.white//post.anon.color
+            avatarImageView.backgroundColor = UIColor.white//post.anon.color
+            contentBox.topAnchor.constraint(equalTo: topAnchor, constant: 20).isActive = true
+            self.clipsToBounds = false
+            self.applyShadow(radius: 5.0, opacity: 0.25, offset: CGSize(width:0,height:5.0), color: post.anon.color, shouldRasterize: false)
+        }
+        layoutIfNeeded()
     }
 }

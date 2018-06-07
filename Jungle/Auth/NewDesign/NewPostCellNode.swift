@@ -12,6 +12,7 @@ import AsyncDisplayKit
 
 class NewPostCellNode:ASCellNode {
     
+    var avatarNode = ASNetworkImageNode()
     var videoNode = ASVideoNode()
     var imageNode = ASNetworkImageNode()
     var previewBox = ASDisplayNode()
@@ -28,12 +29,19 @@ class NewPostCellNode:ASCellNode {
     required init(post:Post) {
         super.init()
         self.post = post
-        self.style.height = ASDimension(unit: .points, value: 144)
-        self.backgroundColor = UIColor.clear
+        self.backgroundColor = UIColor.white
         automaticallyManagesSubnodes = true
         videoNode.backgroundColor = UIColor.blue
         imageNode.backgroundColor = hexColor(from: "BEBEBE")
-        imageNode.url = post.attachments?.video?.thumbnail_url
+        previewBox.style.height = ASDimension(unit: .points, value: 100)
+        if let images = post.attachments?.images, images.count > 0 {
+            imageNode.url = images[0].url
+            previewBox.style.height = ASDimension(unit: .points, value: 100)
+        } else if let video = post.attachments?.video {
+            imageNode.url = video.thumbnail_url
+            previewBox.style.height = ASDimension(unit: .points, value: 130)
+        }
+        
         previewBox.backgroundColor = nil
         previewBox.automaticallyManagesSubnodes = true
         previewBox.layoutSpecBlock = { _, _ in
@@ -41,7 +49,7 @@ class NewPostCellNode:ASCellNode {
             return ASInsetLayoutSpec(insets: .zero, child: overlay)
         }
         
-        titleNode.attributedText = NSAttributedString(string: post.anon.displayName.uppercased(), attributes: [
+        titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: UIColor.black
             ])
@@ -51,14 +59,16 @@ class NewPostCellNode:ASCellNode {
             NSAttributedStringKey.foregroundColor: hexColor(from: "BEBEBE")
             ])
         
-        subtitleNode.attributedText = NSAttributedString(string: "Music Discussion", attributes: [
+        subtitleNode.attributedText = NSAttributedString(string: "Music Discussion • \(post.createdAt.timeSinceNow())", attributes: [
             NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
+            NSAttributedStringKey.foregroundColor: hexColor(from: "BEBEBE")
             ])
         
-        postTextNode.maximumNumberOfLines = 3
+        postTextNode.maximumNumberOfLines = 4
+//        let path = UIBezierPath(rect: CGRect(x: 100, y: 0, width: 200, height: 200))
+//        postTextNode.exclusionPaths = [ path ] 
         postTextNode.attributedText = NSAttributedString(string: post.textClean, attributes: [
-            NSAttributedStringKey.font: Fonts.light(ofSize: 14.0),
+            NSAttributedStringKey.font: Fonts.regular(ofSize: 16.0),
             NSAttributedStringKey.foregroundColor: UIColor.black
             ])
         
@@ -86,6 +96,9 @@ class NewPostCellNode:ASCellNode {
         
         moreButton.setImage(UIImage(named:"more"), for: .normal)
         
+        avatarNode.backgroundColor = post.anon.color
+        avatarNode.style.height = ASDimension(unit: .points, value: 32)
+        avatarNode.style.width = ASDimension(unit: .points, value: 32)
     }
     
     override func didLoad() {
@@ -94,6 +107,8 @@ class NewPostCellNode:ASCellNode {
         videoNode.clipsToBounds = true
         imageNode.layer.cornerRadius = 4.0
         imageNode.clipsToBounds = true
+        avatarNode.layer.cornerRadius = 16
+        avatarNode.clipsToBounds = true
 //        previewBox.clipsToBounds = false
 //        previewBox.view.applyShadow(radius: 4.0, opacity: 0.20, offset: CGSize(width: 0, height: 4.0), color: .black, shouldRasterize: false)
 //        self.clipsToBounds = false
@@ -103,28 +118,44 @@ class NewPostCellNode:ASCellNode {
     var gapNode = ASDisplayNode()
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         gapNode.style.flexGrow = 1.0
-        let titleStack = ASStackLayoutSpec.horizontal()
-        titleStack.children = [titleNode, timeNode ]
-        titleStack.alignContent = .spaceBetween
-        titleStack.justifyContent = .spaceBetween
-        
+//        let titleCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: titleNode)
+//        let titleStack = ASStackLayoutSpec.vertical()
+//        titleStack.children = [ titleCenter, subtitleNode ]
+//        titleStack.spacing = 8.0
+//
         let actionStack = ASStackLayoutSpec.horizontal()
-        actionStack.children = [likeButton, commentButton]
-        actionStack.spacing = 18.0
-        let actionRow = ASStackLayoutSpec.horizontal()
-        actionRow.children = [actionStack]
-        actionRow.alignContent = .spaceBetween
-        actionRow.justifyContent = .spaceBetween
+        actionStack.children = [likeButton, commentButton, moreButton]
+        actionStack.spacing = 0.0
+        actionStack.alignContent = .spaceBetween
+        actionStack.justifyContent = .spaceBetween
         
+        let headerStack = ASStackLayoutSpec.vertical()
+        headerStack.children = [titleNode, subtitleNode]
+        headerStack.spacing = 1.0
+        
+        
+        let headerInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 40, 0, 0), child: headerStack)
+        let avatarAbsolute = ASAbsoluteLayoutSpec(children: [avatarNode])
+        let headerOverlay = ASOverlayLayoutSpec(child: headerInset, overlay: avatarAbsolute)
         let contentStack = ASStackLayoutSpec.vertical()
-        contentStack.children = [titleStack, subtitleNode, postTextNode, gapNode, actionRow]
+        contentStack.children = [headerOverlay, postTextNode]
         contentStack.style.width = ASDimension(unit: .fraction, value: 0.70)
+        contentStack.spacing = 6.0
         previewBox.style.width = ASDimension(unit: .fraction, value: 0.3)
+        
         let stack = ASStackLayoutSpec.horizontal()
-        stack.children = [previewBox, contentStack]
+        stack.children = [contentStack, previewBox]
         stack.spacing = 12
         let mainInsets = UIEdgeInsetsMake(12, 12, 12, 24)
     
-        return ASInsetLayoutSpec(insets: mainInsets, child: stack)
+        let mStack = ASStackLayoutSpec.vertical()
+        mStack.children = [stack, actionStack]
+        mStack.spacing = 8.0
+        
+        return ASInsetLayoutSpec(insets: mainInsets, child: mStack)
+    }
+    
+    func setHighlighted(_ highlighted:Bool) {
+        backgroundColor = highlighted ? UIColor(white: 0.92, alpha: 1.0) : UIColor.white
     }
 }

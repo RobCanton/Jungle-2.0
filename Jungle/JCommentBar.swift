@@ -108,6 +108,12 @@ class JCommentBar:UIView, UITextViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func darkMode() {
+        textView.keyboardAppearance = .dark
+        backgroundColor = UIColor(white: 0.2, alpha: 1.0)
+        textBox.backgroundColor = UIColor(white: 0.075, alpha: 1.0)
+        textView.textColor = UIColor.white
+    }
     
     func prepareTextView() {
         textView.text = "Hello!"
