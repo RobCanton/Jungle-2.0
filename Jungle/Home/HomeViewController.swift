@@ -13,7 +13,29 @@ import Firebase
 import SwiftMessages
 import AlgoliaSearch
 
-class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, UIGestureRecognizerDelegate {
+class JViewController:UIViewController {
+    var shouldHideStatusBar:Bool = false
+    
+    override var prefersStatusBarHidden: Bool {
+        get { return shouldHideStatusBar }
+    }
+    
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if shouldHideStatusBar {
+            self.setNeedsStatusBarAppearanceUpdate()
+            
+            UIView.animate(withDuration: 0.25, animations: {
+                self.shouldHideStatusBar = false
+                self.setNeedsStatusBarAppearanceUpdate()
+            })
+        }
+    }
+}
+
+class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UIGestureRecognizerDelegate {
     
     var pagerNode:ASPagerNode!
     var navBar:UIView!
@@ -142,10 +164,10 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, U
         var controller:PostsTableViewController!
         switch index {
         case 0:
-            controller = RecentPostsTableViewController()
+            controller = PopularPostsTableViewController()
             break
         case 1:
-            controller = PopularPostsTableViewController()
+            controller = RecentPostsTableViewController()
             break
         default:
             controller = NearbyPostsTableViewController()
@@ -258,3 +280,16 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, U
     }
 }
 
+extension HomeViewController: PushTransitionSourceDelegate {
+    func staticTopView() -> UIImageView? {
+        let rect = CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0)
+        let size = CGSize(width: view.bounds.width, height: 70.0)
+        UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
+        view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        let imageView = UIImageView(frame:rect)
+        imageView.image = image
+        return imageView
+    }
+}

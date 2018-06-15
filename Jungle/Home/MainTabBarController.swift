@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import SwiftMessages
 import Alamofire
+import Pulley
 
 protocol UploadProgressDelegate {
     func uploadedDidComplete()
@@ -53,6 +54,7 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
 //        tabBar.addSubview(divider)
         
         self.tabBar.unselectedItemTintColor = hexColor(from: "#708078")
+        SearchService.getTrendingHastags { _ in }
         
     }
     
@@ -62,8 +64,17 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
 //            let controller = CameraViewController()
 //            let nav = UINavigationController(rootViewController: controller)
 //            self.present(nav, animated: true, completion: nil)
-            let controller = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "NewPostNavController")
-            self.present(controller, animated: true, completion: nil)
+//            let controller = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "NewPostNavController")
+//            self.present(controller, animated: true, completion: nil)
+            
+            let controller = CameraViewController()
+            //controller.addVideo = addVideo
+            let drawerVC = StickerViewController()
+            let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
+            pulleyController.drawerBackgroundVisualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
+            
+            //let nav = UINavigationController(rootViewController: controller)
+            self.present(pulleyController, animated: true, completion: nil)
         } else {
             openLoginView()
         }

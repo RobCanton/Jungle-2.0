@@ -39,6 +39,10 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
         self.preservesSuperviewLayoutMargins = false
         self.insetsLayoutMarginsFromSafeArea = false
         
+        let bg = UIImageView(image: UIImage(named:"NavBarGradient1"))
+        bg.frame = bounds
+        addSubview(bg)
+        
         leftButtonItem = UIButton(type: .custom)
         leftButtonItem.tintColor = UIColor.black
         addSubview(leftButtonItem)
@@ -81,7 +85,7 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
         
         let containerLayout = textFieldContainer.safeAreaLayoutGuide
         
-        textBubble.backgroundColor = UIColor.white//UIColor(white: 0.90, alpha: 1.0)
+        textBubble.backgroundColor = UIColor.black.withAlphaComponent(0.25)
         textBubble.translatesAutoresizingMaskIntoConstraints = false
         textBubble.leadingAnchor.constraint(equalTo: containerLayout.leadingAnchor, constant: 0.0).isActive = true
         textBubble.trailingAnchor.constraint(equalTo: containerLayout.trailingAnchor, constant: 0.0).isActive = true
@@ -100,16 +104,6 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
         textField.topAnchor.constraint(equalTo: bubbleLayout.topAnchor, constant: 0.0).isActive = true
         textField.bottomAnchor.constraint(equalTo: bubbleLayout.bottomAnchor, constant: 0.0).isActive = true
         
-        gradient = CAGradientLayer()
-        let botColor = hexColor(from: "a4e078")
-        let topColor = hexColor(from: "81d892")
-        gradient!.colors = [topColor.cgColor, botColor.cgColor]
-        gradient!.locations = [0.0 , 1.0]
-        gradient!.startPoint = CGPoint(x: 0.0, y: 1.0)
-        gradient!.endPoint = CGPoint(x: 1.0, y: 1.0)
-        gradient!.frame = self.bounds
-        
-        self.layer.insertSublayer(gradient!, at: 0)
         
         textBubble.isUserInteractionEnabled = true
         
@@ -120,11 +114,13 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
     var gradient:CAGradientLayer?
     
     func addGradient() {
-        gradient?.frame = self.bounds
+        //gradient?.frame = self.bounds
     }
     
     @objc func beginEditing() {
+        
         if !textField.isFirstResponder {
+            print("BECOME FIRST RESPONDER")
             textField.becomeFirstResponder()
         }
     }
@@ -133,9 +129,10 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
     
     func setup(withDelegate delegate:RCSearchBarDelegate) {
         self.delegate = delegate
-        textBubble.layer.cornerRadius = textBubble.bounds.height / 2
+        textBubble.layer.cornerRadius = 4
         textBubble.clipsToBounds = true
         textField.font = Fonts.medium(ofSize: 16.0)
+        textField.textColor = UIColor.white
         textField.delegate = self
         textField.placeholder = "Search"
         textField.text = "Search"
@@ -161,18 +158,20 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
     }
     
     @objc func handleCancelButton(_ sender: Any) {
-        self.textField.text = ""
+        //self.textField.text = ""
         self.textField.endEditing(true)
     }
     
     func textFieldDidBeginEditing(_ textField: UITextField) {
         delegate?.searchDidBegin()
+        print("textFieldDidBeginEditing")
         UIView.animate(withDuration: 0.25, delay: 0.0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.2, options: .curveEaseOut, animations: {
             self.containerLeadingAnchor.constant = 12.0
             self.containerTrailingAnchor.constant = -80.0
             self.textFieldLeadingAnchor.constant = 12.0
             self.layoutIfNeeded()
             self.cancelButton.alpha = 1.0
+            self.leftButtonItem.alpha = 0.0
         }, completion: nil)
     }
     
@@ -195,6 +194,7 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
             self.textFieldLeadingAnchor.constant = leadingConstant
             self.layoutIfNeeded()
             self.cancelButton.alpha = 0.0
+            self.leftButtonItem.alpha = 1.0
         }, completion: nil)
     }
     

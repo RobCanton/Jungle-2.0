@@ -9,6 +9,7 @@
 import UIKit
 import CoreData
 import Firebase
+import AVFoundation
 
 var firestore:Firestore {
     return Firestore.firestore()
@@ -28,9 +29,11 @@ var gpsService = GPSService()
 
 let API_ENDPOINT = "https://us-central1-jungle-anonymous.cloudfunctions.net/app"
 
-let accentColor = hexColor(from: "#6ae45a")
+let accentColor = hexColor(from: "#72E279")
+let accentDarkColor = hexColor(from: "#81d891")
+let tagColor = hexColor(from: "#1696e0")
 let redColor = hexColor(from: "FF6B6B")
-let grayColor = UIColor(white: 0.5, alpha: 1.0)
+let grayColor = UIColor(white: 0.75, alpha: 1.0)
 let tertiaryColor = hexColor(from: "BEBEBE")
 let subtitleColor = hexColor(from: "708078")
 let bgColor = hexColor(from: "#eff0e9")
@@ -53,12 +56,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         FirebaseApp.configure()
         let settings = FirestoreSettings()
         settings.isPersistenceEnabled = false
+        settings.areTimestampsInSnapshotsEnabled = true
         // Enable offline data persistence
         
+        createDirectory("captured")
         createDirectory("user_content")
+        createDirectory("anon_icons")
         
         let db = Firestore.firestore()
         db.settings = settings
+
         //try! Auth.auth().signOut()
         let authHandler = Auth.auth().addStateDidChangeListener { (auth, user) in
             if let user = user {
@@ -85,13 +92,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     DispatchQueue.main.async {
                         if let data = data {
                             GIFService.tendingGIFImage = UIImage.gif(data: data)
-                            
+
                         }
                     }
                 }
                 thumbnailDataTask.resume()
             }
         }
+        
+        do {
+            //            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayAndRecord,with:
+            //                [AVAudioSessionCategoryOptions.mixWithOthers,
+            //                 AVAudioSessionCategoryOptions.defaultToSpeaker])
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+        } catch {
+            print("error")
+        }
+        
         return true
     }
     

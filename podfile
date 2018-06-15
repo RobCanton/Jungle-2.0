@@ -28,4 +28,6 @@ target 'Jungle' do
   pod 'DeckTransition', '~> 2.0'
   pod "Regift"
   pod 'Pulley'
+  pod 'WCLShineButton' 
+  pod 'DynamicButton', '~> 5.0.0'
 end

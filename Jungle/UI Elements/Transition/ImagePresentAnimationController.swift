@@ -36,19 +36,30 @@ class LightboxPresentAnimationController: NSObject, UIViewControllerAnimatedTran
         toView.alpha = 0.0
         
         toView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-       
         
         let duration = self.transitionDuration(using: transitionContext)
-        
-        UIView.animate(withDuration: duration, delay: 0.0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.0, options: [.curveEaseOut], animations: {
-            
-            fromView.alpha = 0.5
+        let c1 = CGPoint(x: 0.23, y: 1)
+        let c2 = CGPoint(x: 0.32, y: 1)
+        let animator = UIViewPropertyAnimator(duration: duration, controlPoint1: c1, controlPoint2: c2, animations: {
+            fromView.alpha = 0.0
             toView.alpha = 1.0
             toView.transform = CGAffineTransform.identity
-        }, completion: { finished in
-            fromView.alpha = 1.0
-            transitionContext.completeTransition(true)
         })
+        animator.addCompletion { _ in
+            fromView.alpha = 1.0
+            
+            transitionContext.completeTransition(true)
+        }
+        animator.startAnimation()
+//        UIView.animate(withDuration: duration, delay: 0.0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.0, options: [.curveEaseOut], animations: {
+//            
+//            fromView.alpha = 0.5
+//            toView.alpha = 1.0
+//            toView.transform = CGAffineTransform.identity
+//        }, completion: { finished in
+//            fromView.alpha = 1.0
+//            transitionContext.completeTransition(true)
+//        })
         
     }
 }

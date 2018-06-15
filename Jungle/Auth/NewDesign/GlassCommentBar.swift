@@ -30,6 +30,7 @@ class GlassCommentBar:UIView, UITextViewDelegate {
     
     weak var delegate:CommentBarDelegate?
     
+    var dividerNode:UIView!
     override init(frame: CGRect) {
         super.init(frame: frame)
         clipsToBounds = true
@@ -38,14 +39,14 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         self.insetsLayoutMarginsFromSafeArea = false
         self.preservesSuperviewLayoutMargins = false
         
-//        let dividerNode = UIView()
-//        dividerNode.backgroundColor = UIColor.white
-//        addSubview(dividerNode)
-//        dividerNode.translatesAutoresizingMaskIntoConstraints = false
-//        dividerNode.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
-//        dividerNode.topAnchor.constraint(equalTo: topAnchor).isActive = true
-//        dividerNode.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12.0).isActive = true
-//        dividerNode.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12.0).isActive = true
+        dividerNode = UIView()
+        dividerNode.backgroundColor = UIColor(white: 0.8, alpha: 1.0)
+        addSubview(dividerNode)
+        dividerNode.translatesAutoresizingMaskIntoConstraints = false
+        dividerNode.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+        dividerNode.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        dividerNode.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0.0).isActive = true
+        dividerNode.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 0.0).isActive = true
         
         textBox = UIView()
         addSubview(textBox)
@@ -58,7 +59,7 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         textBox.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4.0).isActive = true
         
         placeHolderLabel = UILabel(frame: .zero)
-        placeHolderLabel.textColor = UIColor.white.withAlphaComponent(0.5)
+        placeHolderLabel.textColor = UIColor.gray
         textBox.addSubview(placeHolderLabel)
         placeHolderLabel.translatesAutoresizingMaskIntoConstraints = false
         placeHolderLabel.font = Fonts.regular(ofSize: 15.0)
@@ -70,7 +71,7 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         
         textView = UITextView(frame: .zero)
         textView.backgroundColor = .clear
-        textView.textColor = UIColor.white
+        textView.textColor = UIColor.black
         textView.font = Fonts.regular(ofSize: 15.0)
         textBox.addSubview(textView)
         textView.translatesAutoresizingMaskIntoConstraints = false
@@ -81,7 +82,7 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         textHeightAnchor.isActive = true
         textView.delegate = self
         textView.returnKeyType = .send
-        textView.keyboardAppearance = .dark
+        textView.keyboardAppearance = .light
         textView.isScrollEnabled = false
         
         
@@ -105,14 +106,26 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         sendButton.layer.cornerRadius = 4.0
         sendButton.clipsToBounds = true
         sendButton.addTarget(self, action: #selector(sendText), for: .touchUpInside)
-        
-        
     }
     
     var activeColor:UIColor!
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    func setToCaptionMode() {
+        textView.keyboardAppearance = .dark
+        dividerNode.backgroundColor = UIColor.white
+        textBox.backgroundColor = UIColor.clear
+        self.backgroundColor = UIColor.black.withAlphaComponent(0.67)
+        textView.textColor = UIColor.white
+        placeHolderLabel.text = "Write a caption..."
+        placeHolderLabel.font = Fonts.regular(ofSize: 16.0)
+        placeHolderLabel.textColor = UIColor(white: 1.0, alpha: 0.67)
+        textView.font = Fonts.regular(ofSize: 16.0)
+        textView.keyboardType = .twitter
+        //textView.returnKeyType = .done
     }
     
     
@@ -156,6 +169,11 @@ class GlassCommentBar:UIView, UITextViewDelegate {
     @objc func sendText(_ sender:Any) {
         guard textView.text.count > 0 else { return }
         delegate?.commentSend(text: textView.text)
+    }
+    
+    func setText(_ text:String) {
+        textView.text = text
+        textViewDidChange(textView)
     }
 }
 

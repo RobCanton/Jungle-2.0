@@ -8,6 +8,15 @@
 
 import Foundation
 import UIKit
+import DynamicButton
+
+protocol CameraHUDProtocol {
+    func handleClose()
+    func handleSwitchCamera()
+    func handleStickers()
+    func handleNext()
+    func handlePost()
+}
 
 class CameraHUDView:UIView {
     
@@ -29,13 +38,21 @@ class CameraHUDView:UIView {
     /// drag in the X direction?
     var shouldDragX = true
     
-    var closeButton:UIButton!
     var nextButton:UIButton!
     var recordButton:RecordButton!
     
+    var switchCameraButton:UIButton!
     var stickersOverlay:UIView!
+    var commentBar:GlassCommentBar!
+    var captionBarBottomAnchor:NSLayoutConstraint!
+    var captionBar:CaptionBar!
     
     var stickerButton:UIButton!
+    var closeButton:DynamicButton!
+    var postButton:UIButton!
+    var postWidthAnchor:NSLayoutConstraint!
+    var activityIndicator:UIActivityIndicatorView!
+    var dimView:UIView!
     override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -56,11 +73,16 @@ class CameraHUDView:UIView {
 //
 //        stickersOverlay.addSubview(sticker)
         
-        let pan = UIPanGestureRecognizer(target:self, action:#selector(handlePan))
-        pan.maximumNumberOfTouches = 1
-        pan.minimumNumberOfTouches = 1
-        stickersOverlay.addGestureRecognizer(pan)
-        stickersOverlay.isUserInteractionEnabled = true
+        dimView = UIView(frame: bounds)
+        dimView.backgroundColor = UIColor.black
+        dimView.alpha = 0.0
+        dimView.isUserInteractionEnabled = false
+        addSubview(dimView)
+        dimView.translatesAutoresizingMaskIntoConstraints = false
+        dimView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        dimView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        dimView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        dimView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
         
         recordButton = RecordButton(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
         addSubview(recordButton)
@@ -70,18 +92,30 @@ class CameraHUDView:UIView {
         recordButton.widthAnchor.constraint(equalToConstant: 50.0).isActive = true
         recordButton.heightAnchor.constraint(equalToConstant: 50.0).isActive = true
         
-        closeButton = UIButton(type: .custom)
-        closeButton.setImage(UIImage(named:"Remove2"), for: .normal)
+        switchCameraButton = UIButton(type: .custom)
+        switchCameraButton.setImage(UIImage(named:"SwitchCamera"), for: .normal)
+        switchCameraButton.tintColor = UIColor.white
+        addSubview(switchCameraButton)
+        switchCameraButton.translatesAutoresizingMaskIntoConstraints = false
+        switchCameraButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 0).isActive = true
+        switchCameraButton.topAnchor.constraint(equalTo: topAnchor, constant: 0).isActive = true
+        switchCameraButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        switchCameraButton.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        switchCameraButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: .black, shouldRasterize: false)
+        
+        closeButton = DynamicButton(style: .caretDown)
+        closeButton.highlightStokeColor = UIColor.white
+        closeButton.strokeColor = UIColor.white
         addSubview(closeButton)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
-        closeButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0).isActive = true
-        closeButton.topAnchor.constraint(equalTo: topAnchor, constant: 0).isActive = true
-        closeButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
-        closeButton.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        closeButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24).isActive = true
+        closeButton.topAnchor.constraint(equalTo: topAnchor, constant: 24).isActive = true
+        closeButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        closeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
         closeButton.tintColor = UIColor.white
         closeButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: .black, shouldRasterize: false)
         nextButton = UIButton(type: .custom)
-        nextButton.setTitle("Use", for: .normal)
+        nextButton.setTitle("Next", for: .normal)
         nextButton.backgroundColor = UIColor.white
         nextButton.titleLabel?.font = Fonts.semiBold(ofSize: 15)
         nextButton.setTitleColor(UIColor.gray, for: .normal)
@@ -97,6 +131,7 @@ class CameraHUDView:UIView {
         nextButton.clipsToBounds = true
         nextButton.isHidden = true
         nextButton.applyShadow(radius: 6.0, opacity: 0.2, offset: .zero, color: .black, shouldRasterize: false)
+        //nextButton.addTarget(self, action: #selector(showCaptionBar), for: .touchUpInside)
         
         stickerButton = UIButton(type: .custom)
         stickerButton.setImage(UIImage(named:"sticker"), for: .normal)
@@ -108,7 +143,101 @@ class CameraHUDView:UIView {
         stickerButton.heightAnchor.constraint(equalToConstant: 64).isActive = true
         stickerButton.tintColor = UIColor.white
         stickerButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: .black, shouldRasterize: false)
-                
+        
+        captionBar = CaptionBar(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 50))
+        
+        addSubview(captionBar)
+        captionBar.translatesAutoresizingMaskIntoConstraints = false
+        captionBar.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        captionBar.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        captionBar.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+        captionBarBottomAnchor = captionBar.bottomAnchor.constraint(equalTo: bottomAnchor, constant: 0)
+        captionBarBottomAnchor?.isActive = true
+        captionBar.isHidden = true
+        captionBar.handleTag = handleTag
+        
+        commentBar = GlassCommentBar(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 50))
+        
+        addSubview(commentBar)
+        commentBar.translatesAutoresizingMaskIntoConstraints = false
+        commentBar.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        commentBar.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        commentBar.bottomAnchor.constraint(equalTo: captionBar.topAnchor, constant: 0).isActive = true
+        commentBar.prepareTextView()
+        commentBar.setToCaptionMode()
+        commentBar.isHidden = true
+        commentBar.delegate = self
+        
+        postButton = UIButton(type: .custom)
+        postButton.setTitle("Post", for: .normal)
+        postButton.backgroundColor = accentColor
+        postButton.titleLabel?.font = Fonts.semiBold(ofSize: 15)
+        postButton.setTitleColor(UIColor.white, for: .normal)
+        addSubview(postButton)
+        postButton.translatesAutoresizingMaskIntoConstraints = false
+        postButton.sizeToFit()
+        
+        postButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -14).isActive = true
+        postButton.topAnchor.constraint(equalTo: topAnchor, constant: 14).isActive = true
+        postButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        postWidthAnchor = postButton.widthAnchor.constraint(equalToConstant: 90)
+        postWidthAnchor.isActive = true
+        postButton.layer.cornerRadius = 36/2
+        postButton.clipsToBounds = true
+        postButton.isHidden = true
+        postButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: accentColor, shouldRasterize: false)
+        
+        activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .white)
+        activityIndicator.hidesWhenStopped = true
+        addSubview(activityIndicator)
+        
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        activityIndicator.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        activityIndicator.centerXAnchor.constraint(equalTo: postButton.centerXAnchor).isActive = true
+        activityIndicator.centerYAnchor.constraint(equalTo: postButton.centerYAnchor).isActive = true
+        
+        
+        closeButton.addTarget(self, action: #selector(handleClose), for: .touchUpInside)
+        switchCameraButton.addTarget(self, action: #selector(handleSwitchCamera), for: .touchUpInside)
+        stickerButton.addTarget(self, action: #selector(handleStickers), for: .touchUpInside)
+        nextButton.addTarget(self, action: #selector(handleNext), for: .touchUpInside)
+        postButton.addTarget(self, action: #selector(handlePost), for: .touchUpInside)
+    }
+    
+    var delegate:CameraHUDProtocol?
+    @objc func handleClose() {
+        delegate?.handleClose()
+    }
+    
+    @objc func handleSwitchCamera() {
+        delegate?.handleSwitchCamera()
+    }
+    
+    @objc func handleStickers() {
+        delegate?.handleStickers()
+    }
+    
+    @objc func handleNext() {
+        delegate?.handleNext()
+    }
+    
+    @objc func handlePost() {
+        delegate?.handlePost()
+    }
+    
+    
+    func handleTag(_ tag:String) {
+        if let last = commentBar.textView.text.last {
+            if last == " " {
+                commentBar.textView.text = commentBar.textView.text + "\(tag) "
+            } else {
+                commentBar.textView.text = commentBar.textView.text + " \(tag) "
+            }
+        } else {
+           commentBar.textView.text = commentBar.textView.text + "\(tag) "
+        }
+        commentBar.textViewDidChange(commentBar.textView)
         
     }
     
@@ -181,5 +310,84 @@ class CameraHUDView:UIView {
             selectedView = nil
             break
         }
+    }
+    
+    func hideCaptionBar() {
+        commentBar.textView.resignFirstResponder()
+        UIView.animate(withDuration: 0.25, animations: {
+            self.dimView.alpha = 0.0
+            self.commentBar.alpha = 0.0
+            self.captionBar.alpha = 0.0
+            self.stickerButton.alpha = 1.0
+            self.nextButton.alpha = 1.0
+            self.postButton.alpha = 0.0
+        }, completion: { _ in
+            self.commentBar.isHidden = true
+            self.captionBar.isHidden = true
+            self.postButton.isHidden = true
+        })
+    }
+    
+    func showCaptionBar() {
+        captionBar.alpha = 1.0
+        commentBar.alpha = 1.0
+        commentBar.textView.becomeFirstResponder()
+        commentBar.isHidden = false
+        captionBar.isHidden = false
+        postButton.alpha = 0.0
+        postButton.isHidden = false
+
+        UIView.animate(withDuration: 0.3, animations: {
+            self.dimView.alpha = 0.5
+            self.stickerButton.alpha = 0.0
+            self.nextButton.alpha = 0.0
+            self.postButton.alpha = 1.0
+        })
+    }
+    
+    func observeKeyboard(_ observe:Bool) {
+        if observe {
+            NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+        } else {
+            NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+            NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+        }
+    }
+    
+    func startPostAnimation() {
+        self.activityIndicator.alpha = 0.0
+        self.activityIndicator.startAnimating()
+        UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0.25, options: .curveEaseOut, animations: {
+            self.postButton.setTitleColor(UIColor.clear, for: .normal)
+            self.postWidthAnchor.constant = 40
+            self.activityIndicator.alpha = 1.0
+            self.layoutIfNeeded()
+        }, completion: nil)
+        
+    }
+}
+
+extension CameraHUDView: CommentBarDelegate {
+    func commentSend(text: String) {
+//        commentBar.textView.resignFirstResponder()
+//        
+//        UIView.animate(withDuration: 0.3, animations: {
+//            self.commentBar.dividerNode.alpha = 0.0
+//        })
+    }
+}
+
+extension CameraHUDView: KeyboardAccessoryProtocol {
+    @objc func keyboardWillShow(notification: Notification) {
+        guard let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return }
+        
+        self.captionBarBottomAnchor?.constant = -keyboardSize.height
+        self.layoutIfNeeded()
+    }
+    
+    @objc func keyboardWillHide(notification:Notification) {
+        self.captionBarBottomAnchor?.constant = 0.0
+        self.layoutIfNeeded()
     }
 }

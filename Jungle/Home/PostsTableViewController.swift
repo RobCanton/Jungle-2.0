@@ -99,6 +99,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         tableNode.view.showsVerticalScrollIndicator = false
         tableNode.view.delaysContentTouches = false
         tableNode.view.backgroundColor = hexColor(from: "#eff0e9")
+        tableNode.view.tableFooterView = UIView()
         
         //tableNode.allowsSelection = false
         tableNode.reloadData()
@@ -129,9 +130,9 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         super.viewDidDisappear(animated)
         newPostsListener?.remove()
         
-        if let postCellNodes = tableNode.visibleNodes as? [PostCellNode] {
+        if let postCellNodes = tableNode.visibleNodes as? [NewPostCellNode] {
             for node in postCellNodes {
-                node.setSelected(false)
+                node.setHighlighted(false)
             }
         }
          
@@ -285,7 +286,9 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     
     
     func fetchData(state:State, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
-        return completion([],true)
+        DispatchQueue.main.async {
+            return completion([],true)
+        }
     }
     
     var context:ASBatchContext?
@@ -475,6 +478,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         
         openSinglePost(post, index: indexPath.row)
     }
+    //let interactor = Interactor()
     
     func openSinglePost(_ post:Post, index:Int) {
         
@@ -483,8 +487,9 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             controller.hidesBottomBarWhenPushed = true
             controller.posts = self.state.posts
             controller.initialIndex = index
-            let drawerVC = CommentsViewController()
-            drawerVC.post = post
+            let drawerVC = CommentsDrawerViewController()
+            //drawerVC.post = post
+            drawerVC.interactor = transitionManager.interactor
             let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
 
             pulleyController.drawerBackgroundVisualEffectView = nil
@@ -493,6 +498,10 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             pulleyController.hidesBottomBarWhenPushed = true
 
             pulleyController.transitioningDelegate = transitionManager
+            if let parentVC = self.parent as? JViewController {
+                print("J WE GOOD!")
+                parentVC.shouldHideStatusBar = true
+            }
             self.present(pulleyController, animated: true, completion: nil)
             return
         }
@@ -520,7 +529,6 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         node?.setHighlighted(false)
     }
     
-    
 }
 
 extension PostsTableViewController: PostCellDelegate {
@@ -529,11 +537,12 @@ extension PostsTableViewController: PostCellDelegate {
     }
     
     func postOpen(tag: String) {
+        let vc = SearchViewController()
         
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let vc = storyboard.instantiateViewController(withIdentifier: "SearchViewController") as! SearchViewController
-        vc.initialSearch = tag
-        self.navigationController?.pushViewController(vc, animated: true)
+        vc.initialSearch = "#\(tag)"
+        vc.interactor = pushTransitionManager.interactor
+        vc.transitioningDelegate = pushTransitionManager
+        self.present(vc, animated: true, completion: nil)
     }
     
     func postOptions(_ post: Post) {

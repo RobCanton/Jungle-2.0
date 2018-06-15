@@ -12,13 +12,21 @@ import AVFoundation
 
 class LightboxTransitionManager: NSObject, UIViewControllerTransitioningDelegate  {
     
-
+    
+    let interactor = Interactor()
     func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         return LightboxPresentAnimationController()
     }
     
     func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        if interactor.hasStarted {
+            return DismissAnimator()
+        }
         return LightboxDismissAnimationController()
+    }
+    
+    func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+        return interactor.hasStarted ? interactor : nil
     }
     
 }

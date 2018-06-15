@@ -12,6 +12,7 @@ import AVFoundation
 
 class CaptureSessionView:UIView {
     
+    private(set) var isFrontCamera = false
     var captureSession = AVCaptureSession()
     var backCamera: AVCaptureDevice?
     var frontCamera: AVCaptureDevice?
@@ -40,6 +41,7 @@ class CaptureSessionView:UIView {
         let devices = deviceDiscoverySession.devices
         
         for device in devices {
+            
             if device.position == AVCaptureDevice.Position.back {
                 backCamera = device
             }
@@ -51,12 +53,46 @@ class CaptureSessionView:UIView {
         currentCamera = backCamera
     }
     
+    func switchCamera() {
+        guard let currentCamera = currentCamera,
+            let captureDeviceInput = captureDeviceInput,
+            let frontCamera = frontCamera,
+            let backCamera = backCamera else { return }
+        captureSession.beginConfiguration()
+        //Remove existing input
+        for input in captureSession.inputs {
+            if input == captureDeviceInput {
+                captureSession.removeInput(input)
+                self.captureDeviceInput = nil
+            }
+        }
+        if currentCamera == backCamera {
+            self.currentCamera = self.frontCamera
+        } else {
+            self.currentCamera = self.backCamera
+        }
+        do {
+            self.captureDeviceInput = try AVCaptureDeviceInput(device: self.currentCamera!)
+            captureSession.addInput(self.captureDeviceInput!)
+            captureSession.commitConfiguration()
+            
+        } catch {
+            print("ERROR: \(error.localizedDescription)")
+        }
+        
+    }
+    
+        var captureDeviceInput:AVCaptureDeviceInput?
     func setupInputOutput() {
+        guard let audioDevice = AVCaptureDevice.default(for: .audio) else { return }
         do {
             
-            let captureDeviceInput = try AVCaptureDeviceInput(device: currentCamera!)
+            captureDeviceInput = try AVCaptureDeviceInput(device: currentCamera!)
+            let audioDeviceInput = try AVCaptureDeviceInput(device: audioDevice)
             
-            captureSession.addInput(captureDeviceInput)
+            captureSession.addInput(captureDeviceInput!)
+            captureSession.addInput(audioDeviceInput)
+            
             photoOutput?.setPreparedPhotoSettingsArray([AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])], completionHandler: nil)
             videoFileOutput = AVCaptureMovieFileOutput()
             self.captureSession.addOutput(videoFileOutput!)

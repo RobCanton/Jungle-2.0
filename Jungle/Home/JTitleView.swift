@@ -35,7 +35,11 @@ class JTitleView:UIView {
         //self.clipsToBounds = false
         //self.applyShadow(radius: 5.0, opacity: 0.08, offset: CGSize(width:0,height:5.0), color: UIColor.black, shouldRasterize: false)
         
-        contentBox = UIView()
+        let bg = UIImageView(image: UIImage(named:"NavBarGradient1"))
+        bg.frame = bounds
+        addSubview(bg)
+        
+        contentBox = UIView() 
         addSubview(contentBox)
         contentBox.translatesAutoresizingMaskIntoConstraints = false
         contentBox.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
@@ -78,20 +82,20 @@ class JTitleView:UIView {
         
         let buttonFont = Fonts.semiBold(ofSize: 13.0)
         homeButton = UIButton(type: .custom)
-        homeButton.setTitle("HOME", for: .normal)
+        homeButton.setTitle("POPULAR", for: .normal)
         homeButton.setTitleColor(UIColor.white, for: .normal)
         homeButton.titleLabel?.font = buttonFont
         tabStack.addArrangedSubview(homeButton)
         
-        homeTabWidth = UILabel.size(text: "HOME", height: 50.0, font: buttonFont).width
+        homeTabWidth = UILabel.size(text: "POPULAR", height: 50.0, font: buttonFont).width
         
         popularButton = UIButton(type: .custom)
-        popularButton.setTitle("POPULAR", for: .normal)
+        popularButton.setTitle("LATEST", for: .normal)
         popularButton.setTitleColor(UIColor.white, for: .normal)
         popularButton.titleLabel?.font = Fonts.semiBold(ofSize: 13.0)
         popularButton.alpha = 0.6
         tabStack.addArrangedSubview(popularButton)
-        popularTabWidth = UILabel.size(text: "POPULAR", height: 50.0, font: buttonFont).width
+        popularTabWidth = UILabel.size(text: "LATEST", height: 50.0, font: buttonFont).width
         
         nearbyButton = UIButton(type: .custom)
         nearbyButton.setTitle("NEARBY", for: .normal)

@@ -25,11 +25,14 @@ class Post {
     private(set) var tags:[String]
     private(set) var score:Double
     var votes:Int
+    var numLikes:Int
     var numReplies:Int
     var replies:[Post]
     var parent:String?
     var replyTo:String?
     var documentSnapshot:DocumentSnapshot?
+    
+    var liked = false
     
     var topComment:Post?
     var vote = Vote.notvoted
@@ -53,7 +56,7 @@ class Post {
         return offenses.count > 0 && !isYou
     }
     
-    init(key:String, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments?=nil, location:LocationPair?, tags:[String], score:Double, votes:Int,
+    init(key:String, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments?=nil, location:LocationPair?, tags:[String], score:Double, votes:Int, numLikes:Int,
          numReplies:Int, replies:[Post], parent:String?, replyTo:String?) {
         
         self.key = key
@@ -66,6 +69,7 @@ class Post {
         self.tags = tags
         self.score = score
         self.votes = votes
+        self.numLikes = numLikes
         self.numReplies = numReplies
         self.replies = replies
         self.parent = parent
@@ -85,7 +89,7 @@ class Post {
             
             let attachments = Attachments.parse(data)
             let location = LocationPair.parse(data)
-            
+            let numLikes = data["numLikes"] as? Int ?? 0
             let score = data["score"] as? Double ?? 0.0
             
             var parent:String?
@@ -101,7 +105,7 @@ class Post {
                 replyTo = _replyTo
             }
             
-            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes, numReplies: numReplies, replies:[], parent: parent, replyTo: replyTo )
+            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:[], parent: parent, replyTo: replyTo )
         }
         return post
     }
@@ -194,6 +198,12 @@ class LocationPair {
     var locationStr:String {
         get {
             return "\(city), \(country)"
+        }
+    }
+    
+    var locationShortStr:String {
+        get {
+            return "\(city.trunc(length: 16)), \(country)"
         }
     }
 }

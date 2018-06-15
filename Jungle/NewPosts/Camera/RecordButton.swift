@@ -108,7 +108,7 @@ class RecordButton:UIView {
     }
     
     func startRecording() {
-        progressRing.setProgress(value: 1.0, animationDuration: 10) {
+        progressRing.setProgress(value: 1.0, animationDuration: 30) {
             print("Done animating!")
             // Do anything your heart desires...
         }

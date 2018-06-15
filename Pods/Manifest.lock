@@ -10,6 +10,7 @@ PODS:
   - BoringSSL/Interface (10.0.2)
   - CameraManager (4.1.1)
   - DeckTransition (2.0.0)
+  - DynamicButton (5.0.0)
   - Firebase/Auth (5.0.1):
     - Firebase/CoreOnly
     - FirebaseAuth (= 5.0.0)
@@ -123,6 +124,7 @@ PODS:
     - Texture/Core
   - TGPControls (4.0.0)
   - UICircularProgressRing (1.8.2)
+  - WCLShineButton (1.0.7)
 
 DEPENDENCIES:
   - Alamofire (~> 4.5)
@@ -130,6 +132,7 @@ DEPENDENCIES:
   - AlignedCollectionViewFlowLayout
   - CameraManager (~> 4.1)
   - DeckTransition (~> 2.0)
+  - DynamicButton (~> 5.0.0)
   - Firebase/Auth
   - Firebase/Core
   - Firebase/Database
@@ -146,6 +149,7 @@ DEPENDENCIES:
   - Texture
   - TGPControls
   - UICircularProgressRing
+  - WCLShineButton
 
 EXTERNAL SOURCES:
   ScrollableGraphView:
@@ -169,6 +173,7 @@ SPEC CHECKSUMS:
   BoringSSL: 60dd24df4af296bf41d78e5841dbb95d75f88c0d
   CameraManager: 796c7ef95401e8c8b6bd299f3399fe6abc841041
   DeckTransition: 2300694f94fbeca2c103f365dc9dc09ffae14a4f
+  DynamicButton: 4c2fef968e4aa0a8a6ed7ca6b8a58c8e21a36cdc
   Firebase: d6861c2059d8c32d1e6dd8932e22ada346d90a3a
   FirebaseAnalytics: 19812b49fa5f283dd6b23edf8a14b5d477029ab8
   FirebaseAuth: acbeef02fe7c3a26624e309849f3fe30c84115af
@@ -200,7 +205,8 @@ SPEC CHECKSUMS:
   Texture: 7249074582daf75e524e59df5428b66b8e8db0e4
   TGPControls: d7ab5a338746c100b2ae57f6b6cedee7151f116a
   UICircularProgressRing: e737881c0dcc9cc1e4d0ea7db0c16d4b0f260082
+  WCLShineButton: d8b979b6f6f9f6709f9e241e6e1a4712a1a9b36b
 
-PODFILE CHECKSUM: 03ca746bb56260fb18894072d4d912069bf6cf42
+PODFILE CHECKSUM: 111a2dab55f234ffde7057d8215f62980e124243
 
 COCOAPODS: 1.4.0

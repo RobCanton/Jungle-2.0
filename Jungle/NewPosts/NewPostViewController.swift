@@ -238,7 +238,12 @@ class NewPostViewController:UIViewController, UITextViewDelegate {
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        
+        endLoopVideo()
+        playerLayer?.player?.pause()
+        playerLayer?.player?.replaceCurrentItem(with: nil)
+        playerLayer?.player = nil
+        playerLayer?.removeFromSuperlayer()
+        playerLayer = nil
         NotificationCenter.default.removeObserver(self)
     }
     

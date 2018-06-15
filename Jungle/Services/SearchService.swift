@@ -44,6 +44,13 @@ class SearchService {
         2: 1000000,
         3: 10000000
     ]
+    static let trendingTagsNotification = NSNotification.Name.init("trendingHashtags")
+    
+    static var trendingHashtags = [TrendingHashtag]() {
+        didSet {
+            NotificationCenter.default.post(name: trendingTagsNotification, object: nil)
+        }
+    }
     
     static func searchFor(text:String, limit:Int, offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
         
@@ -143,6 +150,23 @@ class SearchService {
         }
     }
     
-    static func getTrendingHashtags() {
+    static func getTrendingHastags(completion: @escaping((_ tags:[TrendingHashtag])->())) {
+        let trendingRef = database.child("hashtags/trending").queryOrdered(byChild: "score").queryLimited(toFirst: 7)
+        trendingRef.observe(.value, with: { snapshot in
+            guard let dict = snapshot.value as? [String:[String:Any]] else { return }
+            var _trendingHashtags = [TrendingHashtag]()
+            
+            for (hashtag, metadata) in dict {
+                let totalCount = metadata["total"] as? Int ?? 0
+                let todayCount = metadata["today"] as? Int ?? 0
+                let score = metadata["score"] as? Double ?? 0.0
+                
+                let trendingHashtag = TrendingHashtag(hastag: hashtag, totalCount: totalCount, todayCount: todayCount, score: score, posts: [])
+                _trendingHashtags.append(trendingHashtag)
+            }
+            
+            trendingHashtags = _trendingHashtags.sorted(by: { $0.score > $1.score })
+            completion(trendingHashtags)
+        })
     }
 }

@@ -196,7 +196,6 @@ class TagsSelectorViewController:UIViewController, ASCollectionDelegate, ASColle
         UploadService.uploadPost(text: newPost.text,
                                  image: newPost.attachments,
                                  videoURL: newPost.video,
-                                 tags: selectedTags,
                                  gif: newPost.gif,
                                  includeLocation:true)
         self.dismiss(animated: true, completion: nil)

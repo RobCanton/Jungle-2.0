@@ -33,6 +33,11 @@ class StickerView:UIView, UIGestureRecognizerDelegate {
         let rotate = UIRotationGestureRecognizer(target: self, action: #selector(handleRotate))
         rotate.delegate = self
         self.addGestureRecognizer(rotate)
+        
+        let pan = UIPanGestureRecognizer(target:self, action:#selector(handlePan))
+        pan.maximumNumberOfTouches = 1
+        pan.minimumNumberOfTouches = 1
+        self.addGestureRecognizer(pan)
     }
     
     func setupSticker(_ sticker:UIImage) {
@@ -58,6 +63,15 @@ class StickerView:UIView, UIGestureRecognizerDelegate {
             let degrees:CGFloat = radians * (CGFloat(180) / CGFloat(M_PI) )
             let r = Double(degrees).degreesToRadians
             print("Degrees: \(degrees) R: \(r)")
+        }
+    }
+    
+    @objc func handlePan(pan: UIPanGestureRecognizer) {
+        print("WE PANNING BOY!")
+        if let view = pan.view {
+            let translation = pan.translation(in: self.superview)
+            view.center = CGPoint(x: view.center.x + translation.x, y: view.center.y + translation.y)
+            pan.setTranslation(.zero, in: self.superview)
         }
     }
     

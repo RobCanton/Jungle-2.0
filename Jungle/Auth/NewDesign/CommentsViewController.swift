@@ -13,6 +13,133 @@ import DeckTransition
 import Firebase
 import Pulley
 
+class CommentsDrawerViewController:UIViewController {
+    var currentPost:Post?
+    var commentsVC:CommentsViewController?
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = UIColor.blue.withAlphaComponent(0.25)
+        
+        
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handleGesture))
+        pulleyViewController?.view.addGestureRecognizer(pan)
+    }
+    var interactor:Interactor? = nil
+    
+    @IBAction func handleGesture(_ sender: UIPanGestureRecognizer) {
+        
+        if let parent = self.pulleyViewController?.parent as? JViewController {
+            print("OOH YEA BABY!")
+        }
+        
+        let percentThreshold:CGFloat = 0.3
+        
+        // convert y-position to downward pull progress (percentage)
+        let translation = sender.translation(in: view)
+        if translation.y <= 0 {
+            //interactor?.hasStarted = false
+            return
+        }
+        print("translation: \(translation.y)")
+        let lightBox = self.pulleyViewController?.primaryContentViewController as! LightboxViewController
+        let verticalMovement = translation.y / view.bounds.height
+        let downwardMovement = fmaxf(Float(verticalMovement), 0.0)
+        let downwardMovementPercent = fminf(downwardMovement, 1.0)
+        let progress = CGFloat(downwardMovementPercent)
+        
+        guard let interactor = interactor else { return }
+        lightBox.setCurrentCellVolume(1 - progress)
+        switch sender.state {
+        case .began:
+            interactor.hasStarted = true
+            dismiss(animated: true, completion: nil)
+        case .changed:
+            interactor.shouldFinish = progress > percentThreshold
+            interactor.update(progress)
+        case .cancelled:
+            interactor.hasStarted = false
+            interactor.cancel()
+        case .ended:
+            interactor.hasStarted = false
+            interactor.shouldFinish
+                ? interactor.finish()
+                : interactor.cancel()
+        default:
+            break
+        }
+    }
+    
+    
+    func setup(withPost post:Post, showKeyboard:Bool?=nil) {
+        if let showKeyboard = showKeyboard, showKeyboard {
+            print("SHOW DAT KEYBOARD!")
+            DispatchQueue.main.async {
+                self.commentsVC?.commentBar.textView.becomeFirstResponder()
+            }
+            //commentsVC?.commentBar.textView.becomeFirstResponder()
+        }
+        if let currentPost = currentPost, currentPost.key == post.key {
+            return
+        }
+        
+        commentsVC?.willMove(toParentViewController: nil)
+        commentsVC?.view.removeFromSuperview()
+        commentsVC?.didMove(toParentViewController: nil)
+        commentsVC = nil
+        
+        self.currentPost = post
+        commentsVC = CommentsViewController()
+        commentsVC!.post = post
+        commentsVC!.willMove(toParentViewController: self)
+        addChildViewController(commentsVC!)
+        commentsVC!.view.frame = view.bounds
+        view.addSubview(commentsVC!.view)
+        commentsVC!.didMove(toParentViewController: self)
+    }
+    
+    override var prefersStatusBarHidden: Bool {
+        get { return true }
+    }
+    
+}
+
+extension CommentsDrawerViewController: PulleyDrawerViewControllerDelegate {
+    
+    func collapsedDrawerHeight(bottomSafeArea: CGFloat) -> CGFloat
+    {
+        // For devices with a bottom safe area, we want to make our drawer taller. Your implementation may not want to do that. In that case, disregard the bottomSafeArea value.
+        return 0.0
+    }
+    
+    func partialRevealDrawerHeight(bottomSafeArea: CGFloat) -> CGFloat
+    {
+        // For devices with a bottom safe area, we want to make our drawer taller. Your implementation may not want to do that. In that case, disregard the bottomSafeArea value.
+        return view.bounds.height * 3/5 + bottomSafeArea
+    }
+    
+    
+    
+    func supportedDrawerPositions() -> [PulleyPosition] {
+        return [.open, .collapsed] // You can specify the drawer positions you support. This is the same as: [.open, .partiallyRevealed, .collapsed, .closed]
+    }
+    
+    func drawerChangedDistanceFromBottom(drawer: PulleyViewController, distance: CGFloat, bottomSafeArea: CGFloat) {
+        if distance < view.bounds.height {
+            commentsVC?.commentBar.textView.resignFirstResponder()
+        }
+        
+        
+    }
+    
+    
+    
+}
+
+
 class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSource {
     
     var post:Post!
@@ -70,7 +197,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         closeButton.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         closeButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
         closeButton.widthAnchor.constraint(equalTo: closeButton.heightAnchor, multiplier: 1.0).isActive = true
-        
+        closeButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
         
         let title = UILabel(frame: .zero)
         title.text = "COMMENTS"
@@ -84,7 +211,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         view.backgroundColor = UIColor.white
         
         let divider = UIView()
-        divider.backgroundColor = UIColor.lightGray
+        divider.backgroundColor = UIColor(white: 0.8, alpha: 1.0)
         view.addSubview(divider)
         divider.translatesAutoresizingMaskIntoConstraints = false
         divider.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
@@ -106,7 +233,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         tableNode.backgroundColor = UIColor(white: 0.92, alpha: 1.0)
         tableView.tableFooterView = UIView()
         tableView.separatorInset = UIEdgeInsetsMake(0, 40, 0, 0)
-        ///tableView.separatorStyle = .none
+        tableView.separatorColor = UIColor(white: 0.8, alpha: 1.0)
         tableNode.performBatch(animated: false, updates: {
             self.tableNode.reloadData()
         }, completion: { _ in })
@@ -119,17 +246,17 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         commentBar.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
         commentBarBottomAnchor  = commentBar.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -20)
         commentBarBottomAnchor?.isActive = true
-        //commentBar.activeColor = //post.anon.color
-        //commentBar.delegate = self
         commentBar.prepareTextView()
         commentBar.delegate = self
-        //tableBottomAnchor?.constant = -commentBar.minimumHeight
-        
-        //commentBar.setComposeMode(false)
+
         tableView.keyboardDismissMode = .onDrag
         tableView.bottomAnchor.constraint(equalTo: commentBar.topAnchor).isActive = true
         self.view.layoutIfNeeded()
         
+    }
+    
+    @objc func handleDismiss() {
+        self.pulleyViewController?.setDrawerPosition(position: .collapsed, animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -143,7 +270,6 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         NotificationCenter.default.removeObserver(self)
-        animator?.stopAnimation(true)
     }
     
     
@@ -183,10 +309,8 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
             return node;
         }
         
-        
         let reply = topState.replies[section]
         if indexPath.row == 0 {
-            
             let cell = PostCommentCellNode(post: reply)
             cell.selectionStyle = .none
             return cell
@@ -441,7 +565,7 @@ extension CommentsViewController: CommentBarDelegate {
             guard success, let reply = _reply else { return }
             self.commentBar.isUserInteractionEnabled = true
             reply.isYou = true
-            if let replyTo = _replyTo {
+            if let replyTo = _replyTo, replyTo != self.post.key {
                 reply.replyTo = replyTo
                 
                 print("Added reply to: \(replyTo)")
@@ -453,7 +577,7 @@ extension CommentsViewController: CommentBarDelegate {
                             self.tableNode.reloadData()
                             self.tableNode.performBatch(animated: false, updates: {
                                 let indexSet = IndexSet(integer: i)
-                                self.tableNode.reloadSections(indexSet, with: .fade)
+                                self.tableNode.reloadSections(indexSet, with: .top)
                             }, completion: nil)
                         }
                     }
@@ -463,11 +587,11 @@ extension CommentsViewController: CommentBarDelegate {
                     let action = Action.append(reply: reply)
                     let oldState = self.topState
                     self.topState = CommentsViewController.handleAction(action, fromState: oldState)
-                    let section = self.topState.replies.count - 1
+                    let section = self.topState.replies.count
                     let indexSet = IndexSet([section])
                     
                     self.tableNode.performBatchUpdates({
-                        self.tableNode.insertSections(indexSet, with: .fade)
+                        self.tableNode.insertSections(indexSet, with: .top)
                     }, completion: { _ in
                         self.tableNode.scrollToRow(at: IndexPath(row: 0, section: section), at: .bottom, animated: true)
                     })
@@ -484,42 +608,4 @@ extension CommentsViewController: CommentBarDelegate {
     override var prefersStatusBarHidden: Bool {
         get { return true }
     }
-}
-
-
-extension CommentsViewController: PulleyDrawerViewControllerDelegate {
-    
-    func collapsedDrawerHeight(bottomSafeArea: CGFloat) -> CGFloat
-    {
-        // For devices with a bottom safe area, we want to make our drawer taller. Your implementation may not want to do that. In that case, disregard the bottomSafeArea value.
-        return 0.0
-    }
-    
-    func partialRevealDrawerHeight(bottomSafeArea: CGFloat) -> CGFloat
-    {
-        // For devices with a bottom safe area, we want to make our drawer taller. Your implementation may not want to do that. In that case, disregard the bottomSafeArea value.
-        return view.bounds.height * 3/5 + bottomSafeArea
-    }
-    
-    
-    
-    func supportedDrawerPositions() -> [PulleyPosition] {
-        return [.open, .collapsed] // You can specify the drawer positions you support. This is the same as: [.open, .partiallyRevealed, .collapsed, .closed]
-    }
-    
-    func drawerPositionDidChange(drawer: PulleyViewController, bottomSafeArea: CGFloat) {
-        print("drawerPositionDidChange: \(drawer)")
-    }
-    
-    func drawerChangedDistanceFromBottom(drawer: PulleyViewController, distance: CGFloat, bottomSafeArea: CGFloat) {
-        print("Distance: \(distance - contentHeight) : Max\(view.bounds.height/2)")
-        
-        let progress = (distance - contentHeight) / (view.bounds.height / 2)
-        if (distance - contentHeight) < (view.bounds.height) {
-            self.commentBar.textView.resignFirstResponder()
-        }
-        
-        
-    }
-    
 }

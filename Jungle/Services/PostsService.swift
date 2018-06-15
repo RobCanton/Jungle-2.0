@@ -301,9 +301,9 @@ class PostsService {
 
     static func getReplies(post:Post, after:Double?, completion: @escaping (_ replies:[Post])->()) {
         let postID = post.key
-        guard let uid = Auth.auth().currentUser?.uid else { return completion([]) }
+        //guard let uid = Auth.auth().currentUser?.uid else { return completion([]) }
         let postsRef = firestore.collection("posts")
-        let lexiconRef = postsRef.document(postID).collection("lexicon").document(uid)
+        //let lexiconRef = postsRef.document(postID).collection("lexicon").document(uid)
         let myAnonKey = post.myAnonKey
         
         let postRepliesRef = postsRef
@@ -316,6 +316,8 @@ class PostsService {
         } else {
             postRepliesQuery = postRepliesRef.limit(to: 12)
         }
+        
+        print("POST: \(post.key) AFTER: \(after)")
         
         postRepliesQuery.getDocuments { snapshot, error in
             var replies = [Post]()

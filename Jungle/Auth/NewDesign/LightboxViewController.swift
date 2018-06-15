@@ -15,11 +15,12 @@ import Pulley
 class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSource {
     
     var closeButton:UIButton!
+    var moreButton:UIButton!
     var pagerNode:ASPagerNode!
     
     var posts = [Post]()
     
-    var initialIndex = 0
+    var initialIndex:Int?
     
     var dimView:UIView!
     var contentView:UIView!
@@ -58,11 +59,24 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         contentView.addSubview(closeButton)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        closeButtonAnchor = closeButton.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: 0)
+        closeButtonAnchor = closeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 0)
         closeButtonAnchor?.isActive = true
         closeButton.widthAnchor.constraint(equalToConstant: 64.0).isActive = true
         closeButton.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
         closeButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
+        
+        moreButton = UIButton(frame: CGRect(x: 0, y: 0, width: 64.0, height: 64.0))
+        moreButton.setImage(UIImage(named:"more_white"), for: .normal)
+        moreButton.tintColor = UIColor.white
+        view.addSubview(moreButton)
+        moreButton.translatesAutoresizingMaskIntoConstraints = false
+        moreButton.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        moreButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
+        moreButton.widthAnchor.constraint(equalToConstant: 64.0).isActive = true
+        moreButton.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
+        //moreButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
+        
+        
     }
     
     var closeButtonAnchor:NSLayoutConstraint?
@@ -70,10 +84,14 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        DispatchQueue.main.async {
-            self.pagerNode.scrollToPage(at: self.initialIndex, animated: false)
-            self.pagerNode.isHidden = false
+        if let initialIndex = initialIndex {
+            DispatchQueue.main.async {
+                self.pagerNode.scrollToPage(at: initialIndex, animated: false)
+                self.pagerNode.isHidden = false
+                self.initialIndex = nil
+            }
         }
+        
         
         statusBarHidden = true
         UIView.animate(withDuration: 0.05, animations: {
@@ -85,14 +103,23 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        //self.pagerNode.setContentOffset(CGPoint(x:500,y:0), animated: false)
-        
+        let cells = pagerNode.visibleNodes as? [SinglePostCellNode] ?? []
+        if cells.count > 0 {
+            cells[0].stopObservingPost()
+            cells[0].observePost()
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
     }
 
+    func setCurrentCellVolume(_ volume:CGFloat) {
+        let cellNodes = pagerNode.visibleNodes as? [SinglePostCellNode] ?? []
+        if cellNodes.count > 0 {
+            cellNodes[0].contentNode.videoNode.player?.volume = Float(volume)
+        }
+    }
 
     var statusBarHidden = false
     override var prefersStatusBarHidden: Bool {
@@ -128,14 +155,16 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
 }
 
 extension LightboxViewController : SinglePostDelegate {
-    func openComments(_ post:Post) {
+    func openComments(_ post:Post, _ showKeyboard:Bool) {
+        let commentsVC = pulleyViewController?.drawerContentViewController as! CommentsDrawerViewController
+        commentsVC.setup(withPost: post, showKeyboard: showKeyboard)
         self.pulleyViewController?.setDrawerPosition(position: .open, animated: true)
     }
 }
 
 extension LightboxViewController: PulleyPrimaryContentControllerDelegate {
     func drawerChangedDistanceFromBottom(drawer: PulleyViewController, distance: CGFloat, bottomSafeArea: CGFloat) {
-        let progress = (distance) / (view.bounds.height / 2)
+        let progress = min(max((distance) / (view.bounds.height / 2), 0), 1)
         //        //view.backgroundColor = UIColor(white: 0.0, alpha: 0.75 * progress)
         //        print("PROGRESS: \(progress)")
         //
@@ -144,7 +173,25 @@ extension LightboxViewController: PulleyPrimaryContentControllerDelegate {
         contentView.clipsToBounds = true
         contentView.layer.cornerRadius = 8 * progress
         contentView.transform = CGAffineTransform(scaleX: scale, y: scale)
+        
+        print("PROGRESS: \(progress)")
+        
+        setCurrentCellVolume(1 - progress)
         //dimView.alpha = 0.25 * progress
         
     }
+    
+//    func drawerPositionDidChange(drawer: PulleyViewController, bottomSafeArea: CGFloat) {
+//        switch drawer.drawerPosition {
+//        case PulleyPosition.closed:
+//            let cells = pagerNode.visibleNodes as? [SinglePostCellNode] ?? []
+//            if cells.count > 0 {
+//                cells[0].stopObservingPost()
+//                cells[0].observePost()
+//            }
+//            break
+//        default:
+//            break
+//        }
+//    }
 }

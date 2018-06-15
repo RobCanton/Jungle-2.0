@@ -51,7 +51,7 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         self.attrString = attributedString
         self.textString = text
         
-        let font = Fonts.regular(ofSize: size)
+        let font = Fonts.light(ofSize: size)
         // Set initial font attributes for our string
         attrString?.addAttribute(NSAttributedStringKey.font, value: font, range: NSRange(location: 0, length: count))
         attrString?.addAttribute(NSAttributedStringKey.foregroundColor, value: normalColor, range: NSRange(location: 0, length: count))
@@ -74,7 +74,7 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
             let str = text.substring(with: range)
             attrString?.addAttributes([
                 NSAttributedStringKey(rawValue: ActiveTextType.hashtag.rawValue): str,
-                NSAttributedStringKey.font: Fonts.semiBold(ofSize: size)
+                NSAttributedStringKey.foregroundColor: color
                 ], range: element.range)
         }
         

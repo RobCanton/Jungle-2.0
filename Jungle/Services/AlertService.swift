@@ -23,6 +23,7 @@ struct Alerts {
         var config = SwiftMessages.defaultConfig
         config.duration = SwiftMessages.Duration.seconds(seconds: 2.0)
         config.presentationContext = .window(windowLevel: UIWindowLevelStatusBar)
+        config.preferredStatusBarStyle = UIStatusBarStyle.lightContent
         
         if wrapper != nil {
             wrapper!.hideAll()
@@ -36,14 +37,15 @@ struct Alerts {
     static func showInfoAlert(withMessage message: String, inWrapper wrapper:SwiftMessages?=nil){
         
         let alert = MessageView.viewFromNib(layout: .statusLine)
-        alert.backgroundView.backgroundColor = UIColor.white
-        alert.bodyLabel?.textColor = UIColor.gray
+        alert.backgroundView.backgroundColor = UIColor(white: 0.45, alpha: 1.0)
+        alert.bodyLabel?.textColor = UIColor.white
         alert.bodyLabel?.font = Fonts.semiBold(ofSize: 12.0)
         alert.configureContent(body: message)
         
         var config = SwiftMessages.defaultConfig
         config.duration = SwiftMessages.Duration.forever
         config.presentationContext = .window(windowLevel: UIWindowLevelStatusBar)
+        config.preferredStatusBarStyle = UIStatusBarStyle.lightContent
         
         if wrapper != nil {
             wrapper!.hideAll()

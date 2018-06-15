@@ -8,6 +8,65 @@
 
 import Foundation
 import UIKit
+import AVFoundation
+
+extension String {
+    /*
+     Truncates the string to the specified length number of characters and appends an optional trailing string if longer.
+     - Parameter length: Desired maximum lengths of a string
+     - Parameter trailing: A 'String' that will be appended after the truncation.
+     
+     - Returns: 'String' object.
+     */
+    func trunc(length: Int, trailing: String = "…") -> String {
+        return (self.count > length) ? self.prefix(length) + trailing : self
+    }
+}
+
+extension AVAsset {
+    func writeAudioTrackToURL(_ url: URL, completion: @escaping (Bool, Error?) -> ()) {
+        do {
+            let audioAsset = try self.audioAsset()
+            audioAsset.writeToURL(url, completion: completion)
+        } catch (let error as NSError){
+            completion(false, error)
+        }
+    }
+    
+    func writeToURL(_ url: URL, completion: @escaping (Bool, Error?) -> ()) {
+        
+        guard let exportSession = AVAssetExportSession(asset: self, presetName: AVAssetExportPresetAppleM4A) else {
+            completion(false, nil)
+            return
+        }
+        
+        exportSession.outputFileType = .m4a
+        exportSession.outputURL      = url
+        
+        exportSession.exportAsynchronously {
+            switch exportSession.status {
+            case .completed:
+                completion(true, nil)
+            case .unknown, .waiting, .exporting, .failed, .cancelled:
+                completion(false, nil)
+            }
+        }
+    }
+    
+    func audioAsset() throws -> AVAsset {
+        
+        let composition = AVMutableComposition()
+        let audioTracks = tracks(withMediaType: .audio)
+        
+        for track in audioTracks {
+            
+            let compositionTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
+            try compositionTrack?.insertTimeRange(track.timeRange, of: track, at: track.timeRange.start)
+            compositionTrack?.preferredTransform = track.preferredTransform
+        }
+        return composition
+    }
+}
 
 extension UIView {
     func applyShadow(radius:CGFloat, opacity:Float, offset:CGSize, color:UIColor, shouldRasterize:Bool) {
@@ -85,6 +144,32 @@ extension Date
         }
         else if components.minute! > 0 {
             return "\(components.minute!)m"
+        }
+        return "Now"
+    }
+    
+    func fullTimeSinceNow() -> String
+    {
+        let calendar = Calendar.current
+        
+        let components = calendar.dateComponents([.day, .hour, .minute, .second], from: self, to: Date())
+        
+        if components.day! >= 365 {
+            return "\(components.day! / 365) years ago"
+        }
+        
+        if components.day! >= 7 {
+            return "\(components.day! / 7) weeks ago"
+        }
+        
+        if components.day! > 0 {
+            return "\(components.day!) days ago"
+        }
+        else if components.hour! > 0 {
+            return "\(components.hour!) hours ago"
+        }
+        else if components.minute! > 0 {
+            return "\(components.minute!) minutes ago"
         }
         return "Now"
     }

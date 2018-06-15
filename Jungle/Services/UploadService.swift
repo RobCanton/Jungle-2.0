@@ -130,28 +130,27 @@ class UploadService {
         }
     }
     
-    fileprivate static func getNewPostID(_ headers: HTTPHeaders, completion: @escaping(_ postID:String?)->()) {
-        Alamofire.request("\(API_ENDPOINT)/posts/add", method: .get, parameters: nil, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
-            DispatchQueue.main.async {
-                if let dict = response.result.value as? [String:Any], let success = dict["success"] as? Bool, success, let postID = dict["postID"] as? String {
-                    completion(postID)
-                } else {
-                    completion(nil)
-                }
+    fileprivate static func getNewPostID(completion: @escaping(_ postID:String?)->()) {
+        functions.httpsCallable("requestNewPostID").call { result, error in
+            guard let data = result?.data as? [String:Any], let postID = data["postID"] as? String else {
+                return completion(nil)
             }
+            return completion(postID)
         }
     }
     
-    fileprivate static func addNewPost(_ headers: HTTPHeaders, withID id:String, parameters:[String:Any], completion: @escaping(_ success:Bool)->()) {
-        Alamofire.request("\(API_ENDPOINT)/posts/add", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
-                DispatchQueue.main.async {
-                    if let dict = response.result.value as? [String:Any], let success = dict["success"] as? Bool, success {
-                        completion(true)
-                    } else {
-                        completion(false)
-                    }
-                }
+    fileprivate static func addNewPost(withID id:String, parameters:[String:Any]) {
+        NSLog("RSC: addNewPost - Start")
+        functions.httpsCallable("createNewPost").call(parameters) { result, error in
+            NSLog("RSC: addNewPost - End")
+            if error == nil {
+                
+                Alerts.showSuccessAlert(withMessage: "Uploaded!")
+            } else {
+                
             }
+            
+        }
     }
     
     static func deletePost(_ headers: HTTPHeaders, post:Post, completion: @escaping (_ success:Bool)->()) {
@@ -189,124 +188,117 @@ class UploadService {
     }
     
     
-    static func uploadPost(text:String, image:SelectedImage?, videoURL:URL?, tags:[String], gif:GIF?=nil, includeLocation:Bool?=nil) {
+    static func uploadPost(text:String, image:SelectedImage?, videoURL:URL?, gif:GIF?=nil, includeLocation:Bool?=nil) {
+        NSLog("RSC: uploadPost - Start")
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        var parameters: [String: Any] = [
+            "uid" : uid,
+            "text" : text
+        ]
         
-        Alerts.showInfoAlert(withMessage: "Uploading...")
-        
-        userHTTPHeaders() { uid, headers in
-            if let headers = headers, let uid = uid {
-               
-                var parameters: [String: Any] = [
-                    "uid" : uid,
-                    "text" : text,
-                    "tags": tags
+        if includeLocation != nil, includeLocation!, let location = gpsService.getLastLocation() {
+            parameters["location"] = [
+                "lat": location.coordinate.latitude,
+                "lon": location.coordinate.longitude
+            ]
+        }
+        NSLog("getNewPost - Start")
+        getNewPostID { _postID in
+            NSLog("getNewPost - End")
+            
+            guard let postID = _postID else { return }
+
+            pendingPostKey = postID
+            parameters["postID"] = postID
+                
+            if let gif = gif {
+                parameters["attachments"] = [
+                    "images": [
+                        [
+                            "url": gif.original_url.absoluteString,
+                            "source": "GIF",
+                            "order": 0,
+                            "color": "0xFFFFFF",
+                            "type": "GIF",
+                            "dimensions": [
+                                "width": gif.contentSize.width,
+                                "height": gif.contentSize.height,
+                                "ratio": gif.contentSize.width / gif.contentSize.height
+                                ] as [String:Any]
+                        ]
+                    ]
                 ]
                 
-                if includeLocation != nil, includeLocation!, let location = gpsService.getLastLocation() {
-                    parameters["location"] = [
-                        "lat": SearchService.myCoords.lat,//location.coordinate.latitude,
-                        "lon": SearchService.myCoords.lng//location.coordinate.longitude
-                    ]
-                }
-                
-                getNewPostID(headers) { postID in
-                    if let postID = postID {
-                        pendingPostKey = postID
-                        parameters["postID"] = postID
+                UploadService.addNewPost(withID: postID, parameters: parameters)
+            } else if let image = image {
+                UploadService.uploadPostImages(postID: postID, images: [image]) { urlAttachments in
+                    if urlAttachments.count > 0 {
                         
-                        if let gif = gif {
+                        parameters["attachments"] = [
+                            "images": urlAttachments
+                        ]
+                    }
+                    UploadService.addNewPost(withID: postID, parameters: parameters)
+                }
+            } else if let url = videoURL {
+                let urlAsset = AVURLAsset(url: url, options: nil)
+                let track =  urlAsset.tracks(withMediaType: AVMediaType.video)
+                let videoTrack:AVAssetTrack = track[0] as AVAssetTrack
+                let size = videoTrack.naturalSize
+                NSLog("RSC: uploadVideo - Start")
+                var vidURL:URL?
+                var vidLength:Double?
+                var gifURL:URL?
+                UploadService.uploadVideo(pathName: "video.mp4", videoURL: url, postID: postID) { _vidURL, _vidLength in
+                    NSLog("RSC: uploadVideo - End")
+                    if _vidURL != nil, _vidLength != nil {
+                        vidURL = _vidURL!
+                        vidLength = _vidLength!
+                        if gifURL != nil {
                             parameters["attachments"] = [
-                                "images": [
-                                    [
-                                    "url": gif.original_url.absoluteString,
-                                    "source": "GIF",
-                                    "order": 0,
-                                    "color": "0xFFFFFF",
-                                    "type": "GIF",
-                                    "dimensions": [
-                                        "width": gif.contentSize.width,
-                                        "height": gif.contentSize.height,
-                                        "ratio": gif.contentSize.width / gif.contentSize.height
-                                        ] as [String:Any]
+                                "video": [
+                                    "url": vidURL!.absoluteString,
+                                    "thumbnail_url": gifURL!.absoluteString,
+                                    "length": "\(vidLength!)",
+                                    "size": [
+                                        "width": size.width,
+                                        "height": size.height,
+                                        "ratio": size.width / size.height
                                     ]
                                 ]
                             ]
                             
-                            UploadService.addNewPost(headers, withID: postID, parameters: parameters) { success in
-                                if success {
-                                    Alerts.showSuccessAlert(withMessage: "Uploaded!")
-                                    
-                                }
-                            }
-                        } else if let image = image {
-                            UploadService.uploadPostImages(postID: postID, images: [image]) { urlAttachments in
-                                if urlAttachments.count > 0 {
-                                    
-                                    parameters["attachments"] = [
-                                        "images": urlAttachments
+                            UploadService.addNewPost(withID: postID, parameters: parameters)
+                        }
+                    }
+                }
+                
+                UploadService.createGif(videoURL: url, postID: postID) { _gifURL in
+                    if _gifURL != nil {
+                        gifURL = _gifURL!
+                        if vidURL != nil, vidLength != nil {
+                            parameters["attachments"] = [
+                                "video": [
+                                    "url": vidURL!.absoluteString,
+                                    "thumbnail_url": gifURL!.absoluteString,
+                                    "length": "\(vidLength!)",
+                                    "size": [
+                                        "width": size.width,
+                                        "height": size.height,
+                                        "ratio": size.width / size.height
                                     ]
-                                }
-                                UploadService.addNewPost(headers, withID: postID, parameters: parameters) { success in
-                                    if success {
-                                        Alerts.showSuccessAlert(withMessage: "Uploaded!")
-                                        
-                                    }
-                                }
-                            }
-                        } else if let url = videoURL {
-                            let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                            let outputUrl = documentsURL.appendingPathComponent("output.mp4")
+                                ]
+                            ]
                             
-                            do {
-                                try FileManager.default.removeItem(at: outputUrl)
-                            } catch {
-                                print (error)
-                            }
-                            compressVideo(inputURL: url, outputURL: outputUrl) { size in
-                                    UploadService.uploadVideo(pathName: "video.mp4", videoURL: outputUrl, postID: postID) { _vidURL, _vidLength in
-                                        if let vidURL = _vidURL,
-                                            let vidLength = _vidLength {
-                                            UploadService.createGif(videoURL: vidURL, postID: postID) { _gifURL in
-                                                if let gifURL = _gifURL {
-                                                    print("WE GOT THE GIF URL: \(gifURL.absoluteString)")
-                                                    parameters["attachments"] = [
-                                                        "video": [
-                                                            "url": vidURL.absoluteString,
-                                                            "thumbnail_url": gifURL.absoluteString,
-                                                            "length": "\(vidLength)",
-                                                            "size": [
-                                                                "width": size.width,
-                                                                "height": size.height,
-                                                                "ratio": size.width / size.height
-                                                            ]
-                                                        ]
-                                                    ]
-                                                    
-                                                    UploadService.addNewPost(headers, withID: postID, parameters: parameters) { success in
-                                                        if success {
-                                                            Alerts.showSuccessAlert(withMessage: "Uploaded!")
-                                                        
-                                                        }
-                                                    }
-                                                } else {
-                                                    print("WE AINT GOT THE GIF LIKE THAT")
-                                                }
-                                            }
-                                        }
-                                    }
-                                
-                                
-                            }
-                        } else {
-                            UploadService.addNewPost(headers, withID: postID, parameters: parameters) { success in
-                                if success {
-                                    Alerts.showSuccessAlert(withMessage: "Uploaded!")
-                                }
-                            }
+                            UploadService.addNewPost(withID: postID, parameters: parameters)
                         }
                     }
                     
+                    
                 }
+                
+            } else {
+                UploadService.addNewPost(withID: postID, parameters: parameters)
             }
         }
     }
@@ -393,37 +385,16 @@ class UploadService {
         let playerItem = AVAsset(url: videoURL)
         let length = CMTimeGetSeconds(playerItem.duration)
         guard let data = NSData(contentsOf: videoURL) else { return completion(nil, nil) }
-        DispatchQueue.main.async {
-            storageRef.putData(data as Data, metadata: uploadMetadata) { metaData, error in
-                storageRef.downloadURL { url, error in
-                    completion(url, length)
-                }
-            }
-        }
-    }
-    
-    static func compressVideo(inputURL: URL, outputURL: URL, handler:@escaping (_ size:CGSize)-> Void) {
-        
-        let urlAsset = AVURLAsset(url: inputURL, options: nil)
-        let track =  urlAsset.tracks(withMediaType: AVMediaType.video)
-        let videoTrack:AVAssetTrack = track[0] as AVAssetTrack
-        let size = videoTrack.naturalSize
-        if let exportSession = AVAssetExportSession(asset: urlAsset, presetName: AVAssetExportPresetMediumQuality) {
-            exportSession.outputURL = outputURL
-            exportSession.outputFileType = AVFileType.mp4
-            exportSession.shouldOptimizeForNetworkUse = true
-            
-            exportSession.exportAsynchronously {
-                handler(size)
+        storageRef.putData(data as Data, metadata: uploadMetadata) { metaData, error in
+            storageRef.downloadURL { url, error in
+                completion(url, length)
             }
         }
     }
     
     static func createGif(videoURL:URL, postID:String, completion:@escaping((_ url:URL?)->())) {
-        let frameCount = 16
-        let delayTime  = Float(0.0)
-        let loopCount  = 0    // 0 means loop forever
-        let size = CGSize(width: 300, height: 300)
+        NSLog("RSC: createGif - Start")
+        let size = CGSize(width: 200, height: 200)
         let fileManager = FileManager.default
         let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let outputURL = documentDirectory.appendingPathComponent("output-thumbnail.gif")
@@ -439,15 +410,11 @@ class UploadService {
             
             let uploadMetadata = StorageMetadata()
             uploadMetadata.contentType = "image/gif"
-            
-            let playerItem = AVAsset(url: videoURL)
-            let length = CMTimeGetSeconds(playerItem.duration)
             guard let data = NSData(contentsOf: url) else { return completion(nil) }
-            DispatchQueue.main.async {
-                storageRef.putData(data as Data, metadata: uploadMetadata) { metaData, error in
-                    storageRef.downloadURL { url, error in
-                        completion(url)
-                    }
+            storageRef.putData(data as Data, metadata: uploadMetadata) { metaData, error in
+                storageRef.downloadURL { url, error in
+                    NSLog("RSC: createGif - End")
+                    completion(url)
                 }
             }
         }

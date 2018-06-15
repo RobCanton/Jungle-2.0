@@ -10,12 +10,46 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 
-class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, UITextFieldDelegate {
+class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource {
     
     var initialSearch:String?
     var pagerNode:ASPagerNode!
-    var latestPostsVC:SearchPostsViewController!
+    var latestPostsVC:SearchPostsTableViewController!
     var searchBar:RCSearchBarView!
+    
+    var interactor:Interactor? = nil
+    
+    
+    @objc func handlePan(_ sender: UIPanGestureRecognizer) {
+        
+        let translation = sender.translation(in: view)
+        let percentThreshold:CGFloat = 0.3
+        let verticalMovement = translation.x / view.bounds.width
+        let downwardMovement = fmaxf(Float(verticalMovement), 0.0)
+        let downwardMovementPercent = fminf(downwardMovement, 1.0)
+        let progress = CGFloat(downwardMovementPercent)
+        
+        guard let interactor = interactor else { return }
+        switch sender.state {
+        case .began:
+            interactor.hasStarted = true
+            dismiss(animated: true, completion: nil)
+        case .changed:
+            interactor.shouldFinish = progress > percentThreshold
+            interactor.update(progress)
+        case .cancelled:
+            interactor.hasStarted = false
+            interactor.shouldFinish = false
+            interactor.cancel()
+        case .ended:
+            interactor.hasStarted = false
+            interactor.shouldFinish
+                ? interactor.finish()
+                : interactor.cancel()
+        default:
+            break
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,11 +81,17 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource,
         pagerNode.reloadData()
         
         searchBar.setup(withDelegate: self)
+        searchBar.leftButtonItem.tintColor = UIColor.white
+        searchBar.leftButtonItem.setImage(UIImage(named:"back"), for: .normal)
+        
+        let edgeSwipe = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(handlePan))
+        edgeSwipe.edges = .left
+        view.addGestureRecognizer(edgeSwipe)
+        view.isUserInteractionEnabled = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: animated)
         if let search = initialSearch {
             searchBar.textField.text = search
             latestPostsVC?.setSearch(text: search)
@@ -68,7 +108,7 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource,
     func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
         let cellNode = ASCellNode()
         cellNode.backgroundColor = bgColor
-        latestPostsVC = SearchPostsViewController()
+        latestPostsVC = SearchPostsTableViewController()
         latestPostsVC.view.backgroundColor = bgColor
         latestPostsVC.willMove(toParentViewController: self)
         self.addChildViewController(latestPostsVC)
@@ -86,15 +126,13 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource,
     func numberOfPages(in pagerNode: ASPagerNode) -> Int {
         return 1
     }
-    @IBAction func handleDismiss(_ sender: Any) {
-        self.navigationController?.popViewController(animated: true)
-    }
 }
 
 
 extension SearchViewController: RCSearchBarDelegate {
     func handleLeftButton() {
-        self.navigationController?.popViewController(animated: true)
+        print("DISMISS YO!")
+        self.dismiss(animated: true, completion: nil)
     }
     
     func searchTextDidChange(_ text: String?) {
@@ -110,7 +148,7 @@ extension SearchViewController: RCSearchBarDelegate {
     }
     
     func searchTapped(_ text: String) {
-        latestPostsVC.setSearch(text: text)
+        latestPostsVC?.setSearch(text: text )
     }
     
     
@@ -118,8 +156,8 @@ extension SearchViewController: RCSearchBarDelegate {
 
 extension SearchViewController: PushTransitionDestinationDelegate {
     func staticTopView() -> UIImageView? {
-        let rect = CGRect(x: 0, y: 0, width: view.bounds.width, height: 64.0)
-        let size = CGSize(width: view.bounds.width, height: 64.0)
+        let rect = CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0)
+        let size = CGSize(width: view.bounds.width, height: 70.0)
         UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
         view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
         let image = UIGraphicsGetImageFromCurrentImageContext()

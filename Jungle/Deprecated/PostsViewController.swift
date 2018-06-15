@@ -321,7 +321,7 @@ extension PostsViewController: ASTableDelegate, ASTableDataSource {
             return node;
         }
         
-        let cell = PostCellNode(withPost: state.posts[indexPath.row])
+        let cell = NewPostCellNode(post: state.posts[indexPath.row])
         cell.selectionStyle = .none
         //cell.delegate = self
         return cell

@@ -9,115 +9,138 @@
 import Foundation
 import UIKit
 import AsyncDisplayKit
+import Firebase
 
-class PostContentNode:ASDisplayNode {
-    var videoNode = ASVideoNode()
-    var gradientNode = ASDisplayNode()
-    var post:Post?
-    required init(post: Post) {
-        super.init()
-        self.post = post
-        automaticallyManagesSubnodes = true
-    }
+class AvatarNode:ASDisplayNode {
+    var backNode = ASDisplayNode()
+    var imageNode = ASNetworkImageNode()
+    var imageInset:CGFloat = 5.0
     
-    override func didLoad() {
-        super.didLoad()
-        let gradient = CAGradientLayer()
-        gradient.frame = UIScreen.main.bounds
-        gradient.colors = [UIColor.clear.cgColor, UIColor(white: 0.0, alpha: 0.2).cgColor]
-        gradient.locations = [0.0, 1.0]
-        gradient.startPoint = CGPoint(x: 0.0, y: 0.5)
-        gradient.endPoint = CGPoint(x: 0.0, y: 1.0)
-        gradientNode.view.layer.addSublayer(gradient)
-        //gradientNode.backgroundColor = UIColor.blue.withAlphaComponent(0.5)
+    required init(post:Post, cornerRadius: CGFloat, imageInset:CGFloat) {
+        super.init()
+        automaticallyManagesSubnodes = true
+        self.imageInset = imageInset
+        self.layer.cornerRadius = cornerRadius
+        self.clipsToBounds = true
+        
+        backgroundColor = UIColor.white
+        backNode.backgroundColor = post.anon.color.withAlphaComponent(0.30)
+        imageNode.imageModificationBlock = { image in
+            return image.maskWithColor(color: post.anon.color) ?? image
+        }
+        
+        UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
+            print("GOT ANON ICON FROMFILE: \(fromFile)")
+            self.imageNode.image = image
+        }
+        
+       
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        let overlay = ASOverlayLayoutSpec(child: videoNode, overlay: gradientNode)
+        let inset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(imageInset, imageInset, imageInset, imageInset), child: imageNode)
+        let overlay = ASOverlayLayoutSpec(child: backNode, overlay: inset)
         return overlay
     }
     
-    override func didEnterVisibleState() {
-        super.didEnterVisibleState()
-        guard let post = self.post else { return }
-        if let videoURL = post.attachments?.video?.url {
-            UploadService.retrieveVideo(withKey: post.key, url: videoURL) { vidURL, fromFile in
-                if let url = vidURL {
-                    print("WE GOT THE VIDEO DATA")
-                    DispatchQueue.main.async {
-                        
-                        self.videoNode.shouldAutoplay = true
-                        self.videoNode.shouldAutorepeat = true
-                        self.videoNode.asset = AVAsset(url: url)
-                        self.videoNode.play()
-                        
-                        self.videoNode.gravity = AVLayerVideoGravity.resizeAspectFill.rawValue
-                    }
-                    
-                } else{
-                    print("NO VIDEO DATA")
-                }
-            }
-        }
-        
-    }
-    
-    override func didExitVisibleState() {
-        super.didExitVisibleState()
-        videoNode.player?.replaceCurrentItem(with: nil)
-        //videoNode.
-    }
 }
 
 class ContentOverlayNode:ASControlNode {
     
-    var postTextNode = ASTextNode()
-    var avatarNode = ASNetworkImageNode()
+    var postTextNode = ActiveTextNode()
+    var avatarNode:AvatarNode!
     var usernameNode = ASTextNode()
+    var timeNode = ASTextNode()
     
-    required init(post:Post) {
+    var actionsRow:SinglePostActionsView!
+    weak var delegate:PostActionsDelegate?
+    weak var post:Post?
+    required init(post:Post, delegate: PostActionsDelegate?) {
         super.init()
+        self.post = post
+        self.delegate = delegate
         automaticallyManagesSubnodes = true
         postTextNode.maximumNumberOfLines = 0
-        postTextNode.attributedText = NSAttributedString(string: post.textClean, attributes: [
-            NSAttributedStringKey.font: Fonts.light(ofSize: 15.0),
+        postTextNode.setText(text: post.textClean, withSize: 15.0, normalColor: .white, activeColor: tagColor)
+        
+        usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
+            NSAttributedStringKey.foregroundColor: post.anon.color
+            ])
+        
+        timeNode.attributedText = NSAttributedString(string: post.createdAt.fullTimeSinceNow() , attributes: [
+            NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
         
-        usernameNode.attributedText = NSAttributedString(string: "KANYEWEST" , attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: UIColor.white
-            ])
+        avatarNode = AvatarNode(post: post, cornerRadius: 16, imageInset: 5)
+        avatarNode.style.height = ASDimension(unit: .points, value: 32)
+        avatarNode.style.width = ASDimension(unit: .points, value: 32)
         
-        avatarNode.style.height = ASDimension(unit: .points, value: 24.0)
-        avatarNode.style.width = ASDimension(unit: .points, value: 24.0)
         
-        avatarNode.layer.cornerRadius = 12.0
-        avatarNode.clipsToBounds = true
-        avatarNode.backgroundColor = UIColor.white
+    }
+    
+    var locationButton:UIButton!
+    override func didLoad() {
+        super.didLoad()
+        actionsRow = SinglePostActionsView(frame: .zero)
+        actionsRow.delegate = delegate
+        view.addSubview(actionsRow)
+        usernameNode.view.applyShadow(radius: 4.0, opacity: 0.1, offset: .zero, color: UIColor.black, shouldRasterize: false)
+        actionsRow.translatesAutoresizingMaskIntoConstraints = false
+        actionsRow.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        actionsRow.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        actionsRow.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        actionsRow.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        if let post = self.post {
+            actionsRow.likeLabel.text = "\(post.numLikes)"
+            actionsRow.commentLabel.text = "\(post.numReplies)"
+            actionsRow.setLiked(post.liked, animated: false)
+        
+            if let location = post.location {
+                actionsRow.locationButton.isHidden = false
+                actionsRow.locationButton.setTitle(location.locationShortStr, for: .normal)
+            } else {
+                actionsRow.locationButton.isHidden = true
+            }
+
+        }
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
         let centerUsername = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: usernameNode)
+        let centerTime = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: timeNode)
+        
+        let labelStack = ASStackLayoutSpec.vertical()
+        labelStack.children = [usernameNode, timeNode]
+        
         let titleStack = ASStackLayoutSpec.horizontal()
-        titleStack.children = [avatarNode, centerUsername]
+        titleStack.children = [avatarNode, labelStack]
         titleStack.spacing = 8.0
         
         let contentStack = ASStackLayoutSpec.vertical()
         contentStack.children = [titleStack, postTextNode]
         contentStack.spacing = 8.0
         
-        let mainInsets = UIEdgeInsetsMake(12, 12, 12, 12)
+        let mainInsets = UIEdgeInsetsMake(12, 12, 64, 12)
         return ASInsetLayoutSpec(insets: mainInsets, child: contentStack)
+    }
+    
+    func setNumLikes(_ likes:Int) {
+        actionsRow.likeLabel.text = "\(likes)"
+    }
+    
+    func setNumComments(_ comments:Int) {
+        actionsRow.commentLabel.text = "\(comments)"
     }
 }
 
 protocol SinglePostDelegate:class {
-    func openComments(_ post:Post)
+    func openComments(_ post:Post,_ showKeyboard:Bool)
 }
 
-class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource {
+class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostActionsDelegate {
     
     var contentNode:PostContentNode!
     var contentOverlay:ContentOverlayNode!
@@ -131,8 +154,7 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource {
         automaticallyManagesSubnodes = true
         backgroundColor = UIColor.black
         contentNode = PostContentNode(post: post)
-        contentOverlay = ContentOverlayNode(post: post)
-        
+        contentOverlay = ContentOverlayNode(post: post, delegate: self)
         contentOverlay.addTarget(self, action: #selector(handleOverlayTap), forControlEvents: .touchUpInside)
     }
     
@@ -148,8 +170,90 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource {
     
     @objc func handleOverlayTap() {
         guard let post = self.post else { return }
-        delegate?.openComments(post)
+        delegate?.openComments(post, false)
     }
     
+    func handleLikeButton() {
+        print("liked!")
+        guard let post = self.post else { return }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let ref = database.ref.child("posts/likes/\(post.key)/\(uid)")
+        post.liked = !post.liked
+        contentOverlay.actionsRow.setLiked(post.liked, animated: true)
+        if post.liked {
+            post.numLikes += 1
+            contentOverlay.setNumLikes(post.numLikes)
+            ref.setValue(true)
+        } else {
+            post.numLikes -= 1
+            contentOverlay.setNumLikes(post.numLikes)
+            ref.setValue(false)
+        }
+    }
+    
+    func handleCommentButton() {
+        print("openComments!")
+        guard let post = self.post else { return }
+        delegate?.openComments(post, true)
+    }
+    
+    var likesRef:DatabaseReference?
+    var likesRefHandle:DatabaseHandle?
+    var likedRef:DatabaseReference?
+    var likedRefHandle:DatabaseHandle?
+    var commentsRef:DatabaseReference?
+    var commentsRefHandle:DatabaseHandle?
+    func observePost() {
+        guard let post = self.post else { return }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        likesRef = database.child("posts/meta/\(post.key)/numLikes")
+        likesRefHandle = likesRef?.observe(.value, with: { snapshot in
+            post.numLikes = snapshot.value as? Int ?? 0
+            self.contentOverlay.setNumLikes(post.numLikes)
+        })
+        
+        likedRef = database.child("posts/likes/\(post.key)/\(uid)")
+        likedRefHandle = likedRef?.observe(.value, with: { snapshot in
+            post.liked = snapshot.value as? Bool ?? false
+            self.contentOverlay.actionsRow.setLiked(post.liked, animated: false)
+        })
+        
+        commentsRef = database.child("posts/meta/\(post.key)/replies")
+        commentsRefHandle = commentsRef?.observe(.value, with: { snapshot in
+            post.numReplies = snapshot.value as? Int ?? 0
+            self.contentOverlay.setNumComments(post.numReplies)
+        })
+    }
+    
+    func stopObservingPost() {
+        likesRef?.removeObserver(withHandle: likesRefHandle!)
+        likesRef = nil
+        likesRefHandle = nil
+        
+        commentsRef?.removeObserver(withHandle: commentsRefHandle!)
+        commentsRef = nil
+        commentsRefHandle = nil
+        
+        likedRef?.removeObserver(withHandle: likedRefHandle!)
+        likedRef = nil
+        likedRefHandle = nil
+        
+    }
+    
+    override func didEnterVisibleState() {
+        super.didEnterVisibleState()
+        observePost()
+        //contentNode.videoNode.play()
+    }
+    
+    override func didExitVisibleState() {
+        super.didExitVisibleState()
+        stopObservingPost()
+        //contentNode.videoNode.pause()
+    }
+    
+    func mutedVideo(_ muted:Bool) {
+        contentNode.videoNode.muted = muted
+    }
     
 }
