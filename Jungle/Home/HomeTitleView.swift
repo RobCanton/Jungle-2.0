@@ -10,6 +10,29 @@ import Foundation
 import UIKit
 
 class JTitleView:UIView {
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        self.translatesAutoresizingMaskIntoConstraints = false
+        self.insetsLayoutMarginsFromSafeArea = false
+        self.preservesSuperviewLayoutMargins = false
+        
+        self.backgroundColor = accentColor
+        let bg = UIImageView(image: UIImage(named:"NavBarGradient1"))
+        bg.frame = bounds
+        addSubview(bg)
+        bg.translatesAutoresizingMaskIntoConstraints = false
+        bg.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        bg.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        bg.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        bg.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+class HomeTitleView:JTitleView {
     
     var contentBox:UIView!
     var sortingButton:UIButton!
@@ -29,15 +52,6 @@ class JTitleView:UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        self.insetsLayoutMarginsFromSafeArea = false
-        self.preservesSuperviewLayoutMargins = false
-        backgroundColor = accentColor
-        //self.clipsToBounds = false
-        //self.applyShadow(radius: 5.0, opacity: 0.08, offset: CGSize(width:0,height:5.0), color: UIColor.black, shouldRasterize: false)
-        
-        let bg = UIImageView(image: UIImage(named:"NavBarGradient1"))
-        bg.frame = bounds
-        addSubview(bg)
         
         contentBox = UIView() 
         addSubview(contentBox)
@@ -62,7 +76,6 @@ class JTitleView:UIView {
         rightButton.translatesAutoresizingMaskIntoConstraints = false
         rightButton.centerYAnchor.constraint(equalTo: contentBox.centerYAnchor).isActive = true
         rightButton.trailingAnchor.constraint(equalTo: contentBox.trailingAnchor, constant: -12).isActive = true
-        //ortingButton.addTarget(self, action: #selector(nearby), for: .touchUpInside)
         
         let tabBox = UIView()
         contentBox.addSubview(tabBox)
@@ -116,17 +129,6 @@ class JTitleView:UIView {
         barLeadingAnchor = barView.leadingAnchor.constraint(equalTo: tabBox.leadingAnchor, constant: 0)
         barLeadingAnchor.isActive = true
         barView.bottomAnchor.constraint(equalTo: tabBox.bottomAnchor, constant: 0).isActive = true
-        
-//        gradient = CAGradientLayer()
-//        let botColor = hexColor(from: "a4e078")
-//        let topColor = hexColor(from: "81d892")
-//        gradient!.colors = [topColor.cgColor, botColor.cgColor]
-//        gradient!.locations = [0.0 , 1.0]
-//        gradient!.startPoint = CGPoint(x: 0.0, y: 1.0)
-//        gradient!.endPoint = CGPoint(x: 1.0, y: 1.0)
-//        gradient!.frame = self.bounds
-//        
-//        self.layer.insertSublayer(gradient!, at: 0)
     }
     
     required init?(coder aDecoder: NSCoder) {

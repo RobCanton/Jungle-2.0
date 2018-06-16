@@ -16,6 +16,7 @@ class CommentActionsRow: UIView {
     var likeButton:WCLShineButton!
     var likeLabel:UILabel!
     
+    var replyButton:UIButton!
     var moreButton:UIButton!
     
     weak var delegate:PostActionsDelegate?
@@ -64,6 +65,18 @@ class CommentActionsRow: UIView {
         moreButton.topAnchor.constraint(equalTo: topAnchor, constant: 0).isActive = true
         moreButton.widthAnchor.constraint(equalToConstant: 32).isActive = true
         moreButton.heightAnchor.constraint(equalTo: moreButton.widthAnchor, multiplier: 1.0).isActive = true
+        
+        replyButton = UIButton(type: .custom)
+        replyButton.setImage(UIImage(named:"reply"), for: .normal)
+        replyButton.setTitle("Reply", for: .normal)
+        replyButton.setTitleColor(tertiaryColor, for: .normal)
+        replyButton.titleLabel?.font = Fonts.semiBold(ofSize: 14.0)
+        addSubview(replyButton)
+        replyButton.translatesAutoresizingMaskIntoConstraints = false
+        replyButton.trailingAnchor.constraint(equalTo: moreButton.leadingAnchor, constant: -12).isActive = true
+        replyButton.topAnchor.constraint(equalTo: topAnchor, constant: 0).isActive = true
+        replyButton.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
+        replyButton.addTarget(self, action: #selector(handleReply), for: .touchUpInside)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -72,6 +85,10 @@ class CommentActionsRow: UIView {
     
     @objc func handleLike() {
         delegate?.handleLikeButton()
+    }
+    
+    @objc func handleReply() {
+        delegate?.handleCommentButton()
     }
     
     
@@ -103,17 +120,23 @@ class PostCommentCellNode: ASCellNode {
     
     var post:Post?
     var contentHeight:CGFloat = 0.0
-    
-    required init(post:Post, isCaption:Bool?=nil) {
+    weak var delegate:CommentCellDelegate?
+    var isSubReply = false
+    var isCaption = false
+    required init(post:Post, isCaption:Bool?=nil, isSubReply:Bool?=nil) {
         super.init()
         self.post = post
+        self.isCaption = isCaption ?? false
+        self.isSubReply = isSubReply ?? false
         automaticallyManagesSubnodes = true
         backgroundColor = UIColor.white
         postTextNode.maximumNumberOfLines = 0
+        let titleSize:CGFloat = self.isSubReply ? 13 : 15
+        let avatarSize:CGFloat = self.isSubReply ? 18 : 24
         postTextNode.setText(text: post.textClean, withSize: 15.0, normalColor: .black, activeColor: tagColor)
         
         usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: titleSize),
             NSAttributedStringKey.foregroundColor: post.anon.color
             ])
         
@@ -149,13 +172,16 @@ class PostCommentCellNode: ASCellNode {
             return image.maskWithColor(color: post.anon.color) ?? image
         }
         //        avatarNode.image = UIImage(named:"sparrow")
-        avatarNode.style.height = ASDimension(unit: .points, value: 24)
-        avatarNode.style.width = ASDimension(unit: .points, value: 24)
-        avatarNode.layer.cornerRadius = 12
+        avatarNode.style.height = ASDimension(unit: .points, value: avatarSize)
+        avatarNode.style.width = ASDimension(unit: .points, value: avatarSize)
+        avatarNode.layer.cornerRadius = avatarSize/2
         avatarImageNode.image = nil
         UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, _ in
             self.avatarImageNode.image = image
         }
+        
+        dividerNode.backgroundColor = UIColor(white: 0.80, alpha: 1.0)
+        dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
     }
     
     var actionsRow:CommentActionsRow!
@@ -165,13 +191,22 @@ class PostCommentCellNode: ASCellNode {
         actionsRow.delegate = self
         view.addSubview(actionsRow)
         actionsRow.translatesAutoresizingMaskIntoConstraints = false
-        actionsRow.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        var leading:CGFloat = 0
+        if isSubReply {
+            leading = 32
+            actionsRow.replyButton.setTitle(nil, for: .normal)
+        }
+        actionsRow.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: leading).isActive = true
         actionsRow.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         actionsRow.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         actionsRow.heightAnchor.constraint(equalToConstant: 40).isActive = true
         if let post = post {
             actionsRow.setLiked(post.liked, animated: false)
             actionsRow.setNumLikes(post.numLikes)
+        }
+        
+        if isCaption {
+            actionsRow.replyButton.isHidden = true
         }
     }
     
@@ -186,13 +221,6 @@ class PostCommentCellNode: ASCellNode {
         titleStack.spacing = 8.0
         titleStack.children = [avatarOverlay, titleCenter]
         
-        let actionStack = ASStackLayoutSpec.horizontal()
-        actionStack.children = [commentButton, moreButton]
-        actionStack.spacing = 24.0
-        //actionStack.alignContent = .spaceBetween
-        actionStack.justifyContent = .end
-        let actionsInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 0), child: actionStack)
-        
         let topStack = ASStackLayoutSpec.vertical()
         topStack.children = [titleStack, postTextNode]
         topStack.spacing = 4.0
@@ -202,8 +230,15 @@ class PostCommentCellNode: ASCellNode {
         
         let contentInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 0), child: contentStack)
    
-        let mainInsets = UIEdgeInsetsMake(12, 12, 44, 12)
-        return ASInsetLayoutSpec(insets: mainInsets, child: contentInset)
+        var mainInsets = UIEdgeInsetsMake(12, 12, 44, 12)
+        if isSubReply {
+            mainInsets = UIEdgeInsetsMake(8, 44, 44, 12)
+        }
+        
+        let mainInsetSpec = ASInsetLayoutSpec(insets: mainInsets, child: contentInset)
+        let dividerStack = ASStackLayoutSpec.vertical()
+        dividerStack.children = [mainInsetSpec, dividerNode]
+        return dividerStack
     }
     
     var likesRef:DatabaseReference?
@@ -280,7 +315,8 @@ extension PostCommentCellNode: PostActionsDelegate {
     }
     
     func handleCommentButton() {
-        //
+        guard let post = self.post else { return }
+        delegate?.handleReply(post)
     }
     
     

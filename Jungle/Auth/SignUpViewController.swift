@@ -26,22 +26,18 @@ class SignUpViewController:UIViewController {
     @IBAction func handleSubmit() {
         guard let username = usernameField.text else { return }
         guard let email = emailField.text else { return }
-        print("ASDWE")
         guard let pass = passField.text else { return }
-        print("ASD")
         guard let user = Auth.auth().currentUser else { return }
-        print("Email: \(email) Pass: \(pass)")
-        
         let credential = EmailAuthProvider.credential(withEmail: email, password: pass)
         print("CREDENTIAL: \(credential)")
-        user.link(with: credential) { user, error in
-            if let user = user, error == nil {
+        user.linkAndRetrieveData(with: credential) { user, error in
+            if let user = user?.user, error == nil {
                 print("WE GUCCI!")
                 let ref = firestore.collection("users").document(user.uid)
-                ref.setData(["username":username])
+                ref.setData(["username":username, "type": "authenticated"])
             } else {
                 print("WE NO GUCCI!: error\(error?.localizedDescription)")
-            
+                
             }
         }
     }

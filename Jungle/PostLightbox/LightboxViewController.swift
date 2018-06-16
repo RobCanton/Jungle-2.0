@@ -171,27 +171,29 @@ extension LightboxViewController: PulleyPrimaryContentControllerDelegate {
         closeButton.alpha = 1 - progress
         let scale = 1 - 0.02 * progress
         contentView.clipsToBounds = true
-        contentView.layer.cornerRadius = 8 * progress
+        contentView.layer.cornerRadius = 12 * progress
         contentView.transform = CGAffineTransform(scaleX: scale, y: scale)
-        
-        print("PROGRESS: \(progress)")
-        
         setCurrentCellVolume(1 - progress)
         //dimView.alpha = 0.25 * progress
         
     }
     
-//    func drawerPositionDidChange(drawer: PulleyViewController, bottomSafeArea: CGFloat) {
-//        switch drawer.drawerPosition {
-//        case PulleyPosition.closed:
-//            let cells = pagerNode.visibleNodes as? [SinglePostCellNode] ?? []
-//            if cells.count > 0 {
-//                cells[0].stopObservingPost()
-//                cells[0].observePost()
-//            }
-//            break
-//        default:
-//            break
-//        }
-//    }
+    func drawerPositionDidChange(drawer: PulleyViewController, bottomSafeArea: CGFloat) {
+        switch drawer.drawerPosition {
+        case PulleyPosition.collapsed:
+            let cells = pagerNode.visibleNodes as? [SinglePostCellNode] ?? []
+            if cells.count > 0 {
+                cells[0].contentNode.videoNode.play()
+            }
+            break
+        case PulleyPosition.open:
+            let cells = pagerNode.visibleNodes as? [SinglePostCellNode] ?? []
+            if cells.count > 0 {
+                cells[0].contentNode.videoNode.pause()
+            }
+            break
+        default:
+            break
+        }
+    }
 }

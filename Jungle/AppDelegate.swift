@@ -66,22 +66,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let db = Firestore.firestore()
         db.settings = settings
 
-        //try! Auth.auth().signOut()
+        ///try! Auth.auth().signOut()
         let authHandler = Auth.auth().addStateDidChangeListener { (auth, user) in
             if let user = user {
                 print("WE ARE HERE DUDE")
+                print("UID: \(user.uid)")
                 let ref = firestore.collection("users").document(user.uid)
                 ref.getDocument { snapshot, error in
+                    print("LOL!")
+                    if let error = error {
+                        print ("ERROR: \(error.localizedDescription)")
+                    }
                     if let snapshot = snapshot {
                         let data = snapshot.data()
+                        print("DATA: \(data)")
                         guard let username = data?["username"] as? String else { return }
-                        currentUser = User(uid: user.uid, username: username)
+                        guard let type = data?["type"] as? String else { return }
+                        currentUser = User(uid: user.uid, authType: type, username: username)
+
                         print("GOT THE USERNAME: \(username)")
                         self.openMainView()
                     }
                 }
 
             } else {
+                print("Anonymous")
                 self.signInAnonymously()
             }
         }
@@ -116,8 +125,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func signInAnonymously() {
         Auth.auth().signInAnonymously() { (user, error) in
-            if user != nil && error == nil {
-                self.openMainView()
+            if let user = user?.user, error == nil {
+                let ref = firestore.collection("users").document(user.uid)
+                ref.setData([
+                    "type": "anonymous",
+                    "username": ""
+                ]) { error in
+                    if error == nil {
+                        self.openMainView()
+                    }
+                }
             }
         }
     }

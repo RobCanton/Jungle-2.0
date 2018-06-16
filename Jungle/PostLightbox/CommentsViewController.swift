@@ -40,11 +40,13 @@ class CommentsDrawerViewController:UIViewController {
         
         // convert y-position to downward pull progress (percentage)
         let translation = sender.translation(in: view)
-        if translation.y <= 0 {
-            //interactor?.hasStarted = false
+        if translation.y < 0 {
+            interactor?.hasStarted = false
+            interactor?.shouldFinish = false
+            interactor?.cancel()
             return
         }
-        print("translation: \(translation.y)")
+        
         let lightBox = self.pulleyViewController?.primaryContentViewController as! LightboxViewController
         let verticalMovement = translation.y / view.bounds.height
         let downwardMovement = fmaxf(Float(verticalMovement), 0.0)
@@ -82,9 +84,9 @@ class CommentsDrawerViewController:UIViewController {
             }
             //commentsVC?.commentBar.textView.becomeFirstResponder()
         }
-        if let currentPost = currentPost, currentPost.key == post.key {
-            return
-        }
+//        if let currentPost = currentPost, currentPost.key == post.key {
+//            return
+//        }
         
         commentsVC?.willMove(toParentViewController: nil)
         commentsVC?.view.removeFromSuperview()
@@ -166,12 +168,15 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     }
     
     var commentBar:GlassCommentBar!
+    var replyBar:ReplyBar!
+    var replyBottomAnchor:NSLayoutConstraint!
     
     var commentBarBottomAnchor:NSLayoutConstraint?
     var commentBarHeightAnchor:NSLayoutConstraint?
     var tableBottomAnchor:NSLayoutConstraint?
     
     var focusedReply:Post?
+    var keyboardHeight:CGFloat?
     
     var blurView:UIVisualEffectView!
     var animator:UIViewPropertyAnimator?
@@ -232,8 +237,9 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         tableNode.dataSource = self
         tableNode.backgroundColor = UIColor(white: 0.92, alpha: 1.0)
         tableView.tableFooterView = UIView()
-        tableView.separatorInset = UIEdgeInsetsMake(0, 40, 0, 0)
-        tableView.separatorColor = UIColor(white: 0.8, alpha: 1.0)
+        //tableView.separatorInset = UIEdgeInsetsMake(0, 40, 0, 0)
+        //tableView.separatorColor = UIColor(white: 0.8, alpha: 1.0)
+        tableView.separatorStyle = .none
         tableNode.performBatch(animated: false, updates: {
             self.tableNode.reloadData()
         }, completion: { _ in })
@@ -248,8 +254,18 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         commentBarBottomAnchor?.isActive = true
         commentBar.prepareTextView()
         commentBar.delegate = self
+        
+        replyBar = ReplyBar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 32.0))
+        view.insertSubview(replyBar, belowSubview: commentBar)
+        replyBar.translatesAutoresizingMaskIntoConstraints = false
+        replyBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        replyBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        replyBottomAnchor = replyBar.bottomAnchor.constraint(equalTo: commentBar.topAnchor, constant: 32.0)
+        replyBottomAnchor.isActive = true
+        replyBar.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
+        replyBar.replyClose.addTarget(self, action: #selector(cancelReply), for: .touchUpInside)
 
-        tableView.keyboardDismissMode = .onDrag
+        //tableView.keyboardDismissMode = .onDrag
         tableView.bottomAnchor.constraint(equalTo: commentBar.topAnchor).isActive = true
         self.view.layoutIfNeeded()
         
@@ -263,7 +279,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         super.viewWillAppear(animated)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidShow), name: NSNotification.Name.UIKeyboardDidShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidHide), name: NSNotification.Name.UIKeyboardDidHide, object: nil)
     }
     
@@ -296,9 +312,10 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
         if indexPath.section == 0 {
-            let cell = PostCommentCellNode(post: post)
+            let cell = PostCommentCellNode(post: post, isCaption: true)
             cell.selectionStyle = .none
             cell.timeNode.isHidden = true
+            
             return cell
         }
         let rowCount = topState.replies.count
@@ -312,7 +329,9 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         let reply = topState.replies[section]
         if indexPath.row == 0 {
             let cell = PostCommentCellNode(post: reply)
+            cell.delegate = self
             cell.selectionStyle = .none
+            cell.dividerNode.isHidden = reply.numReplies > 0
             return cell
         } else {
             var subReplyIndex = indexPath.row - 1
@@ -325,16 +344,33 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
                 return cell
             }
             let subReply = reply.replies[subReplyIndex]
-            let cell = PostCommentCellNode(post: subReply)
+            let cell = PostCommentCellNode(post: subReply, isCaption: false, isSubReply: true)
+            cell.dividerNode.isHidden = subReplyIndex < reply.replies.count - 1
             cell.selectionStyle = .none
-            
+            cell.delegate = self
             return cell
         }
     }
     
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
-        if indexPath.section == 0 {
-            pulleyViewController?.setDrawerPosition(position: .open, animated: true)
+        switch indexPath.section {
+        case 0:
+            break
+        default:
+            let section = indexPath.section - 1
+            let reply = topState.replies[section]
+            if reply.numReplies > reply.replies.count, indexPath.row == 1  {
+                
+                let cell = tableNode.nodeForRow(at: indexPath) as? ViewRepliesCellNode
+                cell?.setFetchingMode()
+                reply.fetchReplies {
+                    
+                    self.tableNode.performBatch(animated: false, updates: {
+                        self.tableNode.reloadSections(IndexSet([indexPath.section]), with: .none)
+                    }, completion: { _ in })
+                    
+                }
+            }
         }
     }
     
@@ -452,67 +488,68 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
 
 extension CommentsViewController: KeyboardAccessoryProtocol {
     @objc func keyboardWillShow(notification:Notification) {
-        //let t = transitioningDelegate as! DeckTransitioningDelegate
-        //t.isSwipeToDismissEnabled = false
-        //transitioningDelegate?.isSwipeToDismissEnabled = false
         guard let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return }
-        //self.commentBarHeightAnchor?.constant = commentBar.textHeight + 8.0
-        //self.view.layoutIfNeeded()
-        var rect:CGRect?
-        var offsetPoint:CGFloat?
-//        if let focusedReply = focusedReply {
-//            
-//            if let replyTo = focusedReply.replyTo {
-//                print("Reply to: \(replyTo)")
-//                for i in 0..<topState.replies.count {
-//                    let reply = topState.replies[i]
-//                    if replyTo == reply.key {
-//                        
-//                        for j in 0..<reply.replies.count {
-//                            let subReply = reply.replies[j]
-//                            if focusedReply.key == subReply.key {
-//                                rect = tableNode.rectForRow(at: IndexPath(row: 1 + j, section: i + 2))
-//                                break
-//                            }
-//                        }
-//                        break
-//                        //rect = tableNode.rectForRow(at: IndexPath(row: 0, section: i + 2))
-//                    }
-//                }
-//            } else {
-//                for i in 0..<topState.replies.count {
-//                    let reply = topState.replies[i]
-//                    if focusedReply.key == reply.key {
-//                        
-//                        rect = tableNode.rectForRow(at: IndexPath(row: 0, section: i + 2))
-//                    }
-//                }
-//            }
-//        }
         
-        let keyboardTop = view.bounds.height - keyboardSize.height - commentBar.calculatedHeight
-        
-        if rect != nil {
-            offsetPoint = rect!.origin.y  + rect!.height + 64.0 - keyboardTop
-        }
-        
-        if offsetPoint != nil {
-            self.tableNode.contentOffset = CGPoint(x:0,y: offsetPoint!)
+        if let focusedReply = focusedReply,
+            let offsetPoint = getTableOffset(forReply: focusedReply, keyboardHeight: keyboardSize.height) {
+            self.tableNode.setContentOffset(offsetPoint, animated: true)
         }
         
         self.commentBarBottomAnchor?.constant = -keyboardSize.height - 20.0
         self.view.layoutIfNeeded()
     }
     
+    @objc func keyboardDidShow(notification:Notification) {
+        guard let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return }
+        keyboardHeight = keyboardSize.height
+        
+    }
+    
     @objc func keyboardWillHide(notification:Notification) {
         self.commentBarBottomAnchor?.constant = -20
+        keyboardHeight = nil
+        //self.commentBar.setReply(nil)
+
+        self.replyBar.setReply(nil)
+        self.replyBottomAnchor.constant = 32
         self.view.layoutIfNeeded()
     }
     
     @objc func keyboardDidHide(notification:Notification) {
-        //let t = transitioningDelegate as! DeckTransitioningDelegate
-        //t.isSwipeToDismissEnabled = true
 
+    }
+    
+    func getTableOffset(forReply: Post, keyboardHeight:CGFloat) -> CGPoint? {
+        var rect:CGRect?
+        var offsetPoint:CGFloat?
+        
+        if let focusedReply = focusedReply,
+            let replyTo = focusedReply.replyTo {
+            if replyTo == post.key {
+                
+                for i in 0..<topState.replies.count {
+                    let reply = topState.replies[i]
+                    if focusedReply.key == reply.key {
+                        rect = tableNode.rectForRow(at: IndexPath(row: 0, section: i + 1))
+                        break
+                    }
+                }
+            }
+        }
+        
+        let keyboardTop = view.bounds.height - keyboardHeight - commentBar.calculatedHeight - 32.0
+        
+        if rect != nil {
+            let rectBottom = rect!.origin.y  + rect!.height
+            if rectBottom < keyboardTop {
+                return nil
+            }
+            //print("RECT BOTTOM: \(rect!.origin.y + rect!.height) | Keyboard: \(keyboardTop)")
+            offsetPoint = rectBottom + 64.0 - keyboardTop
+            
+        }
+        
+        return offsetPoint != nil ? CGPoint(x: 0, y: offsetPoint!) : nil
     }
 }
 
@@ -560,8 +597,11 @@ extension CommentsViewController: CommentBarDelegate {
     
     func commentSend(text: String) {
         commentBar.isUserInteractionEnabled = false
+        commentBar.textView.text = ""
+        commentBar.textViewDidChange(self.commentBar.textView)
+        commentBar.textView.resignFirstResponder()
         callFunction(text: text) { success, _reply, _replyTo in
-            print("SUCCESS: \(success)")
+            self.focusedReply = nil
             guard success, let reply = _reply else { return }
             self.commentBar.isUserInteractionEnabled = true
             reply.isYou = true
@@ -571,16 +611,23 @@ extension CommentsViewController: CommentBarDelegate {
                 print("Added reply to: \(replyTo)")
                 for i in 0..<self.topState.replies.count {
                     let stateReply = self.topState.replies[i]
-                    if stateReply.numReplies <= stateReply.replies.count {
                         if stateReply.key == replyTo {
+                            print("Found Correct reply")
+                            stateReply.numReplies += 1
                             stateReply.replies.append(reply)
-                            self.tableNode.reloadData()
+                            //self.tableNode.reloadData()
                             self.tableNode.performBatch(animated: false, updates: {
-                                let indexSet = IndexSet(integer: i)
-                                self.tableNode.reloadSections(indexSet, with: .top)
-                            }, completion: nil)
+                                let indexSet = IndexSet(integer: i + 1)
+                                print("RELOADING TABLE SECTION for: \(stateReply.text)")
+                                self.tableNode.reloadSections(indexSet, with: .fade)
+                            }, completion: { _ in
+                                var row = stateReply.replies.count
+                                if stateReply.numReplies > stateReply.replies.count {
+                                    row += 1
+                                }
+                                self.tableNode.scrollToRow(at: IndexPath(row: row, section: i + 1), at: .bottom, animated: true)
+                            })
                         }
-                    }
                 }
             } else {
                 if self.topState.endReached {
@@ -598,14 +645,61 @@ extension CommentsViewController: CommentBarDelegate {
                 }
             }
         }
-        commentBar.textView.text = ""
-        commentBar.textViewDidChange(self.commentBar.textView)
-        commentBar.textView.resignFirstResponder()
         return
-
     }
     
     override var prefersStatusBarHidden: Bool {
         get { return true }
     }
+}
+
+extension CommentsViewController: CommentCellDelegate {
+    func handleReply(_ reply: Post) {
+        guard let replyTo = reply.replyTo else { return }
+        if replyTo == post.key {
+            self.focusedReply = reply
+            self.commentBar.setText("")
+            self.replyBar.setReply(reply)
+            self.replyBottomAnchor.constant = 0
+            self.view.layoutIfNeeded()
+            
+            if let keyboardHeight = keyboardHeight {
+                if let focusedReply = self.focusedReply,
+                    let offsetPoint = getTableOffset(forReply: focusedReply, keyboardHeight: keyboardHeight) {
+                    self.tableNode.setContentOffset(offsetPoint, animated: true)
+                }
+            } else {
+                self.commentBar.textView.becomeFirstResponder()
+            }
+        } else {
+            self.focusedReply = reply
+            self.commentBar.setText("@\(reply.anon.displayName) ")
+            
+            self.replyBar.setReply(reply)
+            self.replyBottomAnchor.constant = 0
+            self.view.layoutIfNeeded()
+            
+            if let keyboardHeight = keyboardHeight {
+                if let focusedReply = self.focusedReply,
+                    let offsetPoint = getTableOffset(forReply: focusedReply, keyboardHeight: keyboardHeight) {
+                    self.tableNode.setContentOffset(offsetPoint, animated: true)
+                }
+            } else {
+                self.commentBar.textView.becomeFirstResponder()
+            }
+            
+        }
+    }
+    
+    @objc func cancelReply() {
+        self.focusedReply = nil
+        self.commentBar.setText("")
+        UIView.animate(withDuration: 0.15, delay: 0, options: .curveLinear, animations: {
+            self.replyBottomAnchor.constant = 32
+            self.view.layoutIfNeeded()
+        }, completion: {_ in
+            self.replyBar.setReply(nil)
+        })
+    }
+    
 }

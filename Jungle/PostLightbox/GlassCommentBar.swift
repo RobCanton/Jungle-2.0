@@ -31,13 +31,23 @@ class GlassCommentBar:UIView, UITextViewDelegate {
     weak var delegate:CommentBarDelegate?
     
     var dividerNode:UIView!
+    var backView:UIView!
     override init(frame: CGRect) {
         super.init(frame: frame)
-        clipsToBounds = true
+        clipsToBounds = false
         backgroundColor = UIColor.clear
         translatesAutoresizingMaskIntoConstraints = false
         self.insetsLayoutMarginsFromSafeArea = false
         self.preservesSuperviewLayoutMargins = false
+        
+        backView = UIView(frame: bounds)
+        backView.backgroundColor = UIColor.white
+        addSubview(backView)
+        backView.translatesAutoresizingMaskIntoConstraints = false
+        backView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        backView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        backView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        backView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
         
         dividerNode = UIView()
         dividerNode.backgroundColor = UIColor(white: 0.8, alpha: 1.0)
@@ -125,6 +135,7 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         placeHolderLabel.textColor = UIColor(white: 1.0, alpha: 0.67)
         textView.font = Fonts.regular(ofSize: 16.0)
         textView.keyboardType = .twitter
+        backView.isHidden = true
         //textView.returnKeyType = .done
     }
     
@@ -175,5 +186,6 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         textView.text = text
         textViewDidChange(textView)
     }
+    
 }
 

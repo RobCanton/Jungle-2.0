@@ -440,6 +440,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         
         let cell = NewPostCellNode(post: state.posts[indexPath.row])
         cell.selectionStyle = .none
+        cell.delegate = self
         return cell
 //        let cell = PostCellNode(withPost: state.posts[indexPath.row])
 //        cell.selectionStyle = .none
@@ -539,7 +540,7 @@ extension PostsTableViewController: PostCellDelegate {
     func postOpen(tag: String) {
         let vc = SearchViewController()
         
-        vc.initialSearch = "#\(tag)"
+        vc.initialSearch = tag
         vc.interactor = pushTransitionManager.interactor
         vc.transitioningDelegate = pushTransitionManager
         self.present(vc, animated: true, completion: nil)

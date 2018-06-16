@@ -30,6 +30,8 @@ class NewPostCellNode:ASCellNode {
     var post:Post?
     var shouldStopObserving = true
     
+    weak var delegate:PostCellDelegate?
+    
     required init(post:Post) {
         super.init()
         self.post = post
@@ -78,6 +80,17 @@ class NewPostCellNode:ASCellNode {
         
         postTextNode.maximumNumberOfLines = 3
         postTextNode.setText(text: post.textClean, withSize: 16.0, normalColor: .black, activeColor: tagColor)
+        postTextNode.tapHandler = { type, value in
+            switch type {
+            case .hashtag:
+                self.delegate?.postOpen(tag: value)
+                break
+            case .mention:
+                break
+            case .link:
+                break
+            }
+        }
         
         likeButton.setImage(UIImage(named:"like"), for: .normal)
         likeButton.laysOutHorizontally = true

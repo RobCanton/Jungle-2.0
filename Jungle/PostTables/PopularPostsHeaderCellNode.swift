@@ -92,7 +92,7 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, didSelectItemAt indexPath: IndexPath) {
-        delegate?.postOpen(tag: hashtags[indexPath.row].hastag)
+        delegate?.postOpen(tag: "#\(hashtags[indexPath.row].hastag)")
     }
     
 }

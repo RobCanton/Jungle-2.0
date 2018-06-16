@@ -23,6 +23,7 @@ class SearchTabViewController:UIViewController, RCSearchBarDelegate {
     @IBOutlet weak var topContainerView:UIView!
     @IBOutlet weak var contentView: UIView!
     
+    var pushTransitionManager = PushTransitionManager()
     var trendingHashtagsNode:TrendingHashtagsNode!
     var searchBar:RCSearchBarView!
     override func viewDidLoad() {
@@ -114,11 +115,11 @@ extension SearchTabViewController: TrendingHashtagsDelegate {
     }
     
     func open(hashtag: String) {
-        print("OPEN TAG")
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let vc = storyboard.instantiateViewController(withIdentifier: "SearchViewController") as! SearchViewController
+        let vc = SearchViewController()
         vc.initialSearch = hashtag
-        self.navigationController?.pushViewController(vc, animated: true)
+        vc.interactor = pushTransitionManager.interactor
+        vc.transitioningDelegate = pushTransitionManager
+        self.present(vc, animated: true, completion: nil)
     }
 }
 
@@ -201,11 +202,11 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
         }
         
         let cell = ASTextCellNode()
-        cell.text = trendingHashtags[indexPath.row].hastag
+        cell.text = "#\(trendingHashtags[indexPath.row].hastag)"
         cell.textInsets = UIEdgeInsetsMake(12.0, 16.0, 12.0, 16.0)
         cell.textAttributes = [
             NSAttributedStringKey.font: Fonts.medium(ofSize: 18.0),
-            NSAttributedStringKey.foregroundColor: accentColor,
+            NSAttributedStringKey.foregroundColor: tagColor,
             NSAttributedStringKey.paragraphStyle: paragraphStyle
         ]
         cell.selectionStyle = .none

@@ -42,7 +42,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     
     var sm = SwiftMessages()
     
-    var titleView:JTitleView!
+    var titleView:HomeTitleView!
     var messageWrapper = SwiftMessages()
     
     override func viewDidLoad() {
@@ -56,7 +56,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         
         let layoutGuide = view.safeAreaLayoutGuide
         
-        titleView = JTitleView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0))
+        titleView = HomeTitleView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0))
         view.addSubview(titleView)
         titleView.translatesAutoresizingMaskIntoConstraints = false
         titleView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true

@@ -93,7 +93,7 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if let search = initialSearch {
-            searchBar.textField.text = search
+            searchBar.setText(search)
             latestPostsVC?.setSearch(text: search)
             initialSearch = nil
         }

@@ -17,7 +17,7 @@ protocol RCSearchBarDelegate:class {
     func searchTapped(_ text:String)
 }
 
-class RCSearchBarView:UIView, UITextFieldDelegate {
+class RCSearchBarView:JTitleView, UITextFieldDelegate {
     
     var textFieldContainer:UIView!
     var textBubble:UIView!
@@ -34,14 +34,6 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = accentColor
-        self.translatesAutoresizingMaskIntoConstraints = false
-        self.preservesSuperviewLayoutMargins = false
-        self.insetsLayoutMarginsFromSafeArea = false
-        
-        let bg = UIImageView(image: UIImage(named:"NavBarGradient1"))
-        bg.frame = bounds
-        addSubview(bg)
         
         leftButtonItem = UIButton(type: .custom)
         leftButtonItem.tintColor = UIColor.black
@@ -134,8 +126,11 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
         textField.font = Fonts.medium(ofSize: 16.0)
         textField.textColor = UIColor.white
         textField.delegate = self
-        textField.placeholder = "Search"
         textField.text = "Search"
+        textField.attributedPlaceholder = NSAttributedString(string: "Search", attributes: [
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 16.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.5)
+            ])
         let width = textWidth
         
         var leadingConstant:CGFloat = 12.0
@@ -206,6 +201,27 @@ class RCSearchBarView:UIView, UITextFieldDelegate {
     
     var textWidth:CGFloat {
         return UILabel.size(text: textField.text ?? "", height: 44.0, font: textField.font!).width
+    }
+    
+    func setText(_ text:String) {
+        self.textField.text = text
+        let width = textWidth
+        var leadingConstant:CGFloat = 12.0
+        if width == 0.0 {
+            leadingConstant = defaultTextLeadingConstant
+        } else {
+            let bubbleWidth = textBubble.bounds.width - 24.0
+            if width < bubbleWidth {
+                leadingConstant += (bubbleWidth - width) / 2
+            }
+        }
+        
+        self.containerLeadingAnchor.constant = 44.0
+        self.containerTrailingAnchor.constant = -44.0
+        self.textFieldLeadingAnchor.constant = leadingConstant
+        self.layoutIfNeeded()
+        self.cancelButton.alpha = 0.0
+        self.leftButtonItem.alpha = 1.0
     }
 }
 
