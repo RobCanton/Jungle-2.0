@@ -32,3 +32,25 @@ func clearDirectory(name:String) {
         print("Could not clear temp folder: \(error)")
     }
 }
+
+func numericShorthand(_ number:Int) -> String {
+    var str = "\(number)"
+    
+    if number >= 1000000 {
+        let decimal = Double(number) / 1000000
+        str = "\(roundToOneDecimal(decimal))M"
+    } else if number >= 100000 {
+        let decimal = Int(Double(number) / 1000)
+        str = "\(decimal)K"
+    } else if number >= 10000 {
+        let decimal = Double(number) / 1000
+        str = "\(roundToOneDecimal(decimal))K"
+    } else if number >= 1000 {
+        str.insert(",", at: str.index(str.startIndex, offsetBy: 1))
+    }
+    return str
+}
+
+func roundToOneDecimal(_ value:Double) -> Double {
+    return Double(floor(value*10)/10)
+}

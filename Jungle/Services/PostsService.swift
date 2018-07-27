@@ -19,8 +19,6 @@ class PostsService {
         
     }
     
-    
-    
     static func getPost(_ postID:String, completion: @escaping (_ post:Post?)->()) {
         let postRef = firestore.collection("posts").document(postID)
         postRef.getDocument { snapshot, error in
@@ -54,81 +52,60 @@ class PostsService {
     }
     
     static func refreshNewPosts(existingKeys: [String:Bool], startAfter firstTimestamp: Double?, completion: @escaping (_ posts:[Post])->()) {
-        let postsRef = firestore.collection("posts")
-            .whereField("status", isEqualTo: "active")
-            .whereField("parent", isEqualTo: "NONE")
-            .order(by: "createdAt", descending: false)
-        
-        
-        var queryRef:Query!
-        if let firstTimestamp = firstTimestamp {
-            queryRef = postsRef.start(after: [firstTimestamp]).limit(to: 12)
-        } else {
-            queryRef = postsRef.limit(to: 12)
+        var params = [
+            "limit": 15,
+            ] as [String:Any]
+        if let offset = firstTimestamp {
+            params["offset"] = offset
         }
-        queryRef.getDocuments() { (querySnapshot, err) in
-            var posts = [Post]()
+        
+        functions.httpsCallable("recentPostsRefresh").call(params) { result, error in
             
-            if let err = err {
-                print("Error getting documents: \(err)")
-            } else {
-                for document in querySnapshot!.documents {
-                    let data = document.data()
-                    if let post = Post.parse(id: document.documentID, data) {
-                        if existingKeys[post.key] == nil {
-                            posts.insert(post, at: 0)
-                        }
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([])
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.insert(post, at: 0)
                     }
                 }
+                print("Results: \(posts)")
+                return completion(posts)
             }
-            PostsService.fetchAdditionalInfo(forPosts: posts) { _posts in
-                completion(_posts)
-            }
+            
         }
     }
     
     static func getNewPosts(existingKeys: [String:Bool], lastPostID: Double?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
-            let rootPostRef = firestore.collection("posts")
-                .whereField("status", isEqualTo: "active")
-                .whereField("parent", isEqualTo: "NONE")
-            var postsRef:Query!
-            var queryRef:Query!
-
-            postsRef = rootPostRef.order(by: "createdAt", descending: true)
-            if let lastPostID = lastPostID {
-                queryRef = postsRef.start(after: [lastPostID]).limit(to: 15)
-            } else{
-                queryRef = postsRef.limit(to: 15)
-            }
         
-            queryRef.getDocuments() { (querySnapshot, err) in
+        var params = [
+            "limit": 15,
+        ] as [String:Any]
+        if let offset = lastPostID {
+            params["offset"] = offset
+        }
+        
+        functions.httpsCallable("recentPosts").call(params) { result, error in
+            
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([], false)
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
                 var posts = [Post]()
-                var endReached = false
-                
-                if let err = err {
-                    print("Error getting documents: \(err)")
-                    completion([], false)
-                } else {
-                    
-                    let documents = querySnapshot!.documents
-                    
-                    if documents.count == 0 {
-                        endReached = true
-                    }
-                    
-                    for document in documents {
-                        let data = document.data()
-                        if let post = Post.parse(id: document.documentID, data) {
-                            if existingKeys[post.key] == nil {
-                                posts.append(post)
-                            }
-                        }
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.append(post)
                     }
                 }
-                PostsService.fetchAdditionalInfo(forPosts: posts) { _posts in
-                    completion(_posts, endReached)
-                }
+                print("Results: \(posts)")
+                return completion(posts, posts.count == 0)
             }
+            
+        }
     }
     
     static func fetchAdditionalInfo(forPosts _posts:[Post], completion: @escaping((_ posts:[Post])->())) {
@@ -151,69 +128,37 @@ class PostsService {
     }
     
     static func getAdditionalPostInfo(_ post: Post, completion: @escaping ((_ post:Post)->())) {
-        getMyAnon(forPostID: post.key) { postID, anonKey in
-            post.myAnonKey = anonKey
-            getTopComment(forPost: post) { _topComment in
-                if let topComment = _topComment {
-                    print("MY ANONKEY: \(anonKey) | \(topComment.anon.key)")
-                    topComment.isYou = anonKey == topComment.anon.key
-                    post.topComment = topComment
-                    completion(post)
-                } else {
-                    completion(post)
-                }
-            }
+        var parentID:String = post.key
+        if let parent = post.parent, parent != "", parent != post.key {
+            parentID = parent
         }
+        completion(post)
     }
 
     
-    static func getPopularPosts(existingKeys: [String:Bool], lastScore: Double?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
-        let rootPostRef = firestore.collection("posts")
-            .whereField("status", isEqualTo: "active")
-            .whereField("parent", isEqualTo: "NONE")
-        var postsRef:Query!
-        var queryRef:Query!
+    static func getPopularPosts(existingKeys: [String:Bool], offset: Int, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
         
-        postsRef = rootPostRef.order(by: "score", descending: true)
-        if let lastScore = lastScore {
-            queryRef = postsRef.start(at: [lastScore]).limit(to: 15)
-        } else{
-            queryRef = postsRef.limit(to: 15)
-        }
+        var params = [
+            "length": 15,
+            "offset": offset
+            ] as [String:Any]
         
-        queryRef.getDocuments() { (querySnapshot, err) in
-            var posts = [Post]()
-            var endReached = false
-            
-            if let err = err {
-                print("Error getting documents: \(err)")
-                completion([], false)
-            } else {
-                
-                let allDocuments = querySnapshot!.documents
-                var documents = [QueryDocumentSnapshot]()
-                
-                for doc in allDocuments {
-                    if existingKeys[doc.documentID] == nil {
-                        documents.append(doc)
-                    }
-                }
-                
-                if documents.count == 0 {
-                    endReached = true
-                    print("END REACHED MAN!")
-                }
-                
-                for document in documents {
-                    let data = document.data()
-                    if let post = Post.parse(id: document.documentID, data) {
-                        //post.documentSnapshot = document
+        print("RXC DID CALL")
+        functions.httpsCallable("popularPosts").call(params) { result, error in
+            print("RXC DID RETURN!")
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([], false)
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
                         posts.append(post)
                     }
                 }
-            }
-            PostsService.fetchAdditionalInfo(forPosts: posts) { _posts in
-                completion(_posts, endReached)
+                print("Results: \(posts)")
+                return completion(posts, posts.count == 0)
             }
         }
     }
@@ -240,7 +185,7 @@ class PostsService {
     static func getReplyVote(replyID:String, completion: @escaping (_ replyID:String, _ vote: Vote)->()) {
         guard let uid = Auth.auth().currentUser?.uid else { return completion(replyID,.notvoted) }
         let replyRef = firestore.collection("posts").document(replyID).collection("votes").document(uid)
-        print("REPLY VOTE REF: \(replyRef.debugDescription)")
+        
         replyRef.getDocument { snapshot, error in
             var vote = Vote.notvoted
             if let error = error {
@@ -248,9 +193,7 @@ class PostsService {
             } else if let dict = snapshot?.data(),
                 let val = dict["val"] as? Bool {
                 vote = val ? Vote.upvoted : Vote.downvoted
-                print("GOT ZE VOTE: \(val)")
             }
-            
             
             completion(replyID, vote)
         }
@@ -279,157 +222,43 @@ class PostsService {
                 }
             }
             
-            if replies.count > 0 {
-                var count = 0
-                for reply in replies {
-                    reply.isYou = reply.anon.key == myAnonKey
-                    getReplyVote(replyID: reply.key) { _, vote in
-                        reply.vote = vote
-                        count += 1
-                        print("JJR - count: \(count) | replies: \(replies.count)")
-                        if count >= replies.count {
-                            print("DO WE EVER GET HERE?")
-                            completion(replyID, replies)
-                        }
-                    }
-                }
-            } else {
-                completion(replyID, replies)
+            PostsService.fetchAdditionalInfo(forPosts: replies) { _posts in
+                completion(replyID, _posts)
             }
         }
     }
 
     static func getReplies(post:Post, after:Double?, completion: @escaping (_ replies:[Post])->()) {
-        let postID = post.key
-        //guard let uid = Auth.auth().currentUser?.uid else { return completion([]) }
-        let postsRef = firestore.collection("posts")
-        //let lexiconRef = postsRef.document(postID).collection("lexicon").document(uid)
-        let myAnonKey = post.myAnonKey
-        
-        let postRepliesRef = postsRef
-            .whereField("status", isEqualTo: "active")
-            .whereField("replyTo", isEqualTo: postID)
-            .order(by: "createdAt", descending: false)
-        var postRepliesQuery:Query!
-        if let after = after {
-            postRepliesQuery = postRepliesRef.start(after: [after]).limit(to: 12)
-        } else {
-            postRepliesQuery = postRepliesRef.limit(to: 12)
+        var params = [
+            "limit": 15,
+            "postID": post.key
+            ] as [String:Any]
+        if let offset = after {
+            params["offset"] = offset
         }
         
-        print("POST: \(post.key) AFTER: \(after)")
-        
-        postRepliesQuery.getDocuments { snapshot, error in
-            var replies = [Post]()
-            
-            if let err = error {
-                print("Error getting documents: \(err)")
+        functions.httpsCallable("postReplies").call(params) { result, error in
+            print("RXC DID RETURN!")
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
                 return completion([])
-            } else {
-                
-                let documents = snapshot!.documents
-                print("Got something nah mean dawg: \(documents)")
-                for document in documents {
-                    print("REPLY DOCUMENT: \(document.data())")
-                    if let reply = Post.parse(id: document.documentID, document.data()) {
-                        replies.append(reply)
-                        print("REPLY OBJECT: \(reply)")
-                    }
-                    
-                }
-            }
-            if replies.count > 0 {
-                var count = 0
-                
-                for reply in replies {
-                    var _vote:Vote?
-                    var _subReplies:[Post]?
-                    reply.isYou = reply.anon.key == myAnonKey
-                    
-                    getReplyVote(replyID: reply.key) { _replyID, vote in
-                        _vote = vote
-                        
-                        if _vote != nil, _subReplies != nil {
-                            reply.vote = _vote!
-                            
-                            count += 1
-                            if count >= replies.count {
-                                return completion(replies)
-                            }
-                        }
-                    }
-                    
-                    getSubReplies(replyID: reply.key, myAnonKey: myAnonKey) { _replyID, subReplies in
-                        _subReplies = subReplies
-                        
-                        if _vote != nil, _subReplies != nil {
-                            reply.replies = _subReplies!
-                            
-                            count += 1
-                            if count >= replies.count {
-                                return completion(replies)
-                            }
-                        }
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.append(post)
                     }
                 }
-            } else {
-                return completion([])
+                print("Results: \(posts)")
+                return completion(posts)
             }
         }
     }
-    
-    static func getNearbyPosts(existingKeys: [String:Bool], lastTimestamp: Double?, isRefresh:Bool, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
-        guard let location = gpsService.getLastLocation() else { return }
-        
-        UploadService.userHTTPHeaders { uid, headers in
-            var parameters = [
-                "lat": location.coordinate.latitude,
-                "lon": location.coordinate.longitude,
-                "limit": 5,
-                "radius": 1000,
-                "isRefresh": isRefresh
-                ] as [String:Any]
-            
-            if let lastTimeStamp = lastTimestamp {
-                parameters["lastTimestamp"] = lastTimeStamp
-            }
-            
-            Alamofire.request("\(API_ENDPOINT)/posts/nearby", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
-                DispatchQueue.main.async {
-                    var posts = [Post]()
-                    
-                    if let dict = response.result.value as? [String:Any],
-                        let success = dict["success"] as? Bool, success {
-                        //print("GET NEARBY SUCCESS: \(dict )")
-                        if let postsArray = dict["results"] as? [[String:Any]] {
-                            
-                            for postData in postsArray {
-                                if let postID = postData["postID"] as? String,
-                                    existingKeys[postID] == nil,
-                                    let data = postData["data"] as? [String:Any],
-                                    let post = Post.parse(id: postID, data) {
-                                    posts.insert(post, at: 0)
-                                }
-                            }
-                            
-                            if posts.count == 0 {
-                                return completion(posts, true)
-                            }
-                        }   
-                    } else {
-                        print("GET NEARBY FAILED")
-                    }
-                    
-                    return completion(posts, false)
-                }
-            }
-        }
-    }
-    
     
     static func getSuggestedTags(forText text: String, completion: @escaping (_ tags:[String], _ trending:[String])->()) {
         UploadService.userHTTPHeaders { uid, headers in
-            var parameters = [
+            let parameters = [
                 "text": text
             ] as [String:Any]
             

@@ -393,77 +393,79 @@ extension SinglePostViewController: ASTableDelegate, ASTableDataSource, ASBatchF
     }
     
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
-        switch indexPath.section {
-        case 0:
-            if let _ = post.attachments?.video {
-                let cell = SinglePostCellNode(post: post)
-                cell.style.height = ASDimension(unit: .points, value: view.bounds.height)
-                cell.selectionStyle = .none
-                return cell
-            }
-            
-            let cell = PostCellNode(withPost: post, isSinglePost: true)
-            cell.selectionStyle = .none
-            cell.backgroundColor = UIColor.white
-            return cell
-            
-        case 1:
-            let cell = TitleCellNode(mode: sortMode)
-            cell.selectionStyle = .none
-            return cell
-        default:
-            
-            let section = indexPath.section - 2
-            
-            switch sortMode {
-            case .top:
-                let rowCount = topState.replies.count
-                
-                if topState.fetchingMore && section == rowCount {
-                    let node = LoadingCellNode()
-                    node.style.height = ASDimensionMake(44.0)
-                    return node;
-                }
-                let reply = topState.replies[section]
-                if indexPath.row == 0 {
-                    let cell = PostCommentCellNode(post: reply)
-                    cell.selectionStyle = .none
-                    //cell.delegate = self
-                    return cell
-                } else {
-                    var subReplyIndex = indexPath.row - 1
-                    if reply.numReplies > reply.replies.count {
-                        subReplyIndex -= 1
-                    }
-                    if reply.numReplies > reply.replies.count, indexPath.row == 1 {
-                        let cell = ViewRepliesCellNode(numReplies: reply.numReplies - reply.replies.count)
-                        cell.selectionStyle = .none
-                        return cell
-                    }
-                    let subReply = reply.replies[subReplyIndex]
-                    let cell = PostCommentCellNode(post: subReply)
-                    cell.selectionStyle = .none
-                    
-                    //cell.delegate = self
-                    return cell
-                }
-            case .live:
-               
-                //let rowCount = self.tableNode(tableNode, numberOfRowsInSection: 2)
-                
-//                if liveState.fetchingMore && section == rowCount - 1 {
+//        switch indexPath.section {
+//        case 0:
+//            if let _ = post.attachments?.video {
+//                let cell = SinglePostCellNode(post: post)
+//                cell.style.height = ASDimension(unit: .points, value: view.bounds.height)
+//                cell.selectionStyle = .none
+//                return cell
+//            }
+//
+//            let cell = PostCellNode(withPost: post, isSinglePost: true)
+//            cell.selectionStyle = .none
+//            cell.backgroundColor = UIColor.white
+//            return cell
+//
+//        case 1:
+//            let cell = TitleCellNode(mode: sortMode)
+//            cell.selectionStyle = .none
+//            return cell
+//        default:
+//
+//            let section = indexPath.section - 2
+//
+//            switch sortMode {
+//            case .top:
+//                let rowCount = topState.replies.count
+//
+//                if topState.fetchingMore && section == rowCount {
 //                    let node = LoadingCellNode()
 //                    node.style.height = ASDimensionMake(44.0)
 //                    return node;
 //                }
-                
-                let cell = CommentCellNode(reply: liveState.replies[section], toPost: post)
-                cell.selectionStyle = .none
-                cell.delegate = self
-                return cell
-            }
-            
-        }
+//                let reply = topState.replies[section]
+//                if indexPath.row == 0 {
+//                    let cell = PostCommentCellNode(post: reply)
+//                    cell.selectionStyle = .none
+//                    //cell.delegate = self
+//                    return cell
+//                } else {
+//                    var subReplyIndex = indexPath.row - 1
+//                    if reply.numReplies > reply.replies.count {
+//                        subReplyIndex -= 1
+//                    }
+//                    if reply.numReplies > reply.replies.count, indexPath.row == 1 {
+//                        let cell = ViewRepliesCellNode(numReplies: reply.numReplies - reply.replies.count)
+//                        cell.selectionStyle = .none
+//                        return cell
+//                    }
+//                    let subReply = reply.replies[subReplyIndex]
+//                    let cell = PostCommentCellNode(post: subReply)
+//                    cell.selectionStyle = .none
+//
+//                    //cell.delegate = self
+//                    return cell
+//                }
+//            case .live:
+//
+//                //let rowCount = self.tableNode(tableNode, numberOfRowsInSection: 2)
+//
+////                if liveState.fetchingMore && section == rowCount - 1 {
+////                    let node = LoadingCellNode()
+////                    node.style.height = ASDimensionMake(44.0)
+////                    return node;
+////                }
+//
+//                let cell = CommentCellNode(reply: liveState.replies[section], toPost: post)
+//                cell.selectionStyle = .none
+//                cell.delegate = self
+//                return cell
+//            }
+//
+//        }
+        
+        return ASCellNode()
     }
     
     
@@ -929,6 +931,14 @@ extension SinglePostViewController: CommentBarDelegate {
 }
 
 extension SinglePostViewController: CommentCellDelegate {
+    func postOpen(tag: String) {
+        
+    }
+    
+    func handleMore(_ post: Post) {
+        
+    }
+    
     func handleReply(_ reply:Post) {
         self.focusedReply = reply
         self.commentBar.textView.becomeFirstResponder()

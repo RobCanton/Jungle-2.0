@@ -40,3 +40,41 @@ class Fonts {
         return UIFont.systemFont(ofSize: size, weight: .bold)//UIFont(name: "\(primaryFontName)-Bold", size: size)!
     }
 }
+
+class Theme {
+    var backgroundColor:UIColor
+    var highlightedBackgroundColor:UIColor
+    var tabBarColor:UIColor
+    var primaryAccentColor:UIColor
+    var secondaryAccentColor:UIColor
+    var primaryTextColor:UIColor
+    var secondaryTextColor:UIColor
+    
+    init(_ backgroundColor:UIColor,_ highlightedBackgroundColor:UIColor, _ tabBarColor:UIColor,
+         _ primaryAccentColor:UIColor,_ secondaryAccentColor:UIColor, _ primaryTextColor:UIColor, _ secondaryTextColor:UIColor) {
+        self.backgroundColor = backgroundColor
+        self.highlightedBackgroundColor = highlightedBackgroundColor
+        self.tabBarColor = tabBarColor
+        self.primaryAccentColor = primaryAccentColor
+        self.secondaryAccentColor = secondaryAccentColor
+        self.primaryTextColor = primaryTextColor
+        self.secondaryTextColor = secondaryTextColor
+    }
+    
+    static let night = Theme(hexColor(from: "1a1a1a"),
+                             hexColor(from: "111111"),
+                             hexColor(from: "1a1a1a"),
+                             accentColor,
+                             tagColor,
+                             .white,
+                             UIColor(white: 0.4, alpha: 1.0))
+    static let day = Theme(.white,
+                           UIColor(white: 0.92, alpha: 1.0),
+                           .white,
+                           accentColor,
+                           tagColor,
+                           .black,
+                           tertiaryColor)
+}
+
+var currentTheme = Theme.day

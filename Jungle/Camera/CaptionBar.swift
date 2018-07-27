@@ -15,11 +15,31 @@ class CaptionBar:UIView, ASCollectionDelegate, ASCollectionDataSource {
     
     var collectionNode:ASCollectionNode!
     var hashtags = [TrendingHashtag]()
+    
     var handleTag: ((_ tag:String)->())?
+    var region:Region? {
+        didSet {
+            collectionNode.reloadData()
+            if region != nil {
+                collectionNode.selectItem(at: IndexPath(item: 0, section: 0), animated: true, scrollPosition: .left)
+                collectionNode(collectionNode, didSelectItemAt: IndexPath(item: 0, section: 0))
+            }
+        }
+    }
+    
+    var includeRegion:Bool {
+        guard let paths = collectionNode.indexPathsForSelectedItems else { return false }
+        for path in paths {
+            if path.section == 0, path.item == 0 {
+                return true
+            }
+        }
+        return false
+    }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = UIColor.black.withAlphaComponent(0.67)
+        backgroundColor = UIColor.clear
         
         hashtags = SearchService.trendingHashtags
         
@@ -27,7 +47,7 @@ class CaptionBar:UIView, ASCollectionDelegate, ASCollectionDataSource {
         layout.minimumLineSpacing = 8.0
         layout.minimumInteritemSpacing = 8.0
         layout.scrollDirection = .horizontal
-        layout.sectionInset = UIEdgeInsetsMake(0, 8, 0, 8)
+        layout.sectionInset = UIEdgeInsetsMake(0, 0, 0, 8)
         //layout.estimatedItemSize = CGSize(width: frame.height, height: frame.height)
         
         collectionNode = ASCollectionNode(collectionViewLayout: layout)
@@ -38,10 +58,11 @@ class CaptionBar:UIView, ASCollectionDelegate, ASCollectionDataSource {
         collectionNode.view.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         collectionNode.view.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8).isActive = true
         collectionNode.view.topAnchor.constraint(equalTo: topAnchor).isActive = true
-        
+        collectionNode.contentInset = UIEdgeInsetsMake(0, 8, 0, 0)
         collectionNode.view.showsHorizontalScrollIndicator = false
         collectionNode.delegate = self
         collectionNode.dataSource = self
+        collectionNode.allowsMultipleSelection = true
         collectionNode.reloadData()
     }
     
@@ -50,26 +71,123 @@ class CaptionBar:UIView, ASCollectionDelegate, ASCollectionDataSource {
     }
     
     func numberOfSections(in collectionNode: ASCollectionNode) -> Int {
-        return 1
+        return 2
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, numberOfItemsInSection section: Int) -> Int {
+        if section == 0 {
+            return 2
+        }
+    
         return hashtags.count
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, nodeForItemAt indexPath: IndexPath) -> ASCellNode {
+        if indexPath.section == 0 {
+            switch indexPath.row {
+            case 0:
+                let cell = LocationCellNode(region: region)
+                cell.style.height = ASDimension(unit: .points, value: 36)
+                return cell
+            default:
+                let cell = ASCellNode()
+                cell.style.width = ASDimension(unit: .points, value: 2.0)
+                cell.backgroundColor = UIColor.white.withAlphaComponent(0.5)
+                cell.layer.cornerRadius = 1.0
+                cell.clipsToBounds = true
+                return cell
+            }
+        }
         let cell = HashtagCellNode(tag: "#\(hashtags[indexPath.row].hastag)")
         cell.style.height = ASDimension(unit: .points, value: 36)
         return cell
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, didSelectItemAt indexPath: IndexPath) {
-        let tag = hashtags[indexPath.row]
-        handleTag?("#\(tag.hastag)")
+        
+        let cell = collectionNode.nodeForItem(at: indexPath)
+        if let locationCellNode = cell as? LocationCellNode {
+            locationCellNode.setHighlighted(true)
+        } else if let tagCell = cell as? HashtagCellNode {
+            handleTag?("#\(hashtags[indexPath.item].hastag)")
+            tagCell.setActivated()
+        }
+
+        //let tag = hashtags[indexPath.row]
+        //handleTag?("#\(tag.hastag)")
 //        hashtags.remove(at: indexPath.row)
 //        collectionNode.deleteItems(at: [indexPath])
     }
+    
+    func collectionNode(_ collectionNode: ASCollectionNode, didHighlightItemAt indexPath: IndexPath) {
+        let cell = collectionNode.nodeForItem(at: indexPath)
+        if let tagCell = cell as? HashtagCellNode {
+            tagCell.backgroundColor = tagColor
+        }
+    }
+    
+    func collectionNode(_ collectionNode: ASCollectionNode, didUnhighlightItemAt indexPath: IndexPath) {
+        let cell = collectionNode.nodeForItem(at: indexPath)
+        if let tagCell = cell as? HashtagCellNode {
+            tagCell.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        }
+    }
+    
+    func collectionNode(_ collectionNode: ASCollectionNode, didDeselectItemAt indexPath: IndexPath) {
+        if let cell = collectionNode.nodeForItem(at: indexPath) as? LocationCellNode {
+            cell.setHighlighted(false)
+        }
+    }
 }
+
+class LocationCellNode:ASCellNode {
+    var buttonNode = ASButtonNode()
+    
+    var bgNode = ASDisplayNode()
+    var insets:UIEdgeInsets!
+    var highlightedColor:UIColor = tagColor
+    required init(region:Region?) {
+        super.init()
+        
+        automaticallyManagesSubnodes = true
+        backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        insets = UIEdgeInsetsMake(0, 0, 0, 6)
+        buttonNode.setImage(UIImage(named:"PinLarge"), for: .normal)
+        buttonNode.contentSpacing = 0.0
+        if let locationStr = region?.locationShortStr {
+            buttonNode.imageNode.alpha = 1.0
+            buttonNode.setAttributedTitle(NSAttributedString(string: locationStr, attributes: [
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
+                NSAttributedStringKey.foregroundColor: UIColor.white
+                ]), for: .normal)
+        } else {
+            buttonNode.imageNode.alpha = 0.5
+            buttonNode.setAttributedTitle(NSAttributedString(string: "Unknown", attributes: [
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
+                NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.5)
+                ]), for: .normal)
+        }
+    }
+    
+    func setHighlighted(_ highlighted:Bool) {
+        backgroundColor = highlighted ? highlightedColor : UIColor.black.withAlphaComponent(0.5)
+    }
+    
+    override func didLoad() {
+        super.didLoad()
+        
+        view.layer.cornerRadius = 6.0
+        view.clipsToBounds = true
+    }
+    
+    override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
+        
+        let bgSpec = ASBackgroundLayoutSpec(child: buttonNode, background: bgNode)
+        return ASInsetLayoutSpec(insets: insets, child: bgSpec)
+    }
+}
+
+
 
 class HashtagCellNode:ASCellNode {
     var textNode = ASTextNode()
@@ -78,7 +196,7 @@ class HashtagCellNode:ASCellNode {
     required init(tag:String) {
         super.init()
         automaticallyManagesSubnodes = true
-        //backgroundColor = UIColor.blue.withAlphaComponent(0.5)
+        backgroundColor = UIColor.black.withAlphaComponent(0.5)
         textNode.textContainerInset = UIEdgeInsetsMake(0, 8, 0, 8)
         textNode.attributedText = NSAttributedString(string: tag, attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
@@ -88,15 +206,16 @@ class HashtagCellNode:ASCellNode {
     
     override func didLoad() {
         super.didLoad()
-        let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
-        bgNode.view.insertSubview(blurView, at: 0)
-        blurView.translatesAutoresizingMaskIntoConstraints = false
-        blurView.leadingAnchor.constraint(equalTo: bgNode.view.leadingAnchor).isActive = true
-        blurView.trailingAnchor.constraint(equalTo: bgNode.view.trailingAnchor).isActive = true
-        blurView.topAnchor.constraint(equalTo: bgNode.view.topAnchor).isActive = true
-        blurView.bottomAnchor.constraint(equalTo: bgNode.view.bottomAnchor).isActive = true
+        
         view.layer.cornerRadius = 6.0
         view.clipsToBounds = true
+    }
+    
+    func setActivated() {
+        backgroundColor = tagColor
+        UIView.animate(withDuration: 0.35, delay: 0.15, options: .curveEaseOut, animations: {
+            self.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        }, completion: nil)
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {

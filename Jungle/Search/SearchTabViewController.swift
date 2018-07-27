@@ -13,13 +13,15 @@ import AsyncDisplayKit
 
 struct TrendingHashtag {
     var hastag:String
-    var totalCount:Int
-    var todayCount:Int
-    var score:Double
-    var posts:[Post]
+    var count:Int
+    var postID:String
+    var lastPostedAt:Date
+    var report:Reports
 }
 
-class SearchTabViewController:UIViewController, RCSearchBarDelegate {
+
+
+class SearchTabViewController:JViewController, RCSearchBarDelegate {
     @IBOutlet weak var topContainerView:UIView!
     @IBOutlet weak var contentView: UIView!
     
@@ -30,16 +32,19 @@ class SearchTabViewController:UIViewController, RCSearchBarDelegate {
         super.viewDidLoad()
         view.backgroundColor = bgColor
         
-        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0))
+        let topInset = UIApplication.deviceInsets.top
+        let titleViewHeight = 50 + topInset
+        
+        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: titleViewHeight), topInset: topInset)
         view.addSubview(searchBar)
         
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         
         let layout = view.safeAreaLayoutGuide
-        searchBar.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
-        searchBar.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
-        searchBar.topAnchor.constraint(equalTo: layout.topAnchor, constant: -20).isActive = true
-        searchBar.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
+        searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        searchBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        searchBar.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
         
         trendingHashtagsNode = TrendingHashtagsNode()
         view.addSubview(trendingHashtagsNode.view)
@@ -49,7 +54,6 @@ class SearchTabViewController:UIViewController, RCSearchBarDelegate {
         trendingHashtagsNode.view.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
         trendingHashtagsNode.view.topAnchor.constraint(equalTo: layout.topAnchor, constant: 50).isActive = true
         trendingHashtagsNode.view.bottomAnchor.constraint(equalTo: layout.bottomAnchor).isActive = true
-        trendingHashtagsNode.getTrendingHastags()
         trendingHashtagsNode.delegate = self
         view.layoutIfNeeded()
         
@@ -107,16 +111,19 @@ protocol TrendingHashtagsDelegate: class {
 
 extension SearchTabViewController: TrendingHashtagsDelegate {
     func open(post: Post) {
-        let controller = SinglePostViewController()
-        controller.hidesBottomBarWhenPushed = true
-        controller.post = post
-        self.navigationController?.pushViewController(controller, animated: true)
+//        let controller = SinglePostViewController()
+//        controller.hidesBottomBarWhenPushed = true
+//        controller.post = post
+//
 
     }
     
     func open(hashtag: String) {
+        print("YOOO!")
         let vc = SearchViewController()
         vc.initialSearch = hashtag
+        var navBarHeight = 50 + UIApplication.deviceInsets.top
+        pushTransitionManager.navBarHeight = navBarHeight
         vc.interactor = pushTransitionManager.interactor
         vc.transitioningDelegate = pushTransitionManager
         self.present(vc, animated: true, completion: nil)
@@ -147,18 +154,13 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
         tableNode.delegate = self
         tableNode.dataSource = self
         tableNode.backgroundColor = UIColor.clear
+        
+        trendingHashtags = SearchService.trendingHashtags
     }
     
     override func didLoad() {
         super.didLoad()
-        //tableNode.view.separatorColor = subtitleColor.withAlphaComponent(0.25)
-        
         tableNode.view.separatorStyle = .none
-        
-        refreshControl = UIRefreshControl()
-        tableNode.view.refreshControl = refreshControl
-        refreshControl.addTarget(self, action: #selector(getTrendingHastags), for: .valueChanged)
-        //tableNode.view.delaysContentTouches = false
     }
     
     func clearSelection() {
@@ -192,7 +194,7 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
             let cell = ASTextCellNode()
             cell.text = "Trending"
             cell.textInsets = UIEdgeInsetsMake(16.0, 16.0, 12.0, 16.0)
-            
+            cell.selectionStyle = .none
             cell.textAttributes = [
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 24.0),
                 NSAttributedStringKey.foregroundColor: UIColor.black,
@@ -239,31 +241,20 @@ class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
 //        let node = tableNode.nodeForRow(at: indexPath) as! TrendingHastagCellNode
 //        node.setSelected(false)
     }
+
+    override func didEnterVisibleState() {
+        super.didEnterVisibleState()
+        NotificationCenter.default.addObserver(self, selector: #selector(trendingHashtagsUpdated), name: SearchService.trendingTagsNotification, object: nil)
+    }
     
-    @objc func getTrendingHastags() {
-        let trendingRef = database.child("hashtags/trending").queryOrdered(byChild: "score").queryLimited(toFirst: 7)
-        trendingRef.observeSingleEvent(of: .value, with: { snapshot in
-            guard let dict = snapshot.value as? [String:[String:Any]] else { return }
-            var _trendingHashtags = [TrendingHashtag]()
-            
-            for (hashtag, metadata) in dict {
-                let totalCount = metadata["total"] as? Int ?? 0
-                let todayCount = metadata["today"] as? Int ?? 0
-                let score = metadata["score"] as? Double ?? 0.0
-                
-                let trendingHashtag = TrendingHashtag(hastag: hashtag, totalCount: totalCount, todayCount: todayCount, score: score, posts: [])
-                _trendingHashtags.append(trendingHashtag)
-            }
-            
-            
-            
-            if self.refreshControl.isRefreshing {
-                self.refreshControl.endRefreshing()
-            }
-            self.trendingHashtags = _trendingHashtags.sorted(by: { $0.score > $1.score })
-            self.tableNode.reloadData()
-            
-        })
+    override func didExitVisibleState() {
+        super.didExitVisibleState()
+        NotificationCenter.default.removeObserver(self, name: SearchService.trendingTagsNotification, object: nil)
+    }
+    
+    @objc func trendingHashtagsUpdated() {
+        trendingHashtags = SearchService.trendingHashtags
+        tableNode.reloadData()
     }
 }
 
@@ -288,10 +279,10 @@ class TrendingHastagCellNode:ASCellNode, ASCollectionDelegate, ASCollectionDataS
             NSAttributedStringKey.foregroundColor: UIColor.black
         ])
         
-        subtitleNode.attributedText = NSAttributedString(string: "\(hashtag.todayCount) posts today. \(hashtag.totalCount) posts this week.", attributes: [
-            NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: UIColor.gray
-        ])
+//        subtitleNode.attributedText = NSAttributedString(string: "\(hashtag.todayCount) posts today. \(hashtag.totalCount) posts this week.", attributes: [
+//            NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
+//            NSAttributedStringKey.foregroundColor: UIColor.gray
+//        ])
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
@@ -347,13 +338,14 @@ class TrendingHastagCellNode:ASCellNode, ASCollectionDelegate, ASCollectionDataS
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, numberOfItemsInSection section: Int) -> Int {
-        return hashtag.posts.count
+        return 0//hashtag.posts.count
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, nodeForItemAt indexPath: IndexPath) -> ASCellNode {
-        let cell = MiniPostContainerNode(post: hashtag.posts[indexPath.row])
-        cell.selectionStyle = .none
-        return cell
+        return ASCellNode()
+//        let cell = MiniPostContainerNode(post: hashtag.posts[indexPath.row])
+//        cell.selectionStyle = .none
+//        return cell
     }
     
     
@@ -361,7 +353,7 @@ class TrendingHastagCellNode:ASCellNode, ASCollectionDelegate, ASCollectionDataS
         let node = collectionNode.nodeForItem(at: indexPath) as! MiniPostContainerNode
         node.setSelected(true)
         selectedItem = indexPath
-        delegate?.open(post: hashtag.posts[indexPath.item])
+//        delegate?.open(post: hashtag.posts[indexPath.item])
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, didDeselectItemAt indexPath: IndexPath) {

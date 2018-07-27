@@ -54,6 +54,7 @@ final class LoadingCellNode: ASCellNode {
 }
 
 final class SpinnerNode: ASDisplayNode {
+    
     var activityIndicatorView: UIActivityIndicatorView {
         return view as! UIActivityIndicatorView
     }
@@ -82,4 +83,42 @@ final class SpinnerNode: ASDisplayNode {
         activityIndicatorView.stopAnimating()
     }
 }
+
+final class BlurNode: ASDisplayNode {
+    var blurView:UIVisualEffectView {
+        return view as! UIVisualEffectView
+    }
+    required init(effect:UIBlurEffectStyle?=nil) {
+        super.init()
+        setViewBlock {
+            UIVisualEffectView(effect: UIBlurEffect(style: effect ?? .light))
+        }
+    }
+}
+
+final class UIImageNode: ASDisplayNode {
+    var imageView:UIImageView {
+        return view as! UIImageView
+    }
+    override init() {
+        super.init()
+        setViewBlock {
+            UIImageView(image: nil)
+        }
+    }
+}
+
+final class SwitchNode: ASDisplayNode {
+    var switchView:UISwitch {
+        return view as! UISwitch
+    }
+    override init() {
+        super.init()
+        backgroundColor = UIColor.clear
+        setViewBlock {
+            UISwitch(frame: .zero)
+        }
+    }
+}
+
 

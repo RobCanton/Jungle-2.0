@@ -32,7 +32,7 @@ public extension UIViewController {
 class StickerViewController:UIViewController, ASCollectionDelegate, ASCollectionDataSource {
     var collectionNode:ASCollectionNode!
     var addSticker: ((_ sticker:UIImage)->())?
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.clear
@@ -82,11 +82,11 @@ class StickerViewController:UIViewController, ASCollectionDelegate, ASCollection
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, numberOfItemsInSection section: Int) -> Int {
-        return 11
+        return StickerService.packs.count
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, nodeForItemAt indexPath: IndexPath) -> ASCellNode {
-        let cell = StickerCellNode(sticker: UIImage(named:"stickers-\(indexPath.row+1)")!)
+        let cell = StickerCellNode(stickerPack: StickerService.packs[indexPath.row])
         cell.style.width = ASDimension(unit: .points, value: collectionNode.bounds.width / 2)
         cell.style.height = ASDimension(unit: .points, value: collectionNode.bounds.width / 2)
         return cell
@@ -101,15 +101,34 @@ class StickerViewController:UIViewController, ASCollectionDelegate, ASCollection
 
 class StickerCellNode:ASCellNode {
     var imageNode = ASNetworkImageNode()
-    required init(sticker:UIImage) {
+    var titleNode = ASTextNode()
+    required init(stickerPack:StickerPack) {
         super.init()
         
         automaticallyManagesSubnodes = true
-        imageNode.image = sticker
+        //imageNode.image = sticker
+        imageNode.url = stickerPack.url
         imageNode.contentMode = .scaleAspectFit
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        titleNode.attributedText = NSAttributedString(string: stickerPack.name, attributes: [
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white,
+            NSAttributedStringKey.paragraphStyle: paragraphStyle
+            ])
     }
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(8, 8, 8, 8), child: imageNode)
+       
+        let vStack = ASStackLayoutSpec.vertical()
+        let imageInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(12, 12, 12, 12), child: imageNode)
+        imageInset.style.flexGrow = 1.0
+        titleNode.style.flexShrink = 1.0
+         titleNode.style.height = ASDimension(unit: .fraction, value: 0.25)
+        imageInset.style.height = ASDimension(unit: .fraction, value: 0.75)
+        vStack.children = [imageInset,titleNode]
+        vStack.spacing = 0.0
+        
+        return vStack
     }
 }
 

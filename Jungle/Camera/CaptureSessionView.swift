@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 import AVFoundation
 
-class CaptureSessionView:UIView {
+class CaptureSessionView:UIView, AVCaptureVideoDataOutputSampleBufferDelegate {
     
     private(set) var isFrontCamera = false
     var captureSession = AVCaptureSession()
@@ -20,6 +20,7 @@ class CaptureSessionView:UIView {
     var photoOutput: AVCapturePhotoOutput?
     var videoFileOutput: AVCaptureMovieFileOutput?
     var cameraPreviewLayer: AVCaptureVideoPreviewLayer?
+    var filteredImage: UIImageView!
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -30,6 +31,7 @@ class CaptureSessionView:UIView {
     }
     
     func setup() {
+        
         setupDevice()
         setupInputOutput()
         setupPreviewLayer()
@@ -93,9 +95,18 @@ class CaptureSessionView:UIView {
             captureSession.addInput(captureDeviceInput!)
             captureSession.addInput(audioDeviceInput)
             
-            photoOutput?.setPreparedPhotoSettingsArray([AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])], completionHandler: nil)
-            videoFileOutput = AVCaptureMovieFileOutput()
-            self.captureSession.addOutput(videoFileOutput!)
+            let videoOutput = AVCaptureVideoDataOutput()
+            
+            videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "sample buffer delegate", attributes: []))
+            if captureSession.canAddOutput(videoOutput) {
+                captureSession.addOutput(videoOutput)
+            }
+            
+            
+//
+//        photoOutput?.setPreparedPhotoSettingsArray([AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])], completionHandler: nil)
+           //videoFileOutput = AVCaptureMovieFileOutput()
+           // self.captureSession.addOutput(videoFileOutput!)
         } catch {
             print(error)
         }
@@ -107,11 +118,60 @@ class CaptureSessionView:UIView {
         cameraPreviewLayer?.connection?.videoOrientation = .portrait
         cameraPreviewLayer?.frame = self.bounds
         self.layer.insertSublayer(cameraPreviewLayer!, at: 0)
+        filteredImage = UIImageView(frame: self.bounds)
+        //filteredImage.alpha = 0.5
+        addSubview(filteredImage)
         
     }
     
     func destroySession() {
         cameraPreviewLayer?.removeFromSuperlayer()
         captureSession.stopRunning()
+    }
+    
+    let context = CIContext()
+    
+    func setupCorrectFramerate(currentCamera: AVCaptureDevice) {
+        for vFormat in currentCamera.formats {
+            //see available types
+            //print("\(vFormat) \n")
+            
+            var ranges = vFormat.videoSupportedFrameRateRanges as [AVFrameRateRange]
+            let frameRates = ranges[0]
+            
+            do {
+                //set to 240fps - available types are: 30, 60, 120 and 240 and custom
+                // lower framerates cause major stuttering
+                if frameRates.maxFrameRate == 240 {
+                    try currentCamera.lockForConfiguration()
+                    currentCamera.activeFormat = vFormat as AVCaptureDevice.Format
+                    //for custom framerate set min max activeVideoFrameDuration to whatever you like, e.g. 1 and 180
+                    currentCamera.activeVideoMinFrameDuration = frameRates.minFrameDuration
+                    currentCamera.activeVideoMaxFrameDuration = frameRates.maxFrameDuration
+                }
+            }
+            catch {
+                print("Could not set active format")
+                print(error)
+            }
+        }
+    }
+    
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        connection.videoOrientation = .portrait
+        
+        let comicEffect = CIFilter(name: "CIPixellate")
+        
+        let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+        let cameraImage = CIImage(cvImageBuffer: pixelBuffer!)
+        
+        comicEffect!.setValue(cameraImage, forKey: kCIInputImageKey)
+        
+        let cgImage = self.context.createCGImage(comicEffect!.outputImage!, from: cameraImage.extent)!
+        
+        DispatchQueue.main.async {
+            let filteredImage = UIImage(cgImage: cgImage)
+            self.filteredImage.image = filteredImage
+        }
     }
 }

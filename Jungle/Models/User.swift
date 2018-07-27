@@ -9,27 +9,28 @@
 import Foundation
 
 enum AuthType {
-    case anonymous, authenticated
+    case anonymous, email
 }
 
 class User {
     private(set) var uid:String
-    private(set) var username:String
     private(set) var authType:AuthType
+    private(set) var lastPostedAt:Date?
+
     
-    init(uid:String, authType:String, username:String) {
+    init(uid:String, authType:String, lastPostedAt: Date?) {
         self.uid = uid
-        self.username = username
         switch authType {
         case "anonymous":
             self.authType = .anonymous
             break
-        case "authenticated":
-            self.authType = .authenticated
+        case "email":
+            self.authType = .email
             break
         default:
             self.authType = .anonymous
             break
         }
+        self.lastPostedAt = lastPostedAt
     }
 }

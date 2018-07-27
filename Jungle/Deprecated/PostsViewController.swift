@@ -339,6 +339,10 @@ extension PostsViewController: ASTableDelegate, ASTableDataSource {
 }
 
 extension PostsViewController: PostCellDelegate {
+    func postMore() {
+        
+    }
+    
     
     func postParentVC() -> UIViewController {
         return self
@@ -356,33 +360,28 @@ extension PostsViewController: PostCellDelegate {
         
         if post.isYou {
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-                UploadService.userHTTPHeaders { _ , headers in
-                    if let headers = headers {
-                        UploadService.deletePost(headers, post: post) { success in
-                            print("Post deleted: \(success)")
-                            if success {
-                                for i in 0..<self.state.posts.count {
-                                    let arrayPost = self.state.posts[i]
-                                    if arrayPost.key == post.key {
-                                        self.state = PostsViewController.handleAction(.removePost(at: i), fromState: self.state)
-     
-                                        let indexPath = IndexPath(row: i, section: 0)
-                                        let cell = self.tableNode.nodeForRow(at: indexPath) as? PostCellNode
-                                        //cell?.stopListeningToPost()
-                                        self.tableNode.performBatchUpdates({
-                                            self.tableNode.deleteRows(at: [indexPath], with: .top)
-                                        }, completion: { _ in
-                                        })
-                                        
-                                        break
-                                    }
-                                }
+                UploadService.deletePost(post) { success in
+                    print("Post deleted: \(success)")
+                    if success {
+                        for i in 0..<self.state.posts.count {
+                            let arrayPost = self.state.posts[i]
+                            if arrayPost.key == post.key {
+                                self.state = PostsViewController.handleAction(.removePost(at: i), fromState: self.state)
+
+                                let indexPath = IndexPath(row: i, section: 0)
+                                let cell = self.tableNode.nodeForRow(at: indexPath) as? PostCellNode
+                                //cell?.stopListeningToPost()
+                                self.tableNode.performBatchUpdates({
+                                    self.tableNode.deleteRows(at: [indexPath], with: .top)
+                                }, completion: { _ in
+                                })
+                                
+                                break
                             }
                         }
-                    } else {
-                        
                     }
                 }
+
             }))
         } else {
             alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { _ in

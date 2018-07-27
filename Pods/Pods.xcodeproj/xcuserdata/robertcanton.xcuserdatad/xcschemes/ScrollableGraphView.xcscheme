@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0700"
+   LastUpgradeVersion = "0930"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -13,11 +13,11 @@
             buildForProfiling = "YES"
             buildForArchiving = "YES">
             <BuildableReference
-               BuildableIdentifier = 'primary'
-               BlueprintIdentifier = '9A4C764CAE0C524863CD00E0445CE587'
-               BlueprintName = 'ScrollableGraphView'
-               ReferencedContainer = 'container:Pods.xcodeproj'
-               BuildableName = 'ScrollableGraphView.framework'>
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "30D03B053B4E2D70D0D8FFBF747686C0"
+               BlueprintName = "ScrollableGraphView"
+               ReferencedContainer = "container:Pods.xcodeproj"
+               BuildableName = "ScrollableGraphView.framework">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

@@ -9,7 +9,6 @@
 import Foundation
 import UIKit
 import AsyncDisplayKit
-import DeckTransition
 import Firebase
 import Pulley
 
@@ -18,8 +17,7 @@ class CommentsDrawerViewController:UIViewController {
     var commentsVC:CommentsViewController?
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor.blue.withAlphaComponent(0.25)
-        
+        view.backgroundColor = UIColor.black
         
     }
     
@@ -41,6 +39,11 @@ class CommentsDrawerViewController:UIViewController {
         // convert y-position to downward pull progress (percentage)
         let translation = sender.translation(in: view)
         if translation.y < 0 {
+            if translation.y < -1, let post = currentPost {
+                let commentsVC = pulleyViewController?.drawerContentViewController as! CommentsDrawerViewController
+                commentsVC.setup(withPost: post, showKeyboard: false)
+                self.pulleyViewController?.setDrawerPosition(position: .open, animated: true)
+            }
             interactor?.hasStarted = false
             interactor?.shouldFinish = false
             interactor?.cancel()
@@ -149,6 +152,8 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     var tableNode = ASTableNode()
     var topState = State.empty
     var currentContext:ASBatchContext?
+    var pushTransitionManager = PushTransitionManager()
+    
     struct State {
         var replies: [Post]
         var fetchingMore: Bool
@@ -164,6 +169,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         case endReached()
         case insert(reply:Post)
         case append(reply:Post)
+        case removeReply(at:Int, sub:Int?)
         case firstLoadComplete()
     }
     
@@ -183,11 +189,13 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     var contentHeight:CGFloat = 0.0
     
     var closeButton:UIButton!
+    var subscribeButton:UIButton!
+    var isSubscribed:Bool?
     override func viewDidLoad() {
         super.viewDidLoad()
         
         let name = post.anon.displayName
-        let text = "\(name)  \(post.textClean)"
+        let text = "\(name)  \(post.text)"
         
         let width = UIScreen.main.bounds.width - 60.0
         let textHeight = UILabel.size(text: text, width: width, font: Fonts.regular(ofSize: 15.0)).height
@@ -214,6 +222,17 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         title.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         title.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
         view.backgroundColor = UIColor.white
+        
+        subscribeButton = UIButton(type: .custom)
+        subscribeButton.setImage(UIImage(named:"Bell"), for: .normal)
+        subscribeButton.tintColor = UIColor.gray
+        view.addSubview(subscribeButton)
+        subscribeButton.translatesAutoresizingMaskIntoConstraints = false
+        subscribeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        subscribeButton.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        subscribeButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        subscribeButton.widthAnchor.constraint(equalTo: closeButton.heightAnchor, multiplier: 1.0).isActive = true
+        subscribeButton.addTarget(self, action: #selector(toggleSubscription), for: .touchUpInside)
         
         let divider = UIView()
         divider.backgroundColor = UIColor(white: 0.8, alpha: 1.0)
@@ -281,11 +300,77 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidShow), name: NSNotification.Name.UIKeyboardDidShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidHide), name: NSNotification.Name.UIKeyboardDidHide, object: nil)
+        
+        observePostSubscription()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         NotificationCenter.default.removeObserver(self)
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        let ref = database.child("posts/meta/\(post.key)/subscribers/\(uid)")
+        if let prevListener = subscriptionListener {
+            ref.removeObserver(withHandle: prevListener)
+        }
+    }
+    
+    
+    var subscriptionListener:UInt?
+    func observePostSubscription() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        let ref = database.child("posts/meta/\(post.key)/subscribers/\(uid)")
+        if let prevListener = subscriptionListener {
+            ref.removeObserver(withHandle: prevListener)
+        }
+        
+        subscribeButton.setImage(UIImage(named:"Bell"), for: .normal)
+        subscribeButton.alpha = 0.5
+        subscribeButton.isUserInteractionEnabled = false
+        subscriptionListener = ref.observe(.value, with: { snapshot in
+            var isSubscribed = false
+            if let value = snapshot.value as? Bool {
+                isSubscribed = value
+            }
+            self.setIsSubscribedToPost(isSubscribed)
+        })
+        
+    }
+    
+    
+    func setIsSubscribedToPost(_ isSubscribed:Bool) {
+        self.isSubscribed = isSubscribed
+        subscribeButton.alpha = 1.0
+        subscribeButton.isUserInteractionEnabled = true
+        if isSubscribed {
+            subscribeButton.setImage(UIImage(named:"BellOn"), for: .normal)
+        } else {
+            subscribeButton.setImage(UIImage(named:"Bell"), for: .normal)
+        }
+    }
+    
+    @objc func toggleSubscription() {
+        guard let isSubscribed = self.isSubscribed else { return }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let ref = database.child("posts/meta/\(post.key)/subscribers/\(uid)")
+        if isSubscribed {
+            ref.setValue(false) { error, _ in
+                if let _  = error {
+                    Alerts.showFailureAlert(withMessage: "Unable to unsubscribe from post.")
+                } else {
+                    Alerts.showSuccessAlert(withMessage: "Unsubscribed from post.")
+                }
+            }
+        } else {
+            ref.setValue(true) { error, _ in
+                if let _ = error {
+                    Alerts.showFailureAlert(withMessage: "Unable to subscribe to post.")
+                } else {
+                    Alerts.showSuccessAlert(withMessage: "Subscribed to post!")
+                }
+            }
+        }
     }
     
     
@@ -312,10 +397,10 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
         if indexPath.section == 0 {
-            let cell = PostCommentCellNode(post: post, isCaption: true)
+            let cell = PostCommentCellNode(post: post, parentPost: post, isCaption: true)
             cell.selectionStyle = .none
             cell.timeNode.isHidden = true
-            
+            cell.delegate = self
             return cell
         }
         let rowCount = topState.replies.count
@@ -328,7 +413,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         
         let reply = topState.replies[section]
         if indexPath.row == 0 {
-            let cell = PostCommentCellNode(post: reply)
+            let cell = PostCommentCellNode(post: reply, parentPost: post)
             cell.delegate = self
             cell.selectionStyle = .none
             cell.dividerNode.isHidden = reply.numReplies > 0
@@ -344,7 +429,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
                 return cell
             }
             let subReply = reply.replies[subReplyIndex]
-            let cell = PostCommentCellNode(post: subReply, isCaption: false, isSubReply: true)
+            let cell = PostCommentCellNode(post: subReply, parentPost: post, isCaption: false, isSubReply: true)
             cell.dividerNode.isHidden = subReplyIndex < reply.replies.count - 1
             cell.selectionStyle = .none
             cell.delegate = self
@@ -476,6 +561,13 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         case let .append(reply):
             state.replies.append(reply)
             break
+        case let .removeReply(replyIndex, subReplyIndex):
+            if let subReplyIndex = subReplyIndex {
+                state.replies[replyIndex].replies.remove(at: subReplyIndex)
+            } else {
+                state.replies.remove(at: replyIndex)
+            }
+            break
         case .firstLoadComplete:
             state.isFirstLoad = false
             break
@@ -570,18 +662,23 @@ extension CommentsViewController: CommentBarDelegate {
             }
         }
         
+        print("JADED: \(parameters)")
+        
         functions.httpsCallable("addComment").call(parameters) { result, error in
             if let error = error as NSError? {
-                print("FUNCTION ERROR")
+                print("Error: \(error.localizedDescription)")
                 completion(false, nil, nil)
+            
                 if error.domain == FunctionsErrorDomain {
                     let code = FunctionsErrorCode(rawValue: error.code)
                     let message = error.localizedDescription
                     let details = error.userInfo[FunctionsErrorDetailsKey]
+                    print("ERROR: \(code)-\(message)")
+                    
                 }
-                // ...
-            }
-            if let data = result?.data as? [String: Any],
+                Alerts.showFailureAlert(withMessage: "Comment failed to send.")
+                return completion(false, nil, nil)
+            } else if let data = result?.data as? [String: Any],
                 let success = data["success"] as? Bool,
                 let replyData = data["comment"] as? [String:Any],
                 let id = data["id"] as? String,
@@ -600,10 +697,15 @@ extension CommentsViewController: CommentBarDelegate {
         commentBar.textView.text = ""
         commentBar.textViewDidChange(self.commentBar.textView)
         commentBar.textView.resignFirstResponder()
+        commentBar.placeHolderLabel.isHidden = false
+        commentBar.placeHolderLabel.text = "Sending..."
         callFunction(text: text) { success, _reply, _replyTo in
             self.focusedReply = nil
-            guard success, let reply = _reply else { return }
+            self.commentBar.placeHolderLabel.text = "Reply..."
             self.commentBar.isUserInteractionEnabled = true
+            
+            guard success, let reply = _reply else { return }
+            
             reply.isYou = true
             if let replyTo = _replyTo, replyTo != self.post.key {
                 reply.replyTo = replyTo
@@ -644,6 +746,23 @@ extension CommentsViewController: CommentBarDelegate {
                     })
                 }
             }
+            
+            NotificationService.authorizationStatus { _s in
+                
+                switch _s {
+                case .authorized:
+                    print("AUTHORIZED")
+                    break
+                case .denied:
+                    print("DENIED")
+                    break
+                case .notDetermined:
+                    print("NOT DETERMINED MAN")
+                    let message = "Would you like to be notified when users interact with your posts and comments?"
+                    NotificationService.showRequestAlert(nil, message: message)
+                    break
+                }
+            }
         }
         return
     }
@@ -654,6 +773,78 @@ extension CommentsViewController: CommentBarDelegate {
 }
 
 extension CommentsViewController: CommentCellDelegate {
+    func postOpen(tag: String) {
+        let vc = SearchViewController()
+        vc.initialSearch = tag
+        
+        pushTransitionManager.navBarHeight = nil
+        vc.interactor = pushTransitionManager.interactor
+        vc.transitioningDelegate = pushTransitionManager
+        self.pulleyViewController?.present(vc, animated: true, completion: nil)
+    }
+    
+    func handleMore(_ post: Post) {
+        let alert = UIAlertController(title: post.anon.displayName, message: post.text, preferredStyle: .actionSheet)
+        
+        if post.isYou {
+            alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+                
+                UploadService.deletePost(post) { success in
+                    print("Post deleted: \(success)")
+                    let state = self.topState
+                    var replyIndexPath:IndexPath?
+                    if success {
+                        for i in 0..<state.replies.count {
+                            let reply = state.replies[i]
+                            if reply.key == post.key {
+                                replyIndexPath = IndexPath(row: 0, section: i + 1)
+                                let action = Action.removeReply(at: i, sub: nil)
+                                self.topState = CommentsViewController.handleAction(action, fromState: state)
+                                break
+                            } else {
+                                for j in 0..<reply.replies.count {
+                                    let subReply = reply.replies[j]
+                                    if subReply.key == post.key {
+                                        replyIndexPath = IndexPath(row: j, section: i + 1)
+                                        let action = Action.removeReply(at: i, sub: j)
+                                        self.topState =  CommentsViewController.handleAction(action, fromState: state)
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if let indexPath = replyIndexPath {
+                        print("REMOVE INDEX: \(indexPath)")
+                        self.tableNode.reloadData()
+//                        self.tableNode.performBatchUpdates({
+//                            self.tableNode.deleteRows(at: [indexPath], with: .automatic)
+//                        }, completion: { _ in })
+                    }
+                }
+            }))
+        } else {
+            alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { _ in
+                let reportSheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+                let inappropriate = UIAlertAction(title: "It's Inappropriate", style: .destructive, handler: { _ in
+                    ReportService.reportPost(post, type: .inappropriate)
+                })
+                reportSheet.addAction(inappropriate)
+                let spam = UIAlertAction(title: "It's Spam", style: .destructive, handler: { _ in
+                    ReportService.reportPost(post, type: .spam)
+                })
+                reportSheet.addAction(spam)
+                let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in })
+                reportSheet.addAction(cancel)
+                self.present(reportSheet, animated: true, completion: nil)
+            }))
+        }
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        
+        self.present(alert, animated: true, completion: nil)
+    }
+    
     func handleReply(_ reply: Post) {
         guard let replyTo = reply.replyTo else { return }
         if replyTo == post.key {

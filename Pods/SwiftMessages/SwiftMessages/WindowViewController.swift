@@ -52,4 +52,5 @@ class WindowViewController: UIViewController
     override public var preferredStatusBarStyle: UIStatusBarStyle {
         return config.preferredStatusBarStyle ?? super.preferredStatusBarStyle
     }
+    override var prefersStatusBarHidden: Bool { return true }
 }

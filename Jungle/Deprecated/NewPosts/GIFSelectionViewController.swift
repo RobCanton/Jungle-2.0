@@ -21,7 +21,7 @@ class GIFSelectionViewController:UIViewController, GIFCollectionDelegate {
         super.viewDidLoad()
         view.backgroundColor = UIColor.white
         print("GIFSelectionViewController")
-        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0))
+        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0), topInset: 0)
         view.addSubview(searchBar)
         
         searchBar.translatesAutoresizingMaskIntoConstraints = false
@@ -42,8 +42,8 @@ class GIFSelectionViewController:UIViewController, GIFCollectionDelegate {
         view.layoutIfNeeded()
         
         searchBar.setup(withDelegate: self)
-        searchBar.leftButtonItem.setImage(UIImage(named:"back"), for: .normal)
-        searchBar.leftButtonItem.tintColor = UIColor.white
+        searchBar.leftButton.setImage(UIImage(named:"back"), for: .normal)
+        searchBar.leftButton.tintColor = UIColor.white
     }
     
     override func viewWillAppear(_ animated: Bool) {

@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import AlgoliaSearch
 import Firebase
 
 extension String {
@@ -31,20 +30,13 @@ extension String {
 
 class SearchService {
     
-    static var myCoords:LatLng = LatLng(lat: 43.9050531135017, lng: -79.27830310499503)
-    
-    fileprivate static let client = Client(appID: "O8UGJJNEB6", apiKey: "0df072a9b2f30dfb8c0e312cb52200ff")
-    fileprivate static let postsIndex = client.index(withName: "posts")
-    
-    static let facet_hastags = "hashtags"
-    
     static let distancePairs:[UInt:UInt] = [
         0: 10000,
         1: 100000,
         2: 1000000,
         3: 10000000
     ]
-    static let trendingTagsNotification = NSNotification.Name.init("trendingHashtags")
+    static let trendingTagsNotification = NSNotification.Name.init("trendingHashtagsUpdated")
     
     static var trendingHashtags = [TrendingHashtag]() {
         didSet {
@@ -54,119 +46,165 @@ class SearchService {
     
     static func searchFor(text:String, limit:Int, offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
         
-        let query = Query()
-        
-        if text.isHashtag && !text.containsWhitespace {
-            let searchText = String(text.dropFirst())
-            query.facetFilters = ["hashtags:\(searchText)"]
-            query.offset = UInt(offset)
-            query.length = UInt(limit)
-        } else {
-            //query = Query(query: text)
-            query.query = text
-            query.offset = UInt(offset)
-            query.length = UInt(limit)
-        }
-        
-        postsIndex.search(query) { content, error in
-            var documents = [[String:Any]]()
-            if let hits = content?["hits"] as? [[String:Any]] {
-                documents = hits
-            }
-            
-            var posts = [Post]()
-            var endReached = false
-            
-            if documents.count == 0 {
-                endReached = true
-            }
-            
-            for document in documents {
-                if let postID = document["objectID"] as? String,
-                    let post = Post.parse(id: postID, document) {
-                    //if state.postKeys[post.key] == nil {
-                    posts.append(post)
-                    //}
+        let params = [
+            "text": text,
+            "length": 15,
+            "offset": offset,
+            ] as [String:Any]
+        print("QUERY PARAMS: \(params)")
+        functions.httpsCallable("searchPosts").call(params) { result, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([], true)
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.append(post)
+                    }
                 }
+                print("Results: \(posts)")
+                return completion(posts, posts.count == 0)
             }
-            
-            PostsService.fetchAdditionalInfo(forPosts: posts) { _posts in
-                completion(_posts, endReached)
-            }
-
         }
     }
     
     static func searchNearby(proximity:UInt, offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
-        let distance = distancePairs[proximity]!
-        let query = Query()
-        query.length = 15
-        query.offset = UInt(offset)
-        query.aroundLatLng = myCoords
-        query.aroundRadius = Query.AroundRadius.explicit(distance)
-        postsIndex.search(query) { content, error in
-            var documents = [[String:Any]]()
-            var posts = [Post]()
-            if let hits = content?["hits"] as? [[String:Any]] {
-                documents = hits
-            }
+        if let location = gpsService.getLastLocation() {
+            let params = [
+                "length": 15,
+                "offset": offset,
+                "distance": distancePairs[proximity]!,
+                "lat": location.coordinate.latitude,
+                "lng": location.coordinate.longitude
+                ] as [String:Any]
             
-            for document in documents {
-                if let postID = document["objectID"] as? String,
-                    let post = Post.parse(id: postID, document) {
-                    posts.append(post)
+            functions.httpsCallable("nearbyPosts").call(params) { result, error in
+                if let error = error {
+                    print("Error: \(error.localizedDescription)")
+                    return completion([], true)
+                } else if let data = result?.data as? [String:Any],
+                    let results = data["results"] as? [[String:Any]]{
+                    var posts = [Post]()
+                    for data in results {
+                        if let post = Post.parse(data: data) {
+                            posts.append(post)
+                        }
+                    }
+                    print("Results: \(posts)")
+                    return completion(posts, posts.count == 0)
                 }
             }
-            
-            PostsService.fetchAdditionalInfo(forPosts: posts) { _posts in
-                completion(_posts, documents.count == 0)
+        } else {
+            DispatchQueue.main.async {
+                return completion([], true)
             }
         }
     }
     
-    static func searchMyPosts(offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        let query = Query()
-        query.length = 15
-        query.offset = UInt(offset)
-        query.facetFilters = ["uid:\(uid)"]
-        postsIndex.search(query) { content, error in
-            var documents = [[String:Any]]()
-            var posts = [Post]()
-            if let hits = content?["hits"] as? [[String:Any]] {
-                documents = hits
-            }
-            
-            for document in documents {
-                if let postID = document["objectID"] as? String,
-                    let post = Post.parse(id: postID, document) {
-                    posts.append(post)
-                }
-            }
-            
-            PostsService.fetchAdditionalInfo(forPosts: posts) { _posts in
-                completion(_posts, documents.count == 0)
-            }
-        }
-    }
-    
-    static func getTrendingHastags(completion: @escaping((_ tags:[TrendingHashtag])->())) {
-        let trendingRef = database.child("hashtags/trending").queryOrdered(byChild: "score").queryLimited(toFirst: 7)
-        trendingRef.observe(.value, with: { snapshot in
-            guard let dict = snapshot.value as? [String:[String:Any]] else { return }
-            var _trendingHashtags = [TrendingHashtag]()
-            
-            for (hashtag, metadata) in dict {
-                let totalCount = metadata["total"] as? Int ?? 0
-                let todayCount = metadata["today"] as? Int ?? 0
-                let score = metadata["score"] as? Double ?? 0.0
+    static func myPosts(offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
+        
+        let params = [
+            "length": 15,
+            "offset": offset,
+            ] as [String:Any]
+        
+        functions.httpsCallable("myPosts").call(params) { result, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([], true)
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
                 
-                let trendingHashtag = TrendingHashtag(hastag: hashtag, totalCount: totalCount, todayCount: todayCount, score: score, posts: [])
-                _trendingHashtags.append(trendingHashtag)
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.append(post)
+                    }
+                }
+                
+                return completion(posts, posts.count == 0)
+            }
+        }
+    }
+    
+    static func myComments(offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
+        
+        let params = [
+            "length": 15,
+            "offset": offset,
+            ] as [String:Any]
+        
+        functions.httpsCallable("myComments").call(params) { result, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([], true)
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
+                
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.append(post)
+                    }
+                }
+                
+                return completion(posts, posts.count == 0)
+            }
+        }
+    }
+    
+    static func likedPosts(offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
+        
+        let params = [
+            "length": 15,
+            "offset": offset,
+            ] as [String:Any]
+        
+        functions.httpsCallable("likedPosts").call(params) { result, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([], true)
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]] {
+                
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.insert(post, at: 0)
+                    }
+                }
+                
+                return completion(posts, posts.count == 0)
+            }
+        }
+    }
+    
+    static func getTrendingHastags() {
+        let trendingRef = database.child("trending/hashtags").queryOrdered(byChild: "count")
+        trendingRef.observe(.value, with: { snapshot in
+            guard let dictArray = snapshot.value as? [String:[String:Any]] else { return }
+            var tags = [TrendingHashtag]()
+            for (key, data) in dictArray {
+                if let count = data["count"] as? Int,
+                let post = data["post"] as? [String:Any],
+                    let id = post["id"] as? String,
+                    let createdAt = post["createdAt"] as? Double {
+                    let date = Date(timeIntervalSince1970: createdAt / 1000)
+                    let reports = Reports(inappropriate: 0, spam: 0)
+                    if let _reports = post["reports"] as? [String:Int] {
+                        reports.inappropriate = _reports["inappropriate"] ?? 0
+                        reports.spam = _reports["spam"] ?? 0
+                    }
+                    let tag = TrendingHashtag(hastag: key, count: count, postID: id, lastPostedAt: date, report: reports)
+                    tags.append(tag)
+                }
             }
             
-            trendingHashtags = _trendingHashtags.sorted(by: { $0.score > $1.score })
-            completion(trendingHashtags)
+            trendingHashtags = tags
         })
     }
+    
+    
 }

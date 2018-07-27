@@ -12,105 +12,13 @@ import AsyncDisplayKit
 import WCLShineButton
 import Firebase
 
-class CommentActionsRow: UIView {
-    var likeButton:WCLShineButton!
-    var likeLabel:UILabel!
-    
-    var replyButton:UIButton!
-    var moreButton:UIButton!
-    
-    weak var delegate:PostActionsDelegate?
-    
-    override init(frame: CGRect) {
-        super.init(frame:frame)
-        backgroundColor = UIColor.blue.withAlphaComponent(0.0)
-        
-        var param1 = WCLShineParams()
-        param1.allowRandomColor = true
-        param1.animDuration = 1
-        param1.enableFlashing = false
-        param1.shineDistanceMultiple = 0.9
-        param1.colorRandom =  [UIColor(rgb: (255, 204, 204)),
-                               UIColor(rgb: (255, 102, 102)),
-                               UIColor(rgb: (255, 102, 102))]
-        param1.shineSize = 4
-        
-        likeButton = WCLShineButton(frame: .init(x: 0, y: 0, width: 32, height: 32), params: param1)
-        likeButton.color = hexColor(from: "BEBEBE")
-        likeButton.fillColor = UIColor(rgb: (255, 102, 102))
-        likeButton.image = WCLShineImage.custom(UIImage(named:"like")!)
-        addSubview(likeButton)
-        //likeButton.addTarget(self, action: #selector(action), for: .valueChanged)
-    
-        likeButton.translatesAutoresizingMaskIntoConstraints = false
-        likeButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10).isActive = true
-        likeButton.topAnchor.constraint(equalTo: topAnchor, constant: 0).isActive = true
-        likeButton.widthAnchor.constraint(equalToConstant: 32).isActive = true
-        likeButton.heightAnchor.constraint(equalTo: likeButton.widthAnchor, multiplier: 1.0).isActive = true
-        likeButton.addTarget(self, action: #selector(handleLike), for: .valueChanged)
-        likeLabel = UILabel(frame: .zero)
-        likeLabel.text = "0"
-        likeLabel.textColor = hexColor(from: "BEBEBE")
-        likeLabel.font = Fonts.semiBold(ofSize: 14.0)
-        addSubview(likeLabel)
-        likeLabel.translatesAutoresizingMaskIntoConstraints = false
-        likeLabel.leadingAnchor.constraint(equalTo: likeButton.trailingAnchor, constant: 2.0).isActive = true
-        likeLabel.centerYAnchor.constraint(equalTo: likeButton.centerYAnchor).isActive = true
-        
-        moreButton = UIButton(type: .custom)
-        moreButton.setImage(UIImage(named:"more"), for: .normal)
-        addSubview(moreButton)
-        moreButton.translatesAutoresizingMaskIntoConstraints = false
-        moreButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10).isActive = true
-        moreButton.topAnchor.constraint(equalTo: topAnchor, constant: 0).isActive = true
-        moreButton.widthAnchor.constraint(equalToConstant: 32).isActive = true
-        moreButton.heightAnchor.constraint(equalTo: moreButton.widthAnchor, multiplier: 1.0).isActive = true
-        
-        replyButton = UIButton(type: .custom)
-        replyButton.setImage(UIImage(named:"reply"), for: .normal)
-        replyButton.setTitle("Reply", for: .normal)
-        replyButton.setTitleColor(tertiaryColor, for: .normal)
-        replyButton.titleLabel?.font = Fonts.semiBold(ofSize: 14.0)
-        addSubview(replyButton)
-        replyButton.translatesAutoresizingMaskIntoConstraints = false
-        replyButton.trailingAnchor.constraint(equalTo: moreButton.leadingAnchor, constant: -12).isActive = true
-        replyButton.topAnchor.constraint(equalTo: topAnchor, constant: 0).isActive = true
-        replyButton.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
-        replyButton.addTarget(self, action: #selector(handleReply), for: .touchUpInside)
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    @objc func handleLike() {
-        delegate?.handleLikeButton()
-    }
-    
-    @objc func handleReply() {
-        delegate?.handleCommentButton()
-    }
-    
-    
-    func setLiked(_ liked:Bool, animated:Bool) {
-        if liked {
-            likeButton.setClicked(true, animated: animated)
-        } else {
-            likeButton.setClicked(false, animated: animated)
-        }
-    }
-    
-    func setNumLikes(_ numLikes:Int) {
-        likeLabel.text = "\(numLikes)"
-    }
-}
-
 class PostCommentCellNode: ASCellNode {
     
     var postTextNode = ActiveTextNode()
     var avatarNode = ASDisplayNode()
     var avatarImageNode = ASNetworkImageNode()
     var usernameNode = ASTextNode()
+    var subnameNode = ASTextNode()
     var dividerNode = ASDisplayNode()
     var timeNode = ASTextNode()
     
@@ -123,7 +31,9 @@ class PostCommentCellNode: ASCellNode {
     weak var delegate:CommentCellDelegate?
     var isSubReply = false
     var isCaption = false
-    required init(post:Post, isCaption:Bool?=nil, isSubReply:Bool?=nil) {
+    
+    
+    required init(post:Post, parentPost:Post, isCaption:Bool?=nil, isSubReply:Bool?=nil) {
         super.init()
         self.post = post
         self.isCaption = isCaption ?? false
@@ -131,14 +41,32 @@ class PostCommentCellNode: ASCellNode {
         automaticallyManagesSubnodes = true
         backgroundColor = UIColor.white
         postTextNode.maximumNumberOfLines = 0
-        let titleSize:CGFloat = self.isSubReply ? 13 : 15
+        let titleSize:CGFloat = self.isSubReply ? 13 : 14
         let avatarSize:CGFloat = self.isSubReply ? 18 : 24
-        postTextNode.setText(text: post.textClean, withSize: 15.0, normalColor: .black, activeColor: tagColor)
         
         usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: titleSize),
             NSAttributedStringKey.foregroundColor: post.anon.color
             ])
+        
+        var subnameStr = ""
+        if post.isYou {
+            subnameStr = "YOU"
+            subnameNode.isHidden = false
+        } else if post.key != parentPost.key,
+            parentPost.anon.key == post.anon.key {
+            subnameStr = "OP"
+            subnameNode.isHidden = false
+        } else {
+            subnameNode.isHidden = true
+        }
+        
+        subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white
+            ])
+        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 0, right: 4.0)
+        subnameNode.backgroundColor = post.anon.color
         
         timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow() , attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 15.0),
@@ -182,6 +110,25 @@ class PostCommentCellNode: ASCellNode {
         
         dividerNode.backgroundColor = UIColor(white: 0.80, alpha: 1.0)
         dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
+        
+        if let blockedMessage = post.blockedMessage {
+            postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
+                NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
+                NSAttributedStringKey.foregroundColor: UIColor.gray
+                ])
+            
+        } else {
+            postTextNode.setText(text: post.text, withSize: 15.0, normalColor: .black, activeColor: tagColor)
+            postTextNode.tapHandler = { type, str in
+                switch type {
+                case .hashtag:
+                    self.delegate?.postOpen(tag: str)
+                    break
+                default:
+                    break
+                }
+            }
+        }
     }
     
     var actionsRow:CommentActionsRow!
@@ -208,6 +155,9 @@ class PostCommentCellNode: ASCellNode {
         if isCaption {
             actionsRow.replyButton.isHidden = true
         }
+        
+        subnameNode.layer.cornerRadius = 2.0
+        subnameNode.clipsToBounds = true
     }
     
     
@@ -216,7 +166,11 @@ class PostCommentCellNode: ASCellNode {
         let avatarInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(3, 3, 3, 3), child: avatarImageNode)
         let avatarOverlay = ASOverlayLayoutSpec(child: avatarNode, overlay: avatarInset)
         
-        let titleCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: usernameNode)
+        let tStack = ASStackLayoutSpec.horizontal()
+        tStack.spacing = 4.0
+        tStack.children = [usernameNode, subnameNode]
+        
+        let titleCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: tStack)
         let titleStack = ASStackLayoutSpec.horizontal()
         titleStack.spacing = 8.0
         titleStack.children = [avatarOverlay, titleCenter]
@@ -297,6 +251,19 @@ class PostCommentCellNode: ASCellNode {
 }
 
 extension PostCommentCellNode: PostActionsDelegate {
+    func openTag(_ tag: String) {
+        
+    }
+    
+    func handleLocationButton() {
+        
+    }
+    
+    func handleMoreButton() {
+        guard let post = self.post else { return }
+        delegate?.handleMore(post)
+    }
+    
     func handleLikeButton() {
         print("liked!")
         guard let post = self.post else { return }
@@ -319,5 +286,7 @@ extension PostCommentCellNode: PostActionsDelegate {
         delegate?.handleReply(post)
     }
     
-    
+    func setHighlighted(_ highlighted:Bool) {
+        backgroundColor = highlighted ? UIColor(white: 0.92, alpha: 1.0) : UIColor.white
+    }
 }

@@ -17,27 +17,33 @@ enum Vote {
 class Post {
     private(set) var key:String
     private(set) var anon:Anon
-    private(set) var text:String
-    private(set) var textClean:String
+    private var _text:String
+    private var _textClean:String
+    var text:String {
+        return UserService.currentUserSettings.safeContentMode ? _textClean : _text
+    }
     private(set) var createdAt:Date
     private(set) var attachments:Attachments?
-    private(set) var location:LocationPair?
+    private(set) var location:Region?
     private(set) var tags:[String]
     private(set) var score:Double
     var votes:Int
     var numLikes:Int
     var numReplies:Int
+    var reports:Reports
     var replies:[Post]
     var parent:String?
+    var parentPost:Post?
     var replyTo:String?
     var documentSnapshot:DocumentSnapshot?
     
     var liked = false
+    var likedAt:Double?
     
     var topComment:Post?
     var vote = Vote.notvoted
     var isYou = false
-    var myAnonKey = ""
+    
     var offenses:[String]
     var offensesStr:String {
         var str = ""
@@ -56,13 +62,24 @@ class Post {
         return offenses.count > 0 && !isYou
     }
     
-    init(key:String, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments?=nil, location:LocationPair?, tags:[String], score:Double, votes:Int, numLikes:Int,
-         numReplies:Int, replies:[Post], parent:String?, replyTo:String?) {
+    var blockedMessage:String? {
+        if !UserService.currentUserSettings.safeContentMode { return nil }
+        if isOffensive {
+            return "[Contains muted words]"
+        }
+        if reports.inappropriate > 0 {
+            return "[May contain inappropriate content]"
+        }
+        return nil
+    }
+    
+    init(key:String, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments?=nil, location:Region?, tags:[String], score:Double, votes:Int, numLikes:Int,
+         numReplies:Int, replies:[Post], reports:Reports,parent:String?, replyTo:String?) {
         
         self.key = key
         self.anon = anon
-        self.text = text
-        self.textClean = textClean
+        self._text = text
+        self._textClean = textClean
         self.createdAt = createdAt
         self.attachments = attachments
         self.location = location
@@ -72,6 +89,7 @@ class Post {
         self.numLikes = numLikes
         self.numReplies = numReplies
         self.replies = replies
+        self.reports = reports
         self.parent = parent
         self.replyTo = replyTo
         self.offenses = ContentSettings.checkContent(ofText: text)
@@ -88,9 +106,18 @@ class Post {
             let tags = data["hashtags"] as? [String] {
             
             let attachments = Attachments.parse(data)
-            let location = LocationPair.parse(data)
+            let location = Region.parse(data)
             let numLikes = data["numLikes"] as? Int ?? 0
             let score = data["score"] as? Double ?? 0.0
+            
+            var inappropriateReports = 0
+            var spamReports = 0
+            if let reportsData = data["reports"] as? [String:Any] {
+                inappropriateReports = reportsData["inappropriate"] as? Int ?? 0
+                spamReports = reportsData["spam"] as? Int ?? 0
+            }
+            
+            let reports = Reports(inappropriate: inappropriateReports, spam: spamReports)
             
             var parent:String?
             var replyTo:String?
@@ -105,7 +132,65 @@ class Post {
                 replyTo = _replyTo
             }
             
-            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:[], parent: parent, replyTo: replyTo )
+            
+            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:[], reports: reports, parent: parent, replyTo: replyTo )
+            post?.isYou = data["isYou"] as? Bool ?? false
+            
+            if let parentData = data["parentPost"] as? [String:Any] {
+                post?.parentPost = Post.parse(data: parentData)
+                print("SET PARENT POST!")
+            }
+            post?.likedAt = data["likedAt"] as? Double
+        }
+        return post
+    }
+    
+    static func parse(data:[String:Any]) -> Post? {
+        var post:Post?
+        if let id = data["id"] as? String,
+            let anon = Anon.parse(data),
+            let text = data["text"] as? String,
+            let textClean = data["textClean"] as? String,
+            let createdAt = data["createdAt"] as? Double,
+            let votes = data["votes"] as? Int,
+            let numReplies = data["numReplies"] as? Int,
+            let tags = data["hashtags"] as? [String] {
+            
+            let attachments = Attachments.parse(data)
+            let location = Region.parse(data)
+            let numLikes = data["numLikes"] as? Int ?? 0
+            let score = data["score"] as? Double ?? 0.0
+            
+            var inappropriateReports = 0
+            var spamReports = 0
+            if let reportsData = data["reports"] as? [String:Any] {
+                inappropriateReports = reportsData["inappropriate"] as? Int ?? 0
+                spamReports = reportsData["spam"] as? Int ?? 0
+            }
+            
+            let reports = Reports(inappropriate: inappropriateReports, spam: spamReports)
+            
+            var parent:String?
+            var replyTo:String?
+            
+            let _parent = data["parent"] as? String
+            let _replyTo = data["replyTo"] as? String
+            
+            if _parent != nil, _parent != "NONE" {
+                parent = _parent
+            }
+            if _replyTo != nil, _replyTo != "NONE" {
+                replyTo = _replyTo
+            }
+            
+            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:[], reports: reports, parent: parent, replyTo: replyTo )
+            post?.isYou = data["isYou"] as? Bool ?? false
+            
+            if let parentData = data["parentPost"] as? [String:Any] {
+                post?.parentPost = Post.parse(data: parentData)
+                print("SET PARENT POST!")
+            }
+            post?.likedAt = data["likedAt"] as? Double
         }
         return post
     }
@@ -176,23 +261,29 @@ class Attachments {
 
 
 
-class LocationPair {
+class Region {
     var city:String
     var country:String
+    var countryCode:String
     
-    init(city:String, country:String) {
+    init(city:String, country:String, countryCode:String) {
         self.city = city
         self.country = country
+        self.countryCode = countryCode
     }
     
-    static func parse(_ data:[String:Any]) -> LocationPair? {
+    static func parse(_ data:[String:Any]) -> Region? {
         if let location = data["location"] as? [String:Any],
             let city = location["city"] as? String,
-            let country = location["countryCode"] as? String {
-            return LocationPair(city: city, country: country)
-        } else {
-            return nil
+            let country = location["country"] as? String,
+            let countryCode = location["countryCode"] as? String {
+            return Region(city: city, country: country, countryCode: countryCode)
+        } else if let city = data["city"] as? String,
+            let country = data["country"] as? String,
+            let countryCode = data["countryCode"] as? String {
+            return Region(city: city, country: country, countryCode: countryCode)
         }
+        return nil
     }
     
     var locationStr:String {
@@ -203,7 +294,7 @@ class LocationPair {
     
     var locationShortStr:String {
         get {
-            return "\(city.trunc(length: 16)), \(country)"
+            return "\(city.trunc(length: 16)), \(countryCode)"
         }
     }
 }
@@ -283,5 +374,14 @@ class ImageAttachment {
             }
         }
         return attachments
+    }
+}
+
+class Reports {
+    var inappropriate:Int
+    var spam:Int
+    init(inappropriate:Int, spam:Int) {
+        self.inappropriate = inappropriate
+        self.spam = spam
     }
 }

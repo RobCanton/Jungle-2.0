@@ -9,7 +9,6 @@
 import Foundation
 import UIKit
 import AsyncDisplayKit
-import DeckTransition
 import Pulley
 
 class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSource {
@@ -21,6 +20,8 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     var posts = [Post]()
     
     var initialIndex:Int?
+    
+    var pushTransitionManager = PushTransitionManager()
     
     var dimView:UIView!
     var contentView:UIView!
@@ -54,7 +55,7 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         dimView.alpha = 0.0
         
         closeButton = UIButton(frame: CGRect(x: 0, y: 0, width: 64.0, height: 64.0))
-        closeButton.setImage(UIImage(named:"close"), for: .normal)
+        closeButton.setImage(UIImage(named:"Remove2"), for: .normal)
         closeButton.tintColor = UIColor.white
         contentView.addSubview(closeButton)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
@@ -68,15 +69,47 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         moreButton = UIButton(frame: CGRect(x: 0, y: 0, width: 64.0, height: 64.0))
         moreButton.setImage(UIImage(named:"more_white"), for: .normal)
         moreButton.tintColor = UIColor.white
-        view.addSubview(moreButton)
+        contentView.addSubview(moreButton)
         moreButton.translatesAutoresizingMaskIntoConstraints = false
-        moreButton.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        moreButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
+        moreButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
+        moreButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 0).isActive = true
         moreButton.widthAnchor.constraint(equalToConstant: 64.0).isActive = true
         moreButton.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
-        //moreButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
+        moreButton.addTarget(self, action: #selector(handleMore), for: .touchUpInside)
         
+    }
+    
+    @objc func handleMore() {
+        let post = posts[pagerNode.currentPageIndex]
+        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
+        if post.isYou {
+            alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+                self.handleDismiss()
+                UploadService.deletePost(post) { success in
+                    print("Post deleted: \(success)")
+                }
+            }))
+        } else {
+            alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { _ in
+                let reportSheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+                let inappropriate = UIAlertAction(title: "It's Inappropriate", style: .destructive, handler: { _ in
+                    ReportService.reportPost(post, type: .inappropriate)
+                })
+                reportSheet.addAction(inappropriate)
+                let spam = UIAlertAction(title: "It's Spam", style: .destructive, handler: { _ in
+                    ReportService.reportPost(post, type: .spam)
+                })
+                reportSheet.addAction(spam)
+                let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in })
+                reportSheet.addAction(cancel)
+                self.present(reportSheet, animated: true, completion: nil)
+            }))
+        }
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        
+        self.present(alert, animated: true, completion: nil)
     }
     
     var closeButtonAnchor:NSLayoutConstraint?
@@ -112,6 +145,14 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+//        let cells = pagerNode.visibleNodes as? [SinglePostCellNode] ?? []
+//        if cells.count > 0 {
+//            cells[0].didExitVisibleState()
+//        }
     }
 
     func setCurrentCellVolume(_ volume:CGFloat) {
@@ -155,10 +196,40 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
 }
 
 extension LightboxViewController : SinglePostDelegate {
+    func openTag(_ tag: String) {
+        let controller = UIViewController()
+        pushTransitionManager.navBarHeight = nil
+        
+        let vc = SearchViewController()
+        vc.initialSearch = tag
+        
+        vc.interactor = pushTransitionManager.interactor
+        vc.transitioningDelegate = pushTransitionManager
+        self.present(vc, animated: true, completion: nil)
+    }
+    
     func openComments(_ post:Post, _ showKeyboard:Bool) {
         let commentsVC = pulleyViewController?.drawerContentViewController as! CommentsDrawerViewController
         commentsVC.setup(withPost: post, showKeyboard: showKeyboard)
         self.pulleyViewController?.setDrawerPosition(position: .open, animated: true)
+    }
+    
+    func searchLocation(_ locationStr:String) {
+        print("SEARCH LOCATION")
+        let controller = UIViewController()
+        pushTransitionManager.navBarHeight = nil
+        
+        let vc = SearchViewController()
+        vc.initialSearch = locationStr
+        
+        vc.interactor = pushTransitionManager.interactor
+        vc.transitioningDelegate = pushTransitionManager
+        self.present(vc, animated: true, completion: nil)
+    }
+    
+    func openLogin() {
+        let loginVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "AuthViewController") as! AuthViewController
+        self.present(loginVC, animated: true, completion: nil)
     }
 }
 
@@ -169,7 +240,8 @@ extension LightboxViewController: PulleyPrimaryContentControllerDelegate {
         //        print("PROGRESS: \(progress)")
         //
         closeButton.alpha = 1 - progress
-        let scale = 1 - 0.02 * progress
+        moreButton.alpha = 1 - progress
+        let scale = 1 - 0.05 * progress
         contentView.clipsToBounds = true
         contentView.layer.cornerRadius = 12 * progress
         contentView.transform = CGAffineTransform(scaleX: scale, y: scale)

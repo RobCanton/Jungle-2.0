@@ -106,6 +106,13 @@ class NearbyHeaderCellNode:ASCellNode {
         if index != proximityIndex {
             proximityIndex = index
             delegate?.proximityChanged(proximityIndex)
+            slider.alpha = 0.5
+            slider.isUserInteractionEnabled = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
+                self.slider.alpha = 1.0
+                self.slider.isUserInteractionEnabled = true
+            })
+            
         }
     }
 }

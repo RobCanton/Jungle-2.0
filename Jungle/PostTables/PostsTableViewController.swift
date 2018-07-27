@@ -36,6 +36,13 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         }
     }
     
+    func postCell(_ post:Post) -> ASCellNode {
+        let cell = NewPostCellNode(post: post)
+        cell.selectionStyle = .none
+        cell.delegate = self
+        return cell
+    }
+    
     struct State {
         var posts: [Post]
         var postKeys:[String:Bool]
@@ -81,6 +88,8 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        pushTransitionManager.navBarHeight = 50 + UIApplication.deviceInsets.top
+        
         view.addSubview(tableNode.view)
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
         tableNode.contentInset = UIEdgeInsetsMake(0.0, 0.0, 0.0, 0.0)
@@ -95,8 +104,8 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         tableNode.view.contentInsetAdjustmentBehavior = .never
         tableNode.delegate = self
         tableNode.dataSource = self
-        tableNode.view.separatorColor = UIColor(white: 0.85, alpha: 1.0)
-        tableNode.view.showsVerticalScrollIndicator = false
+        tableNode.view.separatorColor = currentTheme.highlightedBackgroundColor
+        tableNode.view.showsVerticalScrollIndicator = true
         tableNode.view.delaysContentTouches = false
         tableNode.view.backgroundColor = hexColor(from: "#eff0e9")
         tableNode.view.tableFooterView = UIView()
@@ -144,10 +153,6 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         if !state.isFirstLoad {
             listenForNewPosts()
         }
-    }
-    
-    @objc func handleLocationUpdate() {
-       tableNode.reloadData()
     }
     
     var seeNewPostsTopAnchor:NSLayoutConstraint?
@@ -438,14 +443,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             return node;
         }
         
-        let cell = NewPostCellNode(post: state.posts[indexPath.row])
-        cell.selectionStyle = .none
-        cell.delegate = self
-        return cell
-//        let cell = PostCellNode(withPost: state.posts[indexPath.row])
-//        cell.selectionStyle = .none
-//        cell.postCellNode.delegate = self
-//        return cell
+        return postCell(state.posts[indexPath.row])
     }
     
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
@@ -454,65 +452,33 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         }
         let node = tableNode.nodeForRow(at: indexPath) as? NewPostCellNode
         node?.setHighlighted(true)
-//        let node = tableNode.nodeForRow(at: indexPath) as! PostCellNode
-//        node.setSelected(true)
         
         let post = state.posts[indexPath.row]
-//        if post.isOffensive {
-//            let alert = UIAlertController(title: "This post may contain offensive content.", message: "Contains muted word(s): \(post.offensesStr)", preferredStyle: .actionSheet)
-//
-//            alert.addAction(UIAlertAction(title: "Open Anyways", style: .destructive, handler: { _ in
-//                self.openSinglePost(post)
-//            }))
-//
-//            alert.addAction(UIAlertAction(title: "Change Content Settings", style: .default, handler: { _ in
-//
-//                let controller = ContentSettingsViewController()
-//                let nav = UINavigationController(rootViewController: controller)
-//                self.present(nav, animated: true, completion: nil)
-//            }))
-//
-//            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-//            self.present(alert, animated: true, completion: nil)
-//            return
-//        }
-        
         openSinglePost(post, index: indexPath.row)
     }
-    //let interactor = Interactor()
+    
     
     func openSinglePost(_ post:Post, index:Int) {
         
-        if let _ = post.attachments?.video {
-            let controller = LightboxViewController()
-            controller.hidesBottomBarWhenPushed = true
-            controller.posts = self.state.posts
-            controller.initialIndex = index
-            let drawerVC = CommentsDrawerViewController()
-            //drawerVC.post = post
-            drawerVC.interactor = transitionManager.interactor
-            let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
-
-            pulleyController.drawerBackgroundVisualEffectView = nil
-            pulleyController.backgroundDimmingOpacity = 0.35
-            pulleyController.topInset = 24
-            pulleyController.hidesBottomBarWhenPushed = true
-
-            pulleyController.transitioningDelegate = transitionManager
-            if let parentVC = self.parent as? JViewController {
-                print("J WE GOOD!")
-                parentVC.shouldHideStatusBar = true
-            }
-            self.present(pulleyController, animated: true, completion: nil)
-            return
-        }
-        
-        //controller.transitioningDelegate = transitionManager
-        //self.present(controller, animated: true, completion: nil)
-        let controller = SinglePostViewController()
+        let controller = LightboxViewController()
         controller.hidesBottomBarWhenPushed = true
-        controller.post = post
-        self.navigationController?.pushViewController(controller, animated: true)
+        controller.posts = self.state.posts
+        controller.initialIndex = index
+        let drawerVC = CommentsDrawerViewController()
+        
+        drawerVC.interactor = transitionManager.interactor
+        let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
+        pulleyController.view.clipsToBounds = true
+        pulleyController.drawerBackgroundVisualEffectView = nil
+        pulleyController.backgroundDimmingOpacity = 0.35
+        pulleyController.topInset = 24
+        pulleyController.hidesBottomBarWhenPushed = true
+        pulleyController.transitioningDelegate = transitionManager
+        if let parentVC = self.parent as? JViewController {
+            parentVC.shouldHideStatusBar = true
+        }
+        self.present(pulleyController, animated: true, completion: nil)
+        return
     }
     
     func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
@@ -539,8 +505,13 @@ extension PostsTableViewController: PostCellDelegate {
     
     func postOpen(tag: String) {
         let vc = SearchViewController()
-        
         vc.initialSearch = tag
+        
+        var navBarHeight:CGFloat?
+        if let _ = self.parent as? JViewController {
+            navBarHeight = 50 + UIApplication.deviceInsets.top
+        }
+        pushTransitionManager.navBarHeight = navBarHeight
         vc.interactor = pushTransitionManager.interactor
         vc.transitioningDelegate = pushTransitionManager
         self.present(vc, animated: true, completion: nil)
@@ -549,44 +520,49 @@ extension PostsTableViewController: PostCellDelegate {
     func postOptions(_ post: Post) {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        if post.myAnonKey == post.anon.key {
+        if post.isYou {
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
                 self.newPostsListener?.remove()
-                UploadService.userHTTPHeaders { _ , headers in
-                    if let headers = headers {
-                        UploadService.deletePost(headers, post: post) { success in
-                            print("Post deleted: \(success)")
-                            if success {
-                                for i in 0..<self.state.posts.count {
-                                    let arrayPost = self.state.posts[i]
-                                    if arrayPost.key == post.key {
-                                        self.state = PostsTableViewController.handleAction(.removePost(at: i), fromState: self.state)
-                                        
-                                        
-                                        if !self.state.isFirstLoad {
-                                            self.listenForNewPosts()
-                                        }
-                                        let indexPath = IndexPath(row: i, section: 1)
-                                        let cell = self.tableNode.nodeForRow(at: indexPath) as? PostCellNode
-                                        //cell?.stopListeningToPost()
-                                        self.tableNode.performBatchUpdates({
-                                            self.tableNode.deleteRows(at: [indexPath], with: .top)
-                                        }, completion: { _ in
-                                        })
-                                        
-                                        break
-                                    }
+                UploadService.deletePost(post) { success in
+                    print("Post deleted: \(success)")
+                    if success {
+                        for i in 0..<self.state.posts.count {
+                            let arrayPost = self.state.posts[i]
+                            if arrayPost.key == post.key {
+                                self.state = PostsTableViewController.handleAction(.removePost(at: i), fromState: self.state)
+                                
+                                
+                                if !self.state.isFirstLoad {
+                                    self.listenForNewPosts()
                                 }
+                                let indexPath = IndexPath(row: i, section: 1)
+                                let cell = self.tableNode.nodeForRow(at: indexPath) as? PostCellNode
+                                //cell?.stopListeningToPost()
+                                self.tableNode.performBatchUpdates({
+                                    self.tableNode.deleteRows(at: [indexPath], with: .top)
+                                }, completion: { _ in
+                                })
+                                
+                                break
                             }
                         }
-                    } else {
-                        
                     }
                 }
             }))
         } else {
             alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { _ in
-                print("Report!")
+                let reportSheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+                let inappropriate = UIAlertAction(title: "It's Inappropriate", style: .destructive, handler: { _ in
+                    ReportService.reportPost(post, type: .inappropriate)
+                })
+                reportSheet.addAction(inappropriate)
+                let spam = UIAlertAction(title: "It's Spam", style: .destructive, handler: { _ in
+                    ReportService.reportPost(post, type: .spam)
+                })
+                reportSheet.addAction(spam)
+                let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in })
+                reportSheet.addAction(cancel)
+                self.present(reportSheet, animated: true, completion: nil)
             }))
         }
         
@@ -594,4 +570,5 @@ extension PostsTableViewController: PostCellDelegate {
         
         self.present(alert, animated: true, completion: nil)
     }
+    
 }

@@ -22,62 +22,48 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
     var textFieldContainer:UIView!
     var textBubble:UIView!
     var textField:UITextField!
-    var leftButtonItem:UIButton!
-    var rightButtonItem:UIButton!
-    var cancelButton:UIButton!
     
     var containerLeadingAnchor:NSLayoutConstraint!
     var containerTrailingAnchor:NSLayoutConstraint!
     var textFieldLeadingAnchor:NSLayoutConstraint!
     
+    var clearButton:UIButton!
+    
     weak var delegate:RCSearchBarDelegate?
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    override init(frame: CGRect, topInset: CGFloat) {
+        super.init(frame: frame, topInset: topInset)
         
-        leftButtonItem = UIButton(type: .custom)
-        leftButtonItem.tintColor = UIColor.black
-        addSubview(leftButtonItem)
-        leftButtonItem.translatesAutoresizingMaskIntoConstraints = false
-        leftButtonItem.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
-        leftButtonItem.topAnchor.constraint(equalTo: topAnchor, constant: 20).isActive = true
-        leftButtonItem.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
-        leftButtonItem.widthAnchor.constraint(equalToConstant: 44.0).isActive = true
-        leftButtonItem.addTarget(self, action: #selector(handleLeftButton), for: .touchUpInside)
+        leftButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8).isActive = true
+        leftButton.addTarget(self, action: #selector(handleLeftButton), for: .touchUpInside)
         
-        cancelButton = UIButton(type: .custom)
-        cancelButton.setTitle("Cancel", for: .normal)
-        cancelButton.setTitleColor(UIColor.white, for: .normal)
-        cancelButton.titleLabel?.font = Fonts.medium(ofSize: 16.0)
-        addSubview(cancelButton)
-        cancelButton.sizeToFit()
-        cancelButton.translatesAutoresizingMaskIntoConstraints = false
-        cancelButton.topAnchor.constraint(equalTo: topAnchor, constant: 20).isActive = true
-        cancelButton.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
-        cancelButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12.0).isActive = true
-        cancelButton.addTarget(self, action: #selector(handleCancelButton), for: .touchUpInside)
-        cancelButton.alpha = 0.0
+        rightButton.setTitle("Cancel", for: .normal)
+        rightButton.alpha = 0.0
+        rightButton.setTitleColor(UIColor.white, for: .normal)
+        rightButton.titleLabel?.font = Fonts.medium(ofSize: 16.0)
+        rightButton.sizeToFit()
+        rightButton.alpha = 0.0
         
         textFieldContainer = UIView()
         addSubview(textFieldContainer)
         textFieldContainer.translatesAutoresizingMaskIntoConstraints = false
-        containerLeadingAnchor = textFieldContainer.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 44.0)
+        containerLeadingAnchor = textFieldContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 44.0)
         containerLeadingAnchor.isActive = true
         
-        containerTrailingAnchor = textFieldContainer.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -44.0)
+        containerTrailingAnchor = textFieldContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -44.0)
         containerTrailingAnchor.isActive = true
         
-        textFieldContainer.topAnchor.constraint(equalTo: topAnchor, constant: 20).isActive = true
-        textFieldContainer.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        textFieldContainer.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
+        textFieldContainer.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
         
         textBubble = UIView()
+        textBubble.backgroundColor = UIColor.black.withAlphaComponent(0.25)
         textFieldContainer.addSubview(textBubble)
         textFieldContainer.clipsToBounds = false
         textFieldContainer.applyShadow(radius: 4.0, opacity: 0.05, offset: CGSize(width: 0, height: 4), color: UIColor.black, shouldRasterize: false)
         
         let containerLayout = textFieldContainer.safeAreaLayoutGuide
         
-        textBubble.backgroundColor = UIColor.black.withAlphaComponent(0.25)
         textBubble.translatesAutoresizingMaskIntoConstraints = false
         textBubble.leadingAnchor.constraint(equalTo: containerLayout.leadingAnchor, constant: 0.0).isActive = true
         textBubble.trailingAnchor.constraint(equalTo: containerLayout.trailingAnchor, constant: 0.0).isActive = true
@@ -92,7 +78,7 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         textField.translatesAutoresizingMaskIntoConstraints = false
         textFieldLeadingAnchor = textField.leadingAnchor.constraint(equalTo: bubbleLayout.leadingAnchor, constant: 12.0)
         textFieldLeadingAnchor.isActive = true
-        textField.trailingAnchor.constraint(equalTo: bubbleLayout.trailingAnchor, constant: -12.0).isActive = true
+        textField.trailingAnchor.constraint(equalTo: bubbleLayout.trailingAnchor, constant: -44.0).isActive = true
         textField.topAnchor.constraint(equalTo: bubbleLayout.topAnchor, constant: 0.0).isActive = true
         textField.bottomAnchor.constraint(equalTo: bubbleLayout.bottomAnchor, constant: 0.0).isActive = true
         
@@ -101,7 +87,20 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         
         let bubbleTap = UITapGestureRecognizer(target: self, action: #selector(beginEditing))
         textBubble.addGestureRecognizer(bubbleTap)
+        
+        clearButton = UIButton(type: .custom)
+        clearButton.setImage(UIImage(named:"CloseSmall"), for: .normal)
+        clearButton.tintColor = UIColor.black
+        clearButton.alpha = 0.0
+        textBubble.addSubview(clearButton)
+        clearButton.translatesAutoresizingMaskIntoConstraints = false
+        clearButton.centerYAnchor.constraint(equalTo: textBubble.centerYAnchor).isActive = true
+        clearButton.trailingAnchor.constraint(equalTo: textBubble.trailingAnchor, constant: -8).isActive = true
+        clearButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
+        clearButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        clearButton.addTarget(self, action: #selector(handleClearButton), for: .touchUpInside)
     }
+    
     
     var gradient:CAGradientLayer?
     
@@ -157,6 +156,10 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         self.textField.endEditing(true)
     }
     
+    @objc func handleClearButton() {
+        self.textField.text = ""
+    }
+    
     func textFieldDidBeginEditing(_ textField: UITextField) {
         delegate?.searchDidBegin()
         print("textFieldDidBeginEditing")
@@ -165,8 +168,9 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
             self.containerTrailingAnchor.constant = -80.0
             self.textFieldLeadingAnchor.constant = 12.0
             self.layoutIfNeeded()
-            self.cancelButton.alpha = 1.0
-            self.leftButtonItem.alpha = 0.0
+            self.rightButton.alpha = 1.0
+            self.leftButton.alpha = 0.0
+            self.clearButton.alpha = 0.75
         }, completion: nil)
     }
     
@@ -188,8 +192,9 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
             self.containerTrailingAnchor.constant = -44.0
             self.textFieldLeadingAnchor.constant = leadingConstant
             self.layoutIfNeeded()
-            self.cancelButton.alpha = 0.0
-            self.leftButtonItem.alpha = 1.0
+            self.rightButton.alpha = 0.0
+            self.clearButton.alpha = 0.0
+            self.leftButton.alpha = 1.0
         }, completion: nil)
     }
     
@@ -198,6 +203,7 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         delegate?.searchTapped(textField.text ?? "")
         return true
     }
+    
     
     var textWidth:CGFloat {
         return UILabel.size(text: textField.text ?? "", height: 44.0, font: textField.font!).width
@@ -220,8 +226,8 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         self.containerTrailingAnchor.constant = -44.0
         self.textFieldLeadingAnchor.constant = leadingConstant
         self.layoutIfNeeded()
-        self.cancelButton.alpha = 0.0
-        self.leftButtonItem.alpha = 1.0
+        self.rightButton.alpha = 0.0
+        self.leftButton.alpha = 1.0
     }
 }
 

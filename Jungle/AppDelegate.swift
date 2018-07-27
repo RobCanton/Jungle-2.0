@@ -10,6 +10,7 @@ import UIKit
 import CoreData
 import Firebase
 import AVFoundation
+import UserNotifications
 
 var firestore:Firestore {
     return Firestore.firestore()
@@ -37,6 +38,7 @@ let grayColor = UIColor(white: 0.75, alpha: 1.0)
 let tertiaryColor = hexColor(from: "BEBEBE")
 let subtitleColor = hexColor(from: "708078")
 let bgColor = hexColor(from: "#eff0e9")
+let likeColor = UIColor(rgb: (255, 102, 102))
 
 var listeningDict = [String:Bool]() {
     didSet {
@@ -44,15 +46,25 @@ var listeningDict = [String:Bool]() {
     }
 }
 var currentUser:User?
+var safeAreaInsets:UIEdgeInsets = .zero
 
+protocol AppProtocol {
+    func listenToAuth()
+}
+
+var appProtocol:AppProtocol!
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate, AppProtocol {
 
     var window: UIWindow?
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override  for customization after application launch.
+        
+        appProtocol = self
+        Messaging.messaging().delegate = self
+        
         FirebaseApp.configure()
         let settings = FirestoreSettings()
         settings.isPersistenceEnabled = false
@@ -65,35 +77,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         let db = Firestore.firestore()
         db.settings = settings
-
-        ///try! Auth.auth().signOut()
-        let authHandler = Auth.auth().addStateDidChangeListener { (auth, user) in
-            if let user = user {
-                print("WE ARE HERE DUDE")
-                print("UID: \(user.uid)")
-                let ref = firestore.collection("users").document(user.uid)
-                ref.getDocument { snapshot, error in
-                    print("LOL!")
-                    if let error = error {
-                        print ("ERROR: \(error.localizedDescription)")
-                    }
-                    if let snapshot = snapshot {
-                        let data = snapshot.data()
-                        print("DATA: \(data)")
-                        guard let username = data?["username"] as? String else { return }
-                        guard let type = data?["type"] as? String else { return }
-                        currentUser = User(uid: user.uid, authType: type, username: username)
-
-                        print("GOT THE USERNAME: \(username)")
-                        self.openMainView()
-                    }
+        
+        if let user = Auth.auth().currentUser {
+            user.getIDTokenForcingRefresh(true, completion: { token, error in
+                if token != nil, error == nil {
+                    print("NEW TOKEN")
+                } else {
+                    print("SIGNOUT")
+                    do {
+                        try Auth.auth().signOut()
+                    } catch {}
                 }
-
-            } else {
-                print("Anonymous")
-                self.signInAnonymously()
-            }
+                self.listenToAuth()
+            })
+        } else {
+            self.listenToAuth()
         }
+    
         
         GIFService.getTopTrendingGif { _gif in
             if let gif = _gif {
@@ -119,33 +119,140 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         } catch {
             print("error")
         }
-        
         return true
     }
     
     func signInAnonymously() {
         Auth.auth().signInAnonymously() { (user, error) in
-            if let user = user?.user, error == nil {
-                let ref = firestore.collection("users").document(user.uid)
-                ref.setData([
-                    "type": "anonymous",
-                    "username": ""
-                ]) { error in
-                    if error == nil {
+            
+        }
+    }
+    var authListener:AuthStateDidChangeListenerHandle?
+    func listenToAuth() {
+        if let listener = authListener {
+            Auth.auth().removeStateDidChangeListener(listener)
+        }
+        
+        authListener = Auth.auth().addStateDidChangeListener { (auth, user) in
+            print("AUTH STATE CHANGED!: \(auth)")
+            if let user = user {
+                
+                print("WE ARE HERE DUDE")
+                print("UID: \(user.uid)")
+                
+                functions.httpsCallable("userAccount").call { result, error in
+                    if let data = result?.data as? [String:Any], error == nil,
+                        let type = data["type"] as? String {
+                        var locationServices = false
+                        var pushNotifications = false
+                        var safeContentMode = false
+                        if let settings = data["settings"] as? [String:Any] {
+                            if let _locationSerivces = settings["locationServices"] as? Bool {
+                                locationServices = _locationSerivces
+                            }
+                            if let _pushNotifications = settings["pushNotifications"] as? Bool {
+                                pushNotifications = _pushNotifications
+                            }
+                            if let _safeContentMode = settings["safeContentMode"] as? Bool {
+                                safeContentMode = _safeContentMode
+                            }
+                        }
+                        let settings = UserSettings(locationServices: locationServices,
+                                                    pushNotifications: pushNotifications,
+                                                    safeContentMode: safeContentMode)
+                        UserService.currentUserSettings = settings
+                        UserService.currentUser = User(uid: user.uid, authType: type, lastPostedAt: nil)
+                        currentUser = User(uid: user.uid, authType: type, lastPostedAt: nil)
+                        UserService.observeCurrentUserSettings()
                         self.openMainView()
+                        
+                    } else {
+                        print("ERROR: \(error?.localizedDescription)")
                     }
                 }
+//                UserService.getUser(user.uid) { user in
+//                    currentUser = user
+//                    if currentUser != nil {
+//                        self.openMainView()
+//                    }
+//                }
+            } else {
+                print("Anonymous")
+                self.signInAnonymously()
+            }
+        }
+        
+    }
+    
+    func openMainView() {
+        
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        UserService.observeCurrentUser()
+        UserService.observeCurrentUserSettings()
+        nService.clear()
+        nService.initialFetch()
+        
+        if let token = Messaging.messaging().fcmToken {
+            let tokenRef = database.child("users/fcmToken/\(uid)")
+            tokenRef.setValue(token)
+        }
+        
+        guard let rootVC = window?.rootViewController else { return }
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let controller = storyboard.instantiateViewController(withIdentifier: "MainTabBarController") as! MainTabBarController
+        
+        if rootVC.childViewControllers.count == 0 {
+            self.window?.rootViewController = controller
+            self.window?.makeKeyAndVisible()
+
+        } else {
+            for i in window?.rootViewController?.view.subviews ?? [] {
+                i.isHidden = true
+                
+                print("REMOVE IT YO!")
+            }
+            window?.rootViewController?.dismiss(animated: false, completion: {
+                self.window?.rootViewController = controller
+                self.window?.makeKeyAndVisible()
+
+            })
+        }
+        
+        
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: {
+//        })
+        
+        
+    }
+    
+    func registerForPushNotifications() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) {
+            (granted, error) in
+            print("Permission granted: \(granted)")
+            guard granted else { return }
+            self.getNotificationSettings()
+        }
+    }
+    
+    func getNotificationSettings() {
+        UNUserNotificationCenter.current().getNotificationSettings { (settings) in
+            print("Notification settings: \(settings)")
+            DispatchQueue.main.async {
+                guard settings.authorizationStatus == .authorized else { return }
+                UIApplication.shared.registerForRemoteNotifications()
             }
         }
     }
     
-    func openMainView() {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let controller = storyboard.instantiateViewController(withIdentifier: "MainTabBarController") as! MainTabBarController
-        self.window?.rootViewController = controller
-        self.window?.makeKeyAndVisible()
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
     }
-
+    
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("Failed to register: \(error)")
+    }
+        
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
@@ -214,6 +321,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
     }
+    
+    
 
 }
 
+extension UIApplication {
+    class func topViewController(controller: UIViewController? = UIApplication.shared.keyWindow?.rootViewController) -> UIViewController? {
+        if let navigationController = controller as? UINavigationController {
+            return topViewController(controller: navigationController.visibleViewController)
+        }
+        if let tabController = controller as? UITabBarController {
+            if let selected = tabController.selectedViewController {
+                return topViewController(controller: selected)
+            }
+        }
+        if let presented = controller?.presentedViewController {
+            return topViewController(controller: presented)
+        }
+        return controller
+    }
+}

@@ -11,7 +11,6 @@ import UIKit
 import AsyncDisplayKit
 import Firebase
 import SwiftMessages
-import AlgoliaSearch
 
 class JViewController:UIViewController {
     var shouldHideStatusBar:Bool = false
@@ -55,14 +54,16 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         view.addSubview(pagerNode.view)
         
         let layoutGuide = view.safeAreaLayoutGuide
+        let topInset = UIApplication.deviceInsets.top
+        let titleViewHeight = 50 + topInset
         
-        titleView = HomeTitleView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0))
+        titleView = HomeTitleView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: titleViewHeight), topInset: topInset)
         view.addSubview(titleView)
         titleView.translatesAutoresizingMaskIntoConstraints = false
         titleView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         titleView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
         titleView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        titleView.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
+        titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
         
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
         pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
@@ -74,7 +75,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         pagerNode.view.panGestureRecognizer.delaysTouchesBegan = false
         pagerNode.reloadData()
         
-        titleView.sortingButton.addTarget(self, action: #selector(locationPicker), for: .touchUpInside)
+        titleView.leftButton.addTarget(self, action: #selector(locationPicker), for: .touchUpInside)
         
         titleView.rightButton.addTarget(self, action: #selector(openContentSettings), for: .touchUpInside)
     }
@@ -87,65 +88,57 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     
     @objc func locationPicker() {
         //print("IM SO COLD LIKE YAH")
-        let alert = UIAlertController(title: "Set Location", message: nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "Markham", style: .default, handler: { _ in
-            SearchService.myCoords = LatLng(lat: 43.9050531135017, lng: -79.27830310499503)
-        }))
-        
-        alert.addAction(UIAlertAction(title: "Toronto", style: .default, handler: { _ in
-            SearchService.myCoords = LatLng(lat: 43.6532, lng: -79.3832)
-        }))
-        
-        alert.addAction(UIAlertAction(title: "New York", style: .default, handler: { _ in
-            SearchService.myCoords = LatLng(lat: 40.7128, lng: -74.0060)
-        }))
-        
-        alert.addAction(UIAlertAction(title: "San Francisco", style: .default, handler: { _ in
-            SearchService.myCoords = LatLng(lat: 37.7749, lng: -122.4194)
-        }))
-        
-        alert.addAction(UIAlertAction(title: "London", style: .default, handler: { _ in
-            SearchService.myCoords = LatLng(lat: 51.5074, lng: -0.1278)
-        }))
-        
-        alert.addAction(UIAlertAction(title: "Tokyo", style: .default, handler: { _ in
-            SearchService.myCoords = LatLng(lat: 35.6895, lng: 139.6917)
-        }))
-        
-        alert.addAction(UIAlertAction(title: "Mexico City", style: .default, handler: { _ in
-            SearchService.myCoords = LatLng(lat: 19.4326, lng: 99.1332)
-        }))
-        self.present(alert, animated: true, completion: nil)
+//        let alert = UIAlertController(title: "Set Location", message: nil, preferredStyle: .actionSheet)
+//        alert.addAction(UIAlertAction(title: "Markham", style: .default, handler: { _ in
+//            //SearchService.myCoords = LatLng(lat: 43.9050531135017, lng: -79.27830310499503)
+//        }))
+//        
+//        alert.addAction(UIAlertAction(title: "Toronto", style: .default, handler: { _ in
+//            //SearchService.myCoords = LatLng(lat: 43.6532, lng: -79.3832)
+//        }))
+//        
+//        alert.addAction(UIAlertAction(title: "New York", style: .default, handler: { _ in
+//            SearchService.myCoords = LatLng(lat: 40.7128, lng: -74.0060)
+//        }))
+//        
+//        alert.addAction(UIAlertAction(title: "San Francisco", style: .default, handler: { _ in
+//            SearchService.myCoords = LatLng(lat: 37.7749, lng: -122.4194)
+//        }))
+//        
+//        alert.addAction(UIAlertAction(title: "London", style: .default, handler: { _ in
+//            SearchService.myCoords = LatLng(lat: 51.5074, lng: -0.1278)
+//        }))
+//        
+//        alert.addAction(UIAlertAction(title: "Tokyo", style: .default, handler: { _ in
+//            SearchService.myCoords = LatLng(lat: 35.6895, lng: 139.6917)
+//        }))
+//        
+//        alert.addAction(UIAlertAction(title: "Mexico City", style: .default, handler: { _ in
+//            SearchService.myCoords = LatLng(lat: 19.4326, lng: 99.1332)
+//        }))
+//        self.present(alert, animated: true, completion: nil)
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        self.titleView.addGradient()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.interactivePopGestureRecognizer?.isEnabled = true;
-        navigationController?.interactivePopGestureRecognizer?.delegate = self;
-
-        navigationController?.navigationBar.shadowImage = UIImage()
-        navigationController?.setNavigationBarHidden(true, animated: animated)
-        navigationController?.navigationBar.tintColor = UIColor.gray
-        navigationItem.backBarButtonItem = UIBarButtonItem(image: UIImage(named:"Back"), style: .plain, target: nil, action: nil)
         
         if ContentSettings.recentlyUpdated {
             pagerNode.reloadData()
             ContentSettings.recentlyUpdated = false
-        }
-    
+        } 
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if gpsService.isAuthorized() {
             gpsService.startUpdatingLocation()
+            print("GPS SERVICE IS AUTHORIZED")
         } else {
-            authorizeGPS()
+            print("GPS SERVICE IS NOT AUTHORIZED")
         }
         
         print("Is User signed In : \(UserService.isSignedIn)")
@@ -197,13 +190,11 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         let viewWidth = view.bounds.width
         if offsetX < viewWidth {
             let progress = offsetX / viewWidth
-            titleView.setProgress(progress, index: 0)
+            titleView.tabScrollView.setProgress(progress, index: 0)
         } else {
             let progress = (offsetX - viewWidth) / viewWidth
-            titleView.setProgress(progress, index: 1)
+            titleView.tabScrollView.setProgress(progress, index: 1)
         }
-        
-        
     }
     
     func scrollTo() {
@@ -280,16 +271,6 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     }
 }
 
-extension HomeViewController: PushTransitionSourceDelegate {
-    func staticTopView() -> UIImageView? {
-        let rect = CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0)
-        let size = CGSize(width: view.bounds.width, height: 70.0)
-        UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
-        view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        let imageView = UIImageView(frame:rect)
-        imageView.image = image
-        return imageView
-    }
+class ContainerCellNode:ASCellNode {
+    
 }

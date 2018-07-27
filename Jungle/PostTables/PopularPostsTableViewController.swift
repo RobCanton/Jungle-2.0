@@ -15,6 +15,7 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
     override var headerCell: ASCellNode? {
         let cell = PopularPostsHeaderCellNode()
         cell.delegate = self
+        cell.selectionStyle = .none
         return cell
     }
     
@@ -22,7 +23,7 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
         context?.cancelBatchFetching()
 
         state = .empty
-        PostsService.getPopularPosts(existingKeys: state.postKeys, lastScore: state.lastScore) { posts, endReached in
+        PostsService.getPopularPosts(existingKeys: state.postKeys, offset: state.posts.count) { posts, endReached in
 
             if endReached {
                 let oldState = self.state
@@ -35,20 +36,11 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
             self.refreshControl.endRefreshing()
 
         }
-//            tableNode.performBatch(animated: false, updates: {
-//                tableNode.deleteRows(at: indexPaths, with: .none)
-//            }, completion: { complete in
-//                if complete {
-//                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
-//                        self.refreshControl.endRefreshing()
-//                    })
-//                }
-//            })
 
         return
     }
     
     override func fetchData(state: PostsTableViewController.State, completion: @escaping ([Post], Bool) -> ()) {
-        PostsService.getPopularPosts(existingKeys: state.postKeys, lastScore: state.lastScore, completion: completion)
+        PostsService.getPopularPosts(existingKeys: state.postKeys, offset: state.posts.count, completion: completion)
     }
 }

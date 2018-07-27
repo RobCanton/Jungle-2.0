@@ -9,16 +9,17 @@
 import Foundation
 import UIKit
 class PushTransitionManager: NSObject, UIViewControllerTransitioningDelegate  {
-    
+
+    var navBarHeight:CGFloat?
     let interactor = Interactor()
     func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         
-        return PushTransitionAnimation()
+        return PushTransitionAnimation(navBarHeight: navBarHeight)
     }
     
     func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         
-        return PopAnimationController()
+        return PopAnimationController(navBarHeight: navBarHeight)
     }
     
     func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {

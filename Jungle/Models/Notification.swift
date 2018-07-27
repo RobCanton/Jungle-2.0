@@ -9,7 +9,7 @@
 import Foundation
 
 enum NotificationType:String {
-    case postVotes = "POST_VOTES"
+    case postVotes = "POST_LIKES"
     case commentVotes = "COMMENT_VOTES"
     case postReply = "POST_REPLY"
     
@@ -26,31 +26,48 @@ enum NotificationType:String {
 }
 
 class JNotification {
+    var id:String
     var type:NotificationType
     var timestamp:Date
+    var seen:Bool
+    var anon:Anon
     
-    init(type:NotificationType, timestamp:Double) {
+    init(id:String, type:NotificationType, timestamp:Double, seen:Bool, anon:Anon) {
+        self.id = id
         self.type = type
         self.timestamp = Date(timeIntervalSince1970: timestamp / 1000)
+        self.seen = seen
+        self.anon = anon
     }
     
-    static func parse(_ data:[String:Any]) -> JNotification? {
+    static func parse(_ id:String, _ data:[String:Any]) -> JNotification? {
         if let typeStr = data["type"] as? String,
-            let timestamp = data["timestamp"] as? Double {
+            let timestamp = data["timestamp"] as? Double,
+            let seen = data["seen"] as? Bool,
+            let anon = Anon.parse(data) {
+            print("Notification \(id): seen \(seen)")
             switch typeStr {
             case NotificationType.postVotes.rawValue:
                 if let postID = data["postID"] as? String,
-                    let newVotes = data["newVotes"] as? Int {
-                    return PostVotesNotification(type: .postVotes, timestamp: timestamp, postID: postID, newVotes: newVotes)
+                    let newVotes = data["numLikes"] as? Int {
+                    print("Notification Type Likes")
+                    return PostVotesNotification(id: id, type: .postVotes, timestamp: timestamp,
+                                                 seen: seen, anon: anon, postID: postID, newVotes: newVotes)
                 }
             case NotificationType.commentVotes.rawValue:
                 return nil
             case NotificationType.postReply.rawValue:
                 if let postID = data["postID"] as? String,
                     let replyID = data["replyID"] as? String {
-                    return PostReplyNotification(type: .postVotes, timestamp: timestamp, postID: postID, replyID: replyID)
+                    let mention = data["mention"] as? Bool ?? false
+                    let replyToID = data["replyTo"] as? String
+                    print("Notification Type Reply")
+                    return PostReplyNotification(id: id, type: .postVotes, timestamp: timestamp,
+                                                 seen: seen, anon: anon, postID: postID, replyID: replyID,
+                                                 replyToID: replyToID, mention: mention)
                 }
             default:
+                print("Notification Type Unknown")
                 return nil
             }
             
@@ -63,20 +80,34 @@ class JNotification {
     }
 }
 
+extension JNotification: Equatable, Comparable {
+    static func < (lhs: JNotification, rhs: JNotification) -> Bool {
+        return lhs.timestamp.compare(rhs.timestamp) == .orderedAscending
+    }
+    
+    
+    static func == (lhs: JNotification, rhs: JNotification) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    
+}
+
 class PostVotesNotification:JNotification {
 
     var postID:String
     var newVotes:Int
     var post:Post?
     
-    init(type: NotificationType, timestamp:
-        Double, postID: String, newVotes:Int) {
+    init(id:String, type: NotificationType, timestamp:
+        Double, seen:Bool, anon:Anon, postID: String, newVotes:Int) {
         self.postID = postID
         self.newVotes = newVotes
-        super.init(type: type, timestamp: timestamp)
+        super.init(id:id, type: type, timestamp: timestamp, seen: seen, anon: anon)
         
     }
     override func fetchData(completion: @escaping () -> ()) {
+        if post != nil { return completion() }
         PostsService.getPost(postID) { _post in
             self.post = _post
             return completion()
@@ -88,22 +119,40 @@ class PostReplyNotification:JNotification {
     
     var postID:String
     var replyID:String
+    var replyToID:String?
     var post:Post?
     var reply:Post?
+    var mention:Bool
     
-    init(type: NotificationType, timestamp:
-        Double, postID: String, replyID: String) {
+    init(id:String, type: NotificationType, timestamp:
+        Double, seen:Bool, anon:Anon,  postID: String, replyID: String, replyToID: String?, mention:Bool) {
         self.postID = postID
         self.replyID = replyID
-        super.init(type: type, timestamp: timestamp)
-        
+        self.replyToID = replyToID
+        self.mention = mention
+        super.init(id:id, type: type, timestamp: timestamp, seen: seen, anon: anon)
     }
+    
     override func fetchData(completion: @escaping () -> ()) {
+        if post != nil, reply != nil { return completion() }
         PostsService.getPost(postID) { _post in
-             self.post = _post
-            PostsService.getPost(self.replyID) { _reply in
-                 self.reply = _reply
-                return completion()
+            if let post = _post {
+                PostsService.getAdditionalPostInfo(post) { populatedPost in
+                    self.post = populatedPost
+                    if self.reply != nil {
+                        return completion()
+                    }
+                }
+            }
+        }
+        PostsService.getPost(self.replyID) { _post in
+            if let post = _post {
+                PostsService.getAdditionalPostInfo(post) { populatedPost in
+                    self.reply = populatedPost
+                    if self.post != nil {
+                        return completion()
+                    }
+                }
             }
         }
     }

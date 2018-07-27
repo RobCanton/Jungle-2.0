@@ -10,63 +10,97 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 
-class ProfileViewController:UIViewController, ASTableDelegate, ASTableDataSource {
-
-    var postsVC:MyRecentPostsTableViewController!
+class ProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, UIGestureRecognizerDelegate {
+    
+    var titleView:JTitleView!
+    var pagerNode:ASPagerNode!
+    var tabScrollView:TabScrollView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = UIColor.white
-        postsVC = MyRecentPostsTableViewController()
-        
-        postsVC.willMove(toParentViewController: self)
-        view.addSubview(postsVC.view)
-        addChildViewController(postsVC)
-        postsVC.didMove(toParentViewController: self)
         
         let layoutGuide = view.safeAreaLayoutGuide
-        postsVC.view.translatesAutoresizingMaskIntoConstraints = false
-        postsVC.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        postsVC.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: -20).isActive = true
-        postsVC.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        postsVC.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        let topInset = UIApplication.deviceInsets.top
+        let titleViewHeight = 50 + topInset
         
-//        let layoutGuide = view.safeAreaLayoutGuide
-//        view.addSubview(tableNode.view)
-//        tableNode.view.translatesAutoresizingMaskIntoConstraints = false
-//        tableNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-//        tableNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-//        tableNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: -20.0).isActive = true
-//        tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
-//        tableNode.view.showsVerticalScrollIndicator = false
-//        tableNode.delegate = self
-//        tableNode.dataSource = self
-////        tableNode.view.delaysContentTouches = false
-////        tableNode.view.panGestureRecognizer.delaysTouchesBegan = false
-//        tableNode.view.contentInsetAdjustmentBehavior = .never
-//
-//        tableNode.reloadData()
-//
-//        tableNode.view.separatorStyle = .none
-//        //tableNode.view.bounces = false
-//        updateHeader()
+        titleView = JTitleView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: titleViewHeight), topInset: topInset)
+        view.addSubview(titleView)
+        titleView.translatesAutoresizingMaskIntoConstraints = false
+        titleView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        titleView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
+        titleView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
+        titleView.rightButton.setImage(UIImage(named:"Settings"), for: .normal)
+        titleView.rightButton.addTarget(self, action: #selector(openSettings), for: .touchUpInside)
+        titleView.titleLabel.text = "MY ACCOUNT"
+        titleView.backgroundImage.isHidden = true
+        titleView.backgroundColor = UIColor.clear
+        
+        let scrollTabBar = UIView()
+        view.addSubview(scrollTabBar)
+        scrollTabBar.translatesAutoresizingMaskIntoConstraints = false
+        scrollTabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        scrollTabBar.topAnchor.constraint(equalTo: titleView.bottomAnchor, constant: -12).isActive = true
+        scrollTabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        scrollTabBar.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+        
+        tabScrollView = TabScrollView(frame: .zero, titles: ["POSTS", "COMMENTS", "LIKES"])
+        scrollTabBar.addSubview(tabScrollView)
+        tabScrollView.translatesAutoresizingMaskIntoConstraints = false
+        tabScrollView.centerXAnchor.constraint(equalTo: scrollTabBar.centerXAnchor).isActive = true
+        tabScrollView.topAnchor.constraint(equalTo: scrollTabBar.topAnchor).isActive = true
+        tabScrollView.bottomAnchor.constraint(equalTo: scrollTabBar.bottomAnchor).isActive = true
+
+        
+        let bgImageView = UIImageView(image: UIImage(named:"NavBarGradient1"))
+        view.insertSubview(bgImageView, belowSubview: titleView)
+        bgImageView.translatesAutoresizingMaskIntoConstraints = false
+        bgImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        bgImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        bgImageView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        bgImageView.heightAnchor.constraint(equalToConstant:  titleViewHeight + 32.0).isActive = true
+        
+        pagerNode = ASPagerNode()
+        pagerNode.setDelegate(self)
+        pagerNode.setDataSource(self)
+        pagerNode.backgroundColor = hexColor(from: "#eff0e9")
+        view.addSubview(pagerNode.view)
+        pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
+        pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        pagerNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        pagerNode.view.topAnchor.constraint(equalTo: scrollTabBar.bottomAnchor).isActive = true
+        pagerNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        pagerNode.view.delaysContentTouches = false
+        //pagerNode.view.isScrollEnabled = false
+        pagerNode.view.panGestureRecognizer.delaysTouchesBegan = false
+        pagerNode.reloadData()
+    }
+    
+    var pushTransition = PushTransitionManager()
+    
+    @objc func openSettings() {
+        let controller = SettingsViewController()
+        let navBarHeight = 50 + UIApplication.deviceInsets.top
+        pushTransition.navBarHeight = navBarHeight
+        controller.interactor = pushTransition.interactor
+        controller.transitioningDelegate = pushTransition
+        
+        self.present(controller, animated: true, completion: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: false)
+        if !UserService.isSignedIn {
+            let loginVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "AuthViewController") as! AuthViewController
+            self.present(loginVC, animated: true, completion: nil)
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        //profileHeader.setLevelProgress(0.67)
-        
-        SearchService.searchMyPosts(offset: 0) { posts, endReached in
-            for post in posts {
-                print("TEXT: \(post.text)")
-            }
-        }
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -75,36 +109,54 @@ class ProfileViewController:UIViewController, ASTableDelegate, ASTableDataSource
         }
     }
     
-    func numberOfSections(in tableNode: ASTableNode) -> Int {
-        return 1
+    func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
+        let cellNode = ASCellNode()
+        cellNode.frame = pagerNode.bounds
+        cellNode.backgroundColor = index % 2 == 0 ? UIColor.blue : UIColor.yellow
+        var controller:PostsTableViewController!
+        switch index {
+        case 0:
+            controller = MyPostsTableViewController()
+            break
+        case 1:
+            controller = MyCommentsTableViewController()
+            break
+        default:
+            controller = LikedPostsTableViewController()
+            break
+        }
+        controller.willMove(toParentViewController: self)
+        self.addChildViewController(controller)
+        controller.view.frame = cellNode.bounds
+        cellNode.addSubnode(controller.node)
+        let layoutGuide = cellNode.view.safeAreaLayoutGuide
+        controller.view.translatesAutoresizingMaskIntoConstraints = false
+        controller.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        controller.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        controller.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        controller.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        
+        return cellNode
     }
     
-    func tableNode(_ tableNode: ASTableNode, numberOfRowsInSection section: Int) -> Int {
-        return 15
-    }
-    
-    func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
-        let cell = ASTextCellNode()
-        cell.text = "Row #\(indexPath.row)"
-        return cell
+    func numberOfPages(in pagerNode: ASPagerNode) -> Int {
+        return 3
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        updateHeader()
+        guard scrollView == pagerNode.view else { return }
+        let offsetX = scrollView.contentOffset.x
+        let viewWidth = view.bounds.width
+        if offsetX < viewWidth {
+            let progress = offsetX / viewWidth
+            tabScrollView.setProgress(progress, index: 0)
+        } else {
+            let progress = (offsetX - viewWidth) / viewWidth
+            tabScrollView.setProgress(progress, index: 1)
+        }
     }
     
-    func updateHeader() {
-//        var progress:CGFloat = 1.0
-//        if tableNode.contentOffset.y < -headerHeight {
-//
-//            headerHeightAnchor.constant = -tableNode.contentOffset.y
-//        } else {
-//            //print("Offset: \(-tableNode.contentOffset.y)")
-//            progress = (-tableNode.contentOffset.y - 108) / (headerHeight - 108)
-//            headerHeightAnchor.constant = max(-tableNode.contentOffset.y, 108)
-//
-//        }
-//        profileHeader.updateProgress(max(progress,0))
-//        //let progress =
+    func scrollTo() {
     }
+
 }

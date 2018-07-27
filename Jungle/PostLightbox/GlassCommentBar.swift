@@ -115,7 +115,7 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         sendButton.widthAnchor.constraint(equalTo: sendButton.heightAnchor, multiplier: 1.0).isActive = true
         sendButton.layer.cornerRadius = 4.0
         sendButton.clipsToBounds = true
-        sendButton.addTarget(self, action: #selector(sendText), for: .touchUpInside)
+        sendButton.addTarget(self, action: #selector(sendText), for: .touchUpInside) 
     }
     
     var activeColor:UIColor!

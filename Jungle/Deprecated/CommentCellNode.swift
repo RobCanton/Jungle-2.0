@@ -13,6 +13,8 @@ import Firebase
 
 protocol CommentCellDelegate:class {
     func handleReply(_ reply:Post)
+    func handleMore(_ post:Post)
+    func postOpen(tag:String)
 }
 
 class CommentPreviewNode:ASDisplayNode {

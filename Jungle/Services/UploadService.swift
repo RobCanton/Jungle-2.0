@@ -147,24 +147,48 @@ class UploadService {
                 
                 Alerts.showSuccessAlert(withMessage: "Uploaded!")
             } else {
-                
+                Alerts.showFailureAlert(withMessage: "Failed to upload.")
             }
             
         }
     }
     
-    static func deletePost(_ headers: HTTPHeaders, post:Post, completion: @escaping (_ success:Bool)->()) {
-        let postRef = firestore.collection("posts").document(post.key)
-        postRef.delete() { error in
-            completion(error == nil)
+    static func deletePost(_ post:Post, completion: @escaping (_ success:Bool)->()) {
+        Alerts.showInfoAlert(withMessage: "Deleting...")
+        functions.httpsCallable("removePost").call(["postID": post.key]) { result, error in
+            if let error = error {
+                print("ERROR: \(error)")
+                Alerts.showFailureAlert(withMessage: "Failed to delete post.")
+                return completion(false)
+            }
+            
+            Alerts.showSuccessAlert(withMessage: "Deleted!")
+            return completion(true)
         }
         
-        deletePostAttachments(post: post)
     }
     
-    static func deletePostAttachments(post:Post) {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        guard let attachments = post.attachments else { return }
+    static func deletePostAttachments(post:Post, completion: @escaping (_ success:Bool)->()) {
+        guard let uid = Auth.auth().currentUser?.uid else { return completion(false) }
+        guard let attachments = post.attachments else { return completion(true) }
+        if let video = attachments.video {
+            let videoRef = storage.child("userPosts/\(uid)/\(post.key)/video.mp4")
+            videoRef.delete { error in
+                if let _ = error {
+                    return completion(false)
+                }
+                let thumbnailRef = storage.child("userPosts/\(uid)/\(post.key)/thumbnail.gif")
+                thumbnailRef.delete { error in
+                    if let _ = error {
+                        return completion(false)
+                    }
+                    return completion(true)
+                }
+            }
+        } else {
+            return completion(true)
+        }
+        
 //        for image in attachments.images {
 //            
 //            let imageRef = storage.child("userPosts/\(uid)/\(post.key)/\(image.order).\(image.type)")
@@ -188,7 +212,7 @@ class UploadService {
     }
     
     
-    static func uploadPost(text:String, image:SelectedImage?, videoURL:URL?, gif:GIF?=nil, includeLocation:Bool?=nil) {
+    static func uploadPost(text:String, image:SelectedImage?, videoURL:URL?, gif:GIF?=nil, region:Region?=nil, location:CLLocation?=nil) {
         NSLog("RSC: uploadPost - Start")
         guard let uid = Auth.auth().currentUser?.uid else { return }
         var parameters: [String: Any] = [
@@ -196,10 +220,16 @@ class UploadService {
             "text" : text
         ]
         
-        if includeLocation != nil, includeLocation!, let location = gpsService.getLastLocation() {
+        if let region = region, let location = location {
             parameters["location"] = [
                 "lat": location.coordinate.latitude,
-                "lon": location.coordinate.longitude
+                "lng": location.coordinate.longitude,
+                "region": [
+                    "city": region.city,
+                    "country": region.country,
+                    "countryCode": region.countryCode
+                ]
+                
             ]
         }
         NSLog("getNewPost - Start")
@@ -246,60 +276,133 @@ class UploadService {
                 let videoTrack:AVAssetTrack = track[0] as AVAssetTrack
                 let size = videoTrack.naturalSize
                 NSLog("RSC: uploadVideo - Start")
-                var vidURL:URL?
-                var vidLength:Double?
-                var gifURL:URL?
-                UploadService.uploadVideo(pathName: "video.mp4", videoURL: url, postID: postID) { _vidURL, _vidLength in
-                    NSLog("RSC: uploadVideo - End")
-                    if _vidURL != nil, _vidLength != nil {
-                        vidURL = _vidURL!
-                        vidLength = _vidLength!
-                        if gifURL != nil {
-                            parameters["attachments"] = [
-                                "video": [
-                                    "url": vidURL!.absoluteString,
-                                    "thumbnail_url": gifURL!.absoluteString,
-                                    "length": "\(vidLength!)",
-                                    "size": [
-                                        "width": size.width,
-                                        "height": size.height,
-                                        "ratio": size.width / size.height
-                                    ]
-                                ]
-                            ]
-                            
-                            UploadService.addNewPost(withID: postID, parameters: parameters)
-                        }
-                    }
-                }
+                var videoLength:Float64?
+                var videoUploaded = false
+                var thumbnailUploaded = false
                 
-                UploadService.createGif(videoURL: url, postID: postID) { _gifURL in
-                    if _gifURL != nil {
-                        gifURL = _gifURL!
-                        if vidURL != nil, vidLength != nil {
-                            parameters["attachments"] = [
-                                "video": [
-                                    "url": vidURL!.absoluteString,
-                                    "thumbnail_url": gifURL!.absoluteString,
-                                    "length": "\(vidLength!)",
-                                    "size": [
-                                        "width": size.width,
-                                        "height": size.height,
-                                        "ratio": size.width / size.height
+                uploadVideoStill(url: url, postID: postID) { success in
+                    if success {
+                        UploadService.uploadVideo(pathName: "video.mp4", videoURL: url, postID: postID) { success, _vidLength in
+                            NSLog("RSC: uploadVideo - End")
+                            videoUploaded = success
+                            videoLength = _vidLength
+                            if videoUploaded, thumbnailUploaded, videoLength != nil {
+                                parameters["attachments"] = [
+                                    "video": [
+                                        "length": "\(videoLength!)",
+                                        "size": [
+                                            "width": size.width,
+                                            "height": size.height,
+                                            "ratio": size.width / size.height
+                                        ]
                                     ]
                                 ]
-                            ]
-                            
-                            UploadService.addNewPost(withID: postID, parameters: parameters)
+                                
+                                UploadService.addNewPost(withID: postID, parameters: parameters)
+                                
+                            }
+                        }
+                        
+                        UploadService.createGif(videoURL: url, postID: postID) { success in
+                            thumbnailUploaded = success
+                            if thumbnailUploaded, videoUploaded, videoLength != nil {
+                                parameters["attachments"] = [
+                                    "video": [
+                                        "length": "\(videoLength!)",
+                                        "size": [
+                                            "width": size.width,
+                                            "height": size.height,
+                                            "ratio": size.width / size.height
+                                        ]
+                                    ]
+                                ]
+                                
+                                UploadService.addNewPost(withID: postID, parameters: parameters)
+                            }
                         }
                     }
-                    
-                    
                 }
                 
             } else {
                 UploadService.addNewPost(withID: postID, parameters: parameters)
             }
+        }
+    }
+    
+    static func uploadVideo(pathName:String, videoURL:URL, postID:String, completion: @escaping ((_ success:Bool, _ length:Float64?)->())) {
+        guard let uid = Auth.auth().currentUser?.uid else { return completion(false, nil) }
+        
+        let storageRef = Storage.storage().reference().child("userPosts/\(uid)/\(postID)/video.mp4")
+        
+        let uploadMetadata = StorageMetadata()
+        uploadMetadata.contentType = "video/mp4"
+        
+        let playerItem = AVAsset(url: videoURL)
+        let length = CMTimeGetSeconds(playerItem.duration)
+        guard let data = NSData(contentsOf: videoURL) else { return completion(false, nil) }
+        storageRef.putData(data as Data, metadata: uploadMetadata) { metaData, error in
+            if let error = error {
+                print("ERROR: \(error.localizedDescription)")
+            }
+            completion(error == nil, length)
+        }
+    }
+    
+    static func createGif(videoURL:URL, postID:String, completion:@escaping((_ success:Bool)->())) {
+        NSLog("RSC: createGif - Start")
+        guard let uid = Auth.auth().currentUser?.uid else { return completion(false) }
+        let size = CGSize(width: 160, height: 160)
+        let fileManager = FileManager.default
+        let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let outputURL = documentDirectory.appendingPathComponent("output-thumbnail.gif")
+        
+        //Remove existing file
+        try? fileManager.removeItem(at: outputURL)
+        Regift.createGIFFromSource(videoURL, destinationFileURL: outputURL, startTime: 0.0, duration: 2.5, frameRate: 12, loopCount: 0, size: size) { result in
+            guard let url = result else { return completion(false) }
+            
+            let storageRef = Storage.storage().reference().child("userPosts/\(uid)/\(postID)/thumbnail.gif")
+            
+            let uploadMetadata = StorageMetadata()
+            uploadMetadata.contentType = "image/gif"
+            guard let data = NSData(contentsOf: url) else { return completion(false) }
+            storageRef.putData(data as Data, metadata: uploadMetadata) { metaData, error in
+                return completion(error == nil)
+            }
+        }
+    }
+    
+    private static func uploadVideoStill(url:URL, postID:String, completion: @escaping(_ success:Bool)->()) {
+        guard let uid = Auth.auth().currentUser?.uid else { return completion(false) }
+        var image:UIImage?
+        print("GOT EM!")
+        do {
+            let asset = AVAsset(url: url)
+            let imgGenerator = AVAssetImageGenerator(asset: asset)
+            imgGenerator.appliesPreferredTrackTransform = true
+            let cgImage = try imgGenerator.copyCGImage(at: CMTimeMake(0, 1), actualTime: nil)
+            image = UIImage(cgImage: cgImage)
+        } catch let error as NSError {
+            print("Error generating thumbnail: \(error)")
+            return completion(false)
+        }
+        guard let videoStill = image else { return completion(false) }
+        guard let jpegData = UIImageJPEGRepresentation(videoStill, 0.5) else { return completion (false) }
+        print("PUT IT")
+        let storageRef = Storage.storage().reference().child("userPosts/\(uid)/\(postID)/thumbnail.jpg")
+        
+        let uploadMetadata = StorageMetadata()
+        uploadMetadata.contentType = "image/jpg"
+        
+        storageRef.putData(jpegData as Data, metadata: uploadMetadata) { metaData, error in
+            print("DUN IT")
+            if let error = error {
+                print("ERROR: \(error.localizedDescription)")
+                return completion(false)
+            } else {
+                return completion(true)
+            }
+            
         }
     }
     
@@ -323,14 +426,14 @@ class UploadService {
         }
     }
     
-    static func videoFileExists(withKey key:String) -> Bool {
+    fileprivate static func videoFileExists(withKey key:String) -> Bool {
         let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let dataPath = documentsDirectory.appendingPathComponent("user_content/upload_video-\(key).mp4")
         let exists = FileManager.default.fileExists(atPath: dataPath.path)
         return exists
     }
     
-    static func writeVideoToFile(withKey key:String, video:Data) -> URL {
+    fileprivate static func writeVideoToFile(withKey key:String, video:Data) -> URL {
         let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let dataPath = documentsDirectory.appendingPathComponent("user_content/upload_video-\(key).mp4")
         
@@ -338,33 +441,43 @@ class UploadService {
         return dataPath
     }
     
-    static func readVideoFromFile(withKey key:String) -> URL? {
+    fileprivate static func readVideoFromFile(withKey key:String) -> URL? {
         let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let dataPath = documentsDirectory.appendingPathComponent("user_content/upload_video-\(key).mp4")
         do {
             let _ = try Data(contentsOf: dataPath)
             
             return dataPath
-        } catch let error as Error{
-            //print("ERROR: \(error.localizedDescription)")
+        } catch {
             return nil
         }
     }
     
-    static func downloadVideo(withKey key:String, url:URL, completion: @escaping (_ data:Data?)->()) {
-        
-        URLSession.shared.dataTask(with: url, completionHandler:
-            { (data, response, error) in
-                return completion(data)
-                
-        }).resume()
+    fileprivate static func removeVideoFile(withKey key:String) -> Bool {
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let dataPath = documentsDirectory.appendingPathComponent("user_content/upload_video-\(key).mp4")
+        do {
+            try FileManager.default.removeItem(at: dataPath)
+            return true
+        } catch {
+            return false
+        }
     }
     
-    static func retrieveVideo(withKey key:String, url:URL, completion: @escaping (_ videoUrl:URL?, _ fromFile:Bool)->()) {
+    fileprivate static func downloadVideo(withKey key:String, completion: @escaping (_ data:Data?)->()) {
+        let videoRef = storage.child("publicPosts/\(key)/video.mp4")
+        
+        // Download in memory with a maximum allowed size of 1MB (1 * 1024 * 1024 bytes)
+        videoRef.getData(maxSize: 30 * 1024 * 1024) { data, error in
+            return completion(data)
+        }
+    }
+    
+    static func retrieveVideo(withKey key:String, completion: @escaping (_ videoUrl:URL?, _ fromFile:Bool)->()) {
         if let data = readVideoFromFile(withKey: key) {
             completion(data, true)
         } else {
-            downloadVideo(withKey: key, url: url) { data in
+            downloadVideo(withKey: key) { data in
                 if data != nil {
                     let url = writeVideoToFile(withKey: key, video: data!)
                     completion(url, false)
@@ -373,88 +486,7 @@ class UploadService {
             }
         }
     }
-    
-    static func uploadVideo(pathName:String, videoURL:URL, postID:String, completion: @escaping ((_ url:URL?, _ length:Float64?)->())) {
-        guard let uid = Auth.auth().currentUser?.uid else { return completion(nil, nil) }
-        
-        let storageRef = Storage.storage().reference().child("userPosts/\(uid)/\(postID)/\(pathName)")
-        
-        let uploadMetadata = StorageMetadata()
-        uploadMetadata.contentType = "video/mp4"
-        
-        let playerItem = AVAsset(url: videoURL)
-        let length = CMTimeGetSeconds(playerItem.duration)
-        guard let data = NSData(contentsOf: videoURL) else { return completion(nil, nil) }
-        storageRef.putData(data as Data, metadata: uploadMetadata) { metaData, error in
-            storageRef.downloadURL { url, error in
-                completion(url, length)
-            }
-        }
-    }
-    
-    static func createGif(videoURL:URL, postID:String, completion:@escaping((_ url:URL?)->())) {
-        NSLog("RSC: createGif - Start")
-        let size = CGSize(width: 200, height: 200)
-        let fileManager = FileManager.default
-        let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let outputURL = documentDirectory.appendingPathComponent("output-thumbnail.gif")
-        
-        //Remove existing file
-        try? fileManager.removeItem(at: outputURL)
-        Regift.createGIFFromSource(videoURL, destinationFileURL: outputURL, startTime: 0.0, duration: 2.5, frameRate: 12, loopCount: 0, size: size) { result in
-            guard let url = result else { return completion(nil) }
-            
-            guard let uid = Auth.auth().currentUser?.uid else { return completion(nil) }
-            
-            let storageRef = Storage.storage().reference().child("userPosts/\(uid)/\(postID)/thumbnail.gif")
-            
-            let uploadMetadata = StorageMetadata()
-            uploadMetadata.contentType = "image/gif"
-            guard let data = NSData(contentsOf: url) else { return completion(nil) }
-            storageRef.putData(data as Data, metadata: uploadMetadata) { metaData, error in
-                storageRef.downloadURL { url, error in
-                    NSLog("RSC: createGif - End")
-                    completion(url)
-                }
-            }
-        }
-    }
-    
-    static func cropVideo(sourceURL: URL, startTime: Double, endTime: Double, completion: ((_ outputUrl: URL) -> Void)? = nil)
-    {
-        let fileManager = FileManager.default
-        let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        
-        let asset = AVAsset(url: sourceURL)
-        let length = Float(asset.duration.value) / Float(asset.duration.timescale)
-        print("video length: \(length) seconds")
-        
-        var outputURL = documentDirectory.appendingPathComponent("output-thumbnail.mp4")
-        
-        //Remove existing file
-        try? fileManager.removeItem(at: outputURL)
-        
-        guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetLowQuality) else { return }
-        exportSession.outputURL = outputURL
-        exportSession.outputFileType = .mp4
-        
-        let timeRange = CMTimeRange(start: CMTime(seconds: startTime, preferredTimescale: 1000),
-                                    end: CMTime(seconds: endTime, preferredTimescale: 1000))
-        
-        exportSession.timeRange = timeRange
-        exportSession.exportAsynchronously {
-            switch exportSession.status {
-            case .completed:
-                print("exported at \(outputURL)")
-                completion?(outputURL)
-            case .failed:
-                print("failed \(exportSession.error.debugDescription)")
-            case .cancelled:
-                print("cancelled \(exportSession.error.debugDescription)")
-            default: break
-            }
-        }
-    }
+
     
 }
 

@@ -9,17 +9,30 @@
 import Foundation
 import CoreLocation
 import Alamofire
+import Firebase
 
 class GPSService: NSObject, CLLocationManagerDelegate {
     
     static let locationUpdatedNotification = Notification.Name.init("LocationUpdated")
+    
     fileprivate var locationManager: CLLocationManager?
     fileprivate var lastLocation: CLLocation?
     fileprivate var currentAccuracy:Double?
+    
+    private(set) var region:Region?
     fileprivate var lastSignificantLocation: CLLocation? {
         didSet {
-            if lastSignificantLocation != nil {
+            if let location = lastSignificantLocation {
                 NotificationCenter.default.post(name: GPSService.locationUpdatedNotification, object: self)
+                let params = [
+                    "lat": location.coordinate.latitude,
+                    "lng": location.coordinate.longitude
+                ]
+                functions.httpsCallable("myRegion").call(params) { results, error in
+                    if let data = results?.data as? [String:Any], error == nil {
+                        self.region = Region.parse(data)
+                    }
+                }
             }
         }
     }
@@ -110,7 +123,9 @@ class GPSService: NSObject, CLLocationManagerDelegate {
     }
     
     internal func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        
+        if status == .authorizedWhenInUse {
+            startUpdatingLocation()
+        }
     }
     
     internal func updateLocationDidFailWithError(_ error: NSError) {

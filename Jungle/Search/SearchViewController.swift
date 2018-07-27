@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 
-class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource {
+class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
     
     var initialSearch:String?
     var pagerNode:ASPagerNode!
@@ -18,7 +18,6 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource 
     var searchBar:RCSearchBarView!
     
     var interactor:Interactor? = nil
-    
     
     @objc func handlePan(_ sender: UIPanGestureRecognizer) {
         
@@ -55,16 +54,19 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource 
         super.viewDidLoad()
         view.backgroundColor = bgColor
         
-        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 70.0))
+        let topInset = UIApplication.deviceInsets.top
+        let titleViewHeight = 50 + topInset
+        
+        searchBar = RCSearchBarView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: titleViewHeight), topInset: topInset)
         view.addSubview(searchBar)
         
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         
         let layout = view.safeAreaLayoutGuide
-        searchBar.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
-        searchBar.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
-        searchBar.topAnchor.constraint(equalTo: layout.topAnchor, constant: -20).isActive = true
-        searchBar.heightAnchor.constraint(equalToConstant: 70.0).isActive = true
+        searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        searchBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        searchBar.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
         
         view.layoutIfNeeded()
         
@@ -81,8 +83,8 @@ class SearchViewController:UIViewController, ASPagerDelegate, ASPagerDataSource 
         pagerNode.reloadData()
         
         searchBar.setup(withDelegate: self)
-        searchBar.leftButtonItem.tintColor = UIColor.white
-        searchBar.leftButtonItem.setImage(UIImage(named:"back"), for: .normal)
+        searchBar.leftButton.tintColor = UIColor.white
+        searchBar.leftButton.setImage(UIImage(named:"back"), for: .normal)
         
         let edgeSwipe = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(handlePan))
         edgeSwipe.edges = .left

@@ -9,18 +9,18 @@
 import Foundation
 import UIKit
 import AVFoundation
-import Hero
 import Photos
 import Pulley
 import Speech
+import CoreLocation
 
 enum CameraState {
-    case initiating, running, recording, endRecording, editing, writing
+    case initiating, running, recording, editing, writing
 }
 
-class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate {
+class CameraViewController: UIViewController, CameraHUDProtocol {
     
-    var captureView:CaptureSessionView!
+    var captureView:FilterCamView!
     var hudView:CameraHUDView!
     
     var previewView:UIView!
@@ -29,6 +29,9 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
     var pageView:UIScrollView!
     
     var addVideo: ((URL)->())?
+    
+    var location:CLLocation?
+    var region:Region?
     
     var shouldHideStatusBar = false
     override var prefersStatusBarHidden: Bool {
@@ -39,114 +42,53 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
         get { return .lightContent }
     }
     
-    var state = CameraState.initiating {
-        didSet {
-            switch state {
-            case .initiating:
-                break
-            case .running:
-                destroyCaptured()
-                endLoopVideo()
-                
-                hudView.closeButton.setStyle(.caretDown, animated: true)
-                hudView.recordButton.reset()
-                hudView.recordButton.isHidden = false
-                hudView.switchCameraButton.isHidden = false
-                hudView.nextButton.isHidden = true
-                hudView.stickerButton.isHidden = true
-                hudView.stickersOverlay.isHidden = true
-                captureView.isHidden = false
-                break
-            case .recording:
-                break
-            case .endRecording:
-                break
-            case .editing:
-                
-                videoPlayer.play()
-                hudView.closeButton.isHidden = false
-                hudView.stickerButton.isHidden = false
-                hudView.stickersOverlay.isHidden = false
-                hudView.stickersOverlay.isUserInteractionEnabled = true
-                hudView.closeButton.setStyle(.close, animated: true)
-                captureView.isHidden = true
-                hudView.recordButton.isHidden = true
-                hudView.nextButton.isHidden = false
-                hudView.switchCameraButton.isHidden = true
-                hudView.hideCaptionBar()
-                break
-            case .writing:
-                videoPlayer.pause()
-                hudView.stickersOverlay.isUserInteractionEnabled = false
-                hudView.closeButton.setStyle(.caretLeft, animated: true)
-                hudView.showCaptionBar()
-                break
-                
-            }
-        }
-    }
+    var state = CameraState.initiating
     
-    func transcribeRecording(completion: @escaping ((_ transcription:String?)->())) {
-        guard let videoURL = videoURL else { return }
+    func transition(toState newState:CameraState) {
         
-        
-        let audioEngine = AVAudioEngine()
-        let speechRecognizer = SFSpeechRecognizer()
-        let request = SFSpeechAudioBufferRecognitionRequest()
-        var recognitionTask:SFSpeechRecognitionTask?
-        
-        
-        let asset = AVAsset(url: videoURL)
-        asset.loadValuesAsynchronously(forKeys: ["playable", "tracks"]) {
-            DispatchQueue.main.async {
-                
-                let fileManager = FileManager.default
-                let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                let filePath = documentDirectory.appendingPathComponent("output_audio.m4a")
-
-                do {
-                    try fileManager.removeItem(at: filePath)
-                } catch {
-                    print("UHUH")
-                }
-                asset.writeAudioTrackToURL(filePath) { completed, error in
-                    guard completed, error == nil else { return }
-                    
-                    SFSpeechRecognizer.requestAuthorization { authStatus in
-                        if (authStatus == .authorized) {
-                            // Get the party started and watch for results in the completion block.
-                            // It gets fired every time a new word (aka transcription) gets detected.
-                            let request = SFSpeechURLRecognitionRequest(url: filePath)
-                            
-                            speechRecognizer?.recognitionTask(with: request, resultHandler: { (result, error) in
-                                
-                                if let result = result {
-                                    var transcription:String?
-                                    if result.isFinal {
-                                        transcription = result.bestTranscription.formattedString
-                                    }
-                                    completion(transcription)
-                                } else {
-                                    print("ERROR: \(error?.localizedDescription)")
-                                }
-                                
-                            })
-                        } else {
-                            print("Error: Speech-API not authorized!");
-                        }
-                    }
-                }
+        switch newState {
+        case .initiating:
+            break
+        case .running:
+            destroyCaptured()
+            endLoopVideo()
+            hudView.runningState()
+            captureView.isHidden = false
+            
+            break
+        case .recording:
+            if state == .running {
+                self.captureView.startRecording()
+                self.hudView.recordingState()
             }
+            break
+        case .editing:
+            videoPlayer.play()
+            captureView.isHidden = true
+            hudView.editingState()
+            if state == .recording {
+                location = gpsService.getLastLocation()
+                region = gpsService.region
+                hudView.optionsBar.region = region
+            } else if state == .writing {
+                hudView.writingState(forward: false)
+            }
+            break
+        case .writing:
+            videoPlayer.pause()
+            if state == .editing {
+                hudView.writingState(forward: true)
+            }
+            break
         }
-    
-
+        self.state = newState
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = UIColor.black
-        captureView = CaptureSessionView(frame: view.bounds)
+        captureView = FilterCamView(frame: view.bounds)
         view.addSubview(captureView)
         
         captureView.translatesAutoresizingMaskIntoConstraints = false
@@ -164,7 +106,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
         previewView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
         hudView = CameraHUDView(frame: view.bounds)
-        state = .running
+        transition(toState: .running)
         view.addSubview(hudView)
         //hudView.isHidden = true
         
@@ -181,6 +123,13 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
         hudView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         
         hudView.delegate = self
+        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch))
+        hudView.addGestureRecognizer(pinchGesture)
+        hudView.isUserInteractionEnabled = true
+    }
+    
+    @objc func handlePinch(_ gesture:UIPinchGestureRecognizer) {
+        captureView.handlePinchGesture(gesture)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -196,6 +145,12 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
         
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: {
+            self.captureView.setup()
+        })
+    }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         destroyCameraSession()
@@ -205,7 +160,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
     
     
     func destroyCameraSession() {
-        captureView.destroySession()
+        captureView.destroy()
     }
     
     func destroyCaptured() {
@@ -220,10 +175,10 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
             self.dismiss(animated: true, completion: nil)
             break
         case .editing:
-            state = .running
+            transition(toState: .running)
             break
         case .writing:
-            state = .editing
+            transition(toState: .editing)
             break
         default:
             break
@@ -232,12 +187,21 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
     
     func handleSwitchCamera() {
         captureView.switchCamera()
+        hudView.flashButton.isHidden = !captureView.isBackCameraActive
+    }
+    
+    var pushTransitionManager = PushTransitionManager()
+    
+    func handleTorch() {
+        let t = captureView.toggleTorch()
+        let image = t ? UIImage(named: "flash") : UIImage(named:"flash_off")
+        hudView.flashButton.setImage(image, for: .normal)
     }
     
     func handleNext() {
         switch state {
         case .editing:
-            state = .writing
+            transition(toState: .writing)
             break
         default:
             break
@@ -245,24 +209,32 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
     }
     
     func handlePost() {
-        guard let url = videoURL else {return}
+        guard let url = videoURL else { return }
         hudView.startPostAnimation()
-        Alerts.showInfoAlert(withMessage: "Uploading...")
-        hudView.commentBar.textView.resignFirstResponder()
-        processVideoWithWatermark(videoURL: url) { _compressedVideoURL in
-            self.dismiss(animated: true, completion: nil)
+        
+       
+        hudView.textView.resignFirstResponder()
+        
+        self.processVideoWithWatermark(videoURL: url) { _compressedVideoURL in
+
             DispatchQueue.main.async {
+                
+                //alert.configureContent(body: "Uploading...")
+
                 if let compressedVideoURL = _compressedVideoURL {
-                    //self.addVideo?(compressedVideoURL)
-                    UploadService.uploadPost(text: self.hudView.commentBar.textView.text,
+                    UploadService.uploadPost(text: self.hudView.textView.text,
                                              image: nil,
                                              videoURL: compressedVideoURL,
                                              gif: nil,
-                                             includeLocation:true)
+                                             region:self.region,
+                                             location: self.location)
+                    UserService.recentlyPosted = true
+                    let alert = Alerts.showInfoAlert(withMessage: "Uploading...")
                     self.dismiss(animated: true, completion: nil)
                 }
             }
         }
+        
     }
     
     @objc func handleStickers() {
@@ -438,149 +410,53 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
         
     }
     
+    func getCurrentImage() -> CIImage? {
+        return captureView.currentImage
+    }
+    
+    func setCameraEffect(_ effect:String?, _ intensity:Float?) {
+        captureView.effectName = effect
+        captureView.intensity = intensity
+    }
+    
     @objc func handleCaptionBack() {
-//        UIView.animate(withDuration: 0.20, delay: 0, options: .curveEaseInOut, animations: {
-//            self.previewView.alpha = 1.0
-//            self.pageView.contentOffset = CGPoint(x: 0.0, y: 0.0)
-//        }, completion: nil)
         let controller = ConfigurePostViewController()
         self.navigationController?.pushViewController(controller, animated: true)
     }
     
+    var videoURL:URL?
     @objc func handleRecordTap(_ tap:UITapGestureRecognizer) {
         switch state {
         case .running:
-            clipCount = 0
-            clipURLs = []
-            hudView.recordButton.initiateRecordingAnimation()
-            UIView.animate(withDuration: 0.5, animations: {
-                self.hudView.closeButton.alpha = 0.0
-                self.hudView.stickerButton.alpha = 0.0
-            }) { _ in
-                
-                DispatchQueue.main.async {
-                    self.hudView.closeButton.setStyle(.close, animated: false)
-                    self.hudView.closeButton.isHidden = true
-                    self.hudView.stickerButton.isHidden = true
-                    self.hudView.closeButton.alpha = 1.0
-                    self.hudView.stickerButton.alpha = 1.0
-                    self.recordVideo()
-                }
-            }
+            transition(toState: .recording)
             break
         case .recording:
-            stopRecordingVideo()
+            
+            self.captureView.stopRecording() { _url in
+                guard let url = _url else { return }
+                self.videoURL = url
+                self.videoPlayer.replaceCurrentItem(with: AVPlayerItem(url: url))
+                self.playerLayer = AVPlayerLayer(player: self.videoPlayer)
+                self.playerLayer!.frame = self.view.bounds
+                self.previewView.layer.insertSublayer(self.playerLayer!, at: 0)
+                self.playerLayer!.player?.actionAtItemEnd = .none
+                self.loopVideo()
+                self.transition(toState: .editing)
+            }
             break
         default:
             break
         }
     }
-//    @objc func handleRecordPress(_ gesture:UILongPressGestureRecognizer) {
-//
-//
-//        switch state {
-//        case .running:
-//            if gesture.state == .began {
-//                hudView.recordButton.initiateRecordingAnimation()
-//                UIView.animate(withDuration: 0.5, animations: {
-//                    self.hudView.closeButton.alpha = 0.0
-//                    self.hudView.stickerButton.alpha = 0.0
-//                }) { _ in
-//
-//                    DispatchQueue.main.async {
-//                        self.hudView.closeButton.setStyle(.close, animated: false)
-//                        self.hudView.closeButton.isHidden = true
-//                        self.hudView.stickerButton.isHidden = true
-//                        self.hudView.closeButton.alpha = 1.0
-//                        self.hudView.stickerButton.alpha = 1.0
-//                        self.recordVideo()
-//                    }
-//                }
-//            }
-//            break
-//        case .recording:
-//            if gesture.state == .began {
-//                stopRecordingVideo()
-//            }
-//            break
-//        default:
-//            break
-//        }
-//    }
-    
-    var clipCount = 0
-    var clipURLs = [URL]()
-    func setOutputPath() {
-        let recordingDelegate:AVCaptureFileOutputRecordingDelegate? = self
-        do {
-            let documentsURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-            let filePath = documentsURL.appendingPathComponent("captured/captureOutput_\(clipCount).mov")
-            captureView.videoFileOutput?.startRecording(to: filePath, recordingDelegate: recordingDelegate!)
-            
-        } catch {
-            print("OH DAMN")
-        }
-        
-        clipCount += 1
-    }
 
     func recordVideo() {
-        setOutputPath()
         hudView.recordButton.startRecording()
     }
+    
     func stopRecordingVideo() {
-        self.state = .endRecording
-        captureView.videoFileOutput?.stopRecording()
+        //self.state = .endRecording
     }
     
-    func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
-        print("DID START RECORDING")
-        self.state = .recording
-        return
-    }
-    
-    var videoURL:URL?
-    
-    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        clipURLs.append(outputFileURL)
-        if state == .endRecording {
-            videoURL = outputFileURL
-            mc { outputURL in
-                guard let url = outputURL else { return }
-                self.videoURL = url
-                
-                let item = AVPlayerItem(url: self.videoURL!)
-                self.videoPlayer.replaceCurrentItem(with: item)
-                self.playerLayer = AVPlayerLayer(player: self.videoPlayer)
-                
-                self.playerLayer!.frame = self.view.bounds
-                self.previewView.layer.insertSublayer(self.playerLayer!, at: 0)
-                self.playerLayer!.player?.actionAtItemEnd = .none
-                self.loopVideo()
-                
-                self.state = .editing
-                
-            }
-            //state = .editing
-            
-            //loopVideo()
-        } else if state == .recording {
-            print("SETUP NEW RECORDING")
-            recordVideo()
-        }
-    }
-    
-    func mc(completion:@escaping((_ outputURL:URL?)->())) {
-        var assets = [AVAsset]()
-        for clipURL in clipURLs {
-            let asset = AVAsset(url: clipURL)
-            assets.append(asset)
-        }
-        
-        KVVideoManager.shared.merge(arrayVideos: assets) { (outputURL, error) in
-            completion(outputURL)
-        }
-    }
     
     func loopVideo() {
         NotificationCenter.default.addObserver(forName: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil, queue: nil) { notification in
@@ -593,3 +469,60 @@ class CameraViewController: UIViewController, CameraHUDProtocol, AVCaptureVideoD
         NotificationCenter.default.removeObserver(NSNotification.Name.AVPlayerItemDidPlayToEndTime, name: nil, object: nil)
     }
 }
+//
+//
+//func transcribeRecording(completion: @escaping ((_ transcription:String?)->())) {
+//    //guard let videoURL = videoURL else { return }
+//    
+//    
+//    let audioEngine = AVAudioEngine()
+//    let speechRecognizer = SFSpeechRecognizer()
+//    let request = SFSpeechAudioBufferRecognitionRequest()
+//    var recognitionTask:SFSpeechRecognitionTask?
+//    
+//    
+//    let asset = AVAsset(url: videoURL)
+//    asset.loadValuesAsynchronously(forKeys: ["playable", "tracks"]) {
+//        DispatchQueue.main.async {
+//            
+//            let fileManager = FileManager.default
+//            let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+//            let filePath = documentDirectory.appendingPathComponent("output_audio.m4a")
+//            
+//            do {
+//                try fileManager.removeItem(at: filePath)
+//            } catch {
+//                print("UHUH")
+//            }
+//            asset.writeAudioTrackToURL(filePath) { completed, error in
+//                guard completed, error == nil else { return }
+//                
+//                SFSpeechRecognizer.requestAuthorization { authStatus in
+//                    if (authStatus == .authorized) {
+//                        // Get the party started and watch for results in the completion block.
+//                        // It gets fired every time a new word (aka transcription) gets detected.
+//                        let request = SFSpeechURLRecognitionRequest(url: filePath)
+//                        
+//                        speechRecognizer?.recognitionTask(with: request, resultHandler: { (result, error) in
+//                            
+//                            if let result = result {
+//                                var transcription:String?
+//                                if result.isFinal {
+//                                    transcription = result.bestTranscription.formattedString
+//                                }
+//                                completion(transcription)
+//                            } else {
+//                                print("ERROR: \(error?.localizedDescription)")
+//                            }
+//                            
+//                        })
+//                    } else {
+//                        print("Error: Speech-API not authorized!");
+//                    }
+//                }
+//            }
+//        }
+//    }
+//    
+//    
+//}

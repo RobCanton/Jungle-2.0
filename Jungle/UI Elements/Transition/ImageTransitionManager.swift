@@ -12,7 +12,7 @@ import AVFoundation
 
 class LightboxTransitionManager: NSObject, UIViewControllerTransitioningDelegate  {
     
-    
+    var sourceTopView:UIImageView?
     let interactor = Interactor()
     func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         return LightboxPresentAnimationController()

@@ -158,8 +158,6 @@ class NewPostViewController:UIViewController, UITextViewDelegate {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let newPost = newPost else { return }
         if segue.identifier == "toTagsSelector" {
-            let dest = segue.destination as! TagsSelectorViewController
-            dest.newPost = newPost
             
         }
     }

@@ -10,19 +10,38 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import Firebase
+import Pulley
+import Differ
 
-class NotificationsViewController:UIViewController, ASTableDelegate, ASTableDataSource {
+class NotificationsViewController:JViewController, ASTableDelegate, ASTableDataSource, NotificationObserverDelegate {
     
-    var notifications = [JNotification]()
     var tableNode:ASTableNode!
+    var newNotifications = [JNotification]()
+    var notifications = [JNotification]()
+    var titleView:JTitleView!
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        get { return .lightContent }
+    }
+    
+    var transitionManager = LightboxTransitionManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44.0))
-        label.font = Fonts.semiBold(ofSize: 16.0)
-        label.text = "Notifications"
-        label.textAlignment = .center
-        navigationItem.titleView = label
+        
+        let topInset = UIApplication.deviceInsets.top
+        let titleViewHeight = 50 + topInset
+        
+        titleView = JTitleView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: titleViewHeight), topInset: topInset)
+        view.addSubview(titleView)
+        
+        titleView.translatesAutoresizingMaskIntoConstraints = false
+        titleView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        titleView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        titleView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
+        
+        titleView.titleLabel.text = "NOTIFICATIONS"
         
         tableNode = ASTableNode()
         view.addSubview(tableNode.view)
@@ -31,188 +50,168 @@ class NotificationsViewController:UIViewController, ASTableDelegate, ASTableData
         let layoutGuide = view.safeAreaLayoutGuide
         tableNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         tableNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        tableNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        tableNode.view.topAnchor.constraint(equalTo: titleView.bottomAnchor).isActive = true
         tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
         tableNode.view.contentInsetAdjustmentBehavior = .never
+        tableNode.view.tableHeaderView = UIView()
+        tableNode.view.tableFooterView = UIView()
+        tableNode.view.separatorColor = currentTheme.highlightedBackgroundColor
         tableNode.delegate = self
         tableNode.dataSource = self
+        tableNode.leadingScreensForBatching = 1.5
         tableNode.reloadData()
-        getNotifications()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+        calculateAndRenderDiffs()
+        nService.delegate = self
+        
     }
     
-    func getNotifications() {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+    func calculateAndRenderDiffs() {
+        var insertions = [IndexPath]()
+        var deletions = [IndexPath]()
         
-       print("WTH IS THIS?")
-        let ref = firestore.collection("notifications").whereField("uid", isEqualTo: uid)
-        let query = ref.order(by: "timestamp", descending: true).limit(to: 12)
-        query.getDocuments { snapshot, error in
-            if let error = error {
-                print("ERROR: \(error.localizedDescription)")
+        let newDiff = newNotifications.diff(nService.state.newNotifications)
+        
+        let newElements = newDiff.elements
+        
+        for element in newElements {
+            switch element {
+            case let .insert(i):
+                insertions.append(IndexPath(row: i, section:0))
+                break
+            case let .delete(i):
+                deletions.append(IndexPath(row: i, section:0))
+                break
             }
-            var _notifications = [JNotification]()
-            if let snapshot = snapshot {
-                for document in snapshot.documents {
-                    if let notification = JNotification.parse(document.data()) {
-                        _notifications.insert(notification, at: 0)
-                    }
-                }
+        }
+        
+        let diff = notifications.diff(nService.state.notifications)
+        
+        let elements = diff.elements
+        
+        for element in elements {
+            switch element {
+            case let .insert(i):
+                insertions.append(IndexPath(row: i, section:1))
+                break
+            case let .delete(i):
+                deletions.append(IndexPath(row: i, section:1))
+                break
             }
+        }
+        
+        newNotifications = nService.state.newNotifications
+        notifications = nService.state.notifications
+        
+        tableNode.performBatchUpdates({
+            self.tableNode.insertRows(at: insertions, with: .automatic)
+            self.tableNode.deleteRows(at: deletions, with: .automatic)
+        }, completion: nil)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        nService.delegate = nil
+    }
+    
+    func newNotificationRecieved() {
+        calculateAndRenderDiffs()
+    }
+    
+    func numberOfSections(in tableNode: ASTableNode) -> Int {
+        return 2
+    }
+    
+    func tableNode(_ tableNode: ASTableNode, willBeginBatchFetchWith context: ASBatchContext) {
+        guard !nService.state.fetchingMore, !nService.state.endReached else { return }
+        
+        let oldState = nService.state
+        nService.state = NotificationObserver.handleAction(.beginBatchFetch, fromState: oldState)
+        
+        nService.fetchData { notifications, endReached in
             
-            var count = 0
-            for notification in _notifications {
-                notification.fetchData {
-                    count += 1
-                    if count >= _notifications.count {
-                        self.notifications = _notifications
-                        self.tableNode.reloadData()
-                    }
-                }
-            }
+            let oldState = nService.state
+            nService.state = NotificationObserver.handleAction(.appendBatch(notifications: notifications), fromState: oldState)
+            self.notifications = nService.state.notifications
+            self.renderDiff()
+            context.completeBatchFetching(true)
         }
     }
     
-    
-    func numberOfSections(in tableNode: ASTableNode) -> Int {
-        return 1
+    fileprivate func renderDiff() {
+        tableNode.reloadData()
     }
     
     func tableNode(_ tableNode: ASTableNode, numberOfRowsInSection section: Int) -> Int {
+        if section == 0 {
+            return newNotifications.count
+        }
         return notifications.count
     }
+    
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
+        if indexPath.section == 0 {
+             let cell = NotificationCellNode(notification: newNotifications[indexPath.row])
+            cell.selectionStyle = .none
+            return cell
+        }
+        
         let cell = NotificationCellNode(notification: notifications[indexPath.row])
+        cell.selectionStyle = .none
         return cell
     }
     
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
-        tableNode.deselectRow(at: indexPath, animated: true)
-        if let postVotesNotification = notifications[indexPath.row] as? PostVotesNotification,
-            let post = postVotesNotification.post {
-            let controller = SinglePostViewController()
-            controller.hidesBottomBarWhenPushed = true
-            controller.post = post
-            self.navigationController?.pushViewController(controller, animated: true)
-        } else if let postReplyNotification = notifications[indexPath.row] as? PostReplyNotification,
-            let post = postReplyNotification.post {
-            let controller = SinglePostViewController()
-            controller.hidesBottomBarWhenPushed = true
-            controller.post = post
-            self.navigationController?.pushViewController(controller, animated: true)
+        let cell = tableNode.nodeForRow(at: indexPath) as? NotificationCellNode
+        cell?.setHighlighted(true)
+        
+        var post:Post?
+        
+        let notification = notifications[indexPath.row]
+        if let replyNotification = notification as? PostReplyNotification {
+            post = replyNotification.post
+        } else if let likeNotification = notification as? PostVotesNotification {
+            post = likeNotification.post
         }
-        
-    }
-    
-}
-
-
-class NotificationCellNode:ASCellNode {
-    
-    var imageNode = ASImageNode()
-    var titleNode = ASTextNode()
-    var bodyNode = ASTextNode()
-    var timeNode = ASTextNode()
-    
-    required init (notification:JNotification) {
-        super.init()
-        automaticallyManagesSubnodes = true
-        imageNode.layer.cornerRadius = 16.0
-        imageNode.clipsToBounds = true
-        
-        timeNode.attributedText = NSAttributedString(string: notification.timestamp.timeSinceNow(), attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: grayColor
-            ])
-        
-        if let postVotesNotification = notification as? PostVotesNotification {
-            var votesStr = ""
-            if postVotesNotification.newVotes == 1 {
-                votesStr = "1 new vote"
-            } else {
-                votesStr = "\(postVotesNotification.newVotes) new votes"
-            }
-            let votesStrLength = votesStr.utf16.count
-            let prefix = "Your post has "
-            let prefixLength = prefix.utf16.count
-            let notificationStr = "\(prefix)\(votesStr)"
-            let str = "\(notificationStr)"
+        if let post = post {
+            let controller = LightboxViewController()
+            controller.hidesBottomBarWhenPushed = true
+            controller.posts = [post]
+            controller.initialIndex = 0
+            let drawerVC = CommentsDrawerViewController()
             
-            let titleAttr = NSMutableAttributedString(string: str)
-            titleAttr.addAttributes([
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
-                NSAttributedStringKey.foregroundColor: UIColor.black
-                ], range: NSRange(location: 0, length: prefixLength))
+            drawerVC.interactor = transitionManager.interactor
+            let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
             
-            titleAttr.addAttributes([
-                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
-                NSAttributedStringKey.foregroundColor: UIColor.black
-                ], range: NSRange(location: prefixLength, length: votesStrLength))
+            pulleyController.drawerBackgroundVisualEffectView = nil
+            pulleyController.backgroundDimmingOpacity = 0.35
+            pulleyController.topInset = 24
+            pulleyController.hidesBottomBarWhenPushed = true
             
-            titleNode.attributedText = titleAttr
-            
-            
-            var bodyStr = "[Error loading post]"
-            if let post = postVotesNotification.post {
-                bodyStr = "\"\(post.text)\""
-                imageNode.backgroundColor = post.anon.color
-            }
-            bodyNode.maximumNumberOfLines = 3
-            bodyNode.attributedText = NSAttributedString(string: bodyStr, attributes: [
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-                NSAttributedStringKey.foregroundColor: grayColor
-                ])
-            
-        } else if let postReplyNotification = notification as? PostReplyNotification,
-            let reply = postReplyNotification.reply {
-            let name = reply.anon.displayName
-            let notificationStr = "\(name) replied to your post:"
-            let notificationStrLength = notificationStr.utf16.count
-            
-            let nameLength = name.utf16.count
-            
-            let titleAttr = NSMutableAttributedString(string: notificationStr)
-            titleAttr.addAttributes([
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
-                NSAttributedStringKey.foregroundColor: UIColor.black
-                ], range: NSRange(location: 0, length: notificationStrLength))
-            
-            titleAttr.addAttributes([
-                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
-                NSAttributedStringKey.foregroundColor: UIColor.black
-                ], range: NSRange(location: 0, length: nameLength))
-            
-            titleNode.attributedText = titleAttr
-            
-            let bodyStr = "\"\(reply.textClean)\""
-            imageNode.backgroundColor = reply.anon.color
-            
-            bodyNode.maximumNumberOfLines = 3
-            bodyNode.attributedText = NSAttributedString(string: bodyStr, attributes: [
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-                NSAttributedStringKey.foregroundColor: grayColor
-                ])
+            pulleyController.transitioningDelegate = transitionManager
+            self.shouldHideStatusBar = true
+            self.present(pulleyController, animated: true, completion: nil)
+            return
         }
+
     }
     
-    override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        imageNode.style.width = ASDimension(unit: .points, value: 32.0)
-        imageNode.style.height = ASDimension(unit: .points, value: 32.0)
-        
-        imageNode.style.layoutPosition = CGPoint(x: 12.0, y: 12.0)
-        
-        let imageAbs = ASAbsoluteLayoutSpec(children: [imageNode])
-        let verticalStack = ASStackLayoutSpec.vertical()
-        verticalStack.children = [titleNode, bodyNode, timeNode]
-        verticalStack.spacing = 4.0
-        let inset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(12.0, 56.0, 12.0, 12.0), child: verticalStack)
-        
-        return ASOverlayLayoutSpec(child: inset, overlay: imageAbs)
+    func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
+        let cell = tableNode.nodeForRow(at: indexPath) as? NotificationCellNode
+        cell?.setHighlighted(false)
     }
     
+    func tableNode(_ tableNode: ASTableNode, didHighlightRowAt indexPath: IndexPath) {
+        let cell = tableNode.nodeForRow(at: indexPath) as? NotificationCellNode
+        cell?.setHighlighted(true)
+    }
     
+    func tableNode(_ tableNode: ASTableNode, didUnhighlightRowAt indexPath: IndexPath) {
+        let cell = tableNode.nodeForRow(at: indexPath) as? NotificationCellNode
+        cell?.setHighlighted(false)
+    }
 }

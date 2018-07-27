@@ -81,7 +81,7 @@ extension UIView {
     func snapshot(of rect: CGRect? = nil) -> UIImageView? {
         
         UIGraphicsBeginImageContextWithOptions(bounds.size, isOpaque, 0)
-        drawHierarchy(in: bounds, afterScreenUpdates: false)
+        drawHierarchy(in: bounds, afterScreenUpdates: true)
         let wholeImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         
@@ -312,4 +312,15 @@ extension BinaryInteger {
 extension FloatingPoint {
     var degreesToRadians: Self { return self * .pi / 180 }
     var radiansToDegrees: Self { return self * 180 / .pi }
+}
+
+extension UIApplication {
+    static var deviceInsets:UIEdgeInsets {
+        if let insets = shared.keyWindow?.safeAreaInsets {
+            if insets.top > 0.0 {
+                return insets
+            }
+        }
+        return UIEdgeInsetsMake(20, 0, 0, 0)
+    }
 }

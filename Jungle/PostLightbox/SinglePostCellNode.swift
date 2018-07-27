@@ -61,7 +61,24 @@ class ContentOverlayNode:ASControlNode {
         self.delegate = delegate
         automaticallyManagesSubnodes = true
         postTextNode.maximumNumberOfLines = 0
-        postTextNode.setText(text: post.textClean, withSize: 15.0, normalColor: .white, activeColor: tagColor)
+        
+        if let blockedMessage = post.blockedMessage {
+            postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
+                NSAttributedStringKey.font: Fonts.medium(ofSize: 16.0),
+                NSAttributedStringKey.foregroundColor: UIColor(white:0.67, alpha: 1.0)
+                ])
+        } else {
+            postTextNode.setText(text: post.text, withSize: 15.0, normalColor: .white, activeColor: tagColor)
+            postTextNode.tapHandler = { type, str in
+                switch type {
+                case .hashtag:
+                    self.delegate?.openTag(str)
+                    break
+                default:
+                    break
+                }
+            }
+        }
         
         usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
@@ -85,6 +102,7 @@ class ContentOverlayNode:ASControlNode {
         super.didLoad()
         actionsRow = SinglePostActionsView(frame: .zero)
         actionsRow.delegate = delegate
+        actionsRow.isUserInteractionEnabled = UserService.isSignedIn
         view.addSubview(actionsRow)
         usernameNode.view.applyShadow(radius: 4.0, opacity: 0.1, offset: .zero, color: UIColor.black, shouldRasterize: false)
         actionsRow.translatesAutoresizingMaskIntoConstraints = false
@@ -93,6 +111,7 @@ class ContentOverlayNode:ASControlNode {
         actionsRow.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         actionsRow.heightAnchor.constraint(equalToConstant: 64).isActive = true
         if let post = self.post {
+            
             actionsRow.likeLabel.text = "\(post.numLikes)"
             actionsRow.commentLabel.text = "\(post.numReplies)"
             actionsRow.setLiked(post.liked, animated: false)
@@ -103,6 +122,9 @@ class ContentOverlayNode:ASControlNode {
             } else {
                 actionsRow.locationButton.isHidden = true
             }
+            let isBlocked = post.blockedMessage != nil
+            actionsRow.setBlocked(isBlocked)
+            
 
         }
     }
@@ -128,25 +150,42 @@ class ContentOverlayNode:ASControlNode {
     }
     
     func setNumLikes(_ likes:Int) {
-        actionsRow.likeLabel.text = "\(likes)"
+        actionsRow.likeLabel.text = numericShorthand(likes)
     }
     
     func setNumComments(_ comments:Int) {
-        actionsRow.commentLabel.text = "\(comments)"
+        actionsRow.commentLabel.text = numericShorthand(comments)
+    }
+    
+    func temporaryUnblock() {
+        guard let post = self.post else { return }
+        postTextNode.setText(text: post.text, withSize: 15.0, normalColor: .white, activeColor: tagColor)
+        actionsRow.setBlocked(false)
     }
 }
 
 protocol SinglePostDelegate:class {
     func openComments(_ post:Post,_ showKeyboard:Bool)
+    func searchLocation(_ locationStr:String)
+    func openTag(_ tag:String)
+    func openLogin()
 }
 
 class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostActionsDelegate {
+    func openTag(_ tag: String) {
+        delegate?.openTag(tag)
+    }
+    
+    func handleMoreButton() {
+        
+    }
+    
     
     var contentNode:PostContentNode!
     var contentOverlay:ContentOverlayNode!
     weak var delegate:SinglePostDelegate?
-    var post:Post?
-    
+    weak var post:Post?
+    var temporaryUnblock = false
     var commentNode:PostCommentCellNode!
     required init(post:Post) {
         super.init()
@@ -156,6 +195,11 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
         contentNode = PostContentNode(post: post)
         contentOverlay = ContentOverlayNode(post: post, delegate: self)
         contentOverlay.addTarget(self, action: #selector(handleOverlayTap), forControlEvents: .touchUpInside)
+        
+        let deviceInsets = UIApplication.deviceInsets
+        print("WODA: \(deviceInsets)")
+        
+        contentNode.blockedButtonNode?.addTarget(self, action: #selector(handleUnblock), forControlEvents: .touchUpInside)
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
@@ -163,20 +207,36 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
         overlayStack.children = [contentOverlay]
         overlayStack.alignContent = .end
         overlayStack.justifyContent = .end
+        let overlayInsets = UIEdgeInsetsMake(0, 0, UIApplication.deviceInsets.bottom, 0)
+        let overlayInsetSpec = ASInsetLayoutSpec(insets: overlayInsets, child: overlayStack)
         
-        let overlay = ASOverlayLayoutSpec(child: contentNode, overlay: overlayStack)
+        let overlay = ASOverlayLayoutSpec(child: contentNode, overlay: overlayInsetSpec)
         return ASInsetLayoutSpec(insets: .zero, child: overlay)
     }
     
     @objc func handleOverlayTap() {
         guard let post = self.post else { return }
-        delegate?.openComments(post, false)
+        if !UserService.isSignedIn {
+            delegate?.openLogin()
+            return
+        }
+        if post.blockedMessage == nil || temporaryUnblock {
+            delegate?.openComments(post, false)
+        }
+    }
+    
+    @objc func handleUnblock() {
+        guard let post = self.post else { return }
+        temporaryUnblock = true
+        contentNode.temporaryUnblock()
+        contentOverlay.temporaryUnblock()
     }
     
     func handleLikeButton() {
         print("liked!")
         guard let post = self.post else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
+        
         let ref = database.ref.child("posts/likes/\(post.key)/\(uid)")
         post.liked = !post.liked
         contentOverlay.actionsRow.setLiked(post.liked, animated: true)
@@ -195,6 +255,11 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
         print("openComments!")
         guard let post = self.post else { return }
         delegate?.openComments(post, true)
+    }
+    
+    func handleLocationButton() {
+        guard let location = self.post?.location else { return }
+        delegate?.searchLocation(location.locationStr)
     }
     
     var likesRef:DatabaseReference?

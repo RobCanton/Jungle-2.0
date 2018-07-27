@@ -52,7 +52,7 @@ extension DismissAnimator : UIViewControllerAnimatedTransitioning {
 class LightboxDismissAnimationController: NSObject, UIViewControllerAnimatedTransitioning {
     
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
-        return 0.45
+        return 0.35
     }
     
     func adjustFrameForStatusBar(_ frame:CGRect) -> CGRect {
@@ -77,13 +77,20 @@ class LightboxDismissAnimationController: NSObject, UIViewControllerAnimatedTran
         fromView.transform = CGAffineTransform.identity
         let duration = self.transitionDuration(using: transitionContext)
         
-        UIView.animate(withDuration: duration, delay: 0.0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.0, options: [.curveEaseIn], animations: {
+        UIView.animate(withDuration: duration, animations: {
             toView.alpha = 1.0
             fromView.alpha = 0.0
             fromView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
         }, completion: { finished in
             transitionContext.completeTransition(!transitionContext.transitionWasCancelled)
         })
+//        UIView.animate(withDuration: duration, delay: 0.0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.0, options: [.curveEaseIn], animations: {
+//            toView.alpha = 1.0
+//            fromView.alpha = 0.0
+//            fromView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+//        }, completion: { finished in
+//            transitionContext.completeTransition(!transitionContext.transitionWasCancelled)
+//        })
     }
 }
 

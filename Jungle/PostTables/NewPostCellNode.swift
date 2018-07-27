@@ -10,15 +10,48 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import Firebase
+import SwiftGifOrigin
+import PINRemoteImage
 
-class NewPostCellNode:ASCellNode {
+var imageCache = NSCache<NSString, UIImage>()
+class PreviewNode:ASDisplayNode {
+    var imageNode = ASNetworkImageNode()
+    var blurNode:BlurNode?
+    var iconNode:ASImageNode?
+    var shouldBlock = false
+    required init(block:Bool?=nil) {
+        super.init()
+        shouldBlock = block ?? false
+        if shouldBlock {
+            blurNode = BlurNode(effect: UIBlurEffectStyle.extraLight)
+            iconNode = ASImageNode()
+            iconNode?.image = UIImage(named:"danger")
+        }
+        automaticallyManagesSubnodes = true
+        //self.cornerRadius = 4.0
+        self.clipsToBounds = true
+        //self.imageNode.shouldCacheImage = true
+        self.imageNode.backgroundColor = currentTheme.highlightedBackgroundColor
+    }
+    override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
+        if blurNode != nil, iconNode != nil {
+            let iconCenterXY = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: iconNode!)
+            let iconOverlay = ASOverlayLayoutSpec(child: blurNode!, overlay: iconCenterXY)
+            return ASOverlayLayoutSpec(child: imageNode, overlay: iconOverlay)
+        } else {
+            return ASInsetLayoutSpec(insets: .zero, child: imageNode)
+        }
+    }
+    
+}
+
+class NewPostCellNode:ASCellNode, ASNetworkImageNodeDelegate {
     
     var avatarNode = ASDisplayNode()
     var avatarImageNode = ASImageNode()
-    var videoNode = ASVideoNode()
-    var imageNode = ASNetworkImageNode()
-    var previewBox = ASDisplayNode()
+    var previewNode:PreviewNode!
     var titleNode = ASTextNode()
+    var subnameNode = ASTextNode()
     var subtitleNode = ASTextNode()
     var postTextNode = ActiveTextNode()
     var timeNode = ASTextNode()
@@ -35,51 +68,10 @@ class NewPostCellNode:ASCellNode {
     required init(post:Post) {
         super.init()
         self.post = post
-        self.backgroundColor = UIColor.white
+        self.backgroundColor = currentTheme.backgroundColor
         automaticallyManagesSubnodes = true
-        imageNode.backgroundColor = hexColor(from: "BEBEBE")
-        imageNode.shouldCacheImage = true
         
-        previewBox.style.height = ASDimension(unit: .points, value: 100)
-        if let images = post.attachments?.images, images.count > 0 {
-            imageNode.url = images[0].url
-            previewBox.style.height = ASDimension(unit: .points, value: 100)
-        } else if let video = post.attachments?.video {
-            imageNode.url = video.thumbnail_url
-            previewBox.style.height = ASDimension(unit: .points, value: 132)
-        }
-        
-        previewBox.backgroundColor = nil
-        previewBox.automaticallyManagesSubnodes = true
-        previewBox.layoutSpecBlock = { _, _ in
-            let overlay = ASOverlayLayoutSpec(child: self.videoNode, overlay: self.imageNode)
-            return ASInsetLayoutSpec(insets: .zero, child: overlay)
-        }
-        
-        titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: post.anon.color
-            ])
-        
-        timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: hexColor(from: "BEBEBE")
-            ])
-        
-        var locationStr = ""
-        if let location = post.location {
-            locationStr = " • \(location.locationStr)"
-        }
-        
-        let subtitleStr = "\(post.createdAt.timeSinceNow())\(locationStr)"
-        
-        subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: grayColor
-            ])
-        
-        postTextNode.maximumNumberOfLines = 3
-        postTextNode.setText(text: post.textClean, withSize: 16.0, normalColor: .black, activeColor: tagColor)
+        postTextNode.maximumNumberOfLines = 4
         postTextNode.tapHandler = { type, value in
             switch type {
             case .hashtag:
@@ -97,9 +89,13 @@ class NewPostCellNode:ASCellNode {
         likeButton.contentSpacing = 1.0
         likeButton.contentHorizontalAlignment = .middle
         likeButton.contentEdgeInsets = .zero
-        let likeTitle = NSMutableAttributedString(string: "\(post.numLikes)", attributes: [
+        likeButton.imageNode.imageModificationBlock = { image in
+            return image.maskWithColor(color: currentTheme.secondaryTextColor)
+        }
+        
+        let likeTitle = NSMutableAttributedString(string: numericShorthand(post.numLikes), attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: hexColor(from: "BEBEBE")
+            NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
             ])
         likeButton.setAttributedTitle(likeTitle, for: .normal)
         
@@ -107,36 +103,99 @@ class NewPostCellNode:ASCellNode {
         commentButton.setImage(UIImage(named:"comment_small"), for: .normal)
         commentButton.contentSpacing = 1.0
         commentButton.contentHorizontalAlignment = .middle
-        let commentTitle = NSMutableAttributedString(string: "\(post.numReplies)", attributes: [
+        let commentTitle = NSMutableAttributedString(string: numericShorthand(post.numReplies), attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: hexColor(from: "BEBEBE")
+            NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
             ])
         commentButton.setAttributedTitle(commentTitle, for: .normal)
-        
+        commentButton.imageNode.imageModificationBlock = { image in
+            return image.maskWithColor(color: currentTheme.secondaryTextColor)
+        }
         
         moreButton.setImage(UIImage(named:"more"), for: .normal)
+        moreButton.addTarget(self, action: #selector(handleMore), forControlEvents: .touchUpInside)
+        moreButton.imageNode.imageModificationBlock = { image in
+            return image.maskWithColor(color: currentTheme.secondaryTextColor)
+        }
         
         avatarNode.backgroundColor = post.anon.color.withAlphaComponent(0.30)
         avatarImageNode.imageModificationBlock = { image in
             return image.maskWithColor(color: post.anon.color) ?? image
         }
-//        avatarNode.image = UIImage(named:"sparrow")
         avatarNode.style.height = ASDimension(unit: .points, value: 32)
         avatarNode.style.width = ASDimension(unit: .points, value: 32)
+        
+        titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
+            NSAttributedStringKey.foregroundColor: post.anon.color
+            ])
+        
+        var subnameStr = ""
+        if post.isYou {
+            subnameStr = "YOU"
+            subnameNode.isHidden = false
+        }else {
+            subnameNode.isHidden = true
+        }
+        
+        subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
+            NSAttributedStringKey.foregroundColor: currentTheme.backgroundColor
+            ])
+        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 0, right: 4.0)
+        subnameNode.backgroundColor = post.anon.color
+        
+        timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 13.0),
+            NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
+            ])
+        
+        var locationStr = ""
+        if let location = post.location {
+            locationStr = " • \(location.locationStr)"
+        }
+        
+        let subtitleStr = "\(post.createdAt.timeSinceNow())\(locationStr)"
+        
+        subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 13.0),
+            NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
+            ])
+        
         avatarImageNode.image = nil
         UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
-            print("GOT ANON ICON FROMFILE: \(fromFile)")
             self.avatarImageNode.image = image
         }
+        
+        if let blockedMessage = post.blockedMessage {
+            previewNode = PreviewNode(block: true)
+            postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
+                NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
+                NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
+            ])
+            
+        } else {
+            previewNode = PreviewNode()
+            postTextNode.setText(text: post.text, withSize: 14.0,
+                                 normalColor: currentTheme.primaryTextColor, activeColor: currentTheme.secondaryAccentColor)
+        }
+        
+        previewNode.style.height = ASDimension(unit: .points, value: 144)
+        self.previewNode.imageNode.shouldCacheImage = true
+        let thumbnailRef = storage.child("publicPosts/\(post.key)/thumbnail.gif")
+        thumbnailRef.downloadURL { url, error in
+            self.previewNode.imageNode.url = url
+        }
+        
+        
     }
     
     override func didLoad() {
         super.didLoad()
-        previewBox.layer.cornerRadius = 4.0
-        previewBox.clipsToBounds = true
         avatarNode.layer.cornerRadius = 16
         avatarNode.clipsToBounds = true
-        
+        subnameNode.layer.cornerRadius = 2.0
+        subnameNode.clipsToBounds = true
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
@@ -151,8 +210,12 @@ class NewPostCellNode:ASCellNode {
         actionStack.alignContent = .spaceBetween
         actionStack.justifyContent = .spaceBetween
         
+        let titleStack = ASStackLayoutSpec.horizontal()
+        titleStack.children = [titleNode, subnameNode]
+        titleStack.spacing = 4.0
+        
         let headerStack = ASStackLayoutSpec.vertical()
-        headerStack.children = [titleNode, subtitleNode]
+        headerStack.children = [titleStack, subtitleNode]
         headerStack.spacing = 1.0
         
         postTextNode.style.flexGrow = 1.0
@@ -166,10 +229,10 @@ class NewPostCellNode:ASCellNode {
         contentStack.children = [headerOverlay, postTextNode, actionStack]
         contentStack.style.width = ASDimension(unit: .fraction, value: 0.70)
         contentStack.spacing = 6.0
-        previewBox.style.width = ASDimension(unit: .fraction, value: 0.25)
+        previewNode.style.width = ASDimension(unit: .fraction, value: 0.25)
         
         let stack = ASStackLayoutSpec.horizontal()
-        stack.children = [previewBox, contentStack]
+        stack.children = [previewNode, contentStack]
         stack.spacing = 12
         let mainInsets = UIEdgeInsetsMake(12, 12, 12, 12)
         
@@ -177,7 +240,7 @@ class NewPostCellNode:ASCellNode {
     }
     
     func setHighlighted(_ highlighted:Bool) {
-        backgroundColor = highlighted ? UIColor(white: 0.92, alpha: 1.0) : UIColor.white
+        backgroundColor = highlighted ? currentTheme.highlightedBackgroundColor : currentTheme.backgroundColor
     }
     
     var likesRef:DatabaseReference?
@@ -191,9 +254,9 @@ class NewPostCellNode:ASCellNode {
         likesRef = database.child("posts/meta/\(post.key)/numLikes")
         likesRefHandle = likesRef?.observe(.value, with: { snapshot in
             post.numLikes = snapshot.value as? Int ?? 0
-            let likeTitle = NSMutableAttributedString(string: "\(post.numLikes)", attributes: [
+            let likeTitle = NSMutableAttributedString(string: numericShorthand(post.numLikes), attributes: [
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-                NSAttributedStringKey.foregroundColor: hexColor(from: "BEBEBE")
+                NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
                 ])
             self.likeButton.setAttributedTitle(likeTitle, for: .normal)
         })
@@ -206,9 +269,9 @@ class NewPostCellNode:ASCellNode {
         commentsRef = database.child("posts/meta/\(post.key)/replies")
         commentsRefHandle = commentsRef?.observe(.value, with: { snapshot in
             post.numReplies = snapshot.value as? Int ?? 0
-            let commentTitle = NSMutableAttributedString(string: "\(post.numReplies)", attributes: [
+            let commentTitle = NSMutableAttributedString(string: numericShorthand(post.numReplies), attributes: [
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-                NSAttributedStringKey.foregroundColor: hexColor(from: "BEBEBE")
+                NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
                 ])
             self.commentButton.setAttributedTitle(commentTitle, for: .normal)
         })
@@ -235,9 +298,8 @@ class NewPostCellNode:ASCellNode {
         observePost()
     }
     
-    override func didExitVisibleState() {
-        super.didExitVisibleState()
-        
-        stopObservingPost()
+    @objc func handleMore() {
+        guard let post = self.post else { return }
+        delegate?.postOptions(post)
     }
 }

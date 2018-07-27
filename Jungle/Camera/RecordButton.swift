@@ -99,12 +99,20 @@ class RecordButton:UIView {
             self.progressRingWidthAnchor.constant = 100.0
             self.blurViewWidthAnchor.constant = 100.0
             self.blurView.layer.cornerRadius = 50
-            self.centerViewWidthAnchor.constant = 40.0
-            self.centerView.layer.cornerRadius = 20.0
+            
+            
             self.layoutIfNeeded()
         }, completion: { _ in
             //self.startRecording()
         })
+        
+        UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
+            self.centerViewWidthAnchor.constant = 32
+            self.centerView.layer.cornerRadius = 8.0
+            self.layoutIfNeeded()
+        }, completion: nil)
+        
+        
     }
     
     func startRecording() {

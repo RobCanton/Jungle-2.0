@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import DynamicButton
 
 class AuthViewController: UIViewController {
 

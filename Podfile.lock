@@ -1,15 +1,12 @@
 PODS:
   - Alamofire (4.6.0)
-  - AlgoliaSearch-Client-Swift (5.1.2)
-  - AlignedCollectionViewFlowLayout (1.1.2)
   - BoringSSL (10.0.2):
     - BoringSSL/Implementation (= 10.0.2)
     - BoringSSL/Interface (= 10.0.2)
   - BoringSSL/Implementation (10.0.2):
     - BoringSSL/Interface (= 10.0.2)
   - BoringSSL/Interface (10.0.2)
-  - CameraManager (4.1.1)
-  - DeckTransition (2.0.0)
+  - Differ (1.2.3)
   - DynamicButton (5.0.0)
   - Firebase/Auth (5.0.1):
     - Firebase/CoreOnly
@@ -28,19 +25,22 @@ PODS:
   - Firebase/Functions (5.0.1):
     - Firebase/CoreOnly
     - FirebaseFunctions (= 2.0.0)
+  - Firebase/Messaging (5.0.1):
+    - Firebase/CoreOnly
+    - FirebaseMessaging (= 3.0.0)
   - Firebase/Storage (5.0.1):
     - Firebase/CoreOnly
     - FirebaseStorage (= 3.0.0)
   - FirebaseAnalytics (5.0.0):
     - FirebaseCore (~> 5.0)
     - FirebaseInstanceID (~> 3.0)
-    - GoogleToolboxForMac/NSData+zlib (~> 2.1)
+    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
     - nanopb (~> 0.3)
   - FirebaseAuth (5.0.0):
     - FirebaseCore (~> 5.0)
     - GTMSessionFetcher/Core (~> 1.1)
   - FirebaseCore (5.0.1):
-    - GoogleToolboxForMac/NSData+zlib (~> 2.1)
+    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
   - FirebaseDatabase (5.0.0):
     - FirebaseCore (~> 5.0)
     - leveldb-library (~> 1.18)
@@ -60,11 +60,18 @@ PODS:
     - GTMSessionFetcher/Core (~> 1.1)
   - FirebaseInstanceID (3.0.0):
     - FirebaseCore (~> 5.0)
+  - FirebaseMessaging (3.0.0):
+    - FirebaseCore (~> 5.0)
+    - FirebaseInstanceID (~> 3.0)
+    - GoogleToolboxForMac/Logger (~> 2.1)
+    - Protobuf (~> 3.1)
   - FirebaseStorage (3.0.0):
     - FirebaseCore (~> 5.0)
     - GTMSessionFetcher/Core (~> 1.1)
   - GoogleToolboxForMac/Defines (2.1.4)
-  - GoogleToolboxForMac/NSData+zlib (2.1.4):
+  - GoogleToolboxForMac/Logger (2.1.4):
+    - GoogleToolboxForMac/Defines (= 2.1.4)
+  - "GoogleToolboxForMac/NSData+zlib (2.1.4)":
     - GoogleToolboxForMac/Defines (= 2.1.4)
   - gRPC (1.12.0):
     - gRPC-RxLibrary (= 1.12.0)
@@ -86,7 +93,7 @@ PODS:
     - gRPC-Core (= 1.12.0)
     - gRPC-RxLibrary (= 1.12.0)
   - GTMSessionFetcher/Core (1.1.15)
-  - Hero (1.2.0)
+  - JaneSliderControl (1.0.3)
   - leveldb-library (1.20)
   - nanopb (0.3.8):
     - nanopb/decode (= 0.3.8)
@@ -100,7 +107,7 @@ PODS:
     - PINCache/Core
   - PINCache/Core (3.0.1-beta.6):
     - PINOperation (~> 1.1.0)
-  - PINOperation (1.1)
+  - PINOperation (1.1.1)
   - PINRemoteImage/Core (3.0.0-beta.13):
     - PINOperation
   - PINRemoteImage/iOS (3.0.0-beta.13):
@@ -114,7 +121,6 @@ PODS:
   - ScrollableGraphView (4.0.4)
   - SwiftGifOrigin (1.6.1)
   - SwiftMessages (4.1.0)
-  - TagCellLayout (1.0)
   - Texture (2.6):
     - Texture/PINRemoteImage (= 2.6)
   - Texture/Core (2.6)
@@ -128,51 +134,78 @@ PODS:
 
 DEPENDENCIES:
   - Alamofire (~> 4.5)
-  - AlgoliaSearch-Client-Swift
-  - AlignedCollectionViewFlowLayout
-  - CameraManager (~> 4.1)
-  - DeckTransition (~> 2.0)
+  - Differ
   - DynamicButton (~> 5.0.0)
   - Firebase/Auth
   - Firebase/Core
   - Firebase/Database
   - Firebase/Firestore
   - Firebase/Functions
+  - Firebase/Messaging
   - Firebase/Storage
-  - Hero
+  - JaneSliderControl
   - Pulley
   - Regift
   - ScrollableGraphView (from `https://github.com/barnaclejive/ScrollableGraphView`, branch `master`)
   - SwiftGifOrigin (~> 1.6.1)
   - SwiftMessages
-  - TagCellLayout (from `https://github.com/riteshhgupta/TagCellLayout.git`)
   - Texture
   - TGPControls
   - UICircularProgressRing
   - WCLShineButton
 
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - Alamofire
+    - BoringSSL
+    - Differ
+    - DynamicButton
+    - Firebase
+    - FirebaseAnalytics
+    - FirebaseAuth
+    - FirebaseCore
+    - FirebaseDatabase
+    - FirebaseFirestore
+    - FirebaseFunctions
+    - FirebaseInstanceID
+    - FirebaseMessaging
+    - FirebaseStorage
+    - GoogleToolboxForMac
+    - gRPC
+    - gRPC-Core
+    - gRPC-ProtoRPC
+    - gRPC-RxLibrary
+    - GTMSessionFetcher
+    - JaneSliderControl
+    - leveldb-library
+    - nanopb
+    - PINCache
+    - PINOperation
+    - PINRemoteImage
+    - Protobuf
+    - Pulley
+    - Regift
+    - SwiftGifOrigin
+    - SwiftMessages
+    - Texture
+    - TGPControls
+    - UICircularProgressRing
+    - WCLShineButton
+
 EXTERNAL SOURCES:
   ScrollableGraphView:
     :branch: master
     :git: https://github.com/barnaclejive/ScrollableGraphView
-  TagCellLayout:
-    :git: https://github.com/riteshhgupta/TagCellLayout.git
 
 CHECKOUT OPTIONS:
   ScrollableGraphView:
     :commit: b13c6c43b0bd313269e14fb4f4665c4d3115a863
     :git: https://github.com/barnaclejive/ScrollableGraphView
-  TagCellLayout:
-    :commit: c8a143743b0761606fd36872808ea239c0215a60
-    :git: https://github.com/riteshhgupta/TagCellLayout.git
 
 SPEC CHECKSUMS:
   Alamofire: f41a599bd63041760b26d393ec1069d9d7b917f4
-  AlgoliaSearch-Client-Swift: 6c88667420b02e57c24dc54cfcfa71848980c495
-  AlignedCollectionViewFlowLayout: ee2ef451e741ec08f8e0967d828001e2f051c20a
   BoringSSL: 60dd24df4af296bf41d78e5841dbb95d75f88c0d
-  CameraManager: 796c7ef95401e8c8b6bd299f3399fe6abc841041
-  DeckTransition: 2300694f94fbeca2c103f365dc9dc09ffae14a4f
+  Differ: 061f3298ea9408494c43b530c44583e555884daf
   DynamicButton: 4c2fef968e4aa0a8a6ed7ca6b8a58c8e21a36cdc
   Firebase: d6861c2059d8c32d1e6dd8932e22ada346d90a3a
   FirebaseAnalytics: 19812b49fa5f283dd6b23edf8a14b5d477029ab8
@@ -182,6 +215,7 @@ SPEC CHECKSUMS:
   FirebaseFirestore: f686b8e83f3cf8bbc37db6e98e01029a14f01f55
   FirebaseFunctions: 141da172b7491276d9da8715b8ca88f9e439ffb6
   FirebaseInstanceID: 83e0040351565df711a5db3d8ebe5ea21aca998a
+  FirebaseMessaging: f2360a966ecfb0d14facf0fbdf306efc2df0ddbe
   FirebaseStorage: 7ca4bb7b58a25fa647b04f524033fc7cb7eb272b
   GoogleToolboxForMac: 91c824d21e85b31c2aae9bb011c5027c9b4e738f
   gRPC: 9362451032695e2dfb7bafcd3740e3a27939e4ff
@@ -189,11 +223,11 @@ SPEC CHECKSUMS:
   gRPC-ProtoRPC: a1bd56fb1991a8dae4581250d7259eddabb66779
   gRPC-RxLibrary: 1ed5314e8b38cd6e55c9bfa048387136ae925ce9
   GTMSessionFetcher: 5fa5b80fd20e439ef5f545fb2cb3ca6c6714caa2
-  Hero: 33dadf2cd1c98af71e213dcbc2902e6e03622a4e
+  JaneSliderControl: 0073344105b2c2b4695d09f74b88b9891f58197c
   leveldb-library: 08cba283675b7ed2d99629a4bc5fd052cd2bb6a5
   nanopb: 5601e6bca2dbf1ed831b519092ec110f66982ca3
   PINCache: d195fdba255283f7e9900a55e3cced377f431f9b
-  PINOperation: 7f042fa6df5b606deb4bd5997654cf7033d5be1d
+  PINOperation: a6219e6fc9db9c269eb7a7b871ac193bcf400aac
   PINRemoteImage: d6d51c5d2adda55f1ce30c96e850b6c4ebd2856a
   Protobuf: 8a9838fba8dae3389230e1b7f8c104aa32389c03
   Pulley: 604066ea5d24339a8701b0167a2c8131a589e705
@@ -201,12 +235,11 @@ SPEC CHECKSUMS:
   ScrollableGraphView: abac54d3493a5a198ade4baf4879967183af8a2c
   SwiftGifOrigin: d6679d3ebe9df2e049a84bc52582635107b581f6
   SwiftMessages: 1bacc783c8f10bdfdc57c14860cae8a1f1fa6591
-  TagCellLayout: 2a6e3f022bb85a5fe8ccc71762d2e8ab1bbfd8a3
   Texture: 7249074582daf75e524e59df5428b66b8e8db0e4
   TGPControls: d7ab5a338746c100b2ae57f6b6cedee7151f116a
   UICircularProgressRing: e737881c0dcc9cc1e4d0ea7db0c16d4b0f260082
   WCLShineButton: d8b979b6f6f9f6709f9e241e6e1a4712a1a9b36b
 
-PODFILE CHECKSUM: 111a2dab55f234ffde7057d8215f62980e124243
+PODFILE CHECKSUM: 43aee3578292785e6fb25c3b9568a3939b1490c7
 
-COCOAPODS: 1.4.0
+COCOAPODS: 1.5.3

@@ -19,6 +19,10 @@ protocol PushTransitionDestinationDelegate {
 
 class PushTransitionAnimation: NSObject, UIViewControllerAnimatedTransitioning {
 
+    var navBarHeight:CGFloat?
+    init(navBarHeight:CGFloat?) {
+        self.navBarHeight = navBarHeight
+    }
     
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
         return 0.35
@@ -36,30 +40,36 @@ class PushTransitionAnimation: NSObject, UIViewControllerAnimatedTransitioning {
         container.addSubview(toView)
         let screenBounds = UIScreen.main.bounds
         
-        let navBarFrame = CGRect(x: 0, y: 0, width: screenBounds.width, height: 70.0)
-        let topView = fromView.snapshot(of: navBarFrame)
-        if topView != nil {
-            container.addSubview(topView!)
+        var topView:UIImageView?
+        var topToView:UIImageView?
+        
+        if let navBarHeight = navBarHeight {
+            let navBarFrame = CGRect(x: 0, y: 0, width: screenBounds.width, height: navBarHeight)
+            topView = fromView.snapshot(of: navBarFrame)
+            if topView != nil {
+                container.addSubview(topView!)
+            }
+            
+            topToView = toView.snapshot(of: navBarFrame)
+            //topToView?.frame = navBarFrame
+            if topToView != nil {
+                topToView!.alpha = 0.0
+                container.addSubview(topToView!)
+            }
         }
         
-        let topToView = toVC.staticTopView()
-        topToView?.frame = navBarFrame
-        if topToView != nil {
-            topToView!.alpha = 0.0
-            container.addSubview(topToView!)
-        }
         
         toView.frame = CGRect(x: screenBounds.width, y: 0, width: toView.bounds.width, height: toView.bounds.height)
         
         
         let duration = self.transitionDuration(using: transitionContext)
         
-        let endFromFrame = CGRect(x: -screenBounds.width*0.25, y: 0, width: fromView.bounds.width, height: fromView.bounds.height)
+        let endFromFrame = CGRect(x: -screenBounds.width*0.333, y: 0, width: fromView.bounds.width, height: fromView.bounds.height)
         
         let cubicTimingParameters = UICubicTimingParameters(controlPoint1: CGPoint(x: 0.215, y: 0.61), controlPoint2: CGPoint(x: 0.355, y: 1.0))
         let animator = UIViewPropertyAnimator(duration: duration, timingParameters: cubicTimingParameters)
         animator.addAnimations() {
-                topToView!.alpha = 1.0
+                topToView?.alpha = 1.0
                 toView.frame = screenBounds
                 fromView.frame = endFromFrame
                 fromView.alpha = 0.5
@@ -79,8 +89,13 @@ class PushTransitionAnimation: NSObject, UIViewControllerAnimatedTransitioning {
 
 class PopAnimationController: NSObject, UIViewControllerAnimatedTransitioning {
     
+    var navBarHeight:CGFloat?
+    init(navBarHeight:CGFloat?) {
+        self.navBarHeight = navBarHeight
+    }
+    
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
-        return 0.35
+        return 0.30
     }
     
     
@@ -93,22 +108,26 @@ class PopAnimationController: NSObject, UIViewControllerAnimatedTransitioning {
         container.addSubview(fromView)
         
         let screenBounds = UIScreen.main.bounds
-        toView.frame = CGRect(x: -screenBounds.width*0.25, y: 0, width: toView.bounds.width, height: toView.bounds.height)
+        toView.frame = CGRect(x: -screenBounds.width*0.333, y: 0, width: toView.bounds.width, height: toView.bounds.height)
     
-        let navBarFrame = CGRect(x: 0, y: 0, width: screenBounds.width, height: 70.0)
-        let topToView = toView.snapshot(of: navBarFrame)
-        if topToView != nil {
-            topToView!.alpha = 1.0
-            container.addSubview(topToView!)
+        var topToView:UIImageView?
+        var topView:UIImageView?
+        
+        if let navBarHeight = navBarHeight {
+            let navBarFrame = CGRect(x: 0, y: 0, width: screenBounds.width, height: navBarHeight)
+            topToView = toView.snapshot(of: navBarFrame)
+            if topToView != nil {
+                topToView!.alpha = 1.0
+                container.addSubview(topToView!)
+            }
+            
+            topView = fromView.snapshot(of: navBarFrame)
+            if topView != nil {
+                topView!.alpha = 1.0
+                container.addSubview(topView!)
+            }
         }
         
-        let topView = fromView.snapshot(of: navBarFrame)
-        if topView != nil {
-            topView!.alpha = 1.0
-            container.addSubview(topView!)
-        }
-        
-        //toView.alpha = 0.5
         toView.alpha = 0.5
         let duration = self.transitionDuration(using: transitionContext)
         let endFromFrame = CGRect(x: screenBounds.width, y: 0, width: fromView.bounds.width, height: fromView.bounds.height)

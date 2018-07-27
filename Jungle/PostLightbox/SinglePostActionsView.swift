@@ -13,6 +13,9 @@ import WCLShineButton
 protocol PostActionsDelegate:class {
     func handleLikeButton()
     func handleCommentButton()
+    func handleMoreButton()
+    func handleLocationButton()
+    func openTag(_ tag:String)
 }
 
 class SinglePostActionsView:UIView {
@@ -153,6 +156,8 @@ class SinglePostActionsView:UIView {
         locationButton.layer.cornerRadius = 16.0
         locationButton.contentEdgeInsets = UIEdgeInsetsMake(0, 0, 0, 12)
         locationButton.sizeToFit()
+        locationButton.addTarget(self, action: #selector(handleLocation), for: .touchUpInside)
+        
     }
     
     @objc func handleLike() {
@@ -184,7 +189,18 @@ class SinglePostActionsView:UIView {
         delegate?.handleCommentButton()
     }
     
+    @objc func handleLocation() {
+        delegate?.handleLocationButton()
+    }
+    
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    func setBlocked(_ isBlocked:Bool) {
+        self.alpha = isBlocked ? 0.5 : 1.0
+        self.commentHitButton.isUserInteractionEnabled = !isBlocked
+        self.likeHitButton.isUserInteractionEnabled = !isBlocked
+        self.locationButton.isUserInteractionEnabled = !isBlocked
     }
 }

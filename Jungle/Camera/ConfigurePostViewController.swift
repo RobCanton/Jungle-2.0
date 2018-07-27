@@ -7,48 +7,81 @@
 //
 
 import Foundation
-import Hero
 import UIKit
 import AVFoundation
+import AsyncDisplayKit
 
-class ConfigurePostViewController:UIViewController {
+class ConfigurePostViewController:UIViewController, ASTableDelegate, ASTableDataSource {
     
     var videoURL:URL!
     var header:ComposeHeaderView!
+    var tableNode = ASTableNode()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Post"
         view.backgroundColor = UIColor.white
         
-        header = ComposeHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 144))
-        view.addSubview(header)
-        header.translatesAutoresizingMaskIntoConstraints = false
-        header.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24.0).isActive = true
-        header.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24.0).isActive = true
-        header.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        header.heightAnchor.constraint(equalToConstant: 144.0).isActive = true
+        let topInset = UIApplication.deviceInsets.top
+        let titleViewHeight = 50 + topInset
         
-        view.layoutIfNeeded()
-        header.setVideo(url: videoURL)
+        let titleView = JTitleView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: titleViewHeight), topInset: topInset)
+        titleView.backgroundImage.image = nil
+        titleView.backgroundColor = currentTheme.backgroundColor
+        titleView.titleLabel.text = "NEW POST"
+        titleView.titleLabel.textColor = UIColor.black
+        titleView.leftButton.setImage(UIImage(named:"back"), for: .normal)
+        titleView.leftButton.tintColor = UIColor.black
+        titleView.leftButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
         
-        let backButton = UIBarButtonItem(image: UIImage(named:"back"), style: .plain, target: self, action: #selector(handleBack))
-        backButton.tintColor = UIColor.lightGray
-        navigationItem.leftBarButtonItem = backButton
+        view.addSubview(titleView)
+        titleView.translatesAutoresizingMaskIntoConstraints = false
+        titleView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        titleView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
+        titleView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
+        
+        view.addSubview(tableNode.view)
+        tableNode.view.translatesAutoresizingMaskIntoConstraints = false
+        tableNode.contentInset = UIEdgeInsetsMake(0.0, 0.0, 0.0, 0.0)
+        
+        tableNode.view.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        tableNode.view.topAnchor.constraint(equalTo: titleView.bottomAnchor).isActive = true
+        tableNode.view.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        tableNode.view.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        tableNode.view.contentInsetAdjustmentBehavior = .never
+        tableNode.delegate = self
+        tableNode.dataSource = self
+        tableNode.view.separatorColor = currentTheme.highlightedBackgroundColor
+        tableNode.view.showsVerticalScrollIndicator = true
+        tableNode.view.delaysContentTouches = false
+        tableNode.view.backgroundColor = hexColor(from: "#eff0e9")
+        tableNode.view.tableFooterView = UIView()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.navigationController?.setNavigationBarHidden(false, animated: animated)
-        self.navigationController?.navigationBar.isTranslucent = false
-        self.navigationController?.navigationBar.shadowImage = UIImage()
-        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
     }
     
-    @objc func handleBack() {
-        navigationController?.popViewController(animated: true)
+    @objc func handleDismiss() {
+        self.dismiss(animated: true, completion: nil)
     }
     
+    func numberOfSections(in tableNode: ASTableNode) -> Int {
+        return 1
+    }
+    
+    func tableNode(_ tableNode: ASTableNode, numberOfRowsInSection section: Int) -> Int {
+        return 1
+    }
+    
+    func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
+        let cell = ASCellNode()
+        cell.style.height = ASDimension(unit: .points, value: 300)
+        cell.backgroundColor = UIColor.blue
+        return cell
+    }
 }
+
 
 class ComposeHeaderView:UIView {
     
