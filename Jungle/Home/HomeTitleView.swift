@@ -25,8 +25,9 @@ class JTitleView:UIView {
         self.insetsLayoutMarginsFromSafeArea = false
         self.preservesSuperviewLayoutMargins = false
         
-        self.backgroundColor = accentColor
-        backgroundImage = UIImageView(image: UIImage(named:"NavBarGradient1"))
+        self.backgroundColor = currentTheme.backgroundColor
+        backgroundImage = UIImageView(image: UIImage(named:"GreenBox"))
+        //backgroundImage.isHidden = true
         backgroundImage.frame = bounds
         addSubview(backgroundImage)
         backgroundImage.translatesAutoresizingMaskIntoConstraints = false
@@ -66,7 +67,7 @@ class JTitleView:UIView {
         titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
         titleLabel.textColor = UIColor.white
         titleLabel.textAlignment = .center
-        titleLabel.font = Fonts.medium(ofSize: 13.0)
+        titleLabel.font = Fonts.semiBold(ofSize: 13.0)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -74,8 +75,13 @@ class JTitleView:UIView {
     }
 }
 
+protocol TabScrollDelegate:class {
+    func tabScrollTo(index:Int)
+}
+
 class TabScrollView:UIView {
     
+    weak var delegate:TabScrollDelegate?
     var tabStack:UIStackView!
     var barView:UIView!
     
@@ -101,7 +107,7 @@ class TabScrollView:UIView {
         tabStack.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         tabStack.spacing = 15
         
-        let buttonFont = Fonts.medium(ofSize: 13.0)
+        let buttonFont = Fonts.semiBold(ofSize: 13.0)
         homeButton = UIButton(type: .custom)
         homeButton.setTitle(titles[0], for: .normal)
         homeButton.setTitleColor(UIColor.white, for: .normal)
@@ -113,7 +119,7 @@ class TabScrollView:UIView {
         popularButton = UIButton(type: .custom)
         popularButton.setTitle(titles[1], for: .normal)
         popularButton.setTitleColor(UIColor.white, for: .normal)
-        popularButton.titleLabel?.font = Fonts.medium(ofSize: 13.0)
+        popularButton.titleLabel?.font = buttonFont
         popularButton.alpha = 0.6
         tabStack.addArrangedSubview(popularButton)
         popularTabWidth = UILabel.size(text: titles[1], height: 50.0, font: buttonFont).width
@@ -121,7 +127,7 @@ class TabScrollView:UIView {
         nearbyButton = UIButton(type: .custom)
         nearbyButton.setTitle(titles[2], for: .normal)
         nearbyButton.setTitleColor(UIColor.white, for: .normal)
-        nearbyButton.titleLabel?.font = Fonts.medium(ofSize: 13.0)
+        nearbyButton.titleLabel?.font = buttonFont
         nearbyButton.alpha = 0.6
         tabStack.addArrangedSubview(nearbyButton)
         
@@ -137,6 +143,10 @@ class TabScrollView:UIView {
         barLeadingAnchor = barView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0)
         barLeadingAnchor.isActive = true
         barView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: 0).isActive = true
+        
+        popularButton.addTarget(self, action: #selector(handleTab), for: .touchUpInside)
+        homeButton.addTarget(self, action: #selector(handleTab), for: .touchUpInside)
+        nearbyButton.addTarget(self, action: #selector(handleTab), for: .touchUpInside)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -158,6 +168,24 @@ class TabScrollView:UIView {
         }
         
     }
+    
+    @objc func handleTab(_ sender:UIButton) {
+        print("HANDLE TAB!")
+        switch sender {
+        case homeButton:
+            delegate?.tabScrollTo(index: 0)
+            break
+        case popularButton:
+            delegate?.tabScrollTo(index: 1)
+            break
+        case nearbyButton:
+            delegate?.tabScrollTo(index: 2)
+            break
+        default:
+            break
+        }
+    }
+    
 }
 
 class HomeTitleView:JTitleView {
@@ -167,8 +195,8 @@ class HomeTitleView:JTitleView {
     override init(frame: CGRect, topInset: CGFloat) {
         super.init(frame: frame, topInset: topInset)
         
-        rightButton.setImage(UIImage(named:"Settings"), for: .normal)
-        leftButton.setImage(UIImage(named:"Switches"), for: .normal)
+        //rightButton.setImage(UIImage(named:"Settings"), for: .normal)
+        //leftButton.setImage(UIImage(named:"Switches"), for: .normal)
         
         tabScrollView = TabScrollView(frame: frame, titles: ["POPULAR", "LATEST", "NEARBY"])
         contentView.addSubview(tabScrollView)
@@ -183,5 +211,74 @@ class HomeTitleView:JTitleView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    
+}
+
+class DualScrollView:UIView {
+    
+    weak var delegate:TabScrollDelegate?
+    var barView:UIView!
+    
+    var barLeadingAnchor:NSLayoutConstraint!
+    
+    var button1:UIButton!
+    var button2:UIButton!
+
+    
+    init(frame:CGRect, title1:String, title2:String) {
+        super.init(frame: frame)
+        self.translatesAutoresizingMaskIntoConstraints = false
+        self.preservesSuperviewLayoutMargins = false
+        self.insetsLayoutMarginsFromSafeArea = false
+        
+        let buttonFont = Fonts.semiBold(ofSize: 13.0)
+        button1 = UIButton(type: .custom)
+        button1.setTitle(title1, for: .normal)
+        button1.setTitleColor(UIColor.white, for: .normal)
+        button1.titleLabel?.font = buttonFont
+        
+        
+        button2 = UIButton(type: .custom)
+        button2.setTitle(title2, for: .normal)
+        button2.setTitleColor(UIColor.white, for: .normal)
+        button2.titleLabel?.font = buttonFont
+
+        addSubview(button1)
+        button1.translatesAutoresizingMaskIntoConstraints = false
+        button1.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        button1.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        button1.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        button1.widthAnchor.constraint(equalToConstant: frame.width/2).isActive = true
+        addSubview(button2)
+        button2.translatesAutoresizingMaskIntoConstraints = false
+        //button2.leadingAnchor.constraint(equalTo: button1.trailingAnchor).isActive = true
+        button2.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        button2.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        button2.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        button2.widthAnchor.constraint(equalToConstant: frame.width/2).isActive = true
+        
+        barView = UIView()
+        barView.backgroundColor = UIColor.white
+        addSubview(barView)
+        barView.translatesAutoresizingMaskIntoConstraints = false
+        barView.widthAnchor.constraint(equalToConstant: frame.width/2).isActive = true
+        
+        barView.heightAnchor.constraint(equalToConstant: 2.0).isActive = true
+        barLeadingAnchor = barView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0)
+        barLeadingAnchor.isActive = true
+        barView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: 0).isActive = true
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func setProgress(_ progress:CGFloat, index:Int) {
+
+    }
+    
+    @objc func handleTab(_ sender:UIButton) {
+
+    }
     
 }

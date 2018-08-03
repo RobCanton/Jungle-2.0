@@ -9,54 +9,6 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Jungle/Models/Post.swift"
-            timestampString = "554426901.012009"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "332"
-            endingLineNumber = "332"
-            landmarkName = "ImageAttachment"
-            landmarkType = "3">
-            <Locations>
-               <Location
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Jungle.ImageAttachment.deinit"
-                  moduleName = "Jungle"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/robertcanton/Documents/Xcode/Jungle/Jungle/Models/Post.swift"
-                  timestampString = "540721887.7687221"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "0"
-                  endingLineNumber = "0"
-                  offsetFromSymbolStart = "12">
-               </Location>
-               <Location
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Jungle.ImageAttachment.__deallocating_deinit"
-                  moduleName = "Jungle"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/robertcanton/Documents/Xcode/Jungle/Jungle/Models/Post.swift"
-                  timestampString = "540721887.7714731"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "0"
-                  endingLineNumber = "0"
-                  offsetFromSymbolStart = "12">
-               </Location>
-            </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
             filePath = "Jungle/PostCellNode.swift"
             timestampString = "541494831.420262"
             startingColumnNumber = "9223372036854775807"
@@ -168,7 +120,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Jungle/Camera/ImageEffects.swift"
-            timestampString = "551853395.055703"
+            timestampString = "554687191.6647871"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "235"
@@ -215,13 +167,45 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Jungle/PostTables/PopularPostsHeaderCellNode.swift"
-            timestampString = "554316068.272211"
+            filePath = "Jungle/Search/RCSearchBarView.swift"
+            timestampString = "554852574.237357"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "58"
-            endingLineNumber = "58"
-            landmarkName = "init()"
+            startingLineNumber = "160"
+            endingLineNumber = "160"
+            landmarkName = "RCSearchBarView"
+            landmarkType = "3">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Jungle/Search/SearchViewController.swift"
+            timestampString = "554975279.045423"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "83"
+            endingLineNumber = "83"
+            landmarkName = "viewDidLoad()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Jungle/Camera/CameraViewController.swift"
+            timestampString = "554975279.045488"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "336"
+            endingLineNumber = "336"
+            landmarkName = "processVideoWithWatermark(videoURL:completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

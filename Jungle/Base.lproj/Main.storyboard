@@ -221,8 +221,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="1000" height="1000"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <color key="tintColor" red="0.54509803921568623" green="0.78431372549019607" blue="0.43529411764705883" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                        <color key="selectedImageTintColor" red="0.44705882352941173" green="0.88627450980392153" blue="0.47450980392156861" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                        <color key="tintColor" red="0.24313725490196078" green="0.792156862745098" blue="0.65490196078431373" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                        <color key="selectedImageTintColor" red="0.24313725490196078" green="0.792156862745098" blue="0.65490196078431373" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                     </tabBar>
                     <connections>
                         <segue destination="BIt-fI-Gyb" kind="relationship" relationship="viewControllers" id="gTI-La-K8Z"/>

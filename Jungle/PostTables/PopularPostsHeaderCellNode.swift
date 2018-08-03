@@ -10,7 +10,7 @@ import Foundation
 import AsyncDisplayKit
 
 protocol PopularHeaderCellProtocol:class {
-    func postOpen(tag:String)
+    func postOpenTrending(tag:TrendingHashtag)
 }
 
 class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionDataSource {
@@ -26,9 +26,9 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
         super.init()
         
         automaticallyManagesSubnodes = true
-        backgroundColor = currentTheme.backgroundColor
+        backgroundColor = UIColor.clear
         
-        style.height = ASDimension(unit: .points, value: 230)
+        style.height = ASDimension(unit: .points, value: 202)
         
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 12
@@ -39,25 +39,11 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
         collectionNode.delegate = self
         collectionNode.dataSource = self
         collectionNode.contentInset = UIEdgeInsetsMake(8, 12, 8, 12)
-        collectionNode.style.height = ASDimension(unit: .points, value: 160)
+        collectionNode.style.height = ASDimension(unit: .points, value: 190)
         collectionNode.reloadData()
-        collectionNode.backgroundColor = currentTheme.backgroundColor
+        collectionNode.backgroundColor = UIColor.clear
+        collectionNode.clipsToBounds = false
         NotificationCenter.default.addObserver(self, selector: #selector(handleTrendingTagsNotification), name: SearchService.trendingTagsNotification, object: nil)
-        
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
-        
-        topTitle.attributedText = NSAttributedString(string: "TRENDING TAGS", attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.paragraphStyle: paragraphStyle,
-            NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
-            ])
-        
-        midTitle.attributedText = NSAttributedString(string: "TOP POSTS", attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.paragraphStyle: paragraphStyle,
-            NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
-            ])
     }
     
     @objc func handleTrendingTagsNotification() {
@@ -71,13 +57,7 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
         collectionNode.view.showsHorizontalScrollIndicator = false
     }
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        let centerTopTitle = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumXY, child: topTitle)
-        centerTopTitle.style.height = ASDimension(unit: .points, value: 35)
-        let centerMidTitle = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumXY, child: midTitle)
-        centerMidTitle.style.height = ASDimension(unit: .points, value: 35)
-        let stack = ASStackLayoutSpec.vertical()
-        stack.children = [centerTopTitle, collectionNode, centerMidTitle]
-        return ASInsetLayoutSpec(insets: .zero, child: stack)
+        return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 0, 8, 0), child: collectionNode)
     }
     
     func numberOfSections(in collectionNode: ASCollectionNode) -> Int {
@@ -89,14 +69,30 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, nodeForItemAt indexPath: IndexPath) -> ASCellNode {
-        let cell = TagCircleCellNode(tag:hashtags[indexPath.row])
+        let cell = TrendingCellNode(tag:hashtags[indexPath.row])
         return cell
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, didSelectItemAt indexPath: IndexPath) {
-        delegate?.postOpen(tag: "#\(hashtags[indexPath.row].hastag)")
+        delegate?.postOpenTrending(tag: hashtags[indexPath.row])
+        let node = collectionNode.nodeForItem(at: indexPath) as? TrendingCellNode
+        node?.setHighlighted(true)
     }
     
+    func collectionNode(_ collectionNode: ASCollectionNode, didDeselectItemAt indexPath: IndexPath) {
+        let node = collectionNode.nodeForItem(at: indexPath) as? TrendingCellNode
+        node?.setHighlighted(false)
+    }
+    
+    func collectionNode(_ collectionNode: ASCollectionNode, didHighlightItemAt indexPath: IndexPath) {
+        let node = collectionNode.nodeForItem(at: indexPath) as? TrendingCellNode
+        node?.setHighlighted(true)
+    }
+    
+    func collectionNode(_ collectionNode: ASCollectionNode, didUnhighlightItemAt indexPath: IndexPath) {
+        let node = collectionNode.nodeForItem(at: indexPath) as? TrendingCellNode
+        node?.setHighlighted(false)
+    }
 }
 
 class BadgeNode:ASDisplayNode {
@@ -145,102 +141,114 @@ class BadgeNode:ASDisplayNode {
     }
 }
 
-class TagCircleCellNode:ASCellNode, ASNetworkImageNodeDelegate {
+class TrendingCellNode:ASCellNode {
     
+    var pastelNode:PastelNode!
     var imageNode = ASNetworkImageNode()
+    var gradientNode = ASDisplayNode()
     var titleNode = ASTextNode()
-    var timeNode = ASTextNode()
-    var post:Post?
-    var previewImageNode:BadgeNode!
-    var tag:TrendingHashtag?
+    var subtitleNode = ASTextNode()
+    var textNode = ASTextNode()
+    var dimNode = ASDisplayNode()
     
     required init(tag:TrendingHashtag) {
         super.init()
-        self.tag = tag
         automaticallyManagesSubnodes = true
-//        if let video = post.attachments?.video {
-//            imageNode.url = video.thumbnail_url
-//        }
-        //layer.cornerRadius = 8.0
+        pastelNode = PastelNode(gradient: tag.post.gradient)
+        imageNode.backgroundColor = UIColor.lightGray
+        self.imageNode.shouldCacheImage = true
+        
+        if tag.post.attachments.isVideo {
+            let thumbnailRef = storage.child("publicPosts/\(tag.post.key)/thumbnail.gif")
+            thumbnailRef.downloadURL { url, error in
+                self.imageNode.url = url
+            }
+        } else if tag.post.attachments.isImage {
+            let imageRef = storage.child("publicPosts/\(tag.post.key)/image.jpg")
+            imageRef.downloadURL { imageURL, error in
+                self.imageNode.url = imageURL
+            }
+        } else {
+            self.imageNode.backgroundColor = UIColor.clear
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center
+            
+            self.textNode.maximumNumberOfLines = 7
+            self.textNode.textContainerInset = UIEdgeInsetsMake(2, 8, 26, 8)
+            self.textNode.attributedText = NSAttributedString(string: tag.post.text, attributes: [
+                NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.85),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0)
+                ])
+        }
         
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         
-        
-        self.imageNode.shouldCacheImage = true
-        let thumbnailRef = storage.child("publicPosts/\(tag.postID)/thumbnail.gif")
-        thumbnailRef.downloadURL { url, error in
-            self.imageNode.url = url
-        }
-        
-        self.timeNode.attributedText = NSAttributedString(string: tag.lastPostedAt.timeSinceNowWithAgo(), attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 12.0),
-            NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor,
-            NSAttributedStringKey.paragraphStyle: paragraphStyle
-            ])
-        
-        imageNode.backgroundColor = currentTheme.highlightedBackgroundColor
-        imageNode.style.width = ASDimension(unit: .points, value: 100)
-        imageNode.style.height = ASDimension(unit: .points, value: 100)
-        imageNode.layer.cornerRadius = 50
-        imageNode.clipsToBounds = true
-        
         titleNode.attributedText = NSAttributedString(string: "#\(tag.hastag)", attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
-            NSAttributedStringKey.foregroundColor: currentTheme.secondaryAccentColor,
+            NSAttributedStringKey.foregroundColor: UIColor.white,
+            NSAttributedStringKey.font: Fonts.bold(ofSize: 14.0),
             NSAttributedStringKey.paragraphStyle: paragraphStyle
             ])
-        titleNode.maximumNumberOfLines = 1
-        titleNode.truncationMode = .byTruncatingTail
-        titleNode.textContainerInset = UIEdgeInsetsMake(0, 1, 2, 1)
-        
+        let subtitle = "\(tag.count) recent posts"
+        subtitleNode.attributedText = NSAttributedString(string: subtitle, attributes: [
+            NSAttributedStringKey.foregroundColor: UIColor.white,
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 11.5),
+            NSAttributedStringKey.paragraphStyle: paragraphStyle
+            ])
+        dimNode.backgroundColor = UIColor.black
+        dimNode.alpha = 0.0
     }
     
     override func didLoad() {
         super.didLoad()
-        guard let tag = self.tag else { return }
-        let button = UIButton(type: .custom)
-        let title = numericShorthand(tag.count)
-        button.setTitle(title, for: .normal)
-        button.titleLabel?.font = Fonts.semiBold(ofSize: 12.0)
-        button.backgroundColor = tagColor
+        imageNode.cornerRadius = 6.0
+        imageNode.clipsToBounds = true
+        pastelNode.cornerRadius = 6.0
+        pastelNode.clipsToBounds = true
+        pastelNode.staticGradient()
+        dimNode.cornerRadius = 6.0
+        dimNode.clipsToBounds = true
+        self.view.applyShadow(radius: 6, opacity: 0.3, offset: CGSize(width:0, height: 3), color: .black, shouldRasterize: false)
+        self.clipsToBounds = false
         
-        view.addSubview(button)
-        let textWidth = UILabel.size(text: title, height: 28, font: Fonts.semiBold(ofSize: 14.0)).width
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -1).isActive = true
-        button.topAnchor.constraint(equalTo: view.topAnchor, constant: 100 - 28 - 1).isActive = true
-        //button.widthAnchor.constraint(greaterThanOrEqualToConstant: 32.0).isActive = true
-        if textWidth < 28 {
-            button.widthAnchor.constraint(equalToConstant: 28).isActive = true
-        } else {
-            button.widthAnchor.constraint(equalToConstant: textWidth + 12).isActive = true
-        }
-        button.heightAnchor.constraint(equalToConstant: 28).isActive = true
-        button.layer.cornerRadius = 14
-        button.clipsToBounds = true
-        button.sizeToFit()
+        let gradient = CAGradientLayer()
+        gradient.colors = [UIColor.black.withAlphaComponent(0.45).cgColor, UIColor.clear.cgColor]
+        gradient.locations = [0.0, 1.0]
+        gradient.startPoint = CGPoint(x: 0, y: 1)
+        gradient.endPoint = CGPoint(x: 0, y: 0.33)
+        gradient.frame = view.bounds
+        gradient.cornerRadius = 6.0
+        gradient.masksToBounds = true
+        gradientNode.layer.addSublayer(gradient)
     }
-    
-    
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
+        pastelNode.style.width = ASDimension(unit: .points, value: 130)
+        pastelNode.style.height = ASDimension(unit: .points, value: 190)
+        let centerText = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: textNode)
+        let imageOverlay = ASOverlayLayoutSpec(child: pastelNode, overlay: imageNode)
+        let textOverlay = ASOverlayLayoutSpec(child: imageOverlay, overlay: centerText)
         
-        let textStack = ASStackLayoutSpec.vertical()
-        //textStack.alignContent = .
-        //textStack.justifyContent = .end
-        textStack.spacing = 0.0
-        textStack.children = [titleNode, timeNode]
-        
-        let contentStack = ASStackLayoutSpec.vertical()
-        contentStack.spacing = 6.0
-        contentStack.children = [imageNode, textStack]
-        
-        return ASInsetLayoutSpec(insets: .zero, child: contentStack)
+        let contentOverlay = ASOverlayLayoutSpec(child: textOverlay, overlay: gradientNode)
+        let titleStack = ASStackLayoutSpec.vertical()
+        titleStack.children = [titleNode, subtitleNode]
+        titleStack.spacing = 2.0
+        titleStack.justifyContent = .end
+        let titleStackInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 4, 4, 4), child: titleStack)
+        let overlay = ASOverlayLayoutSpec(child: contentOverlay, overlay: titleStackInset)
+    
+        return ASOverlayLayoutSpec(child: overlay, overlay: dimNode)
     }
     
-    func imageNode(_ imageNode: ASNetworkImageNode, didLoad image: UIImage) {
-        guard let post = self.post else { return }
-//        guard let image = previewNode.imageNode.animatedImage else { return }
-//        thumbnailCache.add(key: post.key, item: image)
+    override func didEnterVisibleState() {
+        super.didEnterVisibleState()
+    }
+    
+    func setHighlighted(_ highlighted:Bool) {
+        dimNode.alpha = highlighted ? 0.25 : 0.0
+    }
+    
+    override func didExitVisibleState() {
+        super.didExitVisibleState()
+        setHighlighted(false)
     }
 }

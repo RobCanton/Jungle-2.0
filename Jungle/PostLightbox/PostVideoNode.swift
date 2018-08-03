@@ -9,9 +9,15 @@
 import Foundation
 import UIKit
 import AsyncDisplayKit
+import Pastel
 
 class PostContentNode:ASDisplayNode {
+    var pastelNode:PastelNode!
+    var avatarNode:AvatarNode!
+    var usernameNode = ASTextNode()
+    var imageNode = ASNetworkImageNode()
     var videoNode = ASVideoNode()
+    var textNode = ASTextNode()
     var gradientNode = ASDisplayNode()
     var spinnerNode = SpinnerNode()
     weak var post:Post?
@@ -24,13 +30,27 @@ class PostContentNode:ASDisplayNode {
     required init(post: Post) {
         super.init()
         self.post = post
+        pastelNode = PastelNode(gradient: post.gradient)
         automaticallyManagesSubnodes = true
+        videoNode.backgroundColor = UIColor.black
+        imageNode.backgroundColor = UIColor.black
+        
+        avatarNode = AvatarNode(post: post, cornerRadius: 22, imageInset: 6)
+        avatarNode.style.height = ASDimension(unit: .points, value: 44)
+        avatarNode.style.width = ASDimension(unit: .points, value: 44)
+        
+        usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
+            NSAttributedStringKey.font: Fonts.bold(ofSize: 18.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white
+            ])
+        
+        
         if let _ = post.blockedMessage {
             videoNode.muted = true
             videoNode.isHidden = true
             spinnerNode.alpha = 0.0
             blockedMessageNode = ASDisplayNode()
-            
+            backgroundColor = .clear
             blockedIconNode = ASImageNode()
             blockedIconNode?.image = UIImage(named:"danger")
             blockedIconNode?.imageModificationBlock = { image in
@@ -58,7 +78,33 @@ class PostContentNode:ASDisplayNode {
             }
             
         } else {
-            setupVideo(post)
+            if post.attachments.isVideo {
+                usernameNode.isHidden = true
+                avatarNode.isHidden = true
+                setupVideo(post)
+            } else if post.attachments.isImage {
+                usernameNode.isHidden = true
+                avatarNode.isHidden = true
+                setupImage(post)
+            } else {
+                usernameNode.isHidden = false
+                avatarNode.isHidden = false
+                spinnerNode.stopAnimating()
+                spinnerNode.alpha = 0.0
+                imageNode.isHidden = true
+                videoNode.isHidden = true
+                //backgroundColor = accentColor
+                let paragraphStyle = NSMutableParagraphStyle()
+                paragraphStyle.alignment = .center
+                
+                //textNode.maximumNumberOfLines = 7
+                textNode.textContainerInset = UIEdgeInsetsMake(16,24,16,24)
+                textNode.attributedText = NSAttributedString(string: post.text, attributes: [
+                    NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(1.0),
+                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 24.0)
+                ])
+            }
+            
         }
     }
     
@@ -66,8 +112,7 @@ class PostContentNode:ASDisplayNode {
         videoNode.isHidden = false
         videoNode.muted = false
         spinnerNode.isHidden = false
-        
-        
+        imageNode.isHidden = true
         UploadService.retrieveVideo(withKey: post.key) { vidURL, fromFile in
             if let url = vidURL {
                 print("WE GOT THE VIDEO DATA")
@@ -87,7 +132,17 @@ class PostContentNode:ASDisplayNode {
                 print("NO VIDEO DATA")
             }
         }
-        
+    }
+    
+    func setupImage(_ post:Post) {
+        videoNode.isHidden = true
+        videoNode.muted = true
+        imageNode.isHidden = false
+        spinnerNode.isHidden = false
+        let imageRef = storage.child("publicPosts/\(post.key)/image.jpg")
+        imageRef.downloadURL { url, error in
+            self.imageNode.url = url
+        }
     }
     
     override func didLoad() {
@@ -102,6 +157,8 @@ class PostContentNode:ASDisplayNode {
         
         spinnerNode.activityIndicatorView.activityIndicatorViewStyle = .white
         spinnerNode.startAnimating()
+    
+
     }
     
     func temporaryUnblock() {
@@ -113,7 +170,25 @@ class PostContentNode:ASDisplayNode {
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         let spinnerCenter = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: spinnerNode)
-        let spinnerBG = ASBackgroundLayoutSpec(child: videoNode, background: spinnerCenter)
+        let pastelOverlay = ASOverlayLayoutSpec(child: pastelNode, overlay: imageNode)
+        let videoImageOverlay = ASOverlayLayoutSpec(child: pastelOverlay, overlay: videoNode)
+        
+        let centerUsername = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: usernameNode)
+        
+        let titleStack = ASStackLayoutSpec.horizontal()
+        titleStack.children = [avatarNode, centerUsername ]
+        titleStack.spacing = 10
+        titleStack.style.width = ASDimension(unit: .points, value: constrainedSize.max.width - 48)
+        let titleInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 24, 0, 24), child: titleStack)
+        textNode.style.maxHeight = ASDimension(unit: .points, value: constrainedSize.max.height - 64 - 44 - 44)
+        let textStack = ASStackLayoutSpec.vertical()
+        textStack.children = [titleInset, textNode]
+        textStack.spacing = 0.0
+        
+        let centerText = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: textStack)
+        
+        let textOverlay = ASOverlayLayoutSpec(child: videoImageOverlay, overlay: centerText)
+        let spinnerBG = ASBackgroundLayoutSpec(child: textOverlay, background: spinnerCenter)
         let overlay = ASOverlayLayoutSpec(child: spinnerBG, overlay: gradientNode)
         if blockedMessageNode != nil {
             let blockedMessageNodeCenterXY = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: blockedMessageNode!)
@@ -130,8 +205,7 @@ class PostContentNode:ASDisplayNode {
         if videoNode.asset != nil {
             self.videoNode.play()
         }
-        
-        
+        pastelNode.animate()
     }
     
     override func didExitVisibleState() {
@@ -141,5 +215,6 @@ class PostContentNode:ASDisplayNode {
         spinnerNode.stopAnimating()
         //videoNode.player?.replaceCurrentItem(with: nil)
         //videoNode.
+        //pastelNode.pastelView.layer.speed = 0.0
     }
 }

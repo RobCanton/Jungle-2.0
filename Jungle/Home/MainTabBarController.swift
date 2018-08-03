@@ -55,6 +55,8 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         postButtonContainer = UIView(frame: CGRect(x: 0, y: 0, width: pHeight, height: pHeight))
         
         tabBar.addSubview(postButtonContainer)
+        tabBar.tintColor = accentColor
+        tabBar.unselectedItemTintColor = accentColor
         
         postButtonContainer.translatesAutoresizingMaskIntoConstraints = false
         postButtonContainer.centerXAnchor.constraint(equalTo: tabBar.centerXAnchor).isActive = true
@@ -150,10 +152,7 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         if UserService.isSignedIn {
             
             let controller = CameraViewController()
-            let drawerVC = StickerViewController()
-            let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
-            pulleyController.drawerBackgroundVisualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
-            self.present(pulleyController, animated: true, completion: nil)
+            self.present(controller, animated: true, completion: nil)
         } else {
             openLoginView()
         }

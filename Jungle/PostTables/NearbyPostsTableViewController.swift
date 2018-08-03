@@ -15,7 +15,11 @@ class NearbyPostsTableViewController: PostsTableViewController {
     
     var proximity:UInt = 0
     
-    
+    override func lightBoxVC() -> LightboxViewController {
+        let lightbox = NearbyLightboxViewController()
+        lightbox.proximity = proximity
+        return lightbox
+    }
     
     override var headerCell: ASCellNode? {
         get {
@@ -73,17 +77,13 @@ class NearbyPostsTableViewController: PostsTableViewController {
     }
     
     @objc func handleLocationUpdate() {
-        print("handleLocationUpdate")
         state = .empty
         tableNode.view.isScrollEnabled = true
-        SearchService.searchNearby(proximity: self.proximity, offset: self.state.posts.count) { posts, endReached in
-            if endReached {
-                let oldState = self.state
-                self.state = PostsTableViewController.handleAction(.endReached(), fromState: oldState)
-            }
-            let action = Action.endBatchFetch(posts: posts)
+        SearchService.searchNearby(proximity: self.proximity, offset: self.state.posts.count) { posts in
+            
+            let action = PostsStateController.Action.endBatchFetch(posts: posts)
             let oldState = self.state
-            self.state = PostsTableViewController.handleAction(action, fromState: oldState)
+            self.state = PostsStateController.handleAction(action, fromState: oldState)
             self.tableNode.reloadData()
             self.refreshControl.endRefreshing()
         }
@@ -94,21 +94,17 @@ class NearbyPostsTableViewController: PostsTableViewController {
         
         state = .empty
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: {
-            SearchService.searchNearby(proximity: self.proximity, offset: self.state.posts.count) { posts, endReached in
-                if endReached {
-                    let oldState = self.state
-                    self.state = PostsTableViewController.handleAction(.endReached(), fromState: oldState)
-                }
-                let action = Action.endBatchFetch(posts: posts)
+            SearchService.searchNearby(proximity: self.proximity, offset: self.state.posts.count) { posts in
+                let action = PostsStateController.Action.endBatchFetch(posts: posts)
                 let oldState = self.state
-                self.state = PostsTableViewController.handleAction(action, fromState: oldState)
+                self.state = PostsStateController.handleAction(action, fromState: oldState)
                 self.tableNode.reloadData()
                 self.refreshControl.endRefreshing()
             }
         })
     }
     
-    override func fetchData(state: PostsTableViewController.State, completion: @escaping ([Post], Bool) -> ()) {
+    override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
         SearchService.searchNearby(proximity: proximity, offset: state.posts.count, completion: completion)
     }
 }
@@ -125,19 +121,6 @@ extension NearbyPostsTableViewController: DistanceSliderDelegate {
             self.tableNode.reloadSections(IndexSet([1]), with: .none)
         }, completion: { _ in
             self.shouldBatchFetch = true
-//            SearchService.searchNearby(proximity: proximity, offset: self.state.posts.count) {
-//                posts, endReached in
-//                if endReached {
-//                    let oldState = self.state
-//                    self.state = PostsTableViewController.handleAction(.endReached(), fromState: oldState)
-//                }
-//                let action = Action.endBatchFetch(posts: posts)
-//                let oldState = self.state
-//                self.state = PostsTableViewController.handleAction(action, fromState: oldState)
-//                self.tableNode.reloadSections(IndexSet([1]), with: .none)
-//                self.shouldBatchFetch = true
-//                self.refreshControl.endRefreshing()
-//            }
         })
     }
 }

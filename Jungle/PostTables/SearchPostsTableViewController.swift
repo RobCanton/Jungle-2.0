@@ -10,9 +10,18 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 
-class SearchPostsTableViewController: PostsTableViewController, PopularHeaderCellProtocol {
+class SearchPostsTableViewController: PostsTableViewController {
     
+    var type:SearchType = .popular
     var searchText:String?
+    
+    override func lightBoxVC() -> LightboxViewController {
+        let lightbox = SearchLightboxViewController()
+        lightbox.type = type
+        lightbox.searchText = searchText
+        return lightbox
+    }
+    
     func setSearch(text:String?) {
         
         context?.cancelBatchFetching()
@@ -28,14 +37,11 @@ class SearchPostsTableViewController: PostsTableViewController, PopularHeaderCel
         state = .empty
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: {
             if let searchText = self.searchText {
-                SearchService.searchFor(text: searchText, limit: 15, offset: self.state.posts.count) { posts, endReached in
-                    if endReached {
-                        let oldState = self.state
-                        self.state = PostsTableViewController.handleAction(.endReached(), fromState: oldState)
-                    }
-                    let action = Action.endBatchFetch(posts: posts)
+                SearchService.searchFor(text: searchText, type: self.type, limit: 15, offset: self.state.posts.count) { posts in
+                    
+                    let action = PostsStateController.Action.endBatchFetch(posts: posts)
                     let oldState = self.state
-                    self.state = PostsTableViewController.handleAction(action, fromState: oldState)
+                    self.state = PostsStateController.handleAction(action, fromState: oldState)
                     self.tableNode.reloadData()
                     self.refreshControl.endRefreshing()
                 }
@@ -43,11 +49,11 @@ class SearchPostsTableViewController: PostsTableViewController, PopularHeaderCel
         })
     }
     
-    override func fetchData(state: PostsTableViewController.State, completion: @escaping ([Post], Bool) -> ()) {
+    override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
         if let searchText = searchText {
-            SearchService.searchFor(text: searchText, limit: 15, offset: state.posts.count) { posts, endReached in
+            SearchService.searchFor(text: searchText, type: type, limit: 15, offset: state.posts.count) { posts in
                 
-                completion(posts, endReached)
+                completion(posts)
             }
         } else {
             super.fetchData(state: state, completion: completion)

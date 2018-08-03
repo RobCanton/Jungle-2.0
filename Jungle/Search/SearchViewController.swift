@@ -10,10 +10,16 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 
+enum SearchType:String {
+    case popular = "popular"
+    case recent = "recent"
+}
+
 class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
     
     var initialSearch:String?
     var pagerNode:ASPagerNode!
+    var topPostsVC:SearchPostsTableViewController!
     var latestPostsVC:SearchPostsTableViewController!
     var searchBar:RCSearchBarView!
     
@@ -50,6 +56,8 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
         }
     }
     
+    var tabScrollView:DualScrollView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = bgColor
@@ -68,7 +76,33 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
         searchBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         searchBar.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
         
+        let scrollTabBar = UIView()
+        view.addSubview(scrollTabBar)
+        scrollTabBar.translatesAutoresizingMaskIntoConstraints = false
+        scrollTabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        scrollTabBar.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: -12).isActive = true
+        scrollTabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        scrollTabBar.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+        
+        tabScrollView = DualScrollView(frame: CGRect(x: 0, y: 0, width: view.bounds.width - 104, height: 44.0), title1: "POPULAR", title2:"LATEST")
+        scrollTabBar.addSubview(tabScrollView)
+        tabScrollView.translatesAutoresizingMaskIntoConstraints = false
+        tabScrollView.leadingAnchor.constraint(equalTo: scrollTabBar.leadingAnchor, constant: 52.0).isActive = true
+         tabScrollView.trailingAnchor.constraint(equalTo: scrollTabBar.trailingAnchor, constant: -52.0).isActive = true
+        tabScrollView.topAnchor.constraint(equalTo: scrollTabBar.topAnchor).isActive = true
+        tabScrollView.bottomAnchor.constraint(equalTo: scrollTabBar.bottomAnchor).isActive = true
+        
+        let bgImageView = UIImageView(image: UIImage(named:"GreenBox"))
+        view.insertSubview(bgImageView, belowSubview: searchBar)
+        bgImageView.translatesAutoresizingMaskIntoConstraints = false
+        bgImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        bgImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        bgImageView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        bgImageView.heightAnchor.constraint(equalToConstant:  titleViewHeight + 32.0).isActive = true
+        
         view.layoutIfNeeded()
+        
+        
         
         pagerNode = ASPagerNode()
         pagerNode.backgroundColor = bgColor
@@ -78,7 +112,7 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
         pagerNode.view.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
         pagerNode.view.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
-        pagerNode.view.topAnchor.constraint(equalTo: searchBar.bottomAnchor).isActive = true
+        pagerNode.view.topAnchor.constraint(equalTo: tabScrollView.bottomAnchor).isActive = true
         pagerNode.view.bottomAnchor.constraint(equalTo: layout.bottomAnchor).isActive = true
         pagerNode.reloadData()
         
@@ -96,6 +130,7 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
         super.viewWillAppear(animated)
         if let search = initialSearch {
             searchBar.setText(search)
+            topPostsVC?.setSearch(text: search)
             latestPostsVC?.setSearch(text: search)
             initialSearch = nil
         }
@@ -110,24 +145,35 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
     func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
         let cellNode = ASCellNode()
         cellNode.backgroundColor = bgColor
-        latestPostsVC = SearchPostsTableViewController()
-        latestPostsVC.view.backgroundColor = bgColor
-        latestPostsVC.willMove(toParentViewController: self)
-        self.addChildViewController(latestPostsVC)
-        cellNode.addSubnode(latestPostsVC.node)
+        var table:PostsTableViewController
+
+        table = SearchPostsTableViewController()
+        table.view.backgroundColor = bgColor
+        table.willMove(toParentViewController: self)
+        self.addChildViewController(table)
+        cellNode.addSubnode(table.node)
         let layoutGuide = cellNode.view.safeAreaLayoutGuide
-        latestPostsVC.view.translatesAutoresizingMaskIntoConstraints = false
-        latestPostsVC.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        latestPostsVC.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        latestPostsVC.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
-        latestPostsVC.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: 0.0).isActive = true
+        table.view.translatesAutoresizingMaskIntoConstraints = false
+        table.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        table.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        table.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        table.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: 0.0).isActive = true
+        if index == 0 {
+
+            topPostsVC = table as! SearchPostsTableViewController
+            topPostsVC.type = .popular
+        } else {
+            latestPostsVC = table as! SearchPostsTableViewController
+            latestPostsVC.type = .recent
+        }
         
         return cellNode
     }
     
     func numberOfPages(in pagerNode: ASPagerNode) -> Int {
-        return 1
+        return 2
     }
+    
 }
 
 
@@ -150,7 +196,8 @@ extension SearchViewController: RCSearchBarDelegate {
     }
     
     func searchTapped(_ text: String) {
-        latestPostsVC?.setSearch(text: text )
+        topPostsVC?.setSearch(text: text)
+        latestPostsVC?.setSearch(text: text)
     }
     
     

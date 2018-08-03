@@ -121,4 +121,64 @@ final class SwitchNode: ASDisplayNode {
     }
 }
 
+import Pastel
 
+final class PastelNode: ASDisplayNode {
+    var pastelView:PastelView {
+        return view as! PastelView
+    }
+    
+    var viewLoaded = false
+    var animateOnViewLoaded = false
+    var staticOnViewLoaded = false
+    var gradientColors = [UIColor]()
+    required init(gradient:[String]?=nil) {
+        super.init()
+        gradientColors = []
+        if let g = gradient {
+            for color in g {
+                gradientColors.append(hexColor(from: color))
+            }
+        }
+        
+        backgroundColor = UIColor.clear
+        setViewBlock {
+            PastelView(frame: self.bounds)
+        }
+    }
+    
+    override func didLoad() {
+        super.didLoad()
+        pastelView.startPastelPoint = .topLeft
+        pastelView.endPastelPoint = .bottomRight
+        
+        // Custom Duration
+        pastelView.animationDuration = 10
+        pastelView.setColors(gradientColors)
+        pastelView.isUserInteractionEnabled = false
+        viewLoaded = true
+        if animateOnViewLoaded {
+            pastelView.startAnimation()
+        } else if staticOnViewLoaded {
+            pastelView.startStatic()
+        }
+    }
+    
+    func animate() {
+        if viewLoaded {
+            pastelView.startAnimation()
+        } else {
+            animateOnViewLoaded = true
+        }
+    }
+    
+    func staticGradient() {
+        if viewLoaded {
+            pastelView.startStatic()
+        } else {
+            staticOnViewLoaded = true
+        }
+    }
+    
+
+}

@@ -33,7 +33,8 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
     
     override init(frame: CGRect, topInset: CGFloat) {
         super.init(frame: frame, topInset: topInset)
-        
+        backgroundColor = UIColor.clear
+        backgroundImage.image = nil
         leftButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8).isActive = true
         leftButton.addTarget(self, action: #selector(handleLeftButton), for: .touchUpInside)
         
@@ -43,6 +44,7 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         rightButton.titleLabel?.font = Fonts.medium(ofSize: 16.0)
         rightButton.sizeToFit()
         rightButton.alpha = 0.0
+        rightButton.addTarget(self, action: #selector(handleCancelButton), for: .touchUpInside)
         
         textFieldContainer = UIView()
         addSubview(textFieldContainer)

@@ -27,4 +27,5 @@ target 'Jungle' do
   pod 'DynamicButton', '~> 5.0.0'
   pod 'JaneSliderControl'
   pod 'Differ'
+  pod "Pastel"
 end

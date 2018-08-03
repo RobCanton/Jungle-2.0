@@ -20,7 +20,7 @@ enum BarPosition {
 class EffectsBar:UIView, UICollectionViewDelegate, UICollectionViewDataSource {
     var blurView:UIVisualEffectView!
     var collectionView:UICollectionView!
-    let context = CIContext()
+    var context:CIContext!
     let effects:[(String,Bool)] = [
         ("CIPixellate", true),
         ("CIPhotoEffectInstant", false),
@@ -29,12 +29,12 @@ class EffectsBar:UIView, UICollectionViewDelegate, UICollectionViewDataSource {
         ("CIPhotoEffectProcess", false),
         ("CIPhotoEffectChrome", false),
         ("CIPhotoEffectFade", false),
-        ("CIBloom", true),
-        ("CIGloom", true),
+        //("CIBloom", true),
+        //("CIGloom", true),
         ("CIVignetteEffect", true),
         ("CIColorPosterize", true),
         ("CIComicEffect", false),
-        ("CIColorInvert", true)
+        ("CIColorInvert", false)
     ]
     
     weak var delegate:EffectsBarDelegate?
@@ -45,6 +45,7 @@ class EffectsBar:UIView, UICollectionViewDelegate, UICollectionViewDataSource {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        context = CIContext()
         preservesSuperviewLayoutMargins = false
         insetsLayoutMarginsFromSafeArea = false
         translatesAutoresizingMaskIntoConstraints = false

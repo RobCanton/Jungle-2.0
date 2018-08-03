@@ -15,7 +15,7 @@ import SwiftMessages
 
 class PostsService {
     
-    static func refreshNearbyPosts(existingKeys: [String:Bool], startAfter firstTimestamp: Double?, completion: @escaping (_ posts:[Post])->()) {
+    static func refreshNearbyPosts(startAfter firstTimestamp: Double?, completion: @escaping (_ posts:[Post])->()) {
         
     }
     
@@ -51,7 +51,7 @@ class PostsService {
         }
     }
     
-    static func refreshNewPosts(existingKeys: [String:Bool], startAfter firstTimestamp: Double?, completion: @escaping (_ posts:[Post])->()) {
+    static func refreshNewPosts(startAfter firstTimestamp: Double?, completion: @escaping (_ posts:[Post])->()) {
         var params = [
             "limit": 15,
             ] as [String:Any]
@@ -79,20 +79,20 @@ class PostsService {
         }
     }
     
-    static func getNewPosts(existingKeys: [String:Bool], lastPostID: Double?, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
+    static func getRecentPosts(lastPost:Post?, completion: @escaping (_ posts:[Post])->()) {
         
         var params = [
             "limit": 15,
         ] as [String:Any]
-        if let offset = lastPostID {
-            params["offset"] = offset
+        if let lastPost = lastPost {
+            params["offset"] = lastPost.createdAt.timeIntervalSince1970 * 1000
         }
         
         functions.httpsCallable("recentPosts").call(params) { result, error in
             
             if let error = error {
                 print("Error: \(error.localizedDescription)")
-                return completion([], false)
+                return completion([])
             } else if let data = result?.data as? [String:Any],
                 let results = data["results"] as? [[String:Any]]{
                 var posts = [Post]()
@@ -101,8 +101,7 @@ class PostsService {
                         posts.append(post)
                     }
                 }
-                print("Results: \(posts)")
-                return completion(posts, posts.count == 0)
+                return completion(posts)
             }
             
         }
@@ -136,19 +135,18 @@ class PostsService {
     }
 
     
-    static func getPopularPosts(existingKeys: [String:Bool], offset: Int, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
+    static func getPopularPosts(offset: Int, completion: @escaping (_ posts:[Post])->()) {
         
-        var params = [
+        let params = [
             "length": 15,
             "offset": offset
             ] as [String:Any]
         
-        print("RXC DID CALL")
         functions.httpsCallable("popularPosts").call(params) { result, error in
-            print("RXC DID RETURN!")
+            
             if let error = error {
                 print("Error: \(error.localizedDescription)")
-                return completion([], false)
+                return completion([])
             } else if let data = result?.data as? [String:Any],
                 let results = data["results"] as? [[String:Any]]{
                 var posts = [Post]()
@@ -157,8 +155,7 @@ class PostsService {
                         posts.append(post)
                     }
                 }
-                print("Results: \(posts)")
-                return completion(posts, posts.count == 0)
+                return completion(posts)
             }
         }
     }
@@ -250,7 +247,6 @@ class PostsService {
                         posts.append(post)
                     }
                 }
-                print("Results: \(posts)")
                 return completion(posts)
             }
         }

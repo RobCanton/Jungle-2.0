@@ -9,9 +9,14 @@
 import Foundation
 import UIKit
 import AsyncDisplayKit
+import Pulley
 
 class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCellProtocol {
  
+    override func lightBoxVC() -> LightboxViewController {
+        return PopularLightboxViewController()
+    }
+    
     override var headerCell: ASCellNode? {
         let cell = PopularPostsHeaderCellNode()
         cell.delegate = self
@@ -19,19 +24,19 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
         return cell
     }
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        tableNode.contentInset = .zero
+    }
     override func handleRefresh() {
         context?.cancelBatchFetching()
 
         state = .empty
-        PostsService.getPopularPosts(existingKeys: state.postKeys, offset: state.posts.count) { posts, endReached in
+        PostsService.getPopularPosts(offset: state.posts.count) { posts in
 
-            if endReached {
-                let oldState = self.state
-                self.state = PostsTableViewController.handleAction(.endReached(), fromState: oldState)
-            }
-            let action = Action.endBatchFetch(posts: posts)
+            let action = PostsStateController.Action.endBatchFetch(posts: posts)
             let oldState = self.state
-            self.state = PostsTableViewController.handleAction(action, fromState: oldState)
+            self.state = PostsStateController.handleAction(action, fromState: oldState)
             self.tableNode.reloadData()
             self.refreshControl.endRefreshing()
 
@@ -40,7 +45,33 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
         return
     }
     
-    override func fetchData(state: PostsTableViewController.State, completion: @escaping ([Post], Bool) -> ()) {
-        PostsService.getPopularPosts(existingKeys: state.postKeys, offset: state.posts.count, completion: completion)
+    override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
+        PostsService.getPopularPosts(offset: state.posts.count, completion: completion)
+    }
+    
+    func postOpenTrending(tag: TrendingHashtag) {
+        let controller = SearchLightboxViewController()
+        
+        controller.hidesBottomBarWhenPushed = true
+        controller.initialIndex = 0
+        controller.initialSearch = "#\(tag.hastag)"
+        controller.initialPost = tag.post
+        
+        let drawerVC = CommentsDrawerViewController()
+        
+        drawerVC.interactor = transitionManager.interactor
+        let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
+        pulleyController.view.clipsToBounds = true
+        pulleyController.drawerBackgroundVisualEffectView = nil
+        pulleyController.backgroundDimmingOpacity = 0.35
+        pulleyController.topInset = 24
+        pulleyController.hidesBottomBarWhenPushed = true
+        pulleyController.transitioningDelegate = transitionManager
+        
+        if let parentVC = self.parent as? JViewController {
+            parentVC.shouldHideStatusBar = true
+        }
+        self.present(pulleyController, animated: true, completion: nil)
+        return
     }
 }

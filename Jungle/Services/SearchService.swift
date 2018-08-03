@@ -44,18 +44,19 @@ class SearchService {
         }
     }
     
-    static func searchFor(text:String, limit:Int, offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
+    static func searchFor(text:String, type:SearchType, limit:Int, offset:Int, completion: @escaping(_ posts:[Post])->()) {
         
         let params = [
             "text": text,
             "length": 15,
             "offset": offset,
+            "searchType": type.rawValue
             ] as [String:Any]
         print("QUERY PARAMS: \(params)")
         functions.httpsCallable("searchPosts").call(params) { result, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
-                return completion([], true)
+                return completion([])
             } else if let data = result?.data as? [String:Any],
                 let results = data["results"] as? [[String:Any]]{
                 var posts = [Post]()
@@ -65,12 +66,12 @@ class SearchService {
                     }
                 }
                 print("Results: \(posts)")
-                return completion(posts, posts.count == 0)
+                return completion(posts)
             }
         }
     }
     
-    static func searchNearby(proximity:UInt, offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
+    static func searchNearby(proximity:UInt, offset:Int, completion: @escaping(_ posts:[Post])->()) {
         if let location = gpsService.getLastLocation() {
             let params = [
                 "length": 15,
@@ -83,7 +84,7 @@ class SearchService {
             functions.httpsCallable("nearbyPosts").call(params) { result, error in
                 if let error = error {
                     print("Error: \(error.localizedDescription)")
-                    return completion([], true)
+                    return completion([])
                 } else if let data = result?.data as? [String:Any],
                     let results = data["results"] as? [[String:Any]]{
                     var posts = [Post]()
@@ -93,17 +94,17 @@ class SearchService {
                         }
                     }
                     print("Results: \(posts)")
-                    return completion(posts, posts.count == 0)
+                    return completion(posts)
                 }
             }
         } else {
             DispatchQueue.main.async {
-                return completion([], true)
+                return completion([])
             }
         }
     }
     
-    static func myPosts(offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
+    static func myPosts(offset:Int, completion: @escaping(_ posts:[Post])->()) {
         
         let params = [
             "length": 15,
@@ -113,7 +114,7 @@ class SearchService {
         functions.httpsCallable("myPosts").call(params) { result, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
-                return completion([], true)
+                return completion([])
             } else if let data = result?.data as? [String:Any],
                 let results = data["results"] as? [[String:Any]]{
                 
@@ -124,12 +125,12 @@ class SearchService {
                     }
                 }
                 
-                return completion(posts, posts.count == 0)
+                return completion(posts)
             }
         }
     }
     
-    static func myComments(offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
+    static func myComments(offset:Int, completion: @escaping(_ posts:[Post])->()) {
         
         let params = [
             "length": 15,
@@ -139,7 +140,7 @@ class SearchService {
         functions.httpsCallable("myComments").call(params) { result, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
-                return completion([], true)
+                return completion([])
             } else if let data = result?.data as? [String:Any],
                 let results = data["results"] as? [[String:Any]]{
                 
@@ -150,12 +151,12 @@ class SearchService {
                     }
                 }
                 
-                return completion(posts, posts.count == 0)
+                return completion(posts)
             }
         }
     }
     
-    static func likedPosts(offset:Int, completion: @escaping(_ posts:[Post], _ endReached:Bool)->()) {
+    static func likedPosts(offset:Int, completion: @escaping(_ posts:[Post])->()) {
         
         let params = [
             "length": 15,
@@ -165,7 +166,7 @@ class SearchService {
         functions.httpsCallable("likedPosts").call(params) { result, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
-                return completion([], true)
+                return completion([])
             } else if let data = result?.data as? [String:Any],
                 let results = data["results"] as? [[String:Any]] {
                 
@@ -176,7 +177,7 @@ class SearchService {
                     }
                 }
                 
-                return completion(posts, posts.count == 0)
+                return completion(posts)
             }
         }
     }
@@ -188,19 +189,14 @@ class SearchService {
             var tags = [TrendingHashtag]()
             for (key, data) in dictArray {
                 if let count = data["count"] as? Int,
-                let post = data["post"] as? [String:Any],
-                    let id = post["id"] as? String,
-                    let createdAt = post["createdAt"] as? Double {
-                    let date = Date(timeIntervalSince1970: createdAt / 1000)
-                    let reports = Reports(inappropriate: 0, spam: 0)
-                    if let _reports = post["reports"] as? [String:Int] {
-                        reports.inappropriate = _reports["inappropriate"] ?? 0
-                        reports.spam = _reports["spam"] ?? 0
-                    }
-                    let tag = TrendingHashtag(hastag: key, count: count, postID: id, lastPostedAt: date, report: reports)
+                let postData = data["post"] as? [String:Any],
+                    let id = postData["id"] as? String,
+                    let post = Post.parse(id: id, postData) {
+                    let tag = TrendingHashtag(hashtag: key, count: count, post: post)
                     tags.append(tag)
                 }
             }
+            tags.sort(by: { return $0 > $1 })
             
             trendingHashtags = tags
         })

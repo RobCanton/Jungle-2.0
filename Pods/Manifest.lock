@@ -100,6 +100,7 @@ PODS:
     - nanopb/encode (= 0.3.8)
   - nanopb/decode (0.3.8)
   - nanopb/encode (0.3.8)
+  - Pastel (0.4.0)
   - PINCache (3.0.1-beta.6):
     - PINCache/Arc-exception-safe (= 3.0.1-beta.6)
     - PINCache/Core (= 3.0.1-beta.6)
@@ -144,6 +145,7 @@ DEPENDENCIES:
   - Firebase/Messaging
   - Firebase/Storage
   - JaneSliderControl
+  - Pastel
   - Pulley
   - Regift
   - ScrollableGraphView (from `https://github.com/barnaclejive/ScrollableGraphView`, branch `master`)
@@ -179,6 +181,7 @@ SPEC REPOS:
     - JaneSliderControl
     - leveldb-library
     - nanopb
+    - Pastel
     - PINCache
     - PINOperation
     - PINRemoteImage
@@ -226,6 +229,7 @@ SPEC CHECKSUMS:
   JaneSliderControl: 0073344105b2c2b4695d09f74b88b9891f58197c
   leveldb-library: 08cba283675b7ed2d99629a4bc5fd052cd2bb6a5
   nanopb: 5601e6bca2dbf1ed831b519092ec110f66982ca3
+  Pastel: 7fa5e26123b3dbe11f7ed255654bf37100b199a5
   PINCache: d195fdba255283f7e9900a55e3cced377f431f9b
   PINOperation: a6219e6fc9db9c269eb7a7b871ac193bcf400aac
   PINRemoteImage: d6d51c5d2adda55f1ce30c96e850b6c4ebd2856a
@@ -240,6 +244,6 @@ SPEC CHECKSUMS:
   UICircularProgressRing: e737881c0dcc9cc1e4d0ea7db0c16d4b0f260082
   WCLShineButton: d8b979b6f6f9f6709f9e241e6e1a4712a1a9b36b
 
-PODFILE CHECKSUM: 43aee3578292785e6fb25c3b9568a3939b1490c7
+PODFILE CHECKSUM: de783f9239aa137d092050e103056a55bc20a577
 
 COCOAPODS: 1.5.3

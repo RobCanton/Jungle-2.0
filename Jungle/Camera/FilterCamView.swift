@@ -157,6 +157,7 @@ class FilterCamView:UIView {
             captureSession?.addInput(audioDeviceInput)
             captureSession?.addOutput(audioDataOutput)
         }
+        
         captureSession?.commitConfiguration()
         
         // then start everything
@@ -237,6 +238,16 @@ class FilterCamView:UIView {
             self.cvPixelBuffer = nil
             let videoFilePath = self.videoURL()
             return completion(videoFilePath)
+        }
+    }
+    
+    func capturePhoto(completion: @escaping((_ image:UIImage)->()))
+    {
+        AudioServicesPlayAlertSound(1108)
+        DispatchQueue.main.async {
+            if let yo =  self.snapshot(of: self.bounds) { 
+                return completion(yo.image!)
+            }
         }
     }
     
@@ -381,6 +392,7 @@ extension FilterCamView: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
         var filteredImage:CIImage = sourceImage
         if let effect = effectName {
             filteredImage = sourceImage.applyEffect(effect, intensity) ?? sourceImage
+
         }
         
 //        guard let filteredImage = sourceImage else {

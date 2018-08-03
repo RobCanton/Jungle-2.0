@@ -48,7 +48,7 @@ class NotificationCellNode:ASCellNode {
     var titleNode = ASTextNode()
     var bodyNode = ASTextNode()
     var timeNode = ASTextNode()
-    
+    var avatarNode = ASDisplayNode()
     var previewNode = ASNetworkImageNode()
     var previewImageNode:IconNode!
     weak var notification:JNotification?
@@ -60,7 +60,12 @@ class NotificationCellNode:ASCellNode {
         automaticallyManagesSubnodes = true
         imageNode.layer.cornerRadius = 16.0
         imageNode.clipsToBounds = true
-        previewNode.backgroundColor = tertiaryColor
+        //previewNode.backgroundColor = tertiaryColor
+        avatarNode.backgroundColor = UIColor.white
+        avatarNode.automaticallyManagesSubnodes = true
+        avatarNode.layoutSpecBlock = { _, _ in
+            return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(8, 8, 8, 8), child: self.previewNode)
+        }
         
         timeNode.attributedText = NSAttributedString(string: notification.timestamp.timeSinceNow(), attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
@@ -126,9 +131,14 @@ class NotificationCellNode:ASCellNode {
                 NSAttributedStringKey.foregroundColor: UIColor.gray
                 ])
             
-            FileService.retrieveThumbnail(withKey: post.key) { image, _ in
-                self.previewNode.image = image
+//            FileService.retrieveThumbnail(withKey: post.key) { image, _ in
+//                self.previewNode.image = image
+//            }
+            
+            UserService.retrieveAnonImage(withName: postVotesNotification.anon.animal.lowercased()) { image, _ in
+                self.previewNode.image = image?.maskWithColor(color: postVotesNotification.anon.color)
             }
+            self.avatarNode.backgroundColor = postVotesNotification.anon.color.withAlphaComponent(0.25)
             
         } else if let replyNotification = notification as? PostReplyNotification,
             let reply = replyNotification.reply,
@@ -163,17 +173,21 @@ class NotificationCellNode:ASCellNode {
                 NSAttributedStringKey.foregroundColor: UIColor.gray
                 ])
             
-            FileService.retrieveThumbnail(withKey: post.key) { image, _ in
-                self.previewNode.image = image
+//            FileService.retrieveThumbnail(withKey: post.key) { image, _ in
+//                self.previewNode.image = image
+//            }
+            UserService.retrieveAnonImage(withName: reply.anon.animal.lowercased()) { image, _ in
+                self.previewNode.image = image?.maskWithColor(color: reply.anon.color)
             }
+            self.avatarNode.backgroundColor = reply.anon.color.withAlphaComponent(0.25)
         }
         
     }
     
     override func didLoad() {
         super.didLoad()
-        previewNode.view.layer.cornerRadius = 26
-        previewNode.view.clipsToBounds = true
+        avatarNode.view.layer.cornerRadius = 22
+        avatarNode.view.clipsToBounds = true
         
         //previewImageNode.containerNode.cornerRadius = 12
         //previewImageNode.containerNode.clipsToBounds = true
@@ -181,19 +195,19 @@ class NotificationCellNode:ASCellNode {
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        previewNode.style.width = ASDimension(unit: .points, value: 52)
-        previewNode.style.height = ASDimension(unit: .points, value: 52)
+        avatarNode.style.width = ASDimension(unit: .points, value: 44)
+        avatarNode.style.height = ASDimension(unit: .points, value: 44)
         
         previewImageNode.style.width = ASDimension(unit: .points, value: 24)
         previewImageNode.style.height = ASDimension(unit: .points, value: 24)
-        previewImageNode.style.layoutPosition = CGPoint(x: 52-20, y: 52-20)
-        let abs = ASAbsoluteLayoutSpec(children: [previewNode, previewImageNode])
+        previewImageNode.style.layoutPosition = CGPoint(x: 44-20, y: 44-20)
+        let abs = ASAbsoluteLayoutSpec(children: [avatarNode, previewImageNode])
         let verticalStack = ASStackLayoutSpec.vertical()
         verticalStack.children = [titleNode, bodyNode, timeNode]
         verticalStack.spacing = 4.0
         verticalStack.style.flexGrow = 1.0
         //verticalStack.style.height =  ASDimension(unit: .points, value: 74)
-        let inset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 64, 0, 0), child: verticalStack)
+        let inset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 56, 0, 0), child: verticalStack)
         let overlay = ASOverlayLayoutSpec(child: inset, overlay: abs)
         
         return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(12, 12, 12, 12), child: overlay)

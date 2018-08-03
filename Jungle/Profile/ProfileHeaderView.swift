@@ -47,7 +47,7 @@ class ProfileHeaderView:UIView {
         
         backgroundImage = UIImageView(frame: bounds)
         contentContainer.addSubview(backgroundImage)
-        backgroundImage.image = UIImage(named: "BoxGradient")
+        backgroundImage.image = UIImage(named: "GreenBox")
 
         backgroundImage.translatesAutoresizingMaskIntoConstraints = false
         backgroundImage.leadingAnchor.constraint(equalTo: contentContainer.leadingAnchor).isActive = true

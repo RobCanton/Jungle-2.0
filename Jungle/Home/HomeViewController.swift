@@ -34,7 +34,7 @@ class JViewController:UIViewController {
     }
 }
 
-class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UIGestureRecognizerDelegate {
+class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UIGestureRecognizerDelegate, TabScrollDelegate {
     
     var pagerNode:ASPagerNode!
     var navBar:UIView!
@@ -64,6 +64,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         titleView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
         titleView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
+        titleView.tabScrollView.delegate = self
         
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
         pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
@@ -75,17 +76,11 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         pagerNode.view.panGestureRecognizer.delaysTouchesBegan = false
         pagerNode.reloadData()
         
-        titleView.leftButton.addTarget(self, action: #selector(locationPicker), for: .touchUpInside)
+        //titleView.leftButton.addTarget(self, action: #selector(locationPicker), for: .touchUpInside)
         
-        titleView.rightButton.addTarget(self, action: #selector(openContentSettings), for: .touchUpInside)
+        //titleView.rightButton.addTarget(self, action: #selector(openContentSettings), for: .touchUpInside)
     }
-    
-    @objc func openContentSettings() {
-        let controller = ContentSettingsViewController()
-        let nav = UINavigationController(rootViewController: controller)
-        self.present(nav, animated: true, completion: nil)
-    }
-    
+
     @objc func locationPicker() {
         //print("IM SO COLD LIKE YAH")
 //        let alert = UIAlertController(title: "Set Location", message: nil, preferredStyle: .actionSheet)
@@ -197,6 +192,10 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         }
     }
     
+    func tabScrollTo(index: Int) {
+        print("SCROLL TO: \(index)")
+        pagerNode.scrollToPage(at: index, animated: true)
+    }
     func scrollTo() {
 //        switch header {
 //        case .home:

@@ -10,30 +10,38 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import Pulley
+import DynamicButton
+import Pastel
 
 class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSource {
     
-    var closeButton:UIButton!
+    var state = PostsStateController.State.empty
+    
+    var closeButton:DynamicButton!
     var moreButton:UIButton!
     var pagerNode:ASPagerNode!
     
-    var posts = [Post]()
-    
     var initialIndex:Int?
+    var context:ASBatchContext?
+    var shouldBatchFetch = true
     
     var pushTransitionManager = PushTransitionManager()
     
     var dimView:UIView!
     var contentView:UIView!
-
+    var pastelView:PastelView!
+    var deviceInsets:UIEdgeInsets!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.black
+        deviceInsets = UIApplication.deviceInsets
         contentView = UIView(frame: view.bounds)
         view.addSubview(contentView)
         
         pagerNode = ASPagerNode()
-        pagerNode.backgroundColor = UIColor.black
+        pagerNode.leadingScreensForBatching = 3
+        pagerNode.backgroundColor = UIColor.clear
         pagerNode.setDelegate(self)
         pagerNode.setDataSource(self)
         pagerNode.isHidden = true
@@ -45,25 +53,24 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         pagerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
         pagerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
         pagerNode.reloadData()
-        
-        let layoutGuide = contentView.safeAreaLayoutGuide
-        
+    
         dimView = UIView(frame:contentView.bounds)
         dimView.backgroundColor = UIColor.black
         contentView.addSubview(dimView)
         dimView.isUserInteractionEnabled = false
         dimView.alpha = 0.0
         
-        closeButton = UIButton(frame: CGRect(x: 0, y: 0, width: 64.0, height: 64.0))
-        closeButton.setImage(UIImage(named:"Remove2"), for: .normal)
-        closeButton.tintColor = UIColor.white
-        contentView.addSubview(closeButton)
+        closeButton = DynamicButton(style: .caretLeft)
+        closeButton.highlightStokeColor = UIColor.white
+        closeButton.strokeColor = UIColor.white
+        view.addSubview(closeButton)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
-        closeButton.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        closeButtonAnchor = closeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 0)
-        closeButtonAnchor?.isActive = true
-        closeButton.widthAnchor.constraint(equalToConstant: 64.0).isActive = true
-        closeButton.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
+        closeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24).isActive = true
+        closeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 24).isActive = true
+        closeButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        closeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        closeButton.tintColor = UIColor.white
+        closeButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: .black, shouldRasterize: false)
         closeButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
         
         moreButton = UIButton(frame: CGRect(x: 0, y: 0, width: 64.0, height: 64.0))
@@ -80,7 +87,7 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     }
     
     @objc func handleMore() {
-        let post = posts[pagerNode.currentPageIndex]
+        let post = state.posts[pagerNode.currentPageIndex]
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
         if post.isYou {
@@ -112,8 +119,6 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         self.present(alert, animated: true, completion: nil)
     }
     
-    var closeButtonAnchor:NSLayoutConstraint?
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
@@ -124,8 +129,6 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
                 self.initialIndex = nil
             }
         }
-        
-        
         statusBarHidden = true
         UIView.animate(withDuration: 0.05, animations: {
             self.setNeedsStatusBarAppearanceUpdate()
@@ -142,18 +145,7 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
             cells[0].observePost()
         }
     }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-//        let cells = pagerNode.visibleNodes as? [SinglePostCellNode] ?? []
-//        if cells.count > 0 {
-//            cells[0].didExitVisibleState()
-//        }
-    }
+
 
     func setCurrentCellVolume(_ volume:CGFloat) {
         let cellNodes = pagerNode.visibleNodes as? [SinglePostCellNode] ?? []
@@ -176,28 +168,71 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     }
     
     @objc func handleDismiss() {
-//        let modal = CommentsViewController()
-//        let transitionDelegate = DeckTransitioningDelegate()
-//        modal.transitioningDelegate = transitionDelegate
-//        modal.modalPresentationStyle = .custom
-//        present(modal, animated: true, completion: nil)
         self.dismiss(animated: true, completion: nil)
     }
     
     func numberOfPages(in pagerNode: ASPagerNode) -> Int {
-        return posts.count
+        return state.posts.count
     }
     
     func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
-        let cell = SinglePostCellNode(post: posts[index])
+        let cell = SinglePostCellNode(post: state.posts[index], deviceInsets: deviceInsets)
         cell.delegate = self
         return cell
     }
+    
+    func collectionNode(_ collectionNode: ASCollectionNode, willBeginBatchFetchWith context: ASBatchContext) {
+        guard !state.endReached else { return }
+        self.context = context
+        DispatchQueue.main.async {
+            let oldState = self.state
+            let action = PostsStateController.Action.beginBatchFetch
+            self.state = PostsStateController.handleAction(action, fromState: oldState)
+            self.renderDiff(oldState)
+        }
+        
+        fetchData(state: state) { posts in
+            
+            let action = PostsStateController.Action.endBatchFetch(posts: posts)
+            let oldState = self.state
+            self.state = PostsStateController.handleAction(action, fromState: oldState)
+            self.renderDiff(oldState)
+            context.completeBatchFetching(true)
+            if self.state.isFirstLoad {
+                let oldState = self.state
+                self.state = PostsStateController.handleAction(.firstLoadComplete(), fromState: oldState)
+            }
+        }
+    }
+    
+    fileprivate func renderDiff(_ oldState: PostsStateController.State) {
+        
+        self.pagerNode.performBatchUpdates({
+            // Add or remove items
+            let rowCountChange = state.posts.count - oldState.posts.count
+            if rowCountChange > 0 {
+                let indexPaths = (oldState.posts.count..<state.posts.count).map { index in
+                    IndexPath(item: index, section: 0)
+                }
+                self.pagerNode.insertItems(at: indexPaths)
+            } else if rowCountChange < 0 {
+                assertionFailure("Deleting rows is not implemented. YAGNI.")
+            }
+            
+        }, completion: nil)
+
+    }
+    
+    func fetchData(state:PostsStateController.State, completion: @escaping (_ posts:[Post])->()) {
+        DispatchQueue.main.async {
+            return completion([])
+        }
+    }
+    
 }
 
 extension LightboxViewController : SinglePostDelegate {
     func openTag(_ tag: String) {
-        let controller = UIViewController()
         pushTransitionManager.navBarHeight = nil
         
         let vc = SearchViewController()
@@ -215,10 +250,7 @@ extension LightboxViewController : SinglePostDelegate {
     }
     
     func searchLocation(_ locationStr:String) {
-        print("SEARCH LOCATION")
-        let controller = UIViewController()
         pushTransitionManager.navBarHeight = nil
-        
         let vc = SearchViewController()
         vc.initialSearch = locationStr
         
@@ -236,9 +268,6 @@ extension LightboxViewController : SinglePostDelegate {
 extension LightboxViewController: PulleyPrimaryContentControllerDelegate {
     func drawerChangedDistanceFromBottom(drawer: PulleyViewController, distance: CGFloat, bottomSafeArea: CGFloat) {
         let progress = min(max((distance) / (view.bounds.height / 2), 0), 1)
-        //        //view.backgroundColor = UIColor(white: 0.0, alpha: 0.75 * progress)
-        //        print("PROGRESS: \(progress)")
-        //
         closeButton.alpha = 1 - progress
         moreButton.alpha = 1 - progress
         let scale = 1 - 0.05 * progress
@@ -246,8 +275,6 @@ extension LightboxViewController: PulleyPrimaryContentControllerDelegate {
         contentView.layer.cornerRadius = 12 * progress
         contentView.transform = CGAffineTransform(scaleX: scale, y: scale)
         setCurrentCellVolume(1 - progress)
-        //dimView.alpha = 0.25 * progress
-        
     }
     
     func drawerPositionDidChange(drawer: PulleyViewController, bottomSafeArea: CGFloat) {

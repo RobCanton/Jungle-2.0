@@ -10,17 +10,21 @@ import Foundation
 import UIKit
 import AVFoundation
 import Photos
-import Pulley
 import Speech
 import CoreLocation
 
 enum CameraState {
-    case initiating, running, recording, editing, writing
+    case initiating, running, recording, editing, stickers, writing
+}
+
+enum CameraMode {
+    case video, photo, text
 }
 
 class CameraViewController: UIViewController, CameraHUDProtocol {
     
     var captureView:FilterCamView!
+    var photoPreviewView:UIImageView!
     var hudView:CameraHUDView!
     
     var previewView:UIView!
@@ -32,6 +36,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     
     var location:CLLocation?
     var region:Region?
+    var cameraMode = CameraMode.video
     
     var shouldHideStatusBar = false
     override var prefersStatusBarHidden: Bool {
@@ -54,7 +59,8 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             endLoopVideo()
             hudView.runningState()
             captureView.isHidden = false
-            
+            photoPreviewView.isHidden = true
+            photoPreviewView.image = nil
             break
         case .recording:
             if state == .running {
@@ -63,8 +69,10 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             }
             break
         case .editing:
+            
             videoPlayer.play()
             captureView.isHidden = true
+            photoPreviewView.isHidden = false
             hudView.editingState()
             if state == .recording {
                 location = gpsService.getLastLocation()
@@ -72,11 +80,23 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
                 hudView.optionsBar.region = region
             } else if state == .writing {
                 hudView.writingState(forward: false)
+            } else if state == .stickers {
+                hudView.closeButton.setStyle(.close, animated: true)
+                hudView.toggleStickers(open: false)
+            }
+            break
+        case .stickers:
+            if state == .editing {
+                videoPlayer.pause()
+                hudView.closeButton.setStyle(.caretLeft, animated: true)
+                hudView.toggleStickers(open: true)
             }
             break
         case .writing:
             videoPlayer.pause()
             if state == .editing {
+                hudView.writingState(forward: true)
+            } else if state == .running, cameraMode == .text {
                 hudView.writingState(forward: true)
             }
             break
@@ -104,6 +124,16 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         previewView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         previewView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         previewView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        
+        photoPreviewView = UIImageView(image:nil)
+        view.addSubview(photoPreviewView)
+        photoPreviewView.translatesAutoresizingMaskIntoConstraints = false
+        photoPreviewView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        photoPreviewView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        photoPreviewView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        photoPreviewView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        photoPreviewView.backgroundColor = UIColor.clear
+        photoPreviewView.isUserInteractionEnabled = false
         
         hudView = CameraHUDView(frame: view.bounds)
         transition(toState: .running)
@@ -143,13 +173,13 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         
         hudView.observeKeyboard(true)
         
+        self.captureView.setup()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: {
-            self.captureView.setup()
-        })
+        
+        hudView.textOnlyBG.startAnimation()
     }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
@@ -172,10 +202,19 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     func handleClose() {
         switch state {
         case .running:
-            self.dismiss(animated: true, completion: nil)
+            if cameraMode == .text, hudView.textView.isFirstResponder {
+                let point = CGPoint(x: hudView.bounds.width, y: 0)
+                hudView.modePagerView.setContentOffset(point, animated: true)
+            } else {
+               self.dismiss(animated: true, completion: nil)
+            }
+            
             break
         case .editing:
             transition(toState: .running)
+            break
+        case .stickers:
+            transition(toState: .editing)
             break
         case .writing:
             transition(toState: .editing)
@@ -209,39 +248,89 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     }
     
     func handlePost() {
-        guard let url = videoURL else { return }
         hudView.startPostAnimation()
-        
-       
         hudView.textView.resignFirstResponder()
         
-        self.processVideoWithWatermark(videoURL: url) { _compressedVideoURL in
-
-            DispatchQueue.main.async {
+        if let url = videoURL {
+            self.processVideoWithWatermark(videoURL: url) { _compressedVideoURL in
                 
-                //alert.configureContent(body: "Uploading...")
-
-                if let compressedVideoURL = _compressedVideoURL {
-                    UploadService.uploadPost(text: self.hudView.textView.text,
-                                             image: nil,
-                                             videoURL: compressedVideoURL,
-                                             gif: nil,
-                                             region:self.region,
-                                             location: self.location)
-                    UserService.recentlyPosted = true
-                    let alert = Alerts.showInfoAlert(withMessage: "Uploading...")
-                    self.dismiss(animated: true, completion: nil)
+                DispatchQueue.main.async {
+                    
+                    //alert.configureContent(body: "Uploading...")
+                    
+                    if let compressedVideoURL = _compressedVideoURL {
+                        UploadService.uploadPost(text: self.hudView.textView.text,
+                                                 image: nil,
+                                                 videoURL: compressedVideoURL,
+                                                 gif: nil,
+                                                 region:self.region,
+                                                 location: self.location)
+                        UserService.recentlyPosted = true
+                        let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
+                        self.dismiss(animated: true, completion: nil)
+                    }
                 }
             }
+        } else if let image = photoPreviewView.image {
+            UploadService.uploadPost(text: self.hudView.textView.text,
+                                     image: image,
+                                     videoURL: nil,
+                                     gif: nil,
+                                     region:self.region,
+                                     location: self.location)
+            UserService.recentlyPosted = true
+            let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
+            self.dismiss(animated: true, completion: nil)
+        } else {
+            print("POSTING WITHOUT ATTACHMENTS!")
+            UploadService.uploadPost(text: self.hudView.textView.text,
+                                     image: nil,
+                                     videoURL: nil,
+                                     gif: nil,
+                                     region:self.region,
+                                     location: self.location)
+            UserService.recentlyPosted = true
+            let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
+            self.dismiss(animated: true, completion: nil)
         }
+        
         
     }
     
     @objc func handleStickers() {
-        if let x = pulleyViewController?.drawerContentViewController as? StickerViewController {
-            x.addSticker = hudView.addSticker
+        switch state {
+        case .stickers:
+            transition(toState: .editing)
+            break
+        case .editing:
+            transition(toState: .stickers)
+            break
+        default:
+            break
         }
-        pulleyViewController?.setDrawerPosition(position: .partiallyRevealed, animated: true)
+    }
+    
+    func switchCameraMode(_ mode: CameraMode) {
+        if mode != self.cameraMode {
+            
+            switch mode {
+            case .text:
+                hudView.textView.isUserInteractionEnabled = true
+                hudView.textView.becomeFirstResponder()
+                hudView.closeButton.setStyle(.caretLeft, animated: true)
+                hudView.setEffectsBar(open: false)
+                break
+            default:
+                if cameraMode == .text {
+                    hudView.closeButton.setStyle(.close, animated: true)
+                    hudView.textView.isUserInteractionEnabled = false
+                    hudView.textView.resignFirstResponder()
+                }
+                break
+            }
+            cameraMode = mode
+            
+        }
     }
     
     func processVideoWithWatermark(videoURL: URL, completion: @escaping (_ url:URL?) -> Void) {
@@ -280,7 +369,6 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             
             let size = videoTrack.naturalSize
             
-                print("SIZE TING: \(size)")
             let videolayer = CALayer()
             videolayer.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
             
@@ -371,19 +459,6 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
                 switch assetExport.status {
                 case .completed:
                     print("success")
-                    
-                    
-                    //                PHPhotoLibrary.shared().performChanges({
-                    //                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: movieUrl)
-                    //                }) { saved, error in
-                    //                    if saved {
-                    //                        let alertController = UIAlertController(title: "Your video was successfully saved", message: nil, preferredStyle: .alert)
-                    //                        let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-                    //                        alertController.addAction(defaultAction)
-                    //                        self.present(alertController, animated: true, completion: nil)
-                    //                    }
-                    //                }
-                    
                     return completion(movieUrl)
                     
                     break
@@ -428,7 +503,19 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     @objc func handleRecordTap(_ tap:UITapGestureRecognizer) {
         switch state {
         case .running:
-            transition(toState: .recording)
+            switch cameraMode {
+            case .video:
+                transition(toState: .recording)
+                break
+            case .photo:
+                captureView.capturePhoto { image in
+                    self.photoPreviewView.image = image
+                    self.transition(toState: .editing)
+                }
+                break
+            case .text:
+                break
+            }
             break
         case .recording:
             

@@ -9,8 +9,16 @@
 import Foundation
 import UIKit
 import AsyncDisplayKit
+
+protocol StickerDelegate:class {
+    func stickerDragBegan()
+    func stickerDragEnded()
+    func stickerDidEnterTrashRange()
+    func stickerDidLeaveTrashRange()
+}
 class StickerView:UIView, UIGestureRecognizerDelegate {
     var imageNode:ASNetworkImageNode!
+    weak var delegate:StickerDelegate?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -67,12 +75,42 @@ class StickerView:UIView, UIGestureRecognizerDelegate {
     }
     
     @objc func handlePan(pan: UIPanGestureRecognizer) {
-        print("WE PANNING BOY!")
         if let view = pan.view {
             let translation = pan.translation(in: self.superview)
-            view.center = CGPoint(x: view.center.x + translation.x, y: view.center.y + translation.y)
+            let point = CGPoint(x: view.center.x + translation.x, y: view.center.y + translation.y)
+            view.center = point
+           // print("STICKER PAN: \(point) | Screen: \(UIScreen.main.bounds) | Size: \(self.frame.size)")
+            let range = checkRange()
+            if range, !inTrashRange {
+                inTrashRange = true
+                delegate?.stickerDidEnterTrashRange()
+            } else if !range, inTrashRange {
+                 inTrashRange = false
+                delegate?.stickerDidLeaveTrashRange()
+            } else {
+                
+            }
             pan.setTranslation(.zero, in: self.superview)
         }
+        if pan.state == .began {
+            delegate?.stickerDragBegan()
+        } else if pan.state == .ended || pan.state == .failed || pan.state == .cancelled {
+           delegate?.stickerDragEnded()
+            if inTrashRange {
+                self.removeFromSuperview()
+            }
+
+        }
+    }
+    var inTrashRange = false
+    
+    func checkRange() -> Bool {
+        let point = center
+        let screenBounds = UIScreen.main.bounds
+        if point.x > screenBounds.width - 75, point.y < 75 {
+            return true
+        }
+        return false
     }
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {

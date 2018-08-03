@@ -15,6 +15,8 @@ import Pulley
 class CommentsDrawerViewController:UIViewController {
     var currentPost:Post?
     var commentsVC:CommentsViewController?
+    
+    var showComments = false
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.black
@@ -25,7 +27,19 @@ class CommentsDrawerViewController:UIViewController {
         super.viewWillAppear(animated)
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handleGesture))
         pulleyViewController?.view.addGestureRecognizer(pan)
+        if showComments, let post = currentPost {
+            showComments = false
+            let commentsVC = pulleyViewController?.drawerContentViewController as! CommentsDrawerViewController
+            commentsVC.setup(withPost: post, showKeyboard: false)
+            self.pulleyViewController?.setDrawerPosition(position: .open, animated: false)
+        }
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+    }
+    
     var interactor:Interactor? = nil
     
     @IBAction func handleGesture(_ sender: UIPanGestureRecognizer) {
@@ -699,9 +713,12 @@ extension CommentsViewController: CommentBarDelegate {
         commentBar.textView.resignFirstResponder()
         commentBar.placeHolderLabel.isHidden = false
         commentBar.placeHolderLabel.text = "Sending..."
+        let pColor = commentBar.placeHolderLabel.textColor
+        commentBar.placeHolderLabel.textColor = tagColor
         callFunction(text: text) { success, _reply, _replyTo in
             self.focusedReply = nil
             self.commentBar.placeHolderLabel.text = "Reply..."
+            self.commentBar.placeHolderLabel.textColor = pColor
             self.commentBar.isUserInteractionEnabled = true
             
             guard success, let reply = _reply else { return }

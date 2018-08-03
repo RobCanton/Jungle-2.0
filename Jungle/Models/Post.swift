@@ -23,7 +23,7 @@ class Post {
         return UserService.currentUserSettings.safeContentMode ? _textClean : _text
     }
     private(set) var createdAt:Date
-    private(set) var attachments:Attachments?
+    private(set) var attachments:Attachments
     private(set) var location:Region?
     private(set) var tags:[String]
     private(set) var score:Double
@@ -35,6 +35,7 @@ class Post {
     var parent:String?
     var parentPost:Post?
     var replyTo:String?
+    var gradient:[String]
     var documentSnapshot:DocumentSnapshot?
     
     var liked = false
@@ -73,8 +74,8 @@ class Post {
         return nil
     }
     
-    init(key:String, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments?=nil, location:Region?, tags:[String], score:Double, votes:Int, numLikes:Int,
-         numReplies:Int, replies:[Post], reports:Reports,parent:String?, replyTo:String?) {
+    init(key:String, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments, location:Region?, tags:[String], score:Double, votes:Int, numLikes:Int,
+         numReplies:Int, replies:[Post], reports:Reports,parent:String?, replyTo:String?, gradient:[String]) {
         
         self.key = key
         self.anon = anon
@@ -93,6 +94,7 @@ class Post {
         self.parent = parent
         self.replyTo = replyTo
         self.offenses = ContentSettings.checkContent(ofText: text)
+        self.gradient = gradient
     }
     
     static func parse(id:String, _ data:[String:Any]) -> Post? {
@@ -132,8 +134,9 @@ class Post {
                 replyTo = _replyTo
             }
             
+            let gradient = data["gradient"] as? [String] ?? [String]()
             
-            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:[], reports: reports, parent: parent, replyTo: replyTo )
+            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:[], reports: reports, parent: parent, replyTo: replyTo, gradient: gradient )
             post?.isYou = data["isYou"] as? Bool ?? false
             
             if let parentData = data["parentPost"] as? [String:Any] {
@@ -183,7 +186,9 @@ class Post {
                 replyTo = _replyTo
             }
             
-            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:[], reports: reports, parent: parent, replyTo: replyTo )
+            let gradient = data["gradient"] as? [String] ?? [String]()
+            
+            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:[], reports: reports, parent: parent, replyTo: replyTo, gradient: gradient)
             post?.isYou = data["isYou"] as? Bool ?? false
             
             if let parentData = data["parentPost"] as? [String:Any] {
@@ -231,31 +236,38 @@ class Post {
 
 class Attachments {
     
-    var images:[ImageAttachment]?
+    var image:ImageAttachment?
     var video:VideoAttachment?
-    init(images:[ImageAttachment]?, video:VideoAttachment?) {
-        self.images = images
+    init(image:ImageAttachment?, video:VideoAttachment?) {
+        self.image = image
         self.video = video
     }
     
-    static func parse(_ data:[String:Any]) -> Attachments? {
+    static func parse(_ data:[String:Any]) -> Attachments {
+        var image:ImageAttachment?
+        var video:VideoAttachment?
         if let attachments = data["attachments"] as? [String:Any] {
-            var images:[ImageAttachment]?
-            var video:VideoAttachment?
             
-            if let imagesArray = attachments["images"] as? [[String:Any]] {
-                images = ImageAttachment.parse(imagesArray)
+            
+            if let imageData = attachments["image"] as? [String:Any] {
+                image = ImageAttachment.parse(imageData)
             }
             
             if let videoData = attachments["video"] as? [String:Any] {
+                print("WE GOT VIDEO DATA: \(videoData)")
                 video = VideoAttachment.parse(videoData)
             }
-            
-            
-            return Attachments(images: images, video: video)
-        } else {
-            return nil
         }
+        
+        return Attachments(image: image, video: video)
+    }
+    
+    var isVideo:Bool {
+        return video != nil
+    }
+    
+    var isImage:Bool {
+        return image != nil
     }
 }
 
@@ -300,80 +312,47 @@ class Region {
 }
 
 class VideoAttachment {
-    var url:URL
-    var thumbnail_url:URL
     var size:CGSize
     var ratio:CGFloat
-    init(url:URL, thumbnail_url:URL, size:CGSize, ratio:CGFloat) {
-        self.url = url
-        self.thumbnail_url = thumbnail_url
+    var length:Double
+    init(size:CGSize, ratio:CGFloat, length:Double) {
         self.size = size
         self.ratio = ratio
+        self.length = length
     }
     
     static func parse(_ dict:[String:Any]) -> VideoAttachment? {
-        if let urlStr = dict["url"] as? String,
-            let url = URL(string: urlStr),
-            let turlStr = dict["thumbnail_url"] as? String,
-            let turl = URL(string: turlStr),
-            let sizeData = dict["size"] as? [String:Any],
-            let width = sizeData["width"] as? Double,
-            let height = sizeData["height"] as? Double,
-            let ratio = sizeData["ratio"] as? Double {
+        if let length = dict["length"] as? Double,
+            let size = dict["size"] as? [String:Any],
+            let width = size["width"] as? Double,
+            let height = size["height"] as? Double,
+            let ratio = size["ratio"] as? Double {
             let size = CGSize(width: width, height: height)
             
-            return VideoAttachment(url: url, thumbnail_url: turl, size: size, ratio: CGFloat(ratio))
+            return VideoAttachment(size: size, ratio: CGFloat(ratio), length:length)
         }
         return nil
     }
 }
 
 class ImageAttachment {
-    var url:URL
-    var order:Int
-    var dims:CGSize
-    var source:String
-    var type:String
-    var colorHex:String
-    
-    
-    var ratio:CGFloat {
-        return dims.width / dims.height
-    }
-    
-    init(url:URL, order:Int, dims:CGSize, source:String, type:String, colorHex:String) {
-        self.url = url
-        self.order = order
-        self.dims = dims
-        self.source = source
-        self.type = type
-        self.colorHex = colorHex
+    var size:CGSize
+    var ratio:CGFloat
+    init(size:CGSize, ratio:CGFloat) {
+        self.size = size
+        self.ratio = ratio
     }
     
     static func parse(_ dict:[String:Any]) -> ImageAttachment? {
-        if let urlStr = dict["url"] as? String,
-            let url = URL(string: urlStr),
-            let order = dict["order"] as? Int,
-            let source = dict["source"] as? String,
-            let type = dict["type"] as? String,
-            let color = dict["color"] as? String,
-            let dimensions = dict["dimensions"] as? [String:Any],
-            let width = dimensions["width"] as? Double,
-            let height = dimensions["height"] as? Double {
-                let dims = CGSize(width: width, height: height)
-            return ImageAttachment(url: url, order: order, dims: dims, source: source, type: type, colorHex: color)
+        if let size = dict["size"] as? [String:Any],
+            let width = size["width"] as? Double,
+            let height = size["height"] as? Double,
+            let ratio = size["ratio"] as? Double {
+            let size = CGSize(width: width, height: height)
+            
+            return ImageAttachment(size: size, ratio: CGFloat(ratio))
         }
         return nil
-    }
-    
-    static func parse( _ dictArray:[[String:Any]]) -> [ImageAttachment] {
-        var attachments = [ImageAttachment]()
-        for dict in dictArray {
-            if let imageAttachment = parse(dict) {
-                attachments.append(imageAttachment)
-            }
-        }
-        return attachments
     }
 }
 

@@ -11,6 +11,7 @@ import UIKit
 import DynamicButton
 import JaneSliderControl
 import AsyncDisplayKit
+import Pastel
 
 protocol CameraHUDProtocol {
     func handleClose()
@@ -21,6 +22,7 @@ protocol CameraHUDProtocol {
     func handlePost()
     func getCurrentImage() -> CIImage?
     func setCameraEffect(_ effect:String?, _ intensity:Float?)
+    func switchCameraMode(_ mode:CameraMode)
 }
 
 class CameraHUDView:UIView {
@@ -48,19 +50,23 @@ class CameraHUDView:UIView {
     var recordButton:RecordButton!
     var recordButtonBottomAnchor:NSLayoutConstraint!
     
+    
     var switchCameraButton:UIButton!
     var flashButton:UIButton!
     var stickersOverlay:UIView!
-    
+    var modeScrollBar:ModeScrollBar!
+    var modePagerView:UIScrollView!
+    var textViewPlaceholder:UILabel!
     var textView:UITextView!
+    var textViewHeightAnchor:NSLayoutConstraint!
     var textViewLeadingAnchor:NSLayoutConstraint!
+    var currentTextHeight:CGFloat = 0.0
     
     var stickerButton:UIButton!
     var closeButton:DynamicButton!
     var postButton:UIButton!
     var postWidthAnchor:NSLayoutConstraint!
     var activityIndicator:UIActivityIndicatorView!
-    var dimView:UIView!
     
     var effectsButton:UIButton!
     var effectsBar:EffectsBar!
@@ -71,35 +77,21 @@ class CameraHUDView:UIView {
     var optionsBar:CaptionBar!
     var optionsBarBottomAnchor:NSLayoutConstraint!
     
+    var stickersView:StickersView!
+    var textOnlyBG:PastelView!
+    var textMax:CGFloat = 0.0
+    var whiteBar:UIView!
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         
         translatesAutoresizingMaskIntoConstraints = false
         insetsLayoutMarginsFromSafeArea = false
+        preservesSuperviewLayoutMargins = false
         
-        blurView = UIVisualEffectView(effect: nil)
-        addSubview(blurView)
-        blurView.translatesAutoresizingMaskIntoConstraints = false
-        blurView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
-        blurView.topAnchor.constraint(equalTo: topAnchor).isActive = true
-        blurView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
-        blurView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        textMax = frame.height * 0.4
         
-        textView = UITextView(frame: .zero)
-        textView.backgroundColor = UIColor.clear
-        textView.textContainerInset = UIEdgeInsetsMake(8, 20, 0, 20)
-        textView.textColor = UIColor.white
-        textView.keyboardAppearance = .dark
-        textView.font = Fonts.medium(ofSize: 18.0)
-        addSubview(textView)
         
-        textView.translatesAutoresizingMaskIntoConstraints = false
-        textViewLeadingAnchor = textView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0)
-        textViewLeadingAnchor.isActive = true
-        textView.isUserInteractionEnabled = false
-        textView.topAnchor.constraint(equalTo: topAnchor, constant: 64.0).isActive = true
-        textView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
-        textView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
         
         stickersOverlay = UIView()
         addSubview(stickersOverlay)
@@ -109,23 +101,125 @@ class CameraHUDView:UIView {
         stickersOverlay.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         stickersOverlay.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
         
-        dimView = UIView(frame: bounds)
-        dimView.backgroundColor = UIColor.black
-        dimView.alpha = 0.0
-        dimView.isUserInteractionEnabled = false
-        addSubview(dimView)
-        dimView.translatesAutoresizingMaskIntoConstraints = false
-        dimView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
-        dimView.topAnchor.constraint(equalTo: topAnchor).isActive = true
-        dimView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
-        dimView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        blurView = UIVisualEffectView(effect: nil)
+        blurView.isUserInteractionEnabled = false
+        addSubview(blurView)
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        blurView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        blurView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        blurView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        blurView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        
+        textOnlyBG = PastelView(frame: bounds)
+        // Custom Direction
+        textOnlyBG.startPastelPoint = .topLeft
+        textOnlyBG.endPastelPoint = .bottomRight
+        
+        
+        // Custom Duration
+        textOnlyBG.animationDuration = 12
+        
+        // Custom Color
+        //hexColor(from: "42E695"), hexColor(from: "3BB2B8")
+        //hexColor(from: "5B247A"), hexColor(from: "1BCEDF")
+        textOnlyBG.setColors([hexColor(from: "574BCD"),
+                              hexColor(from: "2999AD"),
+                              hexColor(from: "41E975")])
+        
+        
+        textOnlyBG.alpha = 0.0
+        textOnlyBG.isUserInteractionEnabled = false
+        addSubview(textOnlyBG)
+        textOnlyBG.translatesAutoresizingMaskIntoConstraints = false
+        textOnlyBG.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        textOnlyBG.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        textOnlyBG.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        textOnlyBG.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        whiteBar = UIView()
+        whiteBar.backgroundColor = UIColor.white
+        addSubview(whiteBar)
+        whiteBar.translatesAutoresizingMaskIntoConstraints = false
+        whiteBar.heightAnchor.constraint(equalToConstant: 1.5).isActive = true
+        whiteBar.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20).isActive = true
+        whiteBar.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20).isActive = true
+        whiteBar.topAnchor.constraint(equalTo: topAnchor, constant: 64.0).isActive = true
+        whiteBar.alpha = 0.0
+        whiteBar.isHidden = true
+        
+        textViewPlaceholder = UILabel(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 50))
+        textViewPlaceholder.textColor = UIColor.white.withAlphaComponent(0.4)
+        textViewPlaceholder.font = Fonts.medium(ofSize: 22.0)
+        textViewPlaceholder.text = "Write something..."
+        textViewPlaceholder.alpha = 0.0
+        addSubview(textViewPlaceholder)
+        
+        textViewPlaceholder.translatesAutoresizingMaskIntoConstraints = false
+        textViewPlaceholder.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24).isActive = true
+        textViewPlaceholder.isUserInteractionEnabled = false
+        textViewPlaceholder.topAnchor.constraint(equalTo: topAnchor, constant: 72).isActive = true
+        
+        stickersView = StickersView(frame: bounds)
+        addSubview(stickersView)
+        stickersView.translatesAutoresizingMaskIntoConstraints = false
+        stickersView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        stickersView.topAnchor.constraint(equalTo: topAnchor, constant: 64.0).isActive = true
+        stickersView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        stickersView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        stickersView.alpha = 0.0
+        stickersView.addSticker = addSticker
+
+        modePagerView = UIScrollView(frame: bounds)
+        modePagerView.delegate = self
+        modePagerView.showsHorizontalScrollIndicator = false
+        addSubview(modePagerView)
+
+        modePagerView.contentSize = CGSize(width: bounds.width * 3, height: bounds.height)
+        modePagerView.isPagingEnabled = true
+        let vc1 = UIView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height))
+        vc1.backgroundColor = UIColor.clear
+        modePagerView.addSubview(vc1)
+        let vc2 = UIView(frame: CGRect(x: bounds.width, y: 0, width: bounds.width, height: bounds.height))
+        vc2.backgroundColor = UIColor.clear
+        modePagerView.addSubview(vc2)
+        
+        let vc3 = UIView(frame: CGRect(x: bounds.width, y: 0, width: bounds.width * 2, height: bounds.height))
+        vc3.backgroundColor = UIColor.clear
+        modePagerView.addSubview(vc3)
+        modePagerView.setContentOffset(CGPoint(x: bounds.width, y:0), animated: false)
+        modeScrollBar = ModeScrollBar(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 52))
+        
+        addSubview(modeScrollBar)
+        modeScrollBar.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        modeScrollBar.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        modeScrollBar.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        modeScrollBar.heightAnchor.constraint(equalToConstant: 52.0).isActive = true
+        modeScrollBar.delegate = self
+        
+        textView = UITextView(frame: .zero)
+        textView.backgroundColor = UIColor.clear
+        textView.textContainerInset = UIEdgeInsetsMake(8, 20, 0, 20)
+        textView.textColor = UIColor.white
+        textView.keyboardAppearance = .dark
+        textView.keyboardType = .twitter
+        textView.font = Fonts.medium(ofSize: 22.0)
+        textView.delegate = self
+        textView.isScrollEnabled = false
+        
+        addSubview(textView)
+        
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textViewLeadingAnchor = textView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0)
+        textViewLeadingAnchor.isActive = true
+        textView.isUserInteractionEnabled = false
+        textView.topAnchor.constraint(equalTo: topAnchor, constant: 64.0).isActive = true
+        textView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        textViewHeightAnchor = textView.heightAnchor.constraint(equalToConstant: 29.5)
+        textViewHeightAnchor.isActive = true
         
         recordButton = RecordButton(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
         addSubview(recordButton)
         recordButton.translatesAutoresizingMaskIntoConstraints = false
         recordButton.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
-//        recordButtonBottomAnchor = recordButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -72)
-//        recordButtonBottomAnchor.isActive = true
         recordButton.widthAnchor.constraint(equalToConstant: 50.0).isActive = true
         recordButton.heightAnchor.constraint(equalToConstant: 50.0).isActive = true
         
@@ -163,22 +257,22 @@ class CameraHUDView:UIView {
         closeButton.tintColor = UIColor.white
         closeButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: .black, shouldRasterize: false)
         nextButton = UIButton(type: .custom)
-        nextButton.setTitle("Next", for: .normal)
-        nextButton.backgroundColor = UIColor.white
-        nextButton.titleLabel?.font = Fonts.semiBold(ofSize: 15)
-        nextButton.setTitleColor(UIColor.gray, for: .normal)
+        nextButton.setImage(UIImage(named:"pencil"), for: .normal)
+        nextButton.backgroundColor = accentColor
+        nextButton.titleLabel?.font = Fonts.semiBold(ofSize: 14)
+        
+        nextButton.contentEdgeInsets = UIEdgeInsetsMake(12, 12, 12, 12)
         addSubview(nextButton)
         nextButton.translatesAutoresizingMaskIntoConstraints = false
         nextButton.sizeToFit()
 
         nextButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24).isActive = true
         nextButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24).isActive = true
-        nextButton.heightAnchor.constraint(equalToConstant: 36).isActive = true
-        nextButton.widthAnchor.constraint(equalToConstant: 90).isActive = true
-        nextButton.layer.cornerRadius = 36/2
+        nextButton.layer.cornerRadius = nextButton.frame.height / 2
         nextButton.clipsToBounds = true
         nextButton.isHidden = true
-        nextButton.applyShadow(radius: 6.0, opacity: 0.2, offset: .zero, color: .black, shouldRasterize: false)
+        
+        nextButton.applyShadow(radius: 5.0, opacity: 0.3, offset: CGSize(width:0, height: 2), color: .black, shouldRasterize: false)
         //nextButton.addTarget(self, action: #selector(showCaptionBar), for: .touchUpInside)
         
         stickerButton = UIButton(type: .custom)
@@ -195,18 +289,19 @@ class CameraHUDView:UIView {
         postButton = UIButton(type: .custom)
         postButton.setTitle("Post", for: .normal)
         postButton.titleLabel?.font = Fonts.semiBold(ofSize: 14)
-        postButton.setTitleColor(UIColor.white, for: .normal)
-        postButton.backgroundColor = accentColor
+        postButton.setTitleColor(hexColor(from: "42E695"), for: .normal)
+        postButton.setTitleColor(UIColor.gray, for: .disabled)
+        postButton.backgroundColor = UIColor.white
         addSubview(postButton)
         postButton.translatesAutoresizingMaskIntoConstraints = false
-        postButton.contentEdgeInsets = UIEdgeInsetsMake(8, 16, 8, 16)
+        postButton.contentEdgeInsets = UIEdgeInsetsMake(10, 16, 10, 16)
         postButton.sizeToFit()
         postButton.layer.cornerRadius = postButton.frame.height / 2
         postButton.clipsToBounds = true
-        
+        postButton.isEnabled = false
         postButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16).isActive = true
         postButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor).isActive = true
-        postButton.isHidden = true
+        postButton.alpha = 0.0
         postButton.applyShadow(radius: 6.0, opacity: 0.15, offset: CGSize(width: 0, height: 3.0), color: UIColor.black, shouldRasterize: false)
         
         activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .white)
@@ -262,6 +357,7 @@ class CameraHUDView:UIView {
         optionsBarBottomAnchor = optionsBar.bottomAnchor.constraint(equalTo: bottomAnchor)
         optionsBarBottomAnchor.isActive = true
         optionsBar.handleTag = handleTag
+        
     }
     
     var delegate:CameraHUDProtocol?
@@ -289,6 +385,26 @@ class CameraHUDView:UIView {
         delegate?.handlePost()
     }
     
+    func toggleStickers(open:Bool) {
+        if open {
+            UIView.animate(withDuration: 0.3, animations: {
+                //self.stickerButton.alpha = 0.0
+                self.stickerButton.applyShadow(radius: 12.0, opacity:0.75, offset: .zero, color: .white, shouldRasterize: false)
+                self.nextButton.alpha = 0.0
+                self.blurView.effect = UIBlurEffect(style: .dark)
+                self.stickersView.alpha = 1.0
+            })
+        } else {
+            UIView.animate(withDuration: 0.3, animations: {
+                self.stickerButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: .black, shouldRasterize: false)
+                self.nextButton.alpha = 1.0
+                self.blurView.effect = nil
+                self.stickersView.alpha = 0.0
+            })
+        }
+        
+    }
+    
     func runningState() {
         closeButton.setStyle(.caretDown, animated: true)
         recordButton.reset()
@@ -300,27 +416,38 @@ class CameraHUDView:UIView {
         nextButton.isHidden = true
         stickerButton.isHidden = true
         stickersOverlay.isHidden = true
+        modePagerView.isHidden = false
+        modeScrollBar.isHidden = false
+        textView.resignFirstResponder()
+        postButton.alpha = 0.0
+        
+        for subview in stickersOverlay.subviews {
+            subview.removeFromSuperview()
+        }
     }
     
     func recordingState() {
         recordButton.initiateRecordingAnimation()
+        modePagerView.isHidden = true
         UIView.animate(withDuration: 0.5, animations: {
             self.closeButton.alpha = 0.0
             self.stickerButton.alpha = 0.0
-        }) { _ in
+            self.modeScrollBar.alpha = 0.0
             
-            DispatchQueue.main.async {
-                self.closeButton.setStyle(.close, animated: false)
-                self.closeButton.isHidden = true
-                self.stickerButton.isHidden = true
-                self.closeButton.alpha = 1.0
-                self.stickerButton.alpha = 1.0
-                self.recordButton.startRecording()
-            }
+        }) { _ in
+            self.modeScrollBar.isHidden = true
+            self.modeScrollBar.alpha = 1.0
+            self.closeButton.setStyle(.close, animated: false)
+            self.closeButton.isHidden = true
+            self.stickerButton.isHidden = true
+            self.closeButton.alpha = 1.0
+            self.stickerButton.alpha = 1.0
+            self.recordButton.startRecording()
         }
     }
     
     func editingState() {
+        //modePagerView.isHidden = true
         closeButton.isHidden = false
         stickerButton.isHidden = false
         stickersOverlay.isHidden = false
@@ -328,11 +455,15 @@ class CameraHUDView:UIView {
         closeButton.setStyle(.close, animated: true)
         
         recordButton.isHidden = true
+        nextButton.alpha = 1.0
         nextButton.isHidden = false
         switchCameraButton.isHidden = true
         flashButton.isHidden = true
         effectsButton.isHidden = true
         effectsBar.isHidden = true
+        
+        modePagerView.isHidden = true
+        modeScrollBar.isHidden = true
         //hideCaptionBar()
     }
     
@@ -343,14 +474,15 @@ class CameraHUDView:UIView {
             textView.becomeFirstResponder()
             
             postButton.alpha = 0.0
-            postButton.isHidden = false
             
             UIView.animate(withDuration: 0.3, animations: {
+                self.flashButton.alpha = 0.0
                 self.stickerButton.alpha = 0.0
                 self.nextButton.alpha = 0.0
                 self.postButton.alpha = 1.0
                 self.blurView.effect = UIBlurEffect(style: .dark)
                 self.textView.alpha = 1.0
+                self.whiteBar.alpha = 1.0
             })
         } else {
             textView.resignFirstResponder()
@@ -361,8 +493,9 @@ class CameraHUDView:UIView {
                 self.postButton.alpha = 0.0
                 self.blurView.effect = nil
                 self.textView.alpha = 0.0
+                self.whiteBar.alpha = 0.0
             }, completion: { _ in
-                self.postButton.isHidden = true
+            
             })
         }
         
@@ -378,8 +511,7 @@ class CameraHUDView:UIView {
         } else {
            textView.text = textView.text + "\(tag) "
         }
-        //commentBar.textViewDidChange(commentBar.textView)
-        
+        textViewDidChange(textView)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -388,15 +520,16 @@ class CameraHUDView:UIView {
     
     @objc func addSticker(_ sticker:UIImage) {
         print("ADD IT!")
-        
+        delegate?.handleClose()
         let dimensions = sticker.size
         let ratio = dimensions.height / dimensions.width
-        let size = CGSize(width: 200 , height: 200 * ratio)
+        let size = CGSize(width: 100 , height: 100 * ratio)
         let sFrame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
         
         let stickerView = StickerView(frame: sFrame)
         stickerView.setupSticker(sticker)
         stickerView.center = self.center
+        stickerView.delegate = self
         
         stickersOverlay.addSubview(stickerView)
         
@@ -404,53 +537,6 @@ class CameraHUDView:UIView {
         UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.3, options: .curveEaseOut, animations: {
             stickerView.transform = CGAffineTransform.identity
         }, completion: nil)
-    }
-
-    
-    var centerOffsetSize:CGSize = .zero
-    @objc func handlePan(_ rec:UIPanGestureRecognizer) {
-        //print("OMG SAUCE!")
-        let p:CGPoint = rec.location(in: self)
-        switch rec.state {
-        case .began:
-            //print("began")
-            selectedView = self.hitTest(p, with: nil)
-            if selectedView != nil {
-                let center = selectedView!.center
-                centerOffsetSize = CGSize(width: p.x - center.x , height: p.y - center.y)
-                self.bringSubview(toFront: selectedView!)
-                
-            }
-            break
-        case .changed:
-            if let subview = selectedView {
-                if subview is StickerView {
-                    subview.center.x = p.x - (p.x.truncatingRemainder(dividingBy: snapX)) - centerOffsetSize.width
-                    subview.center.y = p.y - (p.y.truncatingRemainder(dividingBy: snapY)) - centerOffsetSize.height
-                }
-            }
-            break
-        case .ended:
-            print("ended")
-            if let subview = selectedView {
-                if subview is StickerView {
-                    // do whatever
-                }
-            }
-            selectedView = nil
-            break
-        case .possible:
-            print("possible")
-            break
-        case .cancelled:
-            print("cancelled")
-            selectedView = nil
-            break
-        case .failed:
-            print("failed")
-            selectedView = nil
-            break
-        }
     }
     
     func observeKeyboard(_ observe:Bool) {
@@ -478,10 +564,14 @@ class CameraHUDView:UIView {
     }
     
     @objc func handleEffects() {
-        guard let image = delegate?.getCurrentImage() else { return }
-        if !effectsBarIsOpen {
+        setEffectsBar(open: !effectsBarIsOpen)
+    }
+    
+    func setEffectsBar(open:Bool) {
+        effectsBarIsOpen = open
+        if effectsBarIsOpen {
+            guard let image = delegate?.getCurrentImage() else { return }
             effectsBar.setImage(image)
-            self.effectsBarIsOpen = true
             let c1 = CGPoint(x: 0.23, y: 1)
             let c2 = CGPoint(x: 0.32, y: 1)
             let animator = UIViewPropertyAnimator(duration: 0.65, controlPoint1: c1, controlPoint2: c2, animations: {
@@ -492,7 +582,7 @@ class CameraHUDView:UIView {
             animator.startAnimation()
             effectsButton.applyShadow(radius: 8.0, opacity: 0.5, offset: .zero, color: .white, shouldRasterize: false)
         } else {
-            self.effectsBarIsOpen = false
+            
             let c1 = CGPoint(x: 0.23, y: 1)
             let c2 = CGPoint(x: 0.32, y: 1)
             let animator = UIViewPropertyAnimator(duration: 0.65, controlPoint1: c1, controlPoint2: c2, animations: {
@@ -506,18 +596,73 @@ class CameraHUDView:UIView {
     }
 }
 
+extension CameraHUDView: StickerDelegate {
+    func stickerDragBegan() {
+        self.stickerButton.transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
+        
+        UIView.animate(withDuration: 0.15, delay: 0.0, options: .curveEaseOut, animations: {
+            self.stickerButton.transform = CGAffineTransform(scaleX: 0.4, y: 0.4)
+            self.stickerButton.alpha = 0.0
+        } , completion: { _ in
+            self.stickerButton.setImage(UIImage(named:"trash"), for: .normal)
+            UIView.animate(withDuration: 0.15, delay: 0.0, options: .curveEaseOut, animations: {
+                self.stickerButton.transform = CGAffineTransform.identity
+                self.stickerButton.alpha = 1.0
+            } , completion: { _ in })
+        })
+        
+    }
+    
+    func stickerDragEnded() {
+        stickerButton.setImage(UIImage(named:"trash"), for: .normal)
+        self.stickerButton.transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
+        
+        UIView.animate(withDuration: 0.15, delay: 0.0, options: .curveEaseOut, animations: {
+            self.stickerButton.transform = CGAffineTransform(scaleX: 0.4, y: 0.4)
+            self.stickerButton.alpha = 0.0
+        } , completion: { _ in
+            self.stickerButton.setImage(UIImage(named:"sticker"), for: .normal)
+            UIView.animate(withDuration: 0.15, delay: 0.0, options: .curveEaseOut, animations: {
+                self.stickerButton.transform = CGAffineTransform.identity
+                self.stickerButton.alpha = 1.0
+            } , completion: { _ in })
+        })
+    }
+    
+    func stickerDidEnterTrashRange() {
+        UIView.animate(withDuration: 0.15, delay: 0.0, options: .curveEaseOut, animations: {
+            self.stickerButton.transform = CGAffineTransform(scaleX: 1.5, y: 1.5)
+        } , completion: { _ in
+            
+        })
+    }
+    
+    func stickerDidLeaveTrashRange() {
+        UIView.animate(withDuration: 0.15, delay: 0.0, options: .curveEaseOut, animations: {
+            self.stickerButton.transform = CGAffineTransform.identity
+        } , completion: { _ in
+            
+        })
+    }
+
+}
+
 
 extension CameraHUDView: KeyboardAccessoryProtocol {
     @objc func keyboardWillShow(notification: Notification) {
         guard let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return }
+        textMax = bounds.height - 64.0 - 44.0 - keyboardSize.height - 8.0
         self.optionsBarBottomAnchor.constant = -keyboardSize.height
         self.optionsBar.alpha = 1.0
+        self.textViewPlaceholder.alpha = 1.0
         self.layoutIfNeeded()
+        
     }
     
     @objc func keyboardWillHide(notification:Notification) {
         self.optionsBarBottomAnchor.constant = 0.0
         self.optionsBar.alpha = 0.0
+        self.textViewPlaceholder.alpha = 0.0
         self.layoutIfNeeded()
     }
 }
@@ -525,5 +670,90 @@ extension CameraHUDView: KeyboardAccessoryProtocol {
 extension CameraHUDView: EffectsBarDelegate {
     func setEffect(_ effect: String?, _ intensity:Float?) {
         delegate?.setCameraEffect(effect, intensity)
+    }
+    
+    
+}
+
+extension CameraHUDView:UITextViewDelegate {
+    
+    func textViewDidChange(_ textView: UITextView) {
+        let hasText = textView.text.count > 0
+        textViewPlaceholder.isHidden = hasText
+        postButton.isEnabled = hasText
+        let height = textView.sizeThatFits(CGSize(width: textView.bounds.width, height: CGFloat.infinity)).height
+        
+        textView.isUserInteractionEnabled = true
+        if height != currentTextHeight {
+            currentTextHeight = height
+            print("CURRENT: \(currentTextHeight) | MAX: \(textMax)")
+            if currentTextHeight > textMax {
+                textViewHeightAnchor.constant = textMax
+                textView.isScrollEnabled = true
+                whiteBar.isHidden = false
+            } else {
+                textViewHeightAnchor.constant = currentTextHeight
+                textView.isScrollEnabled = false
+                whiteBar.isHidden = true
+            }
+            self.layoutIfNeeded()
+        }
+//
+////        textViewHeightAnchor.constant = min(300, textView.contentSize.height + textView.textContainerInset.top)
+        
+    }
+    
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        let newText = (textView.text as NSString).replacingCharacters(in: range, with: text)
+        return newText.count < 600
+    }
+}
+
+extension CameraHUDView: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard scrollView === modePagerView else { return }
+        let offsetX = scrollView.contentOffset.x
+        let viewWidth = bounds.width
+        if offsetX < bounds.width {
+            let progress = offsetX / viewWidth
+            modeScrollBar?.setProgress(progress, index: 0)
+            delegate?.switchCameraMode(progress > 0.5 ? .video : .photo)
+            textView?.alpha = 0.0
+            whiteBar?.alpha = 0.0
+            textViewPlaceholder?.alpha = 0.0
+        } else {
+            let progress = (offsetX - viewWidth) / viewWidth
+            let reverseProgress = 1 - progress
+            modeScrollBar?.setProgress(progress, index: 1)
+            textOnlyBG?.alpha = progress
+            recordButton?.alpha = reverseProgress
+            switchCameraButton?.alpha = reverseProgress
+            flashButton?.alpha = reverseProgress
+            effectsButton?.alpha = reverseProgress
+            textView?.alpha = progress
+            whiteBar?.alpha = progress
+            textViewPlaceholder?.alpha = progress
+            postButton?.alpha = progress
+            delegate?.switchCameraMode(progress > 0.5 ? .text : .video)
+        }
+        //delegate?.switchCameraMode(progress > 0.5 ? .photo : .video)
+    }
+    
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        scrollViewDidEndDecelerating(scrollView)
+    }
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+//        if scrollView.contentOffset.x == bounds.width {
+//            textView.resignFirstResponder()
+//        } else if scrollView.contentOffset.x == bounds.width * 2 {
+//            textView.becomeFirstResponder()
+//        }
+    }
+}
+
+extension CameraHUDView: TabScrollDelegate {
+    func tabScrollTo(index: Int) {
+        modePagerView.setContentOffset(CGPoint(x: bounds.width * CGFloat(index), y: 0), animated: true)
     }
 }

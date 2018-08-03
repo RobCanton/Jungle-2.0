@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import Firebase
+import Pastel
 
 class AvatarNode:ASDisplayNode {
     var backNode = ASDisplayNode()
@@ -24,7 +25,7 @@ class AvatarNode:ASDisplayNode {
         self.clipsToBounds = true
         
         backgroundColor = UIColor.white
-        backNode.backgroundColor = post.anon.color.withAlphaComponent(0.30)
+        backNode.backgroundColor = UIColor.white//post.anon.color.withAlphaComponent(0.30)
         imageNode.imageModificationBlock = { image in
             return image.maskWithColor(color: post.anon.color) ?? image
         }
@@ -52,6 +53,7 @@ class ContentOverlayNode:ASControlNode {
     var usernameNode = ASTextNode()
     var timeNode = ASTextNode()
     
+    
     var actionsRow:SinglePostActionsView!
     weak var delegate:PostActionsDelegate?
     weak var post:Post?
@@ -60,25 +62,39 @@ class ContentOverlayNode:ASControlNode {
         self.post = post
         self.delegate = delegate
         automaticallyManagesSubnodes = true
-        postTextNode.maximumNumberOfLines = 0
+        postTextNode.maximumNumberOfLines = 4
         
-        if let blockedMessage = post.blockedMessage {
-            postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 16.0),
-                NSAttributedStringKey.foregroundColor: UIColor(white:0.67, alpha: 1.0)
-                ])
-        } else {
-            postTextNode.setText(text: post.text, withSize: 15.0, normalColor: .white, activeColor: tagColor)
-            postTextNode.tapHandler = { type, str in
-                switch type {
-                case .hashtag:
-                    self.delegate?.openTag(str)
-                    break
-                default:
-                    break
+        avatarNode = AvatarNode(post: post, cornerRadius: 16, imageInset: 5)
+        avatarNode.style.height = ASDimension(unit: .points, value: 32)
+        avatarNode.style.width = ASDimension(unit: .points, value: 32)
+        
+        let isTextOnly = !post.attachments.isImage && !post.attachments.isVideo
+        avatarNode.isHidden = isTextOnly
+        usernameNode.isHidden = isTextOnly
+        postTextNode.isHidden = isTextOnly
+        timeNode.isHidden = isTextOnly
+        
+        if post.attachments.isImage || post.attachments.isVideo {
+            if let blockedMessage = post.blockedMessage {
+                postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
+                    NSAttributedStringKey.font: Fonts.medium(ofSize: 16.0),
+                    NSAttributedStringKey.foregroundColor: UIColor(white:0.67, alpha: 1.0)
+                    ])
+            } else {
+                
+                postTextNode.setText(text: post.text, withSize: 15.0, normalColor: .white, activeColor: tagColor)
+                postTextNode.tapHandler = { type, str in
+                    switch type {
+                    case .hashtag:
+                        self.delegate?.openTag(str)
+                        break
+                    default:
+                        break
+                    }
                 }
             }
         }
+        
         
         usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
@@ -89,10 +105,6 @@ class ContentOverlayNode:ASControlNode {
             NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
-        
-        avatarNode = AvatarNode(post: post, cornerRadius: 16, imageInset: 5)
-        avatarNode.style.height = ASDimension(unit: .points, value: 32)
-        avatarNode.style.width = ASDimension(unit: .points, value: 32)
         
         
     }
@@ -127,6 +139,7 @@ class ContentOverlayNode:ASControlNode {
             
 
         }
+    
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
@@ -187,17 +200,18 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
     weak var post:Post?
     var temporaryUnblock = false
     var commentNode:PostCommentCellNode!
-    required init(post:Post) {
+    var deviceInsets:UIEdgeInsets = .zero
+    
+    required init(post:Post, deviceInsets:UIEdgeInsets?=nil) {
         super.init()
         self.post = post
-        automaticallyManagesSubnodes = true
-        backgroundColor = UIColor.black
+        self.deviceInsets = deviceInsets ?? .zero
+         automaticallyManagesSubnodes = true
+        backgroundColor = UIColor.clear
         contentNode = PostContentNode(post: post)
         contentOverlay = ContentOverlayNode(post: post, delegate: self)
         contentOverlay.addTarget(self, action: #selector(handleOverlayTap), forControlEvents: .touchUpInside)
         
-        let deviceInsets = UIApplication.deviceInsets
-        print("WODA: \(deviceInsets)")
         
         contentNode.blockedButtonNode?.addTarget(self, action: #selector(handleUnblock), forControlEvents: .touchUpInside)
     }
@@ -207,7 +221,7 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
         overlayStack.children = [contentOverlay]
         overlayStack.alignContent = .end
         overlayStack.justifyContent = .end
-        let overlayInsets = UIEdgeInsetsMake(0, 0, UIApplication.deviceInsets.bottom, 0)
+        let overlayInsets = UIEdgeInsetsMake(0, 0, deviceInsets.bottom, 0)
         let overlayInsetSpec = ASInsetLayoutSpec(insets: overlayInsets, child: overlayStack)
         
         let overlay = ASOverlayLayoutSpec(child: contentNode, overlay: overlayInsetSpec)

@@ -116,6 +116,11 @@ class NotificationsViewController:JViewController, ASTableDelegate, ASTableDataS
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         nService.delegate = nil
+        if let notificationCellNodes = tableNode.visibleNodes as? [NotificationCellNode] {
+            for node in notificationCellNodes {
+                node.setHighlighted(false)
+            }
+        }
     }
     
     func newNotificationRecieved() {
@@ -180,10 +185,12 @@ class NotificationsViewController:JViewController, ASTableDelegate, ASTableDataS
         if let post = post {
             let controller = LightboxViewController()
             controller.hidesBottomBarWhenPushed = true
-            controller.posts = [post]
+            let state = PostsStateController.handleAction(.endBatchFetch(posts: [post]), fromState: .empty)
+            controller.state = state
             controller.initialIndex = 0
             let drawerVC = CommentsDrawerViewController()
-            
+            drawerVC.currentPost = post
+            drawerVC.showComments = true
             drawerVC.interactor = transitionManager.interactor
             let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
             

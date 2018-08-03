@@ -11,14 +11,28 @@ import UIKit
 import AsyncDisplayKit
 
 
-struct TrendingHashtag {
+class TrendingHashtag {
     var hastag:String
     var count:Int
-    var postID:String
-    var lastPostedAt:Date
-    var report:Reports
+    var post:Post
+    
+    init(hashtag:String, count:Int,post:Post) {
+        self.hastag = hashtag
+        self.count = count
+        self.post = post
+    }
 }
 
+extension TrendingHashtag:Comparable, Equatable {
+    static func < (lhs: TrendingHashtag, rhs: TrendingHashtag) -> Bool {
+        return lhs.count < rhs.count
+    }
+    
+    
+    static func == (lhs: TrendingHashtag, rhs: TrendingHashtag) -> Bool {
+        return lhs.count == rhs.count
+    }
+}
 
 
 class SearchTabViewController:JViewController, RCSearchBarDelegate {
@@ -82,6 +96,10 @@ class SearchTabViewController:JViewController, RCSearchBarDelegate {
     }
     
     func handleLeftButton() {
+        
+    }
+    
+    func handleRightButton() {
         
     }
     
@@ -450,17 +468,7 @@ class MiniPostNode:ASDisplayNode {
             NSAttributedStringKey.font: Fonts.regular(ofSize: 12.0),
             NSAttributedStringKey.foregroundColor: textColor
             ])
-        
-        if let attachments = post.attachments {
-//            if attachments.images.count > 0 {
-//                let image = attachments.images[0]
-//                let color =  hexColor(from: image.colorHex)
-//                postImageNode.backgroundColor = color
-//
-//                postImageNode.url = image.url
-//                
-//            }
-        }
+
         
         let metaStr = "\(post.votes) points · \(post.numReplies) replies"
         metaTextNode.attributedText = NSAttributedString(string: metaStr, attributes: [

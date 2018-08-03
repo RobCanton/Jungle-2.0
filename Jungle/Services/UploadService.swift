@@ -170,7 +170,7 @@ class UploadService {
     
     static func deletePostAttachments(post:Post, completion: @escaping (_ success:Bool)->()) {
         guard let uid = Auth.auth().currentUser?.uid else { return completion(false) }
-        guard let attachments = post.attachments else { return completion(true) }
+        let attachments = post.attachments
         if let video = attachments.video {
             let videoRef = storage.child("userPosts/\(uid)/\(post.key)/video.mp4")
             videoRef.delete { error in
@@ -212,7 +212,7 @@ class UploadService {
     }
     
     
-    static func uploadPost(text:String, image:SelectedImage?, videoURL:URL?, gif:GIF?=nil, region:Region?=nil, location:CLLocation?=nil) {
+    static func uploadPost(text:String, image:UIImage?, videoURL:URL?, gif:GIF?=nil, region:Region?=nil, location:CLLocation?=nil) {
         NSLog("RSC: uploadPost - Start")
         guard let uid = Auth.auth().currentUser?.uid else { return }
         var parameters: [String: Any] = [
@@ -261,15 +261,22 @@ class UploadService {
                 
                 UploadService.addNewPost(withID: postID, parameters: parameters)
             } else if let image = image {
-                UploadService.uploadPostImages(postID: postID, images: [image]) { urlAttachments in
-                    if urlAttachments.count > 0 {
-                        
+                
+                uploadImage(postID: postID, image: image) { success in
+                    if success {
                         parameters["attachments"] = [
-                            "images": urlAttachments
+                            "image": [
+                                "size": [
+                                    "width": image.size.width,
+                                    "height": image.size.height,
+                                    "ratio": image.size.width / image.size.height
+                                ]
+                            ]
                         ]
+                        UploadService.addNewPost(withID: postID, parameters: parameters)
                     }
-                    UploadService.addNewPost(withID: postID, parameters: parameters)
                 }
+                
             } else if let url = videoURL {
                 let urlAsset = AVURLAsset(url: url, options: nil)
                 let track =  urlAsset.tracks(withMediaType: AVMediaType.video)
@@ -289,7 +296,7 @@ class UploadService {
                             if videoUploaded, thumbnailUploaded, videoLength != nil {
                                 parameters["attachments"] = [
                                     "video": [
-                                        "length": "\(videoLength!)",
+                                        "length": videoLength!,
                                         "size": [
                                             "width": size.width,
                                             "height": size.height,
@@ -308,7 +315,7 @@ class UploadService {
                             if thumbnailUploaded, videoUploaded, videoLength != nil {
                                 parameters["attachments"] = [
                                     "video": [
-                                        "length": "\(videoLength!)",
+                                        "length": videoLength!,
                                         "size": [
                                             "width": size.width,
                                             "height": size.height,
@@ -347,6 +354,36 @@ class UploadService {
             completion(error == nil, length)
         }
     }
+    
+    static func uploadImage(postID:String, image:UIImage, completion: @escaping ((_ success:Bool)->())) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+
+        guard let data = UIImageJPEGRepresentation(image, 1.0) else { return completion(false) }
+
+        let storageRef = Storage.storage().reference().child("userPosts/\(uid)/\(postID)/image.jpg")
+
+        let uploadMetadata = StorageMetadata()
+        uploadMetadata.contentType = "image/jpg"
+        
+        storageRef.putData(data, metadata: uploadMetadata) { metaData, error in
+            if let error = error {
+                print("ERROR: \(error.localizedDescription)")
+            }
+            
+            guard let thumbnailData = UIImageJPEGRepresentation(image, 0.5) else { return completion(false) }
+            
+            let thumbnailRef = Storage.storage().reference().child("userPosts/\(uid)/\(postID)/thumbnail.jpg")
+            
+            thumbnailRef.putData(thumbnailData, metadata: uploadMetadata) { metaData, error in
+                if let error = error {
+                    print("ERROR: \(error.localizedDescription)")
+                }
+                completion(error == nil)
+            }
+        }
+    }
+    
+    
     
     static func createGif(videoURL:URL, postID:String, completion:@escaping((_ success:Bool)->())) {
         NSLog("RSC: createGif - Start")

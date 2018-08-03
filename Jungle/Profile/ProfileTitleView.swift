@@ -26,6 +26,9 @@ class ProfileTitleView:JTitleView {
         titleView.textAlignment = .center
         titleView.font = Fonts.medium(ofSize: 13.0)
         
+       
+        //tabScrollView.delegate = self
+        
         rightButton.setImage(UIImage(named: "Settings"), for: .normal)
     }
     

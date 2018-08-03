@@ -19,16 +19,15 @@ enum PostsTableType {
 
 class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonDelegate {
     
-    var posts = [Post]()
-    var tableNode = ASTableNode()
+    var state = PostsStateController.State.empty
     
+    var tableNode = ASTableNode()
     var refreshControl:UIRefreshControl!
+    var context:ASBatchContext?
+    var shouldBatchFetch = true
     
     var transitionManager = LightboxTransitionManager()
-    
     var pushTransitionManager = PushTransitionManager()
-    
-    var newPostsView:NewPostsView!
     
     var headerCell:ASCellNode? {
         get {
@@ -36,54 +35,24 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         }
     }
     
+    func lightBoxVC() -> LightboxViewController {
+        return LightboxViewController()
+    }
+    
     func postCell(_ post:Post) -> ASCellNode {
-        let cell = NewPostCellNode(post: post)
+        let cell = PostCellNode(post: post)
+        cell.postNode.delegate = self
         cell.selectionStyle = .none
-        cell.delegate = self
         return cell
-    }
-    
-    struct State {
-        var posts: [Post]
-        var postKeys:[String:Bool]
-        var fetchingMore: Bool
-        var lastPostTimestamp:Double?
-        var lastScore:Double?
-        
-        var endReached:Bool
-        var isFirstLoad:Bool
-        static let empty = State(posts: [], postKeys: [:], fetchingMore: false, lastPostTimestamp: nil, lastScore:nil, endReached: false, isFirstLoad: true)
-    }
-    
-    var state = State.empty
-    
-    var newPostsListener:ListenerRegistration?
-    
-    var locationHeader:UIView?
-    
-    var shouldBatchFetch = true
-    
-    enum Action {
-        case beginBatchFetch
-        case endBatchFetch(posts: [Post])
-        case insertNewBatch(posts: [Post])
-        case removePost(at:Int)
-        case endReached()
-        case firstLoadComplete()
     }
     
     init() {
         super.init(node: ASDisplayNode())
-
-//        if type == .nearby {
-//            NotificationCenter.default.addObserver(self, selector: #selector(handleLocationUpdate), name: GPSService.locationUpdatedNotification, object: nil)
-//        }
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -93,24 +62,22 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         view.addSubview(tableNode.view)
         tableNode.view.translatesAutoresizingMaskIntoConstraints = false
         tableNode.contentInset = UIEdgeInsetsMake(0.0, 0.0, 0.0, 0.0)
-        var layoutGuide:UILayoutGuide!
         
-        layoutGuide = view.safeAreaLayoutGuide
-        
-        tableNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        tableNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
-        tableNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        tableNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        tableNode.view.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        tableNode.view.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        tableNode.view.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        tableNode.view.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         tableNode.view.contentInsetAdjustmentBehavior = .never
         tableNode.delegate = self
         tableNode.dataSource = self
-        tableNode.view.separatorColor = currentTheme.highlightedBackgroundColor
+        
+        tableNode.contentInset = UIEdgeInsetsMake(12, 0, 0, 0)
+        tableNode.view.separatorStyle = .none
         tableNode.view.showsVerticalScrollIndicator = true
         tableNode.view.delaysContentTouches = false
-        tableNode.view.backgroundColor = hexColor(from: "#eff0e9")
+        tableNode.view.backgroundColor = hexColor(from: "#EFEFEF")
         tableNode.view.tableFooterView = UIView()
         
-        //tableNode.allowsSelection = false
         tableNode.reloadData()
         tableNode.clipsToBounds = false
         self.view.clipsToBounds = false
@@ -118,51 +85,6 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         tableNode.view.refreshControl = refreshControl
-        
-        newPostsView = NewPostsView(frame: CGRect(x: 0, y: 100, width: view.bounds.width, height: 44.0))
-        view.addSubview(newPostsView)
-        
-        newPostsView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
-        newPostsView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        seeNewPostsTopAnchor = newPostsView.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: -44.0)
-        seeNewPostsTopAnchor?.isActive = true
-        newPostsView.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
-        newPostsView.delegate = self
-        
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        newPostsListener?.remove()
-        
-        if let postCellNodes = tableNode.visibleNodes as? [NewPostCellNode] {
-            for node in postCellNodes {
-                node.setHighlighted(false)
-            }
-        }
-         
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        if !state.isFirstLoad {
-            listenForNewPosts()
-        }
-    }
-    
-    var seeNewPostsTopAnchor:NSLayoutConstraint?
-    
-    func showSeeNewPosts(_ show:Bool) {
-        
-        UIView.animate(withDuration: 0.60, delay: 0.0, usingSpringWithDamping: 0.6, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: {
-            self.seeNewPostsTopAnchor?.constant = show ? 0.0 : -44.0
-            self.view.layoutIfNeeded()
-        }, completion: nil)
     }
     
     func shouldBatchFetch(for tableNode: ASTableNode) -> Bool {
@@ -170,133 +92,14 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         return shouldBatchFetch
     }
     
-    func listenForNewPosts() {
-//        if type == .popular || type == .nearby {
-//            return
-//        }
-//
-//        newPostsListener?.remove()
-//        let postsRef = firestore.collection("posts")
-//            .whereField("status", isEqualTo: "active")
-//            .whereField("parent", isEqualTo: "NONE")
-//            .order(by: "createdAt", descending: true).limit(to: 1)
-//
-//
-//        newPostsListener = postsRef.addSnapshotListener() { snapshot, err in
-//            print("NEW POST TINGS!")
-//            if let err = err {
-//                print("Error getting documents: \(err)")
-//            } else {
-//                if snapshot!.documents.count > 0 {
-//                    let firstDocument = snapshot!.documents[0]
-//                    let key = firstDocument.documentID
-//                    if self.state.postKeys[key] == nil {
-//                        if let _ = Post.parse(id: key, firstDocument.data()) {
-//                            if let pendingPostKey = UploadService.pendingPostKey, key == pendingPostKey {
-//                                UploadService.pendingPostKey = nil
-//                                self.handleRefresh()
-//                            } else {
-//                                self.showSeeNewPosts(true)
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-        
-    }
-    
-    @objc func handleRefresh() {
-        self.showSeeNewPosts(false)
-//
-//        if type == .popular {
-//
-//            context?.cancelBatchFetching()
-//
-//            state = .empty
-//            PostsService.getPopularPosts(existingKeys: state.postKeys, lastScore: state.lastScore) { posts, endReached in
-//
-//                if endReached {
-//                    let oldState = self.state
-//                    self.state = PostsTableViewController.handleAction(.endReached(), fromState: oldState)
-//                }
-//                let action = Action.endBatchFetch(posts: posts)
-//                let oldState = self.state
-//                self.state = PostsTableViewController.handleAction(action, fromState: oldState)
-//                self.tableNode.reloadData()
-//                self.refreshControl.endRefreshing()
-//
-//            }
-////            tableNode.performBatch(animated: false, updates: {
-////                tableNode.deleteRows(at: indexPaths, with: .none)
-////            }, completion: { complete in
-////                if complete {
-////                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
-////                        self.refreshControl.endRefreshing()
-////                    })
-////                }
-////            })
-//
-//            return
-//        }
-//
-//        var firstTimestamp:Double?
-//        if state.posts.count > 0 {
-//            firstTimestamp = state.posts[0].createdAt.timeIntervalSince1970 * 1000
-//        }
-//
-//        if type == .nearby {
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 1.25, execute: {
-//                self.refreshControl.endRefreshing()
-//            })
-////            PostsService.getNearbyPosts(existingKeys: state.postKeys, lastTimestamp: firstTimestamp, isRefresh: true) { _posts, _ in
-////                self.refreshControl.endRefreshing()
-////
-////                let action = Action.insertNewBatch(posts: _posts)
-////                let oldState = self.state
-////                self.state = PostsTableViewController.handleAction(action, fromState: oldState)
-////
-////                self.tableNode.performBatch(animated: false, updates: {
-////                    let indexPaths = (0..<_posts.count).map { index in
-////                        IndexPath(row: index, section: 0)
-////                    }
-////                    self.tableNode.insertRows(at: indexPaths, with: .none)
-////                }, completion: { _ in
-////                    if self.state.posts.count > 0 {
-////                        self.tableNode.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
-////                    }
-////                })
-////            }
-//        } else {
-//            PostsService.refreshNewPosts(existingKeys: state.postKeys, startAfter: firstTimestamp) { _posts in
-//                self.refreshControl.endRefreshing()
-//
-//                let action = Action.insertNewBatch(posts: _posts)
-//                let oldState = self.state
-//                self.state = PostsTableViewController.handleAction(action, fromState: oldState)
-//
-//                self.tableNode.performBatch(animated: false, updates: {
-//                    let indexPaths = (0..<_posts.count).map { index in
-//                        IndexPath(row: index, section: 1)
-//                    }
-//                    self.tableNode.insertRows(at: indexPaths, with: .none)
-//                }, completion: { _ in
-//                    if self.state.posts.count > 0 {
-//                        self.tableNode.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
-//                    }
-//                })
-//            }
-//        }
-    }
+    @objc func handleRefresh() {}
     
     
-    func fetchData(state:State, completion: @escaping (_ posts:[Post], _ endReached:Bool)->()) {
+    func fetchData(state:PostsStateController.State, completion: @escaping (_ posts:[Post])->()) {
         DispatchQueue.main.async {
-            return completion([],true)
+            return completion([])
         }
     }
-    
-    var context:ASBatchContext?
 }
 
 extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
@@ -308,30 +111,26 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         self.context = context
         DispatchQueue.main.async {
             let oldState = self.state
-            self.state = PostsTableViewController.handleAction(.beginBatchFetch, fromState: oldState)
+            let action = PostsStateController.Action.beginBatchFetch
+            self.state = PostsStateController.handleAction(action, fromState: oldState)
             self.renderDiff(oldState)
         }
         
-        fetchData(state: state) { posts, endReached in
+        fetchData(state: state) { posts in
             
-            if endReached {
-                let oldState = self.state
-                self.state = PostsTableViewController.handleAction(.endReached(), fromState: oldState)
-            }
-            let action = Action.endBatchFetch(posts: posts)
+            let action = PostsStateController.Action.endBatchFetch(posts: posts)
             let oldState = self.state
-            self.state = PostsTableViewController.handleAction(action, fromState: oldState)
+            self.state = PostsStateController.handleAction(action, fromState: oldState)
             self.renderDiff(oldState)
             context.completeBatchFetching(true)
             if self.state.isFirstLoad {
                 let oldState = self.state
-                self.state = PostsTableViewController.handleAction(.firstLoadComplete(), fromState: oldState)
-                self.listenForNewPosts()
+                self.state = PostsStateController.handleAction(.firstLoadComplete(), fromState: oldState)
             }
         }
     }
     
-    fileprivate func renderDiff(_ oldState: State) {
+    fileprivate func renderDiff(_ oldState: PostsStateController.State) {
         
         self.tableNode.performBatchUpdates({
             
@@ -359,61 +158,6 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
                 }
             }
         }, completion:nil)
-    }
-    
-    static func handleAction(_ action: Action, fromState state: State) -> State {
-        var state = state
-        switch action {
-        case .beginBatchFetch:
-            state.fetchingMore = true
-            break
-        case let .endBatchFetch(posts):
-            
-            state.posts.append(contentsOf: posts)
-            
-            if state.posts.count > 0 {
-                let lastPost = state.posts[state.posts.count - 1]
-                state.lastPostTimestamp = lastPost.createdAt.timeIntervalSince1970 * 1000
-                state.lastScore = lastPost.score
-            } else {
-                state.lastPostTimestamp = nil
-                state.lastScore = nil
-            }
-            
-            state.postKeys = [:]
-            for post in state.posts {
-                state.postKeys[post.key] = true
-            }
-            
-            state.fetchingMore = false
-            break
-        case let .insertNewBatch(posts):
-            state.posts.insert(contentsOf: posts, at: 0)
-            state.postKeys = [:]
-            for post in state.posts {
-                state.postKeys[post.key] = true
-            }
-            break
-        case let .removePost(at):
-            state.posts.remove(at: at)
-            if state.posts.count > 0 {
-                let lastPost = state.posts[state.posts.count - 1]
-                state.lastPostTimestamp = lastPost.createdAt.timeIntervalSince1970 * 1000
-                state.lastScore = lastPost.score
-            } else {
-                state.lastPostTimestamp = nil
-                state.lastScore = nil
-            }
-            
-            break
-        case .endReached:
-            state.endReached = true
-            break
-        case .firstLoadComplete:
-            state.isFirstLoad = false
-            break
-        }
-        return state
     }
     
     func numberOfSections(in tableNode: ASTableNode) -> Int {
@@ -450,8 +194,8 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         if indexPath.section == 0 {
             return
         }
-        let node = tableNode.nodeForRow(at: indexPath) as? NewPostCellNode
-        node?.setHighlighted(true)
+        let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
+        node?.postNode.setHighlighted(true)
         
         let post = state.posts[indexPath.row]
         openSinglePost(post, index: indexPath.row)
@@ -460,9 +204,9 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     
     func openSinglePost(_ post:Post, index:Int) {
         
-        let controller = LightboxViewController()
+        let controller = lightBoxVC()
         controller.hidesBottomBarWhenPushed = true
-        controller.posts = self.state.posts
+        controller.state = self.state
         controller.initialIndex = index
         let drawerVC = CommentsDrawerViewController()
         
@@ -474,6 +218,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         pulleyController.topInset = 24
         pulleyController.hidesBottomBarWhenPushed = true
         pulleyController.transitioningDelegate = transitionManager
+        
         if let parentVC = self.parent as? JViewController {
             parentVC.shouldHideStatusBar = true
         }
@@ -482,18 +227,18 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     }
     
     func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
-        let node = tableNode.nodeForRow(at: indexPath) as? NewPostCellNode
-        node?.setHighlighted(false)
+        let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
+        node?.postNode.setHighlighted(false)
     }
     
     func tableNode(_ tableNode: ASTableNode, didHighlightRowAt indexPath: IndexPath) {
-        let node = tableNode.nodeForRow(at: indexPath) as? NewPostCellNode
-        node?.setHighlighted(true)
+        let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
+        node?.postNode.setHighlighted(true)
     }
     
     func tableNode(_ tableNode: ASTableNode, didUnhighlightRowAt indexPath: IndexPath) {
-        let node = tableNode.nodeForRow(at: indexPath) as? NewPostCellNode
-        node?.setHighlighted(false)
+        let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
+        node?.postNode.setHighlighted(false)
     }
     
 }
@@ -522,21 +267,21 @@ extension PostsTableViewController: PostCellDelegate {
         
         if post.isYou {
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-                self.newPostsListener?.remove()
+                //self.newPostsListener?.remove()
                 UploadService.deletePost(post) { success in
                     print("Post deleted: \(success)")
                     if success {
                         for i in 0..<self.state.posts.count {
                             let arrayPost = self.state.posts[i]
                             if arrayPost.key == post.key {
-                                self.state = PostsTableViewController.handleAction(.removePost(at: i), fromState: self.state)
+                                let action = PostsStateController.Action.removePost(at: i)
+                                self.state = PostsStateController.handleAction(action, fromState: self.state)
                                 
-                                
-                                if !self.state.isFirstLoad {
-                                    self.listenForNewPosts()
-                                }
+//                                if !self.state.isFirstLoad {
+//                                    self.listenForNewPosts()
+//                                }
                                 let indexPath = IndexPath(row: i, section: 1)
-                                let cell = self.tableNode.nodeForRow(at: indexPath) as? PostCellNode
+                                
                                 //cell?.stopListeningToPost()
                                 self.tableNode.performBatchUpdates({
                                     self.tableNode.deleteRows(at: [indexPath], with: .top)

@@ -13,12 +13,23 @@ import Pulley
 
 class MyCommentsTableViewController: PostsTableViewController {
     
+    override func lightBoxVC() -> LightboxViewController {
+        return MyCommentsLightboxViewController()
+    }
+    
     override func postCell(_ post: Post) -> ASCellNode {
-        let cell = PostCommentCellNode(post: post, parentPost: post.parentPost!)
-        cell.subnameNode.isHidden = true
-        cell.selectionStyle = .none
-        cell.dividerNode.isHidden = true
+        let cell = super.postCell(post) as! PostCellNode
+        cell.postNode.commentButton.isHidden = true
         return cell
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if let commentCellNodes = tableNode.visibleNodes as? [PostCommentCellNode] {
+            for node in commentCellNodes {
+                node.setHighlighted(false)
+            }
+        }
     }
     
     override func handleRefresh() {
@@ -26,23 +37,20 @@ class MyCommentsTableViewController: PostsTableViewController {
         
         state = .empty
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: {
-            SearchService.myComments(offset: self.state.posts.count) { posts, endReached in
-                if endReached {
-                    let oldState = self.state
-                    self.state = PostsTableViewController.handleAction(.endReached(), fromState: oldState)
-                }
-                let action = Action.endBatchFetch(posts: posts)
+            SearchService.myComments(offset: self.state.posts.count) { posts in
+                
+                let action = PostsStateController.Action.endBatchFetch(posts: posts)
                 let oldState = self.state
-                self.state = PostsTableViewController.handleAction(action, fromState: oldState)
+                self.state = PostsStateController.handleAction(action, fromState: oldState)
                 self.tableNode.reloadData()
                 self.refreshControl.endRefreshing()
             }
         })
     }
     
-    override func fetchData(state: PostsTableViewController.State, completion: @escaping ([Post], Bool) -> ()) {
-        SearchService.myComments(offset: state.posts.count) { posts, endReached in
-            completion(posts, endReached)
+    override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
+        SearchService.myComments(offset: state.posts.count) { posts in
+            completion(posts)
         }
     }
     
@@ -56,9 +64,12 @@ class MyCommentsTableViewController: PostsTableViewController {
         if let parentPost = state.posts[indexPath.row].parentPost {
             let controller = LightboxViewController()
             controller.hidesBottomBarWhenPushed = true
-            controller.posts = [parentPost]
+            let state = PostsStateController.handleAction(.endBatchFetch(posts: [parentPost]), fromState: .empty)
+            controller.state = state
             controller.initialIndex = 0
             let drawerVC = CommentsDrawerViewController()
+            drawerVC.currentPost = parentPost
+            drawerVC.showComments = true
             drawerVC.interactor = transitionManager.interactor
             let pulleyController = PulleyViewController(contentViewController: controller, drawerViewController: drawerVC)
             pulleyController.view.clipsToBounds = true

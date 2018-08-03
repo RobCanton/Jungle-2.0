@@ -11,6 +11,9 @@ import UIKit
 
 class RecentPostsTableViewController: PostsTableViewController {
     
+    override func lightBoxVC() -> LightboxViewController {
+        return RecentLightboxViewController()
+    }
     
     override func handleRefresh() {
         var firstTimestamp:Double?
@@ -18,12 +21,12 @@ class RecentPostsTableViewController: PostsTableViewController {
             firstTimestamp = state.posts[0].createdAt.timeIntervalSince1970 * 1000
         }
         
-        PostsService.refreshNewPosts(existingKeys: state.postKeys, startAfter: firstTimestamp) { _posts in
+        PostsService.refreshNewPosts(startAfter: firstTimestamp) { _posts in
             self.refreshControl.endRefreshing()
             
-            let action = Action.insertNewBatch(posts: _posts)
+            let action = PostsStateController.Action.insertNewBatch(posts: _posts)
             let oldState = self.state
-            self.state = PostsTableViewController.handleAction(action, fromState: oldState)
+            self.state = PostsStateController.handleAction(action, fromState: oldState)
             
             self.tableNode.performBatch(animated: false, updates: {
                 let indexPaths = (0..<_posts.count).map { index in
@@ -38,7 +41,7 @@ class RecentPostsTableViewController: PostsTableViewController {
         }
     }
     
-    override func fetchData(state: PostsTableViewController.State, completion: @escaping ([Post], Bool) -> ()) {
-        PostsService.getNewPosts(existingKeys: state.postKeys, lastPostID: state.lastPostTimestamp, completion: completion)
+    override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
+        PostsService.getRecentPosts(lastPost: state.posts.last , completion: completion)
     }
 }

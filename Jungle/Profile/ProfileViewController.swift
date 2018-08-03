@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 
-class ProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, UIGestureRecognizerDelegate {
+class ProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, UIGestureRecognizerDelegate, TabScrollDelegate {
     
     var titleView:JTitleView!
     var pagerNode:ASPagerNode!
@@ -52,9 +52,9 @@ class ProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSource
         tabScrollView.centerXAnchor.constraint(equalTo: scrollTabBar.centerXAnchor).isActive = true
         tabScrollView.topAnchor.constraint(equalTo: scrollTabBar.topAnchor).isActive = true
         tabScrollView.bottomAnchor.constraint(equalTo: scrollTabBar.bottomAnchor).isActive = true
-
+        tabScrollView.delegate = self
         
-        let bgImageView = UIImageView(image: UIImage(named:"NavBarGradient1"))
+        let bgImageView = UIImageView(image: UIImage(named:"GreenBox"))
         view.insertSubview(bgImageView, belowSubview: titleView)
         bgImageView.translatesAutoresizingMaskIntoConstraints = false
         bgImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
@@ -156,7 +156,8 @@ class ProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSource
         }
     }
     
-    func scrollTo() {
+    func tabScrollTo(index: Int) {
+        pagerNode.scrollToPage(at: index, animated: true)
     }
 
 }

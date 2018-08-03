@@ -30,7 +30,7 @@ var gpsService = GPSService()
 
 let API_ENDPOINT = "https://us-central1-jungle-anonymous.cloudfunctions.net/app"
 
-let accentColor = hexColor(from: "#72E279")
+let accentColor = hexColor(from: "#00B06F")
 let accentDarkColor = hexColor(from: "#81d891")
 let tagColor = hexColor(from: "#1696e0")
 let redColor = hexColor(from: "FF6B6B")
@@ -119,6 +119,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         } catch {
             print("error")
         }
+        
+        Emojis.processEmojis()
         return true
     }
     
