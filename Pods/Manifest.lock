@@ -19,6 +19,9 @@ PODS:
   - Firebase/Database (5.0.1):
     - Firebase/CoreOnly
     - FirebaseDatabase (= 5.0.0)
+  - Firebase/DynamicLinks (5.0.1):
+    - Firebase/Core
+    - FirebaseDynamicLinks (= 3.0.0)
   - Firebase/Firestore (5.0.1):
     - Firebase/CoreOnly
     - FirebaseFirestore (= 0.12.1)
@@ -44,6 +47,8 @@ PODS:
   - FirebaseDatabase (5.0.0):
     - FirebaseCore (~> 5.0)
     - leveldb-library (~> 1.18)
+  - FirebaseDynamicLinks (3.0.0):
+    - FirebaseAnalytics (~> 5.0)
   - FirebaseFirestore (0.12.1):
     - FirebaseCore (~> 5.0)
     - FirebaseFirestore/abseil-cpp (= 0.12.1)
@@ -94,6 +99,7 @@ PODS:
     - gRPC-RxLibrary (= 1.12.0)
   - GTMSessionFetcher/Core (1.1.15)
   - JaneSliderControl (1.0.3)
+  - JGProgressHUD (2.0.3)
   - leveldb-library (1.20)
   - nanopb (0.3.8):
     - nanopb/decode (= 0.3.8)
@@ -140,11 +146,13 @@ DEPENDENCIES:
   - Firebase/Auth
   - Firebase/Core
   - Firebase/Database
+  - Firebase/DynamicLinks
   - Firebase/Firestore
   - Firebase/Functions
   - Firebase/Messaging
   - Firebase/Storage
   - JaneSliderControl
+  - JGProgressHUD
   - Pastel
   - Pulley
   - Regift
@@ -167,6 +175,7 @@ SPEC REPOS:
     - FirebaseAuth
     - FirebaseCore
     - FirebaseDatabase
+    - FirebaseDynamicLinks
     - FirebaseFirestore
     - FirebaseFunctions
     - FirebaseInstanceID
@@ -179,6 +188,7 @@ SPEC REPOS:
     - gRPC-RxLibrary
     - GTMSessionFetcher
     - JaneSliderControl
+    - JGProgressHUD
     - leveldb-library
     - nanopb
     - Pastel
@@ -215,6 +225,7 @@ SPEC CHECKSUMS:
   FirebaseAuth: acbeef02fe7c3a26624e309849f3fe30c84115af
   FirebaseCore: cafc814b2d84fc8733f09e653041cc2165332ad7
   FirebaseDatabase: 697eb53e5b4fe7cd4fa8756c1f82a9fca011345f
+  FirebaseDynamicLinks: c70e8ef2f267f13459db89b8816b13a06b2278d2
   FirebaseFirestore: f686b8e83f3cf8bbc37db6e98e01029a14f01f55
   FirebaseFunctions: 141da172b7491276d9da8715b8ca88f9e439ffb6
   FirebaseInstanceID: 83e0040351565df711a5db3d8ebe5ea21aca998a
@@ -227,6 +238,7 @@ SPEC CHECKSUMS:
   gRPC-RxLibrary: 1ed5314e8b38cd6e55c9bfa048387136ae925ce9
   GTMSessionFetcher: 5fa5b80fd20e439ef5f545fb2cb3ca6c6714caa2
   JaneSliderControl: 0073344105b2c2b4695d09f74b88b9891f58197c
+  JGProgressHUD: 12b20a8f4ffe05258f8635c1ab92816e451f904d
   leveldb-library: 08cba283675b7ed2d99629a4bc5fd052cd2bb6a5
   nanopb: 5601e6bca2dbf1ed831b519092ec110f66982ca3
   Pastel: 7fa5e26123b3dbe11f7ed255654bf37100b199a5
@@ -244,6 +256,6 @@ SPEC CHECKSUMS:
   UICircularProgressRing: e737881c0dcc9cc1e4d0ea7db0c16d4b0f260082
   WCLShineButton: d8b979b6f6f9f6709f9e241e6e1a4712a1a9b36b
 
-PODFILE CHECKSUM: de783f9239aa137d092050e103056a55bc20a577
+PODFILE CHECKSUM: 9c50bbb0c41b7d96934bfdf8a73c50b6a81160f4
 
 COCOAPODS: 1.5.3

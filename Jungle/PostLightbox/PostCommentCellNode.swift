@@ -32,15 +32,30 @@ class PostCommentCellNode: ASCellNode {
     var isSubReply = false
     var isCaption = false
     
+    var deleted = false
+    
     
     required init(post:Post, parentPost:Post, isCaption:Bool?=nil, isSubReply:Bool?=nil) {
         super.init()
         self.post = post
+        deleted = post.deleted
+        
         self.isCaption = isCaption ?? false
         self.isSubReply = isSubReply ?? false
         automaticallyManagesSubnodes = true
         backgroundColor = UIColor.white
         postTextNode.maximumNumberOfLines = 0
+        
+        dividerNode.backgroundColor = UIColor(white: 0.80, alpha: 1.0)
+        dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
+        
+        if deleted {
+            postTextNode.attributedText = NSAttributedString(string: "[deleted]", attributes: [
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
+                NSAttributedStringKey.foregroundColor: tertiaryColor
+                ])
+            return
+        }
         let titleSize:CGFloat = self.isSubReply ? 13 : 14
         let avatarSize:CGFloat = self.isSubReply ? 18 : 24
         
@@ -65,7 +80,7 @@ class PostCommentCellNode: ASCellNode {
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
-        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 0, right: 4.0)
+        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
         subnameNode.backgroundColor = post.anon.color
         
         timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow() , attributes: [
@@ -108,13 +123,10 @@ class PostCommentCellNode: ASCellNode {
             self.avatarImageNode.image = image
         }
         
-        dividerNode.backgroundColor = UIColor(white: 0.80, alpha: 1.0)
-        dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
-        
         if let blockedMessage = post.blockedMessage {
             postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
                 NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
-                NSAttributedStringKey.foregroundColor: UIColor.gray
+                NSAttributedStringKey.foregroundColor: tertiaryColor
                 ])
             
         } else {
@@ -135,12 +147,17 @@ class PostCommentCellNode: ASCellNode {
     override func didLoad() {
         super.didLoad()
         actionsRow = CommentActionsRow(frame:.zero)
+        if deleted {
+            return
+            
+        }
+        
         actionsRow.delegate = self
         view.addSubview(actionsRow)
         actionsRow.translatesAutoresizingMaskIntoConstraints = false
         var leading:CGFloat = 0
         if isSubReply {
-            leading = 32
+            leading = 24
             actionsRow.replyButton.setTitle(nil, for: .normal)
         }
         actionsRow.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: leading).isActive = true
@@ -163,16 +180,31 @@ class PostCommentCellNode: ASCellNode {
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
-        let avatarInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(3, 3, 3, 3), child: avatarImageNode)
+        var mainInsets = UIEdgeInsetsMake(12, 12, 44, 12)
+        if isSubReply {
+            mainInsets = UIEdgeInsetsMake(8, 32, 44, 12)
+        }
+        
+        if deleted {
+            let insets = UIEdgeInsetsMake(mainInsets.top, mainInsets.left,
+                                          12, mainInsets.right)
+            let mainInsetSpec = ASInsetLayoutSpec(insets: insets, child: postTextNode)
+            let dividerStack = ASStackLayoutSpec.vertical()
+            dividerStack.children = [mainInsetSpec, dividerNode]
+            return dividerStack
+        }
+        let avatarInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 4, 4, 4), child: avatarImageNode)
         let avatarOverlay = ASOverlayLayoutSpec(child: avatarNode, overlay: avatarInset)
+        
+        let subnameCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
         
         let tStack = ASStackLayoutSpec.horizontal()
         tStack.spacing = 4.0
-        tStack.children = [usernameNode, subnameNode]
+        tStack.children = [usernameNode, subnameCenter]
         
         let titleCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: tStack)
         let titleStack = ASStackLayoutSpec.horizontal()
-        titleStack.spacing = 8.0
+        titleStack.spacing = 6.0
         titleStack.children = [avatarOverlay, titleCenter]
         
         let topStack = ASStackLayoutSpec.vertical()
@@ -184,10 +216,7 @@ class PostCommentCellNode: ASCellNode {
         
         let contentInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 0), child: contentStack)
    
-        var mainInsets = UIEdgeInsetsMake(12, 12, 44, 12)
-        if isSubReply {
-            mainInsets = UIEdgeInsetsMake(8, 44, 44, 12)
-        }
+        
         
         let mainInsetSpec = ASInsetLayoutSpec(insets: mainInsets, child: contentInset)
         let dividerStack = ASStackLayoutSpec.vertical()
@@ -204,7 +233,7 @@ class PostCommentCellNode: ASCellNode {
     var likedRefHandle:DatabaseHandle?
     
     func observePost() {
-        guard let post = self.post else { return }
+        guard let post = self.post, !post.deleted else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         likesRef = database.child("posts/meta/\(post.key)/numLikes")
         likesRefHandle = likesRef?.observe(.value, with: { snapshot in
@@ -218,10 +247,10 @@ class PostCommentCellNode: ASCellNode {
             self.actionsRow.setLiked(post.liked, animated: false)
         })
         
-        commentsRef = database.child("posts/meta/\(post.key)/replies")
-        commentsRefHandle = commentsRef?.observe(.value, with: { snapshot in
-            post.numReplies = snapshot.value as? Int ?? 0
-        })
+//        commentsRef = database.child("posts/meta/\(post.key)/numReplies")
+//        commentsRefHandle = commentsRef?.observe(.value, with: { snapshot in
+//            post.numReplies = snapshot.value as? Int ?? 0
+//        })
     }
     
     func stopObservingPost() {
@@ -266,7 +295,7 @@ extension PostCommentCellNode: PostActionsDelegate {
     
     func handleLikeButton() {
         print("liked!")
-        guard let post = self.post else { return }
+        guard let post = self.post, !post.deleted else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let ref = database.ref.child("posts/likes/\(post.key)/\(uid)")
         post.liked = !post.liked
@@ -282,7 +311,7 @@ extension PostCommentCellNode: PostActionsDelegate {
     }
     
     func handleCommentButton() {
-        guard let post = self.post else { return }
+        guard let post = self.post, !post.deleted else { return }
         delegate?.handleReply(post)
     }
     

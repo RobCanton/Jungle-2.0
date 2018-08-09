@@ -53,7 +53,7 @@ class CommentsDrawerViewController:UIViewController {
         // convert y-position to downward pull progress (percentage)
         let translation = sender.translation(in: view)
         if translation.y < 0 {
-            if translation.y < -1, let post = currentPost {
+            if translation.y < -5, let post = currentPost {
                 let commentsVC = pulleyViewController?.drawerContentViewController as! CommentsDrawerViewController
                 commentsVC.setup(withPost: post, showKeyboard: false)
                 self.pulleyViewController?.setDrawerPosition(position: .open, animated: true)
@@ -323,7 +323,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         NotificationCenter.default.removeObserver(self)
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        let ref = database.child("posts/meta/\(post.key)/subscribers/\(uid)")
+        let ref = database.child("posts/subscribers/\(post.key)/\(uid)")
         if let prevListener = subscriptionListener {
             ref.removeObserver(withHandle: prevListener)
         }
@@ -334,7 +334,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     func observePostSubscription() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        let ref = database.child("posts/meta/\(post.key)/subscribers/\(uid)")
+        let ref = database.child("posts/subscribers/\(post.key)/\(uid)")
         if let prevListener = subscriptionListener {
             ref.removeObserver(withHandle: prevListener)
         }
@@ -367,7 +367,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     @objc func toggleSubscription() {
         guard let isSubscribed = self.isSubscribed else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let ref = database.child("posts/meta/\(post.key)/subscribers/\(uid)")
+        let ref = database.child("posts/subscribers/\(post.key)/\(uid)")
         if isSubscribed {
             ref.setValue(false) { error, _ in
                 if let _  = error {
@@ -712,11 +712,14 @@ extension CommentsViewController: CommentBarDelegate {
         commentBar.textViewDidChange(self.commentBar.textView)
         commentBar.textView.resignFirstResponder()
         commentBar.placeHolderLabel.isHidden = false
+        commentBar.placeHolderLabel.font = Fonts.semiBold(ofSize: 15.0)
         commentBar.placeHolderLabel.text = "Sending..."
+        
         let pColor = commentBar.placeHolderLabel.textColor
         commentBar.placeHolderLabel.textColor = tagColor
         callFunction(text: text) { success, _reply, _replyTo in
             self.focusedReply = nil
+             self.commentBar.placeHolderLabel.font = Fonts.regular(ofSize: 15.0)
             self.commentBar.placeHolderLabel.text = "Reply..."
             self.commentBar.placeHolderLabel.textColor = pColor
             self.commentBar.isUserInteractionEnabled = true
@@ -809,35 +812,26 @@ extension CommentsViewController: CommentCellDelegate {
                 UploadService.deletePost(post) { success in
                     print("Post deleted: \(success)")
                     let state = self.topState
-                    var replyIndexPath:IndexPath?
                     if success {
                         for i in 0..<state.replies.count {
                             let reply = state.replies[i]
                             if reply.key == post.key {
-                                replyIndexPath = IndexPath(row: 0, section: i + 1)
-                                let action = Action.removeReply(at: i, sub: nil)
-                                self.topState = CommentsViewController.handleAction(action, fromState: state)
+                                
+                                self.topState.replies[i].deleted = true
                                 break
                             } else {
                                 for j in 0..<reply.replies.count {
                                     let subReply = reply.replies[j]
                                     if subReply.key == post.key {
-                                        replyIndexPath = IndexPath(row: j, section: i + 1)
-                                        let action = Action.removeReply(at: i, sub: j)
-                                        self.topState =  CommentsViewController.handleAction(action, fromState: state)
+                                        self.topState.replies[i].replies[j].deleted = true
                                         break
                                     }
                                 }
                             }
                         }
-                    }
-                    if let indexPath = replyIndexPath {
-                        print("REMOVE INDEX: \(indexPath)")
                         self.tableNode.reloadData()
-//                        self.tableNode.performBatchUpdates({
-//                            self.tableNode.deleteRows(at: [indexPath], with: .automatic)
-//                        }, completion: { _ in })
                     }
+                    
                 }
             }))
         } else {

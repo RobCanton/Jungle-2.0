@@ -8,6 +8,7 @@
 
 import UIKit
 import DynamicButton
+import Pastel
 
 class AuthViewController: UIViewController {
 
@@ -15,9 +16,23 @@ class AuthViewController: UIViewController {
     @IBOutlet weak var loginContainer: UIView!
     @IBOutlet weak var signupButton: UIButton!
     
+    var pastelView:PastelView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        pastelView = PastelView(frame:view.bounds)
+        pastelView.startPastelPoint = .topLeft
+        pastelView.endPastelPoint = .bottomRight
+        
+        // Custom Duration
+        pastelView.animationDuration = 12
+        pastelView.setColors([hexColor(from: "00CA65"),
+                              hexColor(from: "00937B")])
+        pastelView.isUserInteractionEnabled = false
+        
+        view.insertSubview(pastelView, at: 0)
+        
         
         loginButton.layer.cornerRadius = loginButton.bounds.height / 2
         loginButton.clipsToBounds = true
@@ -29,6 +44,11 @@ class AuthViewController: UIViewController {
         
         signupButton.layer.borderColor = UIColor.white.cgColor
         signupButton.layer.borderWidth = 3.0
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        pastelView.startStatic()
     }
 
     override func didReceiveMemoryWarning() {

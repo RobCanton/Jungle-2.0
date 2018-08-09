@@ -60,7 +60,7 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         dimView.isUserInteractionEnabled = false
         dimView.alpha = 0.0
         
-        closeButton = DynamicButton(style: .caretLeft)
+        closeButton = DynamicButton(style: .close)
         closeButton.highlightStokeColor = UIColor.white
         closeButton.strokeColor = UIColor.white
         view.addSubview(closeButton)

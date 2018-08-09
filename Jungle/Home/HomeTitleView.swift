@@ -238,10 +238,12 @@ class DualScrollView:UIView {
         button1.titleLabel?.font = buttonFont
         
         
+        
         button2 = UIButton(type: .custom)
         button2.setTitle(title2, for: .normal)
         button2.setTitleColor(UIColor.white, for: .normal)
         button2.titleLabel?.font = buttonFont
+        button2.alpha = 0.6
 
         addSubview(button1)
         button1.translatesAutoresizingMaskIntoConstraints = false
@@ -267,6 +269,9 @@ class DualScrollView:UIView {
         barLeadingAnchor = barView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0)
         barLeadingAnchor.isActive = true
         barView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: 0).isActive = true
+        
+        button1.addTarget(self, action: #selector(handleTab), for: .touchUpInside)
+        button2.addTarget(self, action: #selector(handleTab), for: .touchUpInside)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -274,11 +279,24 @@ class DualScrollView:UIView {
     }
     
     func setProgress(_ progress:CGFloat, index:Int) {
-
+        barLeadingAnchor.constant = (frame.width/2) * progress
+        button1.alpha = 0.6 + 0.4 * (1 - progress)
+        button2.alpha = 0.6 + 0.4 * progress
+        self.layoutIfNeeded()
     }
     
     @objc func handleTab(_ sender:UIButton) {
-
+        print("HANDLE TAB")
+        switch sender {
+        case button1:
+            delegate?.tabScrollTo(index: 0)
+            break
+        case button2:
+            delegate?.tabScrollTo(index: 1)
+            break
+        default:
+            break
+        }
     }
     
 }

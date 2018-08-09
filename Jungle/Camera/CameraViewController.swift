@@ -61,6 +61,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             captureView.isHidden = false
             photoPreviewView.isHidden = true
             photoPreviewView.image = nil
+            videoURL = nil
             break
         case .recording:
             if state == .running {
@@ -75,9 +76,9 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             photoPreviewView.isHidden = false
             hudView.editingState()
             if state == .recording {
-                location = gpsService.getLastLocation()
-                region = gpsService.region
-                hudView.optionsBar.region = region
+//                location = gpsService.getLastLocation()
+//                region = gpsService.region
+//                hudView.optionsBar.region = region
             } else if state == .writing {
                 hudView.writingState(forward: false)
             } else if state == .stickers {
@@ -174,6 +175,11 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         hudView.observeKeyboard(true)
         
         self.captureView.setup()
+        
+        location = gpsService.getLastLocation()
+        region = gpsService.region
+        hudView.optionsBar.region = region
+
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -250,6 +256,10 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     func handlePost() {
         hudView.startPostAnimation()
         hudView.textView.resignFirstResponder()
+        if !hudView.optionsBar.includeRegion {
+            self.region = nil
+            self.location = nil
+        }
         
         if let url = videoURL {
             self.processVideoWithWatermark(videoURL: url) { _compressedVideoURL in

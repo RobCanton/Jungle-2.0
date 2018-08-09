@@ -112,8 +112,8 @@ class PostNode:ASDisplayNode {
         self.post = post
         self.backgroundColor = currentTheme.backgroundColor//hexColor(from: "#333742")
         automaticallyManagesSubnodes = true
-        
-        postTextNode.maximumNumberOfLines = 4
+        postTextNode.maximumNumberOfLines = post.attachments.isImage
+            || post.attachments.isVideo ? 4 : 6
         postTextNode.tapHandler = { type, value in
             switch type {
             case .hashtag:
@@ -157,7 +157,7 @@ class PostNode:ASDisplayNode {
         moreButton.setImage(UIImage(named:"more"), for: .normal)
         moreButton.addTarget(self, action: #selector(handleMore), forControlEvents: .touchUpInside)
         moreButton.imageNode.imageModificationBlock = { image in
-            return image.maskWithColor(color: currentTheme.secondaryTextColor.withAlphaComponent(0.5))
+            return image.maskWithColor(color: currentTheme.secondaryTextColor)
         }
         //moreButton.isHidden = true
         avatarNode.backgroundColor = post.anon.color.withAlphaComponent(0.30)
@@ -184,7 +184,7 @@ class PostNode:ASDisplayNode {
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
             NSAttributedStringKey.foregroundColor: currentTheme.backgroundColor
             ])
-        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 0, right: 4.0)
+        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
         subnameNode.backgroundColor = post.anon.color
         
         timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
@@ -218,11 +218,11 @@ class PostNode:ASDisplayNode {
             
         } else {
             previewNode = PreviewNode()
+            
             postTextNode.setText(text: post.text, withSize: 14.0,
                                  normalColor: currentTheme.primaryTextColor, activeColor: currentTheme.secondaryAccentColor)
         }
         
-        previewNode.style.height = ASDimension(unit: .points, value: 144)
         self.previewNode.imageNode.shouldCacheImage = true
         
         if post.attachments.isVideo {
@@ -262,8 +262,10 @@ class PostNode:ASDisplayNode {
         actionStack.alignContent = .spaceBetween
         actionStack.justifyContent = .spaceBetween
         
+        let subnameCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
+        
         let titleStack = ASStackLayoutSpec.horizontal()
-        titleStack.children = [titleNode, subnameNode]
+        titleStack.children = [titleNode, subnameCenter]
         titleStack.spacing = 4.0
         
         let headerStack = ASStackLayoutSpec.vertical()
@@ -281,22 +283,26 @@ class PostNode:ASDisplayNode {
         contentStack.children = [headerOverlay, postTextNode, actionStack]
         contentStack.style.width = ASDimension(unit: .fraction, value: 1.0)
         contentStack.spacing = 6.0
+        
         previewNode.style.width = ASDimension(unit: .fraction, value: 0.25)
+        previewNode.style.height = ASDimension(unit: .points, value: 144)
         
         let stack = ASStackLayoutSpec.horizontal()
         let contentInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(2, 2, 2, 2), child: contentStack)
         stack.children = [contentInset]
-        var leftInset:CGFloat = 8
+        
         if let post = post {
             if post.attachments.isImage || post.attachments.isVideo {
-                stack.children?.append(previewNode)
-                contentStack.style.width = ASDimension(unit: .fraction, value: 0.70)
-                leftInset = 4
+                let previewNodeInsets = UIEdgeInsetsMake(0, 4, 0, 16)
+                let insetPreviewNode = ASInsetLayoutSpec(insets: previewNodeInsets, child: previewNode)
+                stack.children?.append(insetPreviewNode)
+                contentStack.style.width = ASDimension(unit: .fraction, value: 0.75)
+                
             }
         }
         
-        stack.spacing = 12
-        let mainInsets = UIEdgeInsetsMake(8, 8, 8, leftInset)
+        stack.spacing = 0
+        let mainInsets = UIEdgeInsetsMake(8, 8, 8, 8)
         
         return ASInsetLayoutSpec(insets: mainInsets, child: stack)
     }
@@ -328,7 +334,7 @@ class PostNode:ASDisplayNode {
             post.liked = snapshot.value as? Bool ?? false
         })
         
-        commentsRef = database.child("posts/meta/\(post.key)/replies")
+        commentsRef = database.child("posts/meta/\(post.key)/numReplies")
         commentsRefHandle = commentsRef?.observe(.value, with: { snapshot in
             post.numReplies = snapshot.value as? Int ?? 0
             let commentTitle = NSMutableAttributedString(string: numericShorthand(post.numReplies), attributes: [
@@ -503,6 +509,7 @@ class NewPostCellNode:ASCellNode {
             
         } else {
             previewNode = PreviewNode()
+            postTextNode.maximumNumberOfLines = 6
             postTextNode.setText(text: post.text, withSize: 14.0,
                                  normalColor: currentTheme.primaryTextColor, activeColor: currentTheme.secondaryAccentColor)
         }
@@ -511,6 +518,7 @@ class NewPostCellNode:ASCellNode {
         self.previewNode.imageNode.shouldCacheImage = true
         
         if post.attachments.isVideo {
+            postTextNode.maximumNumberOfLines = 4
             let thumbnailRef = storage.child("publicPosts/\(post.key)/thumbnail.gif")
             print("IS VIDEO MAN!")
             thumbnailRef.downloadURL { url, error in
@@ -519,6 +527,7 @@ class NewPostCellNode:ASCellNode {
             }
         } else if post.attachments.isImage {
             print("IS IMAGE MAN!")
+            postTextNode.maximumNumberOfLines = 4
             let thumbnailRef = storage.child("publicPosts/\(post.key)/thumbnail.jpg")
             thumbnailRef.downloadURL { url, error in
                 self.previewNode.imageNode.url = url
@@ -547,8 +556,9 @@ class NewPostCellNode:ASCellNode {
         actionStack.alignContent = .spaceBetween
         actionStack.justifyContent = .spaceBetween
         
+        let subnameCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
         let titleStack = ASStackLayoutSpec.horizontal()
-        titleStack.children = [titleNode, subnameNode]
+        titleStack.children = [titleNode, subnameCenter]
         titleStack.spacing = 4.0
         
         let headerStack = ASStackLayoutSpec.vertical()
@@ -610,7 +620,7 @@ class NewPostCellNode:ASCellNode {
             post.liked = snapshot.value as? Bool ?? false
         })
         
-        commentsRef = database.child("posts/meta/\(post.key)/replies")
+        commentsRef = database.child("posts/meta/\(post.key)/numReplies")
         commentsRefHandle = commentsRef?.observe(.value, with: { snapshot in
             post.numReplies = snapshot.value as? Int ?? 0
             let commentTitle = NSMutableAttributedString(string: numericShorthand(post.numReplies), attributes: [

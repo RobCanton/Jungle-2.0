@@ -15,6 +15,7 @@ target 'Jungle' do
   pod 'Firebase/Firestore'
   pod 'Firebase/Functions'
   pod 'Firebase/Messaging'
+  pod 'Firebase/DynamicLinks'
   pod 'Texture'
   pod 'SwiftMessages'
   pod 'ScrollableGraphView', :git => 'https://github.com/barnaclejive/ScrollableGraphView', :branch => 'master'
@@ -28,4 +29,5 @@ target 'Jungle' do
   pod 'JaneSliderControl'
   pod 'Differ'
   pod "Pastel"
+  pod 'JGProgressHUD'
 end

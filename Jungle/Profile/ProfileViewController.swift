@@ -14,7 +14,7 @@ class ProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSource
     
     var titleView:JTitleView!
     var pagerNode:ASPagerNode!
-    var tabScrollView:TabScrollView!
+    var tabScrollView:DualScrollView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,14 +42,15 @@ class ProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSource
         view.addSubview(scrollTabBar)
         scrollTabBar.translatesAutoresizingMaskIntoConstraints = false
         scrollTabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        scrollTabBar.topAnchor.constraint(equalTo: titleView.bottomAnchor, constant: -12).isActive = true
+        scrollTabBar.topAnchor.constraint(equalTo: titleView.bottomAnchor, constant: 0).isActive = true
         scrollTabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        scrollTabBar.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+        scrollTabBar.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
         
-        tabScrollView = TabScrollView(frame: .zero, titles: ["POSTS", "COMMENTS", "LIKES"])
+        tabScrollView = DualScrollView(frame: CGRect(x: 0, y: 0, width: view.bounds.width - 104, height: 44.0), title1: "POSTS", title2: "COMMENTS")
         scrollTabBar.addSubview(tabScrollView)
         tabScrollView.translatesAutoresizingMaskIntoConstraints = false
-        tabScrollView.centerXAnchor.constraint(equalTo: scrollTabBar.centerXAnchor).isActive = true
+        tabScrollView.leadingAnchor.constraint(equalTo: scrollTabBar.leadingAnchor, constant: 52.0).isActive = true
+        tabScrollView.trailingAnchor.constraint(equalTo: scrollTabBar.trailingAnchor, constant: -52.0).isActive = true
         tabScrollView.topAnchor.constraint(equalTo: scrollTabBar.topAnchor).isActive = true
         tabScrollView.bottomAnchor.constraint(equalTo: scrollTabBar.bottomAnchor).isActive = true
         tabScrollView.delegate = self
@@ -93,10 +94,6 @@ class ProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSource
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: false)
-        if !UserService.isSignedIn {
-            let loginVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "AuthViewController") as! AuthViewController
-            self.present(loginVC, animated: true, completion: nil)
-        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -140,20 +137,15 @@ class ProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSource
     }
     
     func numberOfPages(in pagerNode: ASPagerNode) -> Int {
-        return 3
+        return 2
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard scrollView == pagerNode.view else { return }
         let offsetX = scrollView.contentOffset.x
         let viewWidth = view.bounds.width
-        if offsetX < viewWidth {
-            let progress = offsetX / viewWidth
-            tabScrollView.setProgress(progress, index: 0)
-        } else {
-            let progress = (offsetX - viewWidth) / viewWidth
-            tabScrollView.setProgress(progress, index: 1)
-        }
+        let progress = offsetX / viewWidth
+        tabScrollView.setProgress(progress, index: 0)
     }
     
     func tabScrollTo(index: Int) {

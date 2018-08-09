@@ -14,12 +14,12 @@ import AsyncDisplayKit
 class TrendingHashtag {
     var hastag:String
     var count:Int
-    var post:Post
+    var posts:[Post]
     
-    init(hashtag:String, count:Int,post:Post) {
+    init(hashtag:String, count:Int,posts:[Post]) {
         self.hastag = hashtag
         self.count = count
-        self.post = post
+        self.posts = posts
     }
 }
 
@@ -46,6 +46,7 @@ class SearchTabViewController:JViewController, RCSearchBarDelegate {
         super.viewDidLoad()
         view.backgroundColor = bgColor
         
+        
         let topInset = UIApplication.deviceInsets.top
         let titleViewHeight = 50 + topInset
         
@@ -59,6 +60,16 @@ class SearchTabViewController:JViewController, RCSearchBarDelegate {
         searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         searchBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         searchBar.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
+        
+        let bgImageView = UIImageView(image: UIImage(named:"GreenBox"))
+        view.insertSubview(bgImageView, belowSubview: searchBar)
+        bgImageView.translatesAutoresizingMaskIntoConstraints = false
+        bgImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        bgImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        bgImageView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        bgImageView.heightAnchor.constraint(equalToConstant:  titleViewHeight).isActive = true
+        
+        view.layoutIfNeeded()
         
         trendingHashtagsNode = TrendingHashtagsNode()
         view.addSubview(trendingHashtagsNode.view)

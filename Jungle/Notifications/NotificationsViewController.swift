@@ -56,6 +56,7 @@ class NotificationsViewController:JViewController, ASTableDelegate, ASTableDataS
         tableNode.view.tableHeaderView = UIView()
         tableNode.view.tableFooterView = UIView()
         tableNode.view.separatorColor = currentTheme.highlightedBackgroundColor
+        tableNode.view.backgroundColor = hexColor(from: "#EFEFEF")
         tableNode.delegate = self
         tableNode.dataSource = self
         tableNode.leadingScreensForBatching = 1.5
@@ -176,7 +177,13 @@ class NotificationsViewController:JViewController, ASTableDelegate, ASTableDataS
         
         var post:Post?
         
-        let notification = notifications[indexPath.row]
+        var notification:JNotification
+        if indexPath.section == 0 {
+            notification = newNotifications[indexPath.row]
+        } else {
+            notification = notifications[indexPath.row]
+        }
+        
         if let replyNotification = notification as? PostReplyNotification {
             post = replyNotification.post
         } else if let likeNotification = notification as? PostVotesNotification {

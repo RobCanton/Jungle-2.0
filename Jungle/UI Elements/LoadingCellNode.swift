@@ -31,7 +31,7 @@ final class LoadingCellNode: ASCellNode {
         text.attributedText = NSAttributedString(
             string: "Loading…",
             attributes: [
-                NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
+                NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
                 NSAttributedStringKey.foregroundColor: UIColor.lightGray
             ])
         addSubnode(spinner)
@@ -46,7 +46,7 @@ final class LoadingCellNode: ASCellNode {
         
         return ASStackLayoutSpec(
             direction: .horizontal,
-            spacing: 16,
+            spacing: 12,
             justifyContent: .center,
             alignItems: .center,
             children: [ spinner, text ])

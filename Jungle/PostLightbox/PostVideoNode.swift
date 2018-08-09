@@ -17,7 +17,9 @@ class PostContentNode:ASDisplayNode {
     var usernameNode = ASTextNode()
     var imageNode = ASNetworkImageNode()
     var videoNode = ASVideoNode()
-    var textNode = ASTextNode()
+    var textNode = ActiveTextNode()
+    var subnameNode = ASTextNode()
+    var timeNode = ASTextNode()
     var gradientNode = ASDisplayNode()
     var spinnerNode = SpinnerNode()
     weak var post:Post?
@@ -35,6 +37,8 @@ class PostContentNode:ASDisplayNode {
         videoNode.backgroundColor = UIColor.black
         imageNode.backgroundColor = UIColor.black
         
+        textNode.isUserInteractionEnabled = true
+        
         avatarNode = AvatarNode(post: post, cornerRadius: 22, imageInset: 6)
         avatarNode.style.height = ASDimension(unit: .points, value: 44)
         avatarNode.style.width = ASDimension(unit: .points, value: 44)
@@ -43,6 +47,29 @@ class PostContentNode:ASDisplayNode {
             NSAttributedStringKey.font: Fonts.bold(ofSize: 18.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
+        
+        var subnameStr = ""
+        if post.isYou {
+            subnameStr = "YOU"
+            subnameNode.isHidden = false
+        }else {
+            subnameNode.isHidden = true
+        }
+        
+        subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 10.0),
+            NSAttributedStringKey.foregroundColor: post.anon.color
+            ])
+        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
+        subnameNode.backgroundColor = UIColor.white
+        
+        timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNowWithAgo() , attributes: [
+            NSAttributedStringKey.font: Fonts.regular(ofSize: 15.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white
+            ])
+        
+        subnameNode.isHidden = true
+        timeNode.isHidden = true
         
         
         if let _ = post.blockedMessage {
@@ -93,16 +120,20 @@ class PostContentNode:ASDisplayNode {
                 spinnerNode.alpha = 0.0
                 imageNode.isHidden = true
                 videoNode.isHidden = true
+                subnameNode.isHidden = false
+                timeNode.isHidden = false
                 //backgroundColor = accentColor
                 let paragraphStyle = NSMutableParagraphStyle()
                 paragraphStyle.alignment = .center
                 
-                //textNode.maximumNumberOfLines = 7
                 textNode.textContainerInset = UIEdgeInsetsMake(16,24,16,24)
-                textNode.attributedText = NSAttributedString(string: post.text, attributes: [
-                    NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(1.0),
-                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 24.0)
-                ])
+                textNode.setText(text: post.text, withSize: 24.0, normalColor: .white, activeColor: UIColor.white.withAlphaComponent(0.67))
+                //textNode.maximumNumberOfLines = 7
+                
+//                textNode.attributedText = NSAttributedString(string: post.text, attributes: [
+//                    NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(1.0),
+//                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 24.0)
+//                ])
             }
             
         }
@@ -139,14 +170,19 @@ class PostContentNode:ASDisplayNode {
         videoNode.muted = true
         imageNode.isHidden = false
         spinnerNode.isHidden = false
-        let imageRef = storage.child("publicPosts/\(post.key)/image.jpg")
-        imageRef.downloadURL { url, error in
-            self.imageNode.url = url
+        
+        UploadService.retrieveImage(withKey: post.key) { image, _ in
+            print("WE GOT DA IMAGE: \(image)")
+            self.imageNode.image = image
         }
     }
     
     override func didLoad() {
         super.didLoad()
+        
+        subnameNode.layer.cornerRadius = 2.0
+        subnameNode.clipsToBounds = true
+        
         let gradient = CAGradientLayer()
         gradient.frame = UIScreen.main.bounds
         gradient.colors = [UIColor.clear.cgColor, UIColor(white: 0.0, alpha: 0.25).cgColor]
@@ -154,7 +190,8 @@ class PostContentNode:ASDisplayNode {
         gradient.startPoint = CGPoint(x: 0.0, y: 0.5)
         gradient.endPoint = CGPoint(x: 0.0, y: 1.0)
         gradientNode.view.layer.addSublayer(gradient)
-        
+        gradientNode.isUserInteractionEnabled = false
+        gradientNode.view.isUserInteractionEnabled = false
         spinnerNode.activityIndicatorView.activityIndicatorViewStyle = .white
         spinnerNode.startAnimating()
     
@@ -173,10 +210,17 @@ class PostContentNode:ASDisplayNode {
         let pastelOverlay = ASOverlayLayoutSpec(child: pastelNode, overlay: imageNode)
         let videoImageOverlay = ASOverlayLayoutSpec(child: pastelOverlay, overlay: videoNode)
         
-        let centerUsername = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: usernameNode)
+        let subnameCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
+        let usernameStack = ASStackLayoutSpec.horizontal()
+        usernameStack.children = [usernameNode, subnameCenter]
+        usernameStack.spacing = 8.0
+        
+        let nameStack = ASStackLayoutSpec.vertical()
+        nameStack.children = [usernameStack, timeNode]
+        nameStack.spacing = 2.0
         
         let titleStack = ASStackLayoutSpec.horizontal()
-        titleStack.children = [avatarNode, centerUsername ]
+        titleStack.children = [avatarNode, nameStack ]
         titleStack.spacing = 10
         titleStack.style.width = ASDimension(unit: .points, value: constrainedSize.max.width - 48)
         let titleInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 24, 0, 24), child: titleStack)

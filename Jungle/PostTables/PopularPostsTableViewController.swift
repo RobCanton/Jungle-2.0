@@ -17,7 +17,7 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
         return PopularLightboxViewController()
     }
     
-    override var headerCell: ASCellNode? {
+    override var headerCell: ASCellNode {
         let cell = PopularPostsHeaderCellNode()
         cell.delegate = self
         cell.selectionStyle = .none
@@ -55,7 +55,7 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
         controller.hidesBottomBarWhenPushed = true
         controller.initialIndex = 0
         controller.initialSearch = "#\(tag.hastag)"
-        controller.initialPost = tag.post
+        controller.initialPosts = tag.posts
         
         let drawerVC = CommentsDrawerViewController()
         

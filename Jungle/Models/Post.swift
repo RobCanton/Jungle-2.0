@@ -44,7 +44,7 @@ class Post {
     var topComment:Post?
     var vote = Vote.notvoted
     var isYou = false
-    
+    var deleted = false
     var offenses:[String]
     var offensesStr:String {
         var str = ""
@@ -136,7 +136,18 @@ class Post {
             
             let gradient = data["gradient"] as? [String] ?? [String]()
             
-            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:[], reports: reports, parent: parent, replyTo: replyTo, gradient: gradient )
+            var replies:[Post] = []
+            if let repliesData = data["replies"] as? [[String:Any]] {
+                for replyData in repliesData {
+                    if let reply = Post.parse(data: replyData) {
+                        replies.append(reply)
+                    }
+                }
+            }
+            
+            
+            
+            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:replies, reports: reports, parent: parent, replyTo: replyTo, gradient: gradient )
             post?.isYou = data["isYou"] as? Bool ?? false
             
             if let parentData = data["parentPost"] as? [String:Any] {
@@ -144,13 +155,19 @@ class Post {
                 print("SET PARENT POST!")
             }
             post?.likedAt = data["likedAt"] as? Double
+            
+            if let deleted = data["deleted"] as? Bool {
+                post?.deleted = deleted
+            }
         }
         return post
     }
     
     static func parse(data:[String:Any]) -> Post? {
         var post:Post?
-        if let id = data["id"] as? String,
+        guard let status = data["status"] as? String else { return nil }
+        if status == "active",
+            let id = data["id"] as? String,
             let anon = Anon.parse(data),
             let text = data["text"] as? String,
             let textClean = data["textClean"] as? String,
@@ -188,7 +205,21 @@ class Post {
             
             let gradient = data["gradient"] as? [String] ?? [String]()
             
-            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:[], reports: reports, parent: parent, replyTo: replyTo, gradient: gradient)
+            var replies:[Post] = []
+            if let repliesData = data["replies"] as? [[String:Any]] {
+                for replyData in repliesData {
+                    if let reply = Post.parse(data: replyData) {
+                        replies.insert(reply, at: 0)
+                    }
+                }
+            }
+            
+            post = Post(key: id, anon: anon, text: text, textClean: textClean,
+                        createdAt: Date(timeIntervalSince1970: createdAt / 1000),
+                        attachments: attachments, location:location, tags: tags,
+                        score:score, votes: votes,numLikes: numLikes,
+                        numReplies: numReplies, replies: replies, reports: reports,
+                        parent: parent, replyTo: replyTo, gradient: gradient)
             post?.isYou = data["isYou"] as? Bool ?? false
             
             if let parentData = data["parentPost"] as? [String:Any] {
@@ -196,41 +227,52 @@ class Post {
                 print("SET PARENT POST!")
             }
             post?.likedAt = data["likedAt"] as? Double
+            
+            if let deleted = data["deleted"] as? Bool {
+                post?.deleted = deleted
+            }
         }
         return post
     }
     
-    func fetchReplies( completion:@escaping ()->()) {
-        let repliesRef = firestore.collection("posts")
-            .whereField("status", isEqualTo: "active")
-            .whereField("replyTo", isEqualTo: key)
-            .order(by: "createdAt", descending: true)
-        
-        var queryRef:Query!
-        if replies.count > 0 {
-            let lastReplyTimestamp = replies[0].createdAt.timeIntervalSince1970 * 1000
-            queryRef = repliesRef.start(after: [lastReplyTimestamp]).limit(to: 5)
-        } else{
-            queryRef = repliesRef.limit(to: 5)
-        }
-        
-        queryRef.getDocuments() { (querySnapshot, err) in
-            var _replies = [Post]()
-            if let err = err {
-                print("Error getting documents: \(err)")
-            } else {
-                let documents = querySnapshot!.documents
-                
-                for document in documents {
-                    if let reply = Post.parse(id: document.documentID, document.data()) {
-                        _replies.insert(reply, at: 0)
+    func fetchReplies(completion:@escaping ()->()) {
+        guard let parentKey = self.parent else { return completion()}
+        PostsService.getMyAnon(forPostID: parentKey) { _, myAnonKey in
+            let repliesRef = firestore.collection("posts")
+                .whereField("status", isEqualTo: "active")
+                .whereField("replyTo", isEqualTo: self.key)
+                .order(by: "createdAt", descending: true)
+            
+            var queryRef:Query!
+            if self.replies.count > 0 {
+                let lastReplyTimestamp = self.replies[0].createdAt.timeIntervalSince1970 * 1000
+                queryRef = repliesRef.start(after: [lastReplyTimestamp]).limit(to: 5)
+            } else{
+                queryRef = repliesRef.limit(to: 5)
+            }
+            
+            queryRef.getDocuments() { (querySnapshot, err) in
+                var _replies = [Post]()
+                if let err = err {
+                    print("Error getting documents: \(err)")
+                } else {
+                    let documents = querySnapshot!.documents
+                    
+                    for document in documents {
+                        print("REPLY \(document.documentID) DATA: \(document.data())")
+                        
+                        if let reply = Post.parse(id: document.documentID, document.data()) {
+                            reply.isYou = reply.anon.key == myAnonKey
+                            _replies.insert(reply, at: 0)
+                        }
                     }
                 }
+                self.replies.insert(contentsOf: _replies, at: 0)
+                //self.endReached = self.replies.count >= self.numReplies
+                completion()
             }
-            self.replies.insert(contentsOf: _replies, at: 0)
-            //self.endReached = self.replies.count >= self.numReplies
-            completion()
         }
+        
     }
 }
 

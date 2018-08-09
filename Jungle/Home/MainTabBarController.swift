@@ -11,7 +11,6 @@ import UIKit
 import SwiftMessages
 import Alamofire
 import Pulley
-import UICircularProgressRing
 import Firebase
 import UserNotifications
 
@@ -37,14 +36,7 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
     
     var popupBottomAnchor:NSLayoutConstraint?
     
-    struct Timeout {
-        var canPost:Bool
-        var progress:CGFloat
-    }
-    
-    var progressRing:UICircularProgressRingView!
-    
-    var timeout = Timeout(canPost: true, progress: 0.0)
+    var progressView:ACRCircleView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -57,7 +49,7 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         tabBar.addSubview(postButtonContainer)
         tabBar.tintColor = accentColor
         tabBar.unselectedItemTintColor = accentColor
-        
+        //postButtonContainer.backgroundColor = accentColor
         postButtonContainer.translatesAutoresizingMaskIntoConstraints = false
         postButtonContainer.centerXAnchor.constraint(equalTo: tabBar.centerXAnchor).isActive = true
         postButtonContainer.centerYAnchor.constraint(equalTo: tabBar.centerYAnchor).isActive = true
@@ -66,42 +58,33 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         postButtonHeight = postButtonContainer.heightAnchor.constraint(equalToConstant:  pHeight)
         postButtonHeight.isActive = true
         
+        postButtonContainer.layer.cornerRadius = postButtonContainer.bounds.height / 2
+        postButtonContainer.clipsToBounds = true
+        
         postButton = UIButton(frame: postButtonContainer.bounds)
         postButton.setImage(UIImage(named:"NewPost"), for: .normal)
-        postButton.backgroundColor = UIColor.clear
-        //postButtonContainer.alpha = 0.35
         
         postButton.layer.cornerRadius = postButton.frame.height / 2
         postButton.clipsToBounds = true
         postButton.addTarget(self, action: #selector(openNewPostVC), for: .touchUpInside)
-        
         postButtonContainer.addSubview(postButton)
-
-        progressRing = UICircularProgressRingView(frame: CGRect(x: 0, y: 0, width: pHeight, height: pHeight))
-        // Change any of the properties you'd like
-        self.tabBar.addSubview(progressRing)
-        progressRing.translatesAutoresizingMaskIntoConstraints = false
-        progressRing.centerXAnchor.constraint(equalTo: tabBar.centerXAnchor).isActive = true
-        progressRing.centerYAnchor.constraint(equalTo: tabBar.centerYAnchor).isActive = true
-        progressRing.widthAnchor.constraint(equalToConstant: pHeight + 5).isActive = true
-        progressRing.heightAnchor.constraint(equalToConstant:  pHeight + 5).isActive = true
         
-        progressRing.maxValue = 1
-        progressRing.shouldShowValueText = false
         
-        progressRing.ringStyle = .gradient
-        progressRing.outerRingWidth = 2.0
-        progressRing.outerRingColor = UIColor(white: 0.0, alpha: 0.0)
-        progressRing.innerRingWidth = 2.0
-        progressRing.gradientColors = [hexColor(from: "6BE6AC"), hexColor(from: "426ED6")]
         
-        progressRing.innerCapStyle = .butt
-        progressRing.innerRingSpacing = 0.0
-        progressRing.startAngle = -90
-        //progressRing.applyShadow(radius: 2.0, opacity: 0.15, offset: .zero, color: UIColor.black, shouldRasterize: false)
+        progressView = ACRCircleView(frame: postButtonContainer.bounds)
+        progressView.baseColor = UIColor.clear
+        progressView.tintColor = UIColor.white
+        progressView.strokeWidth = 10
+        progressView.transform = CGAffineTransform(scaleX: -1, y: 1)
+        postButtonContainer.addSubview(progressView)
+        // Full circle "pie chart" style.
+         progressView.strokeWidth = progressView.bounds.width / 2
+        progressView.progress = 0.25
+        progressView.alpha = 0.75
+        progressView.isUserInteractionEnabled = false
         
-        progressRing.setProgress(value: 0.75, animationDuration: 1.0)
-        progressRing.alpha = 0.0
+        updatePostTimer()
+        
         self.tabBar.unselectedItemTintColor = hexColor(from: "#708078")
         SearchService.getTrendingHastags()
 
@@ -109,12 +92,25 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
             StickerService.packs = packs
         }
         
-        NotificationCenter.default.addObserver(self, selector: #selector(handleUserUpdate), name: UserService.userUpdatedNotification, object: nil)
+        tabBar.items?[2].isEnabled = false
+        
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         observeNotificationsCount()
+        
+        
+        tabBar.items?[4].isEnabled = true
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let timeoutRef = firestore.collection("userTimeouts").document(uid)
+        timeoutRef.addSnapshotListener { snapshot, error in
+            if let data = snapshot?.data() {
+                UserService.timeout = UserService.parseTimeout(data)
+                self.updatePostTimer()
+            }
+        }
     }
     
     var notificationsCountHandle:UInt?
@@ -138,30 +134,39 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
     }
     
     func updatePostTimer() {
-        if timeout.canPost {
-            postButton.setImage(UIImage(named:"NewPost"), for: .normal)
-            postButtonContainer.alpha = 1.0
-        } else {
-            postButton.setImage(UIImage(named:"NewPostTimeout"), for: .normal)
-            postButtonContainer.alpha = 0.5
-        }
-        print("PROGRESS: \(timeout.progress)")
+        self.progressView.progress =  UserService.timeout.progress
     }
     
     @objc func openNewPostVC() {
-        if UserService.isSignedIn {
-            
+        let timeout = UserService.timeout
+        if timeout.canPost {
             let controller = CameraViewController()
             self.present(controller, animated: true, completion: nil)
         } else {
-            openLoginView()
+            let error = MessageView.viewFromNib(layout: .cardView)
+            var minutes:String
+            if timeout.minsLeft == 0 {
+                minutes = "less than a minute."
+            } else if timeout.minsLeft == 1 {
+                minutes = "1 minute."
+            } else {
+                minutes = "\(timeout.minsLeft) minutes."
+            }
+            
+            error.configureContent(title: "Hold on!", body: "You can post again in \(minutes)", iconImage: Icon.errorLight.image)
+            error.button?.removeFromSuperview()
+            error.configureTheme(.error, iconStyle: .default)
+            error.configureDropShadow()
+            error.configureTheme(backgroundColor: tagColor, foregroundColor: .white)
+            var config = SwiftMessages.Config.init()
+            config.presentationContext = .viewController(self)
+            config.duration = .seconds(seconds: 4.0)
+            config.presentationStyle = .bottom
+            
+            messageWrapper.show(config: config, view: error)
         }
     }
     
-    @objc func handleUserUpdate() {
-        guard let user = currentUser else { return }
-        
-    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -199,8 +204,11 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
     
     
     func openLoginView() {
-        let loginVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "AuthViewController") as! AuthViewController
-        self.present(loginVC, animated: true, completion: nil)
+//        let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
+//        blurView.frame = view.bounds
+//        view.addSubview(blurView)
+        let controller = EmailViewController()
+        self.present(controller, animated: true, completion: nil)
     }
     
     @objc func handleUnseenNotification() {
@@ -233,5 +241,6 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         config.dimMode = .color(color: UIColor(white: 0.25, alpha: 1.0), interactive: true)
         self.messageWrapper.show(config: config, view: messageView)
     }
+    
 }
 

@@ -29,9 +29,12 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     var transitionManager = LightboxTransitionManager()
     var pushTransitionManager = PushTransitionManager()
     
-    var headerCell:ASCellNode? {
+    var headerCell:ASCellNode {
         get {
-            return nil
+            let cell = ASCellNode()
+            cell.style.height = ASDimension(unit: .points, value: 12.0)
+            cell.selectionStyle = .none
+            return cell
         }
     }
     
@@ -71,7 +74,6 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         tableNode.delegate = self
         tableNode.dataSource = self
         
-        tableNode.contentInset = UIEdgeInsetsMake(12, 0, 0, 0)
         tableNode.view.separatorStyle = .none
         tableNode.view.showsVerticalScrollIndicator = true
         tableNode.view.delaysContentTouches = false
@@ -83,6 +85,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         self.view.clipsToBounds = false
         
         refreshControl = UIRefreshControl()
+        refreshControl.tintColor = UIColor.lightGray
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         tableNode.view.refreshControl = refreshControl
     }
@@ -91,6 +94,9 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
         if refreshControl.isRefreshing { return false }
         return shouldBatchFetch
     }
+    
+
+    
     
     @objc func handleRefresh() {}
     
@@ -166,7 +172,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     
     func tableNode(_ tableNode: ASTableNode, numberOfRowsInSection section: Int) -> Int {
         if section == 0 {
-            return headerCell != nil ? 1 : 0
+            return 1
         }
         var count = state.posts.count
         if state.fetchingMore {
@@ -177,7 +183,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
         if indexPath.section == 0 {
-            return headerCell ?? ASCellNode()
+            return headerCell
         }
         let rowCount = self.tableNode(tableNode, numberOfRowsInSection: 1)
         

@@ -11,11 +11,13 @@
 		B00124642068560A00E5F2A6 /* SearchTabViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00124632068560A00E5F2A6 /* SearchTabViewController.swift */; };
 		B0017D8D204A10FB00E20DE8 /* PushTransitionAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0017D8C204A10FB00E20DE8 /* PushTransitionAnimation.swift */; };
 		B001A82B20D6D8B900934A14 /* NotificationCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001A82A20D6D8B900934A14 /* NotificationCellNode.swift */; };
+		B00293732118270A0058198A /* ACRCircleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00293722118270A0058198A /* ACRCircleView.swift */; };
 		B0058C6E203BCD7200510EEC /* LoadingCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */; };
 		B0058C70203BDACF00510EEC /* NewPostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0058C6F203BDACF00510EEC /* NewPostsView.swift */; };
 		B0058C72203BDB1300510EEC /* NewPostsView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B0058C71203BDB1300510EEC /* NewPostsView.xib */; };
 		B007D5262049CC52009A6B84 /* RegexParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B007D5252049CC52009A6B84 /* RegexParser.swift */; };
 		B00F66AA203F3475002FCDA0 /* ActiveTextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */; };
+		B0150C762119134A0036113A /* EmailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0150C752119134A0036113A /* EmailViewController.swift */; };
 		B01B7A542112E1E2000B1835 /* PostsStateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01B7A532112E1E2000B1835 /* PostsStateController.swift */; };
 		B01B7A5721139101000B1835 /* RecentLightboxViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01B7A5621139101000B1835 /* RecentLightboxViewController.swift */; };
 		B01E2A54203D0D0A006C8C2D /* UploadingPostMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */; };
@@ -104,6 +106,7 @@
 		B0C917A820B373500067AE67 /* ContentSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C917A720B373500067AE67 /* ContentSettingsViewController.swift */; };
 		B0C917AA20B3851D0067AE67 /* ContentSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C917A920B3851D0067AE67 /* ContentSettings.swift */; };
 		B0C99BE6204E41A2000C2C90 /* ViewRepliesCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C99BE5204E41A2000C2C90 /* ViewRepliesCellNode.swift */; };
+		B0CE8C502116E7BB004EE687 /* NewPostsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0CE8C4F2116E7BA004EE687 /* NewPostsButton.swift */; };
 		B0D81F6E20B2344700ED5A10 /* MyRecentPostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D81F6D20B2344700ED5A10 /* MyRecentPostsTableViewController.swift */; };
 		B0D98F8A2106B24800A25692 /* MyCommentsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D98F892106B24800A25692 /* MyCommentsTableViewController.swift */; };
 		B0DA5A9F20D3863600E0F32C /* PushTransitionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DA5A9E20D3863600E0F32C /* PushTransitionManager.swift */; };
@@ -131,11 +134,13 @@
 		B00124632068560A00E5F2A6 /* SearchTabViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTabViewController.swift; sourceTree = "<group>"; };
 		B0017D8C204A10FB00E20DE8 /* PushTransitionAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushTransitionAnimation.swift; sourceTree = "<group>"; };
 		B001A82A20D6D8B900934A14 /* NotificationCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCellNode.swift; sourceTree = "<group>"; };
+		B00293722118270A0058198A /* ACRCircleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACRCircleView.swift; sourceTree = "<group>"; };
 		B0058C6D203BCD7200510EEC /* LoadingCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingCellNode.swift; sourceTree = "<group>"; };
 		B0058C6F203BDACF00510EEC /* NewPostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostsView.swift; sourceTree = "<group>"; };
 		B0058C71203BDB1300510EEC /* NewPostsView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NewPostsView.xib; sourceTree = "<group>"; };
 		B007D5252049CC52009A6B84 /* RegexParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegexParser.swift; sourceTree = "<group>"; };
 		B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTextNode.swift; sourceTree = "<group>"; };
+		B0150C752119134A0036113A /* EmailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailViewController.swift; sourceTree = "<group>"; };
 		B01B7A532112E1E2000B1835 /* PostsStateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsStateController.swift; sourceTree = "<group>"; };
 		B01B7A5621139101000B1835 /* RecentLightboxViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentLightboxViewController.swift; sourceTree = "<group>"; };
 		B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UploadingPostMessage.xib; sourceTree = "<group>"; };
@@ -227,6 +232,7 @@
 		B0C917A720B373500067AE67 /* ContentSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentSettingsViewController.swift; sourceTree = "<group>"; };
 		B0C917A920B3851D0067AE67 /* ContentSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentSettings.swift; sourceTree = "<group>"; };
 		B0C99BE5204E41A2000C2C90 /* ViewRepliesCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewRepliesCellNode.swift; sourceTree = "<group>"; };
+		B0CE8C4F2116E7BA004EE687 /* NewPostsButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostsButton.swift; sourceTree = "<group>"; };
 		B0D81F6D20B2344700ED5A10 /* MyRecentPostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyRecentPostsTableViewController.swift; sourceTree = "<group>"; };
 		B0D98F892106B24800A25692 /* MyCommentsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyCommentsTableViewController.swift; sourceTree = "<group>"; };
 		B0DA5A9E20D3863600E0F32C /* PushTransitionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushTransitionManager.swift; sourceTree = "<group>"; };
@@ -344,6 +350,7 @@
 				B0D98F892106B24800A25692 /* MyCommentsTableViewController.swift */,
 				B0FECD6D2106F7CF0087F2A3 /* LikedPostsTableViewController.swift */,
 				B0B0EC8620D3527700D1E094 /* PopularPostsHeaderCellNode.swift */,
+				B0CE8C4F2116E7BA004EE687 /* NewPostsButton.swift */,
 				B0058C6F203BDACF00510EEC /* NewPostsView.swift */,
 				B0058C71203BDB1300510EEC /* NewPostsView.xib */,
 			);
@@ -498,6 +505,7 @@
 			isa = PBXGroup;
 			children = (
 				B0F50ECF2037838400037343 /* InitialViewController.swift */,
+				B0150C752119134A0036113A /* EmailViewController.swift */,
 				B0B29DDA2037408900FBE5FF /* AuthViewController.swift */,
 				B03291D9206A253C00B8A0C7 /* SignUpViewController.swift */,
 				B03291DB206A396100B8A0C7 /* VerificationViewController.swift */,
@@ -524,6 +532,7 @@
 				B01E2A53203D0D0A006C8C2D /* UploadingPostMessage.xib */,
 				B01E2A5B203D6C97006C8C2D /* TitleCellNode.swift */,
 				B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */,
+				B00293722118270A0058198A /* ACRCircleView.swift */,
 			);
 			path = "UI Elements";
 			sourceTree = "<group>";
@@ -598,6 +607,9 @@
 							com.apple.Push = {
 								enabled = 1;
 							};
+							com.apple.SafariKeychain = {
+								enabled = 1;
+							};
 						};
 					};
 				};
@@ -660,6 +672,7 @@
 				"${BUILT_PRODUCTS_DIR}/DynamicButton/DynamicButton.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
 				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac/GoogleToolboxForMac.framework",
+				"${BUILT_PRODUCTS_DIR}/JGProgressHUD/JGProgressHUD.framework",
 				"${BUILT_PRODUCTS_DIR}/JaneSliderControl/JaneSliderControl.framework",
 				"${BUILT_PRODUCTS_DIR}/PINCache/PINCache.framework",
 				"${BUILT_PRODUCTS_DIR}/PINOperation/PINOperation.framework",
@@ -690,6 +703,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DynamicButton.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleToolboxForMac.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JGProgressHUD.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JaneSliderControl.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINCache.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINOperation.framework",
@@ -773,6 +787,7 @@
 				B0338CA420C26FA700B1E1DF /* RecordButton.swift in Sources */,
 				B0B29DDB2037408900FBE5FF /* AuthViewController.swift in Sources */,
 				B089C53F20E0188E0067806C /* FileService.swift in Sources */,
+				B00293732118270A0058198A /* ACRCircleView.swift in Sources */,
 				B01B7A5721139101000B1835 /* RecentLightboxViewController.swift in Sources */,
 				B04E788020D426E7007AF840 /* SearchPostsTableViewController.swift in Sources */,
 				B0DA5A9F20D3863600E0F32C /* PushTransitionManager.swift in Sources */,
@@ -780,6 +795,7 @@
 				B0E2335B2083FA240072B1B3 /* NotificationsViewController.swift in Sources */,
 				B0B29DE12037408900FBE5FF /* Jungle.xcdatamodeld in Sources */,
 				B06C0CE520C5B3480017EA6B /* CommentsViewController.swift in Sources */,
+				B0CE8C502116E7BB004EE687 /* NewPostsButton.swift in Sources */,
 				B0B29DF220375AD500FBE5FF /* MainTabBarController.swift in Sources */,
 				B01E2A5C203D6C97006C8C2D /* TitleCellNode.swift in Sources */,
 				B07F6112204543F5005010B7 /* ImageTransitionManager.swift in Sources */,
@@ -795,6 +811,7 @@
 				B0E2335D2083FE660072B1B3 /* Notification.swift in Sources */,
 				B0ACABE0210F762F002DD94B /* ModeScrollBar.swift in Sources */,
 				B0B0EC8720D3527700D1E094 /* PopularPostsHeaderCellNode.swift in Sources */,
+				B0150C762119134A0036113A /* EmailViewController.swift in Sources */,
 				B0A5F55B20C705F6002D3D95 /* StickerView.swift in Sources */,
 				B0E11B7A203A904500EF0814 /* UploadService.swift in Sources */,
 				B0D98F8A2106B24800A25692 /* MyCommentsTableViewController.swift in Sources */,

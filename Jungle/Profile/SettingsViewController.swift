@@ -17,6 +17,7 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     var titleView:JTitleView!
     var interactor:Interactor? = nil
     var tableNode = ASTableNode()
+    var dimView:UIView!
     
     enum OptionKey:String {
         case locationServices = "LOCATION SERVICES"
@@ -53,14 +54,6 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         ]
     ]
     
-    var unauthenticatedOptions:[Int:[Option]] = [
-        0: [
-            Option(title: OptionKey.termsOfService, description: "", type: .button),
-            Option(title: OptionKey.privacyPolicy, description: "", type: .button),
-            Option(title: OptionKey.signUp, description: "", type: .boldButton)
-        ]
-    ]
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = hexColor(from: "#eff0e9")
@@ -77,7 +70,7 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         titleView.leftButton.setImage(UIImage(named:"back"), for: .normal)
         titleView.leftButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
         titleView.titleLabel.text = "SETTINGS"
-        titleView.backgroundImage.image = UIImage(named: "NavBarGradient2")
+        //titleView.backgroundImage.image = UIImage(named: "NavBarGradient2")
         
         let edgeSwipe = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(handlePan))
         edgeSwipe.edges = .left
@@ -94,7 +87,7 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         tableNode.view.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         tableNode.view.contentInsetAdjustmentBehavior = .never
        
-        tableNode.view.separatorStyle = .none
+        //tableNode.view.separatorStyle = .none
         tableNode.view.showsVerticalScrollIndicator = true
         tableNode.view.delaysContentTouches = false
         tableNode.view.backgroundColor = hexColor(from: "#eff0e9")
@@ -103,9 +96,8 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         tableNode.dataSource = self
         
         tableNode.isHidden = true
-        guard let authType = currentUser?.authType else { return }
-        isAuthenticated = authType != .anonymous
-        let o:[Int:[Option]] = isAuthenticated ? options : unauthenticatedOptions
+        
+        let o:[Int:[Option]] = options
         var indexes = [IndexPath]()
         for (section, rows) in o {
             if rows.count > 0 {
@@ -122,6 +114,11 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         }, completion: { _ in
             self.tableNode.isHidden = false
         })
+        
+        dimView = UIView(frame: view.bounds)
+        dimView.backgroundColor = UIColor.black.withAlphaComponent(0.35)
+        dimView.alpha = 0.0
+        view.addSubview(dimView)
         
         print("VIEW DID LOAD MAN!")
     }
@@ -177,46 +174,21 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     }
     
     func numberOfSections(in tableNode: ASTableNode) -> Int {
-        if isAuthenticated {
-            return options.count
-        }
-        return unauthenticatedOptions.count
+        return options.count
     }
     
     func tableNode(_ tableNode: ASTableNode, numberOfRowsInSection section: Int) -> Int {
-        if isAuthenticated {
-            if let count = options[section]?.count {
-                if count > 0 {
-                    return count
-                }
-            }
-        } else {
-            if let count = unauthenticatedOptions[section]?.count {
-                if count > 0 {
-                    return count
-                }
+        if let count = options[section]?.count {
+            if count > 0 {
+                return count
             }
         }
         return 1
     }
     
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
-        if isAuthenticated, options[indexPath.section]!.count > 0 {
+        if options[indexPath.section]!.count > 0 {
             let option = options[indexPath.section]![indexPath.row]
-            switch option.type {
-            case .button:
-                let cell = SettingsButtonCellNode(option: option)
-                return cell
-            case .boldButton:
-                let cell = SettingsButtonCellNode(option: option, bold: true)
-                return cell
-            case .toggle:
-                let cell = SettingsDetailCellNode(option: option)
-                cell.selectionStyle = .none
-                return cell
-            }
-        } else if !isAuthenticated, unauthenticatedOptions[indexPath.section]!.count > 0 {
-            let option = unauthenticatedOptions[indexPath.section]![indexPath.row]
             switch option.type {
             case .button:
                 let cell = SettingsButtonCellNode(option: option)
@@ -242,7 +214,7 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         let node = tableNode.nodeForRow(at: indexPath) as? SettingsButtonCellNode
         node?.setHighlighted(true)
         
-        if isAuthenticated, options[indexPath.section]!.count > 0 {
+        if options[indexPath.section]!.count > 0 {
             let option = options[indexPath.section]![indexPath.row]
             switch option.title {
             case .logout:
@@ -251,16 +223,8 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
             default:
                 break
             }
-        } else if !isAuthenticated, unauthenticatedOptions[indexPath.section]!.count > 0 {
-            let option = unauthenticatedOptions[indexPath.section]![indexPath.row]
-            switch option.title {
-            case .signUp:
-                showLoginView()
-                break
-            default:
-                break
-            }
         }
+        
         tableNode.deselectRow(at: indexPath, animated: true)
         
     }
@@ -283,6 +247,7 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     }
     
     func showLogoutOptions() {
+        
         let alert = UIAlertController(title: "Are you sure you want to logout?", message: nil, preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "Logout", style: .destructive, handler: { _ in
             do {

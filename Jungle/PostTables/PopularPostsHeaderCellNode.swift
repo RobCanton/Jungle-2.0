@@ -154,17 +154,18 @@ class TrendingCellNode:ASCellNode {
     required init(tag:TrendingHashtag) {
         super.init()
         automaticallyManagesSubnodes = true
-        pastelNode = PastelNode(gradient: tag.post.gradient)
+        let post = tag.posts.first!
+        pastelNode = PastelNode(gradient: post.gradient)
         imageNode.backgroundColor = UIColor.lightGray
         self.imageNode.shouldCacheImage = true
         
-        if tag.post.attachments.isVideo {
-            let thumbnailRef = storage.child("publicPosts/\(tag.post.key)/thumbnail.gif")
+        if post.attachments.isVideo {
+            let thumbnailRef = storage.child("publicPosts/\(post.key)/thumbnail.gif")
             thumbnailRef.downloadURL { url, error in
                 self.imageNode.url = url
             }
-        } else if tag.post.attachments.isImage {
-            let imageRef = storage.child("publicPosts/\(tag.post.key)/image.jpg")
+        } else if post.attachments.isImage {
+            let imageRef = storage.child("publicPosts/\(post.key)/image.jpg")
             imageRef.downloadURL { imageURL, error in
                 self.imageNode.url = imageURL
             }
@@ -175,7 +176,7 @@ class TrendingCellNode:ASCellNode {
             
             self.textNode.maximumNumberOfLines = 7
             self.textNode.textContainerInset = UIEdgeInsetsMake(2, 8, 26, 8)
-            self.textNode.attributedText = NSAttributedString(string: tag.post.text, attributes: [
+            self.textNode.attributedText = NSAttributedString(string: post.text, attributes: [
                 NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.85),
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0)
                 ])
@@ -184,6 +185,7 @@ class TrendingCellNode:ASCellNode {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         
+        titleNode.maximumNumberOfLines = 1
         titleNode.attributedText = NSAttributedString(string: "#\(tag.hastag)", attributes: [
             NSAttributedStringKey.foregroundColor: UIColor.white,
             NSAttributedStringKey.font: Fonts.bold(ofSize: 14.0),
@@ -212,10 +214,10 @@ class TrendingCellNode:ASCellNode {
         self.clipsToBounds = false
         
         let gradient = CAGradientLayer()
-        gradient.colors = [UIColor.black.withAlphaComponent(0.45).cgColor, UIColor.clear.cgColor]
+        gradient.colors = [UIColor.black.withAlphaComponent(0.40).cgColor, UIColor.clear.cgColor]
         gradient.locations = [0.0, 1.0]
         gradient.startPoint = CGPoint(x: 0, y: 1)
-        gradient.endPoint = CGPoint(x: 0, y: 0.33)
+        gradient.endPoint = CGPoint(x: 0, y: 0.5)
         gradient.frame = view.bounds
         gradient.cornerRadius = 6.0
         gradient.masksToBounds = true

@@ -46,7 +46,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor.blue
+        view.backgroundColor = UIColor.white
         pagerNode = ASPagerNode()
         pagerNode.setDelegate(self)
         pagerNode.setDataSource(self)

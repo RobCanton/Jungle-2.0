@@ -15,7 +15,7 @@ enum SearchType:String {
     case recent = "recent"
 }
 
-class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
+class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource, TabScrollDelegate {
     
     var initialSearch:String?
     var pagerNode:ASPagerNode!
@@ -80,9 +80,9 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
         view.addSubview(scrollTabBar)
         scrollTabBar.translatesAutoresizingMaskIntoConstraints = false
         scrollTabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        scrollTabBar.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: -12).isActive = true
+        scrollTabBar.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 0).isActive = true
         scrollTabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        scrollTabBar.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
+        scrollTabBar.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
         
         tabScrollView = DualScrollView(frame: CGRect(x: 0, y: 0, width: view.bounds.width - 104, height: 44.0), title1: "POPULAR", title2:"LATEST")
         scrollTabBar.addSubview(tabScrollView)
@@ -91,6 +91,7 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
          tabScrollView.trailingAnchor.constraint(equalTo: scrollTabBar.trailingAnchor, constant: -52.0).isActive = true
         tabScrollView.topAnchor.constraint(equalTo: scrollTabBar.topAnchor).isActive = true
         tabScrollView.bottomAnchor.constraint(equalTo: scrollTabBar.bottomAnchor).isActive = true
+        tabScrollView.delegate = self
         
         let bgImageView = UIImageView(image: UIImage(named:"GreenBox"))
         view.insertSubview(bgImageView, belowSubview: searchBar)
@@ -173,6 +174,19 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource {
     func numberOfPages(in pagerNode: ASPagerNode) -> Int {
         return 2
     }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard scrollView == pagerNode.view else { return }
+        let offsetX = scrollView.contentOffset.x
+        let viewWidth = view.bounds.width
+        let progress = offsetX / viewWidth
+        tabScrollView.setProgress(progress, index: 0)
+    }
+    
+    func tabScrollTo(index: Int) {
+        self.pagerNode.scrollToPage(at: index, animated: true)
+    }
+    
     
 }
 

@@ -141,7 +141,7 @@ class UploadService {
     
     fileprivate static func addNewPost(withID id:String, parameters:[String:Any]) {
         NSLog("RSC: addNewPost - Start")
-        functions.httpsCallable("createNewPost").call(parameters) { result, error in
+        functions.httpsCallable("addPost").call(parameters) { result, error in
             NSLog("RSC: addNewPost - End")
             if error == nil {
                 
@@ -155,7 +155,7 @@ class UploadService {
     
     static func deletePost(_ post:Post, completion: @escaping (_ success:Bool)->()) {
         Alerts.showInfoAlert(withMessage: "Deleting...")
-        functions.httpsCallable("removePost").call(["postID": post.key]) { result, error in
+        functions.httpsCallable("postRemove").call(["postID": post.key]) { result, error in
             if let error = error {
                 print("ERROR: \(error)")
                 Alerts.showFailureAlert(withMessage: "Failed to delete post.")
@@ -236,7 +236,9 @@ class UploadService {
         getNewPostID { _postID in
             NSLog("getNewPost - End")
             
-            guard let postID = _postID else { return }
+            guard let postID = _postID else {
+                Alerts.showFailureAlert(withMessage: "Failed to upload.")
+                return }
 
             pendingPostKey = postID
             parameters["postID"] = postID
@@ -523,7 +525,73 @@ class UploadService {
             }
         }
     }
+    
+    
+    fileprivate static func imageFileExists(withKey key:String) -> Bool {
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let dataPath = documentsDirectory.appendingPathComponent("user_content/upload_image-\(key).jpg")
+        let exists = FileManager.default.fileExists(atPath: dataPath.path)
+        return exists
+    }
+    
+    fileprivate static func writeImageToFile(withKey key:String, data:Data) {
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        
+        let dataPath = documentsDirectory.appendingPathComponent("user_content/upload_image-\(key).jpg")
+        try! data.write(to: dataPath, options: [.atomic])
+    }
+    
+    fileprivate static func readImageFromFile(withKey key:String) -> Data? {
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let dataPath = documentsDirectory.appendingPathComponent("user_content/upload_image-\(key).jpg")
+        do {
+            let data = try Data(contentsOf: dataPath)
+            return data
+        } catch {
+            return nil
+        }
+    }
+    
+    fileprivate static func removeImageFile(withKey key:String) -> Bool {
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let dataPath = documentsDirectory.appendingPathComponent("user_content/upload_image-\(key).jpg")
+        do {
+            try FileManager.default.removeItem(at: dataPath)
+            return true
+        } catch {
+            return false
+        }
+    }
+    
+    
+    fileprivate static func downloadImage(withKey key:String, completion: @escaping (_ data:Data?)->()) {
+        let imageRef = storage.child("publicPosts/\(key)/image.jpg")
+        
+        // Download in memory with a maximum allowed size of 1MB (1 * 1024 * 1024 bytes)
+        imageRef.getData(maxSize: 30 * 1024 * 1024) { data, error in
+            return completion(data)
+            
+        }
+    }
 
+    static func retrieveImage(withKey key:String, completion: @escaping (_ image:UIImage?, _ fromFile:Bool)->()) {
+        
+        if let data = readImageFromFile(withKey: key),
+            let image = UIImage(data: data) {
+            
+            completion(image, true)
+        } else {
+            downloadImage(withKey: key) { data in
+                if data != nil {
+                    print("DATA NOT NIL")
+                    writeImageToFile(withKey: key, data: data!)
+                    return completion(UIImage(data: data!), false)
+                }
+                print("DATA IS NIL")
+                return completion(nil, false)
+            }
+        }
+    }
     
 }
 

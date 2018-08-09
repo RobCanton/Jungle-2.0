@@ -25,8 +25,34 @@ class UserService {
     
     static var lastPostedAt:Date?
     
+    
     static var currentUser:User?
     static var currentUserSettings = UserSettings(locationServices: false, pushNotifications: false, safeContentMode: true)
+    
+    struct Timeout {
+        var canPost:Bool
+        var progress:CGFloat
+        var minsLeft:Int
+    }
+    
+    static  var timeout = Timeout(canPost: false, progress: 0.0, minsLeft: 0)
+    
+    static func parseTimeout(_ data:[String:Any]) -> Timeout {
+        if let canPost = data["canPost"] as? Bool {
+            if canPost {
+                return Timeout(canPost: true, progress: 1.0, minsLeft: 0)
+            } else if let progress = data["progress"] as? Double,
+                let minsLeft = data["minsLeft"] as? Int {
+                
+                return Timeout(canPost: false,
+                               progress: CGFloat(progress),
+                               minsLeft: minsLeft)
+            }
+        }
+        
+        return Timeout(canPost: false, progress: 0, minsLeft: 0)
+    }
+    
     
     static let userUpdatedNotification = NSNotification.Name.init("userUpdated")
     static let userSettingsUpdatedNotification = NSNotification.Name.init("userSettingsUpdated")

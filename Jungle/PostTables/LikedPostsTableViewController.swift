@@ -8,7 +8,6 @@
 
 import Foundation
 import UIKit
-
 class LikedPostsTableViewController: PostsTableViewController {
     
     override func lightBoxVC() -> LightboxViewController {

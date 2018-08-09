@@ -51,28 +51,25 @@ class ContentOverlayNode:ASControlNode {
     var postTextNode = ActiveTextNode()
     var avatarNode:AvatarNode!
     var usernameNode = ASTextNode()
+    var subnameNode = ASTextNode()
     var timeNode = ASTextNode()
     
     
     var actionsRow:SinglePostActionsView!
     weak var delegate:PostActionsDelegate?
     weak var post:Post?
+    var hasAttachments = false
     required init(post:Post, delegate: PostActionsDelegate?) {
         super.init()
         self.post = post
         self.delegate = delegate
+        hasAttachments = post.attachments.isImage || post.attachments.isVideo
         automaticallyManagesSubnodes = true
         postTextNode.maximumNumberOfLines = 4
         
         avatarNode = AvatarNode(post: post, cornerRadius: 16, imageInset: 5)
         avatarNode.style.height = ASDimension(unit: .points, value: 32)
         avatarNode.style.width = ASDimension(unit: .points, value: 32)
-        
-        let isTextOnly = !post.attachments.isImage && !post.attachments.isVideo
-        avatarNode.isHidden = isTextOnly
-        usernameNode.isHidden = isTextOnly
-        postTextNode.isHidden = isTextOnly
-        timeNode.isHidden = isTextOnly
         
         if post.attachments.isImage || post.attachments.isVideo {
             if let blockedMessage = post.blockedMessage {
@@ -98,8 +95,23 @@ class ContentOverlayNode:ASControlNode {
         
         usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
+            NSAttributedStringKey.foregroundColor: UIColor.white//post.anon.color
+            ])
+        
+        var subnameStr = ""
+        if post.isYou {
+            subnameStr = "YOU"
+            subnameNode.isHidden = false
+        }else {
+            subnameNode.isHidden = true
+        }
+        
+        subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
             NSAttributedStringKey.foregroundColor: post.anon.color
             ])
+        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
+        subnameNode.backgroundColor = UIColor.white
         
         timeNode.attributedText = NSAttributedString(string: post.createdAt.fullTimeSinceNow() , attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
@@ -112,6 +124,10 @@ class ContentOverlayNode:ASControlNode {
     var locationButton:UIButton!
     override func didLoad() {
         super.didLoad()
+        
+        subnameNode.layer.cornerRadius = 2.0
+        subnameNode.clipsToBounds = true
+        
         actionsRow = SinglePostActionsView(frame: .zero)
         actionsRow.delegate = delegate
         actionsRow.isUserInteractionEnabled = UserService.isSignedIn
@@ -144,19 +160,26 @@ class ContentOverlayNode:ASControlNode {
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         
-        let centerUsername = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: usernameNode)
-        let centerTime = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: timeNode)
+        let subnameCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
+        
+        let usernameStack = ASStackLayoutSpec.horizontal()
+        usernameStack.children = [usernameNode, subnameCenter]
+        usernameStack.spacing = 4.0
         
         let labelStack = ASStackLayoutSpec.vertical()
-        labelStack.children = [usernameNode, timeNode]
+        labelStack.children = [usernameStack, timeNode]
         
         let titleStack = ASStackLayoutSpec.horizontal()
         titleStack.children = [avatarNode, labelStack]
         titleStack.spacing = 8.0
         
         let contentStack = ASStackLayoutSpec.vertical()
-        contentStack.children = [titleStack, postTextNode]
-        contentStack.spacing = 8.0
+        if hasAttachments {
+            contentStack.children = [titleStack, postTextNode]
+            contentStack.spacing = 8.0
+        }
+        
+        
         
         let mainInsets = UIEdgeInsetsMake(12, 12, 64, 12)
         return ASInsetLayoutSpec(insets: mainInsets, child: contentStack)
@@ -209,9 +232,22 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
          automaticallyManagesSubnodes = true
         backgroundColor = UIColor.clear
         contentNode = PostContentNode(post: post)
-        contentOverlay = ContentOverlayNode(post: post, delegate: self)
-        contentOverlay.addTarget(self, action: #selector(handleOverlayTap), forControlEvents: .touchUpInside)
+        contentNode.textNode.tapHandler = { type, value in
+            print("TAPPED IT: \(value)")
+            switch type {
+            case .hashtag:
+                self.delegate?.openTag(value)
+                break
+            case .mention:
+                break
+            case .link:
+                break
+            }
+        }
         
+        contentOverlay = ContentOverlayNode(post: post, delegate: self)
+        
+        contentOverlay.addTarget(self, action: #selector(handleOverlayTap), forControlEvents: .touchUpInside)
         
         contentNode.blockedButtonNode?.addTarget(self, action: #selector(handleUnblock), forControlEvents: .touchUpInside)
     }
@@ -297,7 +333,7 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
             self.contentOverlay.actionsRow.setLiked(post.liked, animated: false)
         })
         
-        commentsRef = database.child("posts/meta/\(post.key)/replies")
+        commentsRef = database.child("posts/meta/\(post.key)/numReplies")
         commentsRefHandle = commentsRef?.observe(.value, with: { snapshot in
             post.numReplies = snapshot.value as? Int ?? 0
             self.contentOverlay.setNumComments(post.numReplies)

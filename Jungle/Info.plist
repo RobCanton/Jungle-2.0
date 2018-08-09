@@ -2,12 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>For generating captions from your recorded videos.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>For recording audio in videos.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>For taking Photos &amp; Videos.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -27,11 +21,14 @@
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>jungleFDL</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.298475146891-s216dhp8kqocidn1tnj49dhi4ev4ce9g</string>
+				<string>com.robcanton.jungle</string>
 			</array>
 		</dict>
+		<dict/>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
@@ -39,10 +36,16 @@
 	<string></string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>For taking Photos &amp; Videos.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need it bro.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>For recording audio in videos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs it bro</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>For generating captions from your recorded videos.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AzoSans-Light.otf</string>

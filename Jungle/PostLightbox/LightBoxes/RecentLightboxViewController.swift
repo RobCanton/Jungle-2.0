@@ -37,12 +37,12 @@ class SearchLightboxViewController:LightboxViewController {
     var type:SearchType = .popular
     var searchText:String?
     var initialSearch:String?
-    var initialPost:Post?
+    var initialPosts:[Post]?
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        if let search = initialSearch, let post = initialPost {
-            self.state = PostsStateController.handleAction(.endBatchFetch(posts: [post]), fromState: .empty)
+        if let search = initialSearch, let posts = initialPosts {
+            self.state = PostsStateController.handleAction(.endBatchFetch(posts: posts), fromState: .empty)
             context?.cancelBatchFetching()
             self.pagerNode.reloadData()
             searchText = search

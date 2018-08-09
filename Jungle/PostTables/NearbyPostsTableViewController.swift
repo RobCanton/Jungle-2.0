@@ -21,7 +21,7 @@ class NearbyPostsTableViewController: PostsTableViewController {
         return lightbox
     }
     
-    override var headerCell: ASCellNode? {
+    override var headerCell: ASCellNode {
         get {
             if gpsService.isAuthorized() {
                 let cell = NearbyHeaderCellNode()
