@@ -43,25 +43,31 @@ class PostContentNode:ASDisplayNode {
         avatarNode.style.height = ASDimension(unit: .points, value: 44)
         avatarNode.style.width = ASDimension(unit: .points, value: 44)
         
-        usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
-            NSAttributedStringKey.font: Fonts.bold(ofSize: 18.0),
-            NSAttributedStringKey.foregroundColor: UIColor.white
-            ])
+        subnameNode.isHidden = true
         
-        var subnameStr = ""
-        if post.isYou {
-            subnameStr = "YOU"
-            subnameNode.isHidden = false
-        }else {
-            subnameNode.isHidden = true
+        if let profile = post.profile {
+            usernameNode.attributedText = NSAttributedString(string: profile.username , attributes: [
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 18.0),
+                NSAttributedStringKey.foregroundColor: UIColor.white
+                ])
+        } else {
+            usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 18.0),
+                NSAttributedStringKey.foregroundColor: UIColor.white
+                ])
+            
+            if post.isYou {
+                subnameNode.isHidden = false
+                subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
+                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 10.0),
+                    NSAttributedStringKey.foregroundColor: post.anon.color
+                    ])
+                subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
+                subnameNode.backgroundColor = UIColor.white
+            }
         }
         
-        subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 10.0),
-            NSAttributedStringKey.foregroundColor: post.anon.color
-            ])
-        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
-        subnameNode.backgroundColor = UIColor.white
+        
         
         timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNowWithAgo() , attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 15.0),

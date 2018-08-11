@@ -77,7 +77,7 @@ class PostCellNode:ASCellNode {
         postNode.clipsToBounds = true
         //postNode.layer.borderColor = UIColor(white: 0.85, alpha: 1.0).cgColor
         //postNode.layer.borderWidth = 0.5
-        contentNode.view.applyShadow(radius: 4.0, opacity: 0.125, offset: CGSize(width:0, height: 2), color: .black, shouldRasterize: false)
+        contentNode.view.applyShadow(radius: 4.0, opacity: 0.10, offset: CGSize(width:0, height: 2), color: .black, shouldRasterize: false)
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
@@ -90,7 +90,7 @@ class PostCellNode:ASCellNode {
 class PostNode:ASDisplayNode {
     
     var avatarNode = ASDisplayNode()
-    var avatarImageNode = ASImageNode()
+    var avatarImageNode = ASNetworkImageNode()
     var previewNode:PreviewNode!
     var titleNode = ASTextNode()
     var subnameNode = ASTextNode()
@@ -160,17 +160,41 @@ class PostNode:ASDisplayNode {
             return image.maskWithColor(color: currentTheme.secondaryTextColor)
         }
         //moreButton.isHidden = true
-        avatarNode.backgroundColor = post.anon.color.withAlphaComponent(0.30)
-        avatarImageNode.imageModificationBlock = { image in
-            return image.maskWithColor(color: post.anon.color) ?? image
-        }
+        
+        
         avatarNode.style.height = ASDimension(unit: .points, value: 32)
         avatarNode.style.width = ASDimension(unit: .points, value: 32)
         
-        titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: post.anon.color
-            ])
+        avatarImageNode.image = nil
+        
+        if let profile = post.profile {
+            titleNode.attributedText = NSAttributedString(string: profile.username, attributes: [
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
+                NSAttributedStringKey.foregroundColor: UIColor.black
+                ])
+            self.avatarImageNode.url = profile.avatarThumbnailURL
+            avatarImageNode.imageModificationBlock = { image in
+                return image
+            }
+            avatarNode.backgroundColor = tertiaryColor
+            avatarImageNode.layer.cornerRadius = 16
+            avatarImageNode.clipsToBounds = true
+        } else {
+            titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
+                NSAttributedStringKey.foregroundColor: post.anon.color
+                ])
+            UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
+                self.avatarImageNode.image = image
+            }
+            
+            avatarImageNode.imageModificationBlock = { image in
+                return image.maskWithColor(color: post.anon.color) ?? image
+            }
+            avatarNode.backgroundColor = post.anon.color.withAlphaComponent(0.30)
+            avatarImageNode.layer.cornerRadius = 0
+            avatarImageNode.clipsToBounds = false
+        }
         
         var subnameStr = ""
         if post.isYou {
@@ -204,10 +228,6 @@ class PostNode:ASDisplayNode {
             NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
             ])
         
-        avatarImageNode.image = nil
-        UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
-            self.avatarImageNode.image = image
-        }
         
         if let blockedMessage = post.blockedMessage {
             previewNode = PreviewNode(block: true)
@@ -246,6 +266,7 @@ class PostNode:ASDisplayNode {
         super.didLoad()
         avatarNode.layer.cornerRadius = 16
         avatarNode.clipsToBounds = true
+        
         subnameNode.layer.cornerRadius = 2.0
         subnameNode.clipsToBounds = true
     }
@@ -270,12 +291,18 @@ class PostNode:ASDisplayNode {
         
         let headerStack = ASStackLayoutSpec.vertical()
         headerStack.children = [titleStack, subtitleNode]
-        headerStack.spacing = 1.0
+        headerStack.spacing = 0.25
         
         postTextNode.style.flexGrow = 1.0
         let headerInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 40, 0, 0), child: headerStack)
         
-        let avatarInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(5, 5, 5, 5), child: avatarImageNode)
+        var avatarInsets:UIEdgeInsets
+        if post?.profile != nil {
+            avatarInsets = .zero
+        } else {
+            avatarInsets = UIEdgeInsetsMake(5, 5, 5, 5)
+        }
+        let avatarInset = ASInsetLayoutSpec(insets: avatarInsets, child: avatarImageNode)
         let avatarOverlay = ASOverlayLayoutSpec(child: avatarNode, overlay: avatarInset)
         let avatarAbsolute = ASAbsoluteLayoutSpec(children: [avatarOverlay])
         let headerOverlay = ASOverlayLayoutSpec(child: headerInset, overlay: avatarAbsolute)

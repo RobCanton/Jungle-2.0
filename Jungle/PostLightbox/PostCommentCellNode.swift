@@ -33,7 +33,8 @@ class PostCommentCellNode: ASCellNode {
     var isCaption = false
     
     var deleted = false
-    
+    var isYou = false
+    var isOP = false
     
     required init(post:Post, parentPost:Post, isCaption:Bool?=nil, isSubReply:Bool?=nil) {
         super.init()
@@ -57,35 +58,65 @@ class PostCommentCellNode: ASCellNode {
             return
         }
         let titleSize:CGFloat = self.isSubReply ? 13 : 14
-        let avatarSize:CGFloat = self.isSubReply ? 18 : 24
+        let avatarSize:CGFloat = self.isSubReply ? 26 : 32
         
-        usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: titleSize),
-            NSAttributedStringKey.foregroundColor: post.anon.color
-            ])
+        avatarNode.style.height = ASDimension(unit: .points, value: avatarSize)
+        avatarNode.style.width = ASDimension(unit: .points, value: avatarSize)
         
-        var subnameStr = ""
-        if post.isYou {
-            subnameStr = "YOU"
-            subnameNode.isHidden = false
-        } else if post.key != parentPost.key,
-            parentPost.anon.key == post.anon.key {
-            subnameStr = "OP"
-            subnameNode.isHidden = false
+        avatarNode.layer.cornerRadius = avatarSize/2
+        avatarNode.clipsToBounds = true
+        
+        avatarImageNode.image = nil
+        
+        subnameNode.isHidden = true
+        
+        if let profile = post.profile {
+            avatarNode.backgroundColor = tertiaryColor
+            avatarImageNode.url = profile.avatarThumbnailURL
+            usernameNode.attributedText = NSAttributedString(string: profile.username , attributes: [
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: titleSize),
+                NSAttributedStringKey.foregroundColor: UIColor.black
+                ])
+            avatarImageNode.layer.cornerRadius = avatarSize/2
+            avatarImageNode.clipsToBounds = true
         } else {
-            subnameNode.isHidden = true
+            avatarNode.backgroundColor = post.anon.color.withAlphaComponent(0.30)
+            avatarImageNode.imageModificationBlock = { image in
+                return image.maskWithColor(color: post.anon.color) ?? image
+            }
+            UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, _ in
+                self.avatarImageNode.image = image
+            }
+            usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: titleSize),
+                NSAttributedStringKey.foregroundColor: post.anon.color
+                ])
+            
+            var subnameStr = ""
+            if post.isYou {
+                subnameStr = "YOU"
+                subnameNode.isHidden = false
+            } else if post.key != parentPost.key,
+                parentPost.anon.key == post.anon.key {
+                subnameStr = "OP"
+                subnameNode.isHidden = false
+            }
+            
+            subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
+                NSAttributedStringKey.foregroundColor: UIColor.white
+                ])
+            subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
+            subnameNode.backgroundColor = post.anon.color
+            
+            avatarImageNode.layer.cornerRadius = 0
+            avatarImageNode.clipsToBounds = false
         }
         
-        subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
-            NSAttributedStringKey.foregroundColor: UIColor.white
-            ])
-        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
-        subnameNode.backgroundColor = post.anon.color
-        
+        timeNode.textContainerInset = UIEdgeInsetsMake(0,2,0,2)
         timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow() , attributes: [
-            NSAttributedStringKey.font: Fonts.regular(ofSize: 15.0),
-            NSAttributedStringKey.foregroundColor: UIColor.black.withAlphaComponent(0.5)
+            NSAttributedStringKey.font: Fonts.medium(ofSize: titleSize),
+            NSAttributedStringKey.foregroundColor: tertiaryColor
             ])
         
         likeButton.setImage(UIImage(named:"like"), for: .normal)
@@ -109,19 +140,6 @@ class PostCommentCellNode: ASCellNode {
             ])
         commentButton.setAttributedTitle(commentTitle, for: .normal)
         moreButton.setImage(UIImage(named:"more"), for: .normal)
-        
-        avatarNode.backgroundColor = post.anon.color.withAlphaComponent(0.30)
-        avatarImageNode.imageModificationBlock = { image in
-            return image.maskWithColor(color: post.anon.color) ?? image
-        }
-        //        avatarNode.image = UIImage(named:"sparrow")
-        avatarNode.style.height = ASDimension(unit: .points, value: avatarSize)
-        avatarNode.style.width = ASDimension(unit: .points, value: avatarSize)
-        avatarNode.layer.cornerRadius = avatarSize/2
-        avatarImageNode.image = nil
-        UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, _ in
-            self.avatarImageNode.image = image
-        }
         
         if let blockedMessage = post.blockedMessage {
             postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
@@ -193,18 +211,30 @@ class PostCommentCellNode: ASCellNode {
             dividerStack.children = [mainInsetSpec, dividerNode]
             return dividerStack
         }
-        let avatarInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 4, 4, 4), child: avatarImageNode)
-        let avatarOverlay = ASOverlayLayoutSpec(child: avatarNode, overlay: avatarInset)
         
-        let subnameCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
+        var avatarInsets:UIEdgeInsets
+        if let _ = post?.profile {
+            avatarInsets = .zero
+        } else {
+            avatarInsets = UIEdgeInsetsMake(4, 4, 4, 4)
+        }
+        
+        let avatarInset = ASInsetLayoutSpec(insets: avatarInsets, child: avatarImageNode)
+        let avatarOverlay = ASOverlayLayoutSpec(child: avatarNode, overlay: avatarInset)
         
         let tStack = ASStackLayoutSpec.horizontal()
         tStack.spacing = 4.0
-        tStack.children = [usernameNode, subnameCenter]
+        
+        tStack.children = [usernameNode, timeNode]
+        
+        if !subnameNode.isHidden {
+            let subnameCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: subnameNode)
+            tStack.children?.insert(subnameCenter, at: 1)
+        }
         
         let titleCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: tStack)
         let titleStack = ASStackLayoutSpec.horizontal()
-        titleStack.spacing = 6.0
+        titleStack.spacing = 8.0
         titleStack.children = [avatarOverlay, titleCenter]
         
         let topStack = ASStackLayoutSpec.vertical()

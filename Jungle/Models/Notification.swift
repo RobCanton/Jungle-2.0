@@ -30,29 +30,32 @@ class JNotification {
     var type:NotificationType
     var timestamp:Date
     var seen:Bool
+    var profile:Profile?
     var anon:Anon
     
-    init(id:String, type:NotificationType, timestamp:Double, seen:Bool, anon:Anon) {
+    init(id:String, type:NotificationType, timestamp:Double, seen:Bool, profile: Profile?, anon:Anon) {
         self.id = id
         self.type = type
         self.timestamp = Date(timeIntervalSince1970: timestamp / 1000)
         self.seen = seen
+        self.profile = profile
         self.anon = anon
     }
     
     static func parse(_ id:String, _ data:[String:Any]) -> JNotification? {
         if let typeStr = data["type"] as? String,
             let timestamp = data["timestamp"] as? Double,
-            let seen = data["seen"] as? Bool,
-            let anon = Anon.parse(data) {
+            let seen = data["seen"] as? Bool {
             print("Notification \(id): seen \(seen)")
+            let profile = Profile.parse(data)
+            let anon = Anon.parse(data) ?? Anon(key: "", adjective: "", animal: "", color: .black)
             switch typeStr {
             case NotificationType.postVotes.rawValue:
                 if let postID = data["postID"] as? String,
                     let newVotes = data["numLikes"] as? Int {
                     print("Notification Type Likes")
                     return PostVotesNotification(id: id, type: .postVotes, timestamp: timestamp,
-                                                 seen: seen, anon: anon, postID: postID, newVotes: newVotes)
+                                                 seen: seen, profile: profile, anon: anon, postID: postID, newVotes: newVotes)
                 }
             case NotificationType.commentVotes.rawValue:
                 return nil
@@ -63,7 +66,7 @@ class JNotification {
                     let replyToID = data["replyTo"] as? String
                     print("Notification Type Reply")
                     return PostReplyNotification(id: id, type: .postVotes, timestamp: timestamp,
-                                                 seen: seen, anon: anon, postID: postID, replyID: replyID,
+                                                 seen: seen, profile: profile, anon: anon, postID: postID, replyID: replyID,
                                                  replyToID: replyToID, mention: mention)
                 }
             default:
@@ -100,10 +103,10 @@ class PostVotesNotification:JNotification {
     var post:Post?
     
     init(id:String, type: NotificationType, timestamp:
-        Double, seen:Bool, anon:Anon, postID: String, newVotes:Int) {
+        Double, seen:Bool, profile: Profile?,anon:Anon, postID: String, newVotes:Int) {
         self.postID = postID
         self.newVotes = newVotes
-        super.init(id:id, type: type, timestamp: timestamp, seen: seen, anon: anon)
+        super.init(id:id, type: type, timestamp: timestamp, seen: seen, profile: profile, anon: anon)
         
     }
     override func fetchData(completion: @escaping () -> ()) {
@@ -125,12 +128,12 @@ class PostReplyNotification:JNotification {
     var mention:Bool
     
     init(id:String, type: NotificationType, timestamp:
-        Double, seen:Bool, anon:Anon,  postID: String, replyID: String, replyToID: String?, mention:Bool) {
+        Double, seen:Bool, profile:Profile?, anon:Anon,  postID: String, replyID: String, replyToID: String?, mention:Bool) {
         self.postID = postID
         self.replyID = replyID
         self.replyToID = replyToID
         self.mention = mention
-        super.init(id:id, type: type, timestamp: timestamp, seen: seen, anon: anon)
+        super.init(id:id, type: type, timestamp: timestamp, seen: seen, profile: profile, anon: anon)
     }
     
     override func fetchData(completion: @escaping () -> ()) {

@@ -108,6 +108,8 @@
 		B0C99BE6204E41A2000C2C90 /* ViewRepliesCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C99BE5204E41A2000C2C90 /* ViewRepliesCellNode.swift */; };
 		B0CE8C502116E7BB004EE687 /* NewPostsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0CE8C4F2116E7BA004EE687 /* NewPostsButton.swift */; };
 		B0D81F6E20B2344700ED5A10 /* MyRecentPostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D81F6D20B2344700ED5A10 /* MyRecentPostsTableViewController.swift */; };
+		B0D95307211CA74D000CD647 /* CreateProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D95306211CA74D000CD647 /* CreateProfileViewController.swift */; };
+		B0D95309211D2867000CD647 /* AnonSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D95308211D2867000CD647 /* AnonSwitch.swift */; };
 		B0D98F8A2106B24800A25692 /* MyCommentsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D98F892106B24800A25692 /* MyCommentsTableViewController.swift */; };
 		B0DA5A9F20D3863600E0F32C /* PushTransitionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DA5A9E20D3863600E0F32C /* PushTransitionManager.swift */; };
 		B0DA947320C9A5EF0044A576 /* SinglePostActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DA947220C9A5EF0044A576 /* SinglePostActionsView.swift */; };
@@ -234,6 +236,8 @@
 		B0C99BE5204E41A2000C2C90 /* ViewRepliesCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewRepliesCellNode.swift; sourceTree = "<group>"; };
 		B0CE8C4F2116E7BA004EE687 /* NewPostsButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostsButton.swift; sourceTree = "<group>"; };
 		B0D81F6D20B2344700ED5A10 /* MyRecentPostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyRecentPostsTableViewController.swift; sourceTree = "<group>"; };
+		B0D95306211CA74D000CD647 /* CreateProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateProfileViewController.swift; sourceTree = "<group>"; };
+		B0D95308211D2867000CD647 /* AnonSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnonSwitch.swift; sourceTree = "<group>"; };
 		B0D98F892106B24800A25692 /* MyCommentsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyCommentsTableViewController.swift; sourceTree = "<group>"; };
 		B0DA5A9E20D3863600E0F32C /* PushTransitionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushTransitionManager.swift; sourceTree = "<group>"; };
 		B0DA947220C9A5EF0044A576 /* SinglePostActionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePostActionsView.swift; sourceTree = "<group>"; };
@@ -492,6 +496,7 @@
 				B0B29DF120375AD500FBE5FF /* MainTabBarController.swift */,
 				B09C1A0820EBF270000640CB /* PostButton.swift */,
 				B0B29DF52037663D00FBE5FF /* HomeViewController.swift */,
+				B0D95308211D2867000CD647 /* AnonSwitch.swift */,
 				B089D292210652BF009FAFC0 /* EnableLocationServicesCellNode.swift */,
 				B04C2DC320A6E5D900ED65C8 /* HomeTitleView.swift */,
 				B0C917A720B373500067AE67 /* ContentSettingsViewController.swift */,
@@ -506,6 +511,7 @@
 			children = (
 				B0F50ECF2037838400037343 /* InitialViewController.swift */,
 				B0150C752119134A0036113A /* EmailViewController.swift */,
+				B0D95306211CA74D000CD647 /* CreateProfileViewController.swift */,
 				B0B29DDA2037408900FBE5FF /* AuthViewController.swift */,
 				B03291D9206A253C00B8A0C7 /* SignUpViewController.swift */,
 				B03291DB206A396100B8A0C7 /* VerificationViewController.swift */,
@@ -781,6 +787,7 @@
 				B07F611820454516005010B7 /* LightboxViewController.swift in Sources */,
 				B09C1A0720EBD8D9000640CB /* CommentActionsRow.swift in Sources */,
 				B07F610D2044C93B005010B7 /* GPSService.swift in Sources */,
+				B0D95307211CA74D000CD647 /* CreateProfileViewController.swift in Sources */,
 				B0932E7F20A3FD3C004E62E2 /* ProfileViewController.swift in Sources */,
 				B0C99BE6204E41A2000C2C90 /* ViewRepliesCellNode.swift in Sources */,
 				B0FECD6E2106F7CF0087F2A3 /* LikedPostsTableViewController.swift in Sources */,
@@ -836,6 +843,7 @@
 				B04D4E5420492737000A1033 /* SearchViewController.swift in Sources */,
 				B0338C9820C1DD5C00B1E1DF /* CameraViewController.swift in Sources */,
 				B0058C70203BDACF00510EEC /* NewPostsView.swift in Sources */,
+				B0D95309211D2867000CD647 /* AnonSwitch.swift in Sources */,
 				B0528D6920CAD39A006FFB88 /* PostVideoNode.swift in Sources */,
 				B0AA490A20D2336C00B0FC8A /* KVVideoManager.swift in Sources */,
 				B07F610F2044ECFF005010B7 /* PostsService.swift in Sources */,

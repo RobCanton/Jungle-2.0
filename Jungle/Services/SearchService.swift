@@ -207,36 +207,6 @@ class SearchService {
                 trendingHashtags = tags
             }
         }
-//        let trendingRef = database.child("trending/hashtags").queryOrdered(byChild: "count")
-//        trendingRef.observe(.value, with: { snapshot in
-//            guard let dictArray = snapshot.value as? [String:[String:Any]] else { return }
-//            var tags = [TrendingHashtag]()
-//            for (key, data) in dictArray {
-//                if let count = data["count"] as? Int,
-//                    let _posts = data["posts"] as? [[String:Any]] {
-//                    var posts = [Post]()
-//                    for postData in _posts {
-//                        if let post = Post.parse(data: postData) {
-//                            posts.append(post)
-//                        }
-//                    }
-//
-//                    let tag = TrendingHashtag(hashtag: key, count: count, posts: posts)
-//                    tags.append(tag)
-//
-//                }
-////                let postData = data["post"] as? [String:Any],
-////                    let id = postData["id"] as? String,
-////                    let post = Post.parse(id: id, postData) {
-////                    let tag = TrendingHashtag(hashtag: key, count: count, post: post)
-////                    tags.append(tag)
-////                }
-//            }
-//            tags.sort(by: { return $0 > $1 })
-//
-//            trendingHashtags = tags
-//        })
     }
-    
     
 }

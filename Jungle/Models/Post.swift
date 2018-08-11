@@ -16,6 +16,7 @@ enum Vote {
 
 class Post {
     private(set) var key:String
+    private(set) var profile:Profile?
     private(set) var anon:Anon
     private var _text:String
     private var _textClean:String
@@ -74,10 +75,11 @@ class Post {
         return nil
     }
     
-    init(key:String, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments, location:Region?, tags:[String], score:Double, votes:Int, numLikes:Int,
+    init(key:String, profile:Profile?, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments, location:Region?, tags:[String], score:Double, votes:Int, numLikes:Int,
          numReplies:Int, replies:[Post], reports:Reports,parent:String?, replyTo:String?, gradient:[String]) {
         
         self.key = key
+        self.profile = profile
         self.anon = anon
         self._text = text
         self._textClean = textClean
@@ -99,13 +101,16 @@ class Post {
     
     static func parse(id:String, _ data:[String:Any]) -> Post? {
         var post:Post?
-        if let anon = Anon.parse(data),
-            let text = data["text"] as? String,
+        
+        if let text = data["text"] as? String,
             let textClean = data["textClean"] as? String,
             let createdAt = data["createdAt"] as? Double,
             let votes = data["votes"] as? Int,
             let numReplies = data["numReplies"] as? Int,
             let tags = data["hashtags"] as? [String] {
+            
+            let profile = Profile.parse(data)
+            let anon = Anon.parse(data) ?? Anon(key: "", adjective: "", animal: "", color: .black)
             
             let attachments = Attachments.parse(data)
             let location = Region.parse(data)
@@ -145,9 +150,7 @@ class Post {
                 }
             }
             
-            
-            
-            post = Post(key: id, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:replies, reports: reports, parent: parent, replyTo: replyTo, gradient: gradient )
+            post = Post(key: id, profile:profile, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:replies, reports: reports, parent: parent, replyTo: replyTo, gradient: gradient )
             post?.isYou = data["isYou"] as? Bool ?? false
             
             if let parentData = data["parentPost"] as? [String:Any] {
@@ -165,16 +168,19 @@ class Post {
     
     static func parse(data:[String:Any]) -> Post? {
         var post:Post?
+        
         guard let status = data["status"] as? String else { return nil }
         if status == "active",
             let id = data["id"] as? String,
-            let anon = Anon.parse(data),
             let text = data["text"] as? String,
             let textClean = data["textClean"] as? String,
             let createdAt = data["createdAt"] as? Double,
             let votes = data["votes"] as? Int,
             let numReplies = data["numReplies"] as? Int,
             let tags = data["hashtags"] as? [String] {
+            
+            let profile = Profile.parse(data)
+            let anon = Anon.parse(data) ?? Anon(key: "", adjective: "", animal: "", color: .black)
             
             let attachments = Attachments.parse(data)
             let location = Region.parse(data)
@@ -214,7 +220,7 @@ class Post {
                 }
             }
             
-            post = Post(key: id, anon: anon, text: text, textClean: textClean,
+            post = Post(key: id, profile: profile, anon: anon, text: text, textClean: textClean,
                         createdAt: Date(timeIntervalSince1970: createdAt / 1000),
                         attachments: attachments, location:location, tags: tags,
                         score:score, votes: votes,numLikes: numLikes,

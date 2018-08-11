@@ -44,6 +44,8 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     var titleView:HomeTitleView!
     var messageWrapper = SwiftMessages()
     
+    var anonSwitch:AnonSwitch!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.white
@@ -66,6 +68,18 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
         titleView.tabScrollView.delegate = self
         
+        let contentView = titleView.contentView!
+        
+        anonSwitch = AnonSwitch(frame: .zero)
+        contentView.addSubview(anonSwitch)
+        anonSwitch.translatesAutoresizingMaskIntoConstraints = false
+        anonSwitch.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16.0).isActive = true
+        anonSwitch.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
+        anonSwitch.widthAnchor.constraint(equalToConstant: 32.0).isActive = true
+        anonSwitch.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
+        anonSwitch.layer.borderColor = UIColor.white.cgColor
+        anonSwitch.layer.borderWidth = 1.0
+        
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
         pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         pagerNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
@@ -80,6 +94,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         
         //titleView.rightButton.addTarget(self, action: #selector(openContentSettings), for: .touchUpInside)
     }
+    
 
     @objc func locationPicker() {
         //print("IM SO COLD LIKE YAH")
@@ -120,7 +135,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        anonSwitch.setAnonMode(to: UserService.anonMode)
         if ContentSettings.recentlyUpdated {
             pagerNode.reloadData()
             ContentSettings.recentlyUpdated = false

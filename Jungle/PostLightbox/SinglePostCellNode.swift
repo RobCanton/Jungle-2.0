@@ -17,23 +17,34 @@ class AvatarNode:ASDisplayNode {
     var imageNode = ASNetworkImageNode()
     var imageInset:CGFloat = 5.0
     
+    
     required init(post:Post, cornerRadius: CGFloat, imageInset:CGFloat) {
         super.init()
         automaticallyManagesSubnodes = true
-        self.imageInset = imageInset
         self.layer.cornerRadius = cornerRadius
         self.clipsToBounds = true
         
         backgroundColor = UIColor.white
-        backNode.backgroundColor = UIColor.white//post.anon.color.withAlphaComponent(0.30)
-        imageNode.imageModificationBlock = { image in
-            return image.maskWithColor(color: post.anon.color) ?? image
+        backNode.backgroundColor = UIColor.white
+        imageNode.shouldCacheImage = true
+        
+        if let profile = post.profile {
+            self.imageInset = 0.0
+            imageNode.url = profile.avatarThumbnailURL
+            imageNode.imageModificationBlock = nil
+        } else {
+            self.imageInset = imageInset
+            UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
+                print("GOT ANON ICON FROMFILE: \(fromFile)")
+                self.imageNode.image = image
+            }
+            
+            imageNode.imageModificationBlock = { image in
+                return image.maskWithColor(color: post.anon.color) ?? image
+            }
         }
         
-        UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
-            print("GOT ANON ICON FROMFILE: \(fromFile)")
-            self.imageNode.image = image
-        }
+        
         
        
     }
@@ -92,29 +103,33 @@ class ContentOverlayNode:ASControlNode {
             }
         }
         
+        subnameNode.isHidden = true
         
-        usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
-            NSAttributedStringKey.foregroundColor: UIColor.white//post.anon.color
-            ])
-        
-        var subnameStr = ""
-        if post.isYou {
-            subnameStr = "YOU"
-            subnameNode.isHidden = false
-        }else {
-            subnameNode.isHidden = true
+        if let profile = post.profile {
+            usernameNode.attributedText = NSAttributedString(string: profile.username , attributes: [
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 15.0),
+                NSAttributedStringKey.foregroundColor: UIColor.white
+                ])
+        } else {
+            usernameNode.attributedText = NSAttributedString(string: post.anon.displayName , attributes: [
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 15.0),
+                NSAttributedStringKey.foregroundColor: UIColor.white
+                ])
+            
+            if post.isYou {
+
+                subnameNode.isHidden = false
+                subnameNode.attributedText = NSAttributedString(string: "YOU", attributes: [
+                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
+                    NSAttributedStringKey.foregroundColor: post.anon.color
+                    ])
+                subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
+                subnameNode.backgroundColor = UIColor.white
+            }
         }
         
-        subnameNode.attributedText = NSAttributedString(string: subnameStr, attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 9.0),
-            NSAttributedStringKey.foregroundColor: post.anon.color
-            ])
-        subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
-        subnameNode.backgroundColor = UIColor.white
-        
         timeNode.attributedText = NSAttributedString(string: post.createdAt.fullTimeSinceNow() , attributes: [
-            NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 13.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
         
@@ -287,17 +302,30 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
         guard let post = self.post else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        let ref = database.ref.child("posts/likes/\(post.key)/\(uid)")
+        //let ref = database.ref.child("posts/likes/\(post.key)/\(uid)")
         post.liked = !post.liked
         contentOverlay.actionsRow.setLiked(post.liked, animated: true)
+        
+        let likedParams:[String:Any] = [
+            "postID": post.key,
+            "isAnon": UserService.anonMode,
+            "liked": post.liked,
+        ]
+        
         if post.liked {
             post.numLikes += 1
             contentOverlay.setNumLikes(post.numLikes)
-            ref.setValue(true)
         } else {
             post.numLikes -= 1
             contentOverlay.setNumLikes(post.numLikes)
-            ref.setValue(false)
+        }
+        
+        functions.httpsCallable("setPostLike").call(likedParams) { result, error in
+            if let data = result?.data as? [String:Any] {
+                print("SET POST LIKE DATA: \(data)")
+            } else {
+                print("Error: \(error?.localizedDescription)")
+            }
         }
     }
     

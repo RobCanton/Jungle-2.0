@@ -99,11 +99,7 @@ class CommentsDrawerViewController:UIViewController {
             DispatchQueue.main.async {
                 self.commentsVC?.commentBar.textView.becomeFirstResponder()
             }
-            //commentsVC?.commentBar.textView.becomeFirstResponder()
         }
-//        if let currentPost = currentPost, currentPost.key == post.key {
-//            return
-//        }
         
         commentsVC?.willMove(toParentViewController: nil)
         commentsVC?.view.removeFromSuperview()
@@ -162,6 +158,10 @@ extension CommentsDrawerViewController: PulleyDrawerViewControllerDelegate {
 class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSource {
     
     var post:Post!
+    var myProfile:Profile?
+    var myAnon:Anon?
+    var didRecieveLexicon = false
+    
     
     var tableNode = ASTableNode()
     var topState = State.empty
@@ -316,6 +316,7 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidHide), name: NSNotification.Name.UIKeyboardDidHide, object: nil)
         
         observePostSubscription()
+        observePostLexicon()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -329,6 +330,49 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         }
     }
     
+    var lexiconListener:UInt?
+    
+    func observePostLexicon() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let ref = database.child("posts/lexicon/\(post.key)/\(uid)")
+        if let prevListener = lexiconListener {
+            ref.removeObserver(withHandle: prevListener)
+        }
+        myProfile = nil
+        myAnon = nil
+        didRecieveLexicon = false
+        updateAnonSwitch()
+        
+        ref.observe(.value, with: { snapshot in
+            self.didRecieveLexicon = true
+            if let data = snapshot.value as? [String:Any] {
+                if let anon = Anon.parse(data) {
+                    print("WE GOT AN ANON!")
+                    self.myAnon = anon
+                } else if let profile = Profile.parse(data) {
+                    print("WE GOT A PROFILE!")
+                    self.myProfile = profile
+                }
+            } else {
+                print("WE GOT NO DATA!")
+            }
+            self.updateAnonSwitch()
+        }, withCancel: { error in
+            print("WE GOT AN ERROR: \(error.localizedDescription)")
+        })
+    }
+    
+    func updateAnonSwitch() {
+        let anonSwitch = commentBar.anonSwitch
+        if let profile = myProfile {
+            anonSwitch?.display(profile: profile)
+        } else if let anon = myAnon {
+            anonSwitch?.display(anon: anon)
+        } else {
+            anonSwitch?.setAnonMode(to: UserService.anonMode)
+            anonSwitch?.isUserInteractionEnabled = didRecieveLexicon
+        }
+    }
     
     var subscriptionListener:UInt?
     func observePostSubscription() {
@@ -413,7 +457,6 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         if indexPath.section == 0 {
             let cell = PostCommentCellNode(post: post, parentPost: post, isCaption: true)
             cell.selectionStyle = .none
-            cell.timeNode.isHidden = true
             cell.delegate = self
             return cell
         }
@@ -664,7 +707,8 @@ extension CommentsViewController: CommentBarDelegate {
     func callFunction(text:String, completion:@escaping ((_ success:Bool, _ reply:Post?, _ replyTo:String?)->())) {
         var parameters: [String: Any] = [
             "text" : text,
-            "postID": post.key
+            "postID": post.key,
+            "isAnonymous": commentBar.anonSwitch.anonMode
         ]
         
         if let focusedReply = self.focusedReply {
@@ -676,7 +720,6 @@ extension CommentsViewController: CommentBarDelegate {
             }
         }
         
-        print("JADED: \(parameters)")
         
         functions.httpsCallable("addComment").call(parameters) { result, error in
             if let error = error as NSError? {

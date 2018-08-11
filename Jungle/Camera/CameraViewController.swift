@@ -185,7 +185,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        hudView.textOnlyBG.startAnimation()
+        hudView.textOnlyBG.startStatic()
     }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)

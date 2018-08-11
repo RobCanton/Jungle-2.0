@@ -28,6 +28,8 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         return textHeight + 8.0
     }
     
+    var anonSwitch:AnonSwitch!
+    
     weak var delegate:CommentBarDelegate?
     
     var dividerNode:UIView!
@@ -58,13 +60,21 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         dividerNode.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0.0).isActive = true
         dividerNode.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 0.0).isActive = true
         
+        anonSwitch = AnonSwitch(frame: .zero)
+        addSubview(anonSwitch)
+        anonSwitch.translatesAutoresizingMaskIntoConstraints = false
+        anonSwitch.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12).isActive = true
+        anonSwitch.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        anonSwitch.widthAnchor.constraint(equalToConstant: 32.0).isActive = true
+        anonSwitch.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
+        
         textBox = UIView()
         addSubview(textBox)
         textBox.translatesAutoresizingMaskIntoConstraints = false
         textBox.backgroundColor = UIColor(white: 1.0, alpha: 0.2)
         textBox.layer.cornerRadius = 4.0
         textBox.clipsToBounds = true
-        textBox.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4.0).isActive = true
+        textBox.leadingAnchor.constraint(equalTo: anonSwitch.trailingAnchor, constant: 2.0).isActive = true
         textBox.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         textBox.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4.0).isActive = true
         

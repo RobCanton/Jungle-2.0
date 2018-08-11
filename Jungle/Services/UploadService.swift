@@ -217,7 +217,8 @@ class UploadService {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         var parameters: [String: Any] = [
             "uid" : uid,
-            "text" : text
+            "text" : text,
+            "isAnonymous" : UserService.anonMode
         ]
         
         if let region = region, let location = location {

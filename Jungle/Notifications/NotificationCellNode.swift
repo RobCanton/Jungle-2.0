@@ -49,6 +49,7 @@ class NotificationCellNode:ASCellNode {
     var bodyNode = ASTextNode()
     var timeNode = ASTextNode()
     var avatarNode = ASDisplayNode()
+    var avatarImageNode = ASNetworkImageNode()
     var previewNode = ASNetworkImageNode()
     var previewImageNode:IconNode!
     weak var notification:JNotification?
@@ -61,10 +62,11 @@ class NotificationCellNode:ASCellNode {
         imageNode.layer.cornerRadius = 16.0
         imageNode.clipsToBounds = true
         //previewNode.backgroundColor = tertiaryColor
-        avatarNode.backgroundColor = UIColor.white
+        avatarNode.backgroundColor = tertiaryColor
         avatarNode.automaticallyManagesSubnodes = true
         avatarNode.layoutSpecBlock = { _, _ in
-            return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(8, 8, 8, 8), child: self.previewNode)
+            let inset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(8, 8, 8, 8), child: self.previewNode)
+            return ASOverlayLayoutSpec(child: self.avatarImageNode, overlay: inset)
         }
         
         timeNode.attributedText = NSAttributedString(string: notification.timestamp.timeSinceNow(), attributes: [
@@ -98,13 +100,34 @@ class NotificationCellNode:ASCellNode {
         guard let notification = self.notification else { return }
         if let postVotesNotification = notification as? PostVotesNotification,
             let post = postVotesNotification.post {
-            let name = postVotesNotification.anon.displayName
+            var name:String
+            var color:UIColor
+            
+            if let profile = postVotesNotification.profile {
+                name = profile.username
+                color = UIColor.black
+                self.previewNode.isHidden = true
+                self.avatarImageNode.isHidden = false
+                self.avatarImageNode.url = profile.avatarThumbnailURL
+                self.avatarNode.backgroundColor = tertiaryColor
+            } else {
+                name = postVotesNotification.anon.displayName
+                color = postVotesNotification.anon.color
+                self.previewNode.url = nil
+                self.previewNode.isHidden = false
+                self.avatarImageNode.isHidden = true
+                UserService.retrieveAnonImage(withName: postVotesNotification.anon.animal.lowercased()) { image, _ in
+                    self.previewNode.image = image?.maskWithColor(color: postVotesNotification.anon.color)
+                }
+                self.avatarNode.backgroundColor = postVotesNotification.anon.color.withAlphaComponent(0.25)
+            }
+            
             let newVotes = postVotesNotification.newVotes - 1
             let others = newVotes > 1 ? "others" : "other"
             let midfix = newVotes > 0 ? " + \(newVotes) \(others)" : ""
             let postType = post.parent == nil ? "post" : "comment"
             let notificationStr = "\(name)\(midfix) liked your \(postType)"
-            print("WE GOT ANON: \(postVotesNotification.anon.displayName)")
+            
             let titleStr = NSMutableAttributedString(string: notificationStr)
             titleStr.addAttributes([
                 NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
@@ -113,7 +136,7 @@ class NotificationCellNode:ASCellNode {
             
             titleStr.addAttributes([
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
-                NSAttributedStringKey.foregroundColor: postVotesNotification.anon.color
+                NSAttributedStringKey.foregroundColor: color
                 ], range: NSRange(location: 0, length: name.count))
             
             if midfix.count > 0 {
@@ -131,22 +154,37 @@ class NotificationCellNode:ASCellNode {
                 NSAttributedStringKey.foregroundColor: UIColor.gray
                 ])
             
-//            FileService.retrieveThumbnail(withKey: post.key) { image, _ in
-//                self.previewNode.image = image
-//            }
-            
-            UserService.retrieveAnonImage(withName: postVotesNotification.anon.animal.lowercased()) { image, _ in
-                self.previewNode.image = image?.maskWithColor(color: postVotesNotification.anon.color)
-            }
-            self.avatarNode.backgroundColor = postVotesNotification.anon.color.withAlphaComponent(0.25)
-            
         } else if let replyNotification = notification as? PostReplyNotification,
             let reply = replyNotification.reply,
             let post = replyNotification.post {
-            let name = reply.anon.displayName
-            var notificationStr:String
             
-            let replyToID = replyNotification.replyToID ?? post.key
+            
+            var name:String
+            var color:UIColor
+            
+            if let profile = reply.profile {
+                name = profile.username
+                color = UIColor.black
+                
+                self.previewNode.isHidden = true
+                self.avatarImageNode.isHidden = false
+                self.avatarImageNode.url = profile.avatarThumbnailURL
+                self.avatarNode.backgroundColor = tertiaryColor
+            } else {
+                name = reply.anon.displayName
+                color = reply.anon.color
+                
+                self.previewNode.url = nil
+                self.previewNode.isHidden = false
+                self.avatarImageNode.isHidden = true
+                UserService.retrieveAnonImage(withName: reply.anon.animal.lowercased()) { image, _ in
+                    self.previewNode.image = image?.maskWithColor(color: reply.anon.color)
+                }
+                self.avatarNode.backgroundColor = reply.anon.color.withAlphaComponent(0.25)
+            }
+            
+            var notificationStr:String
+            //let replyToID = replyNotification.replyToID ?? post.key
             
             if replyNotification.mention {
                 notificationStr = "\(name) mentioned you:"
@@ -162,7 +200,7 @@ class NotificationCellNode:ASCellNode {
             
             titleStr.addAttributes([
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
-                NSAttributedStringKey.foregroundColor: reply.anon.color
+                NSAttributedStringKey.foregroundColor: color
                 ], range: NSRange(location: 0, length: name.count))
             titleNode.attributedText = titleStr
             
@@ -172,14 +210,6 @@ class NotificationCellNode:ASCellNode {
                 NSAttributedStringKey.font: Fonts.regular(ofSize: 15.0),
                 NSAttributedStringKey.foregroundColor: UIColor.gray
                 ])
-            
-//            FileService.retrieveThumbnail(withKey: post.key) { image, _ in
-//                self.previewNode.image = image
-//            }
-            UserService.retrieveAnonImage(withName: reply.anon.animal.lowercased()) { image, _ in
-                self.previewNode.image = image?.maskWithColor(color: reply.anon.color)
-            }
-            self.avatarNode.backgroundColor = reply.anon.color.withAlphaComponent(0.25)
         }
         
     }

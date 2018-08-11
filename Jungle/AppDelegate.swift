@@ -51,18 +51,23 @@ var listeningDict = [String:Bool]() {
 
 var safeAreaInsets:UIEdgeInsets = .zero
 
+var anonAlertWrapper = SwiftMessages()
+
 protocol AppProtocol {
-    func listenToAuth()
+    func openMainView()
 }
 
+var appProtocol:AppProtocol?
+
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate, AppProtocol {
 
     var window: UIWindow?
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override  for customization after application launch.
+        appProtocol = self
         
         Messaging.messaging().delegate = self
         
@@ -187,12 +192,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                                             pushNotifications: pushNotifications,
                                             safeContentMode: safeContentMode)
                 
+                var profile:Profile?
+                if let profileData = data["profile"] as? [String:Any] {
+                    if let username = profileData["username"] as? String,
+                        let avatarData = profileData["avatar"] as? [String:Any],
+                        let avatarURLStr = avatarData["high"] as? String,
+                        let avatarThumbnailURLStr = avatarData["low"] as? String,
+                        let avatarURL = URL(string: avatarURLStr),
+                        let avatarThumbnailURL = URL(string: avatarThumbnailURLStr) {
+                        
+                        profile = Profile(username: username, avatarURL: avatarURL, avatarThumbnailURL: avatarThumbnailURL)
+                    }
+                }
                 
                 UserService.currentUserSettings = settings
-                UserService.currentUser = User(uid: uid, authType: type, lastPostedAt: nil)
+                UserService.currentUser = User(uid: uid, authType: type, profile: profile)
                 UserService.timeout = timeout
-                UserService.observeCurrentUserSettings()
-                self.openMainView()
+                
+                if profile != nil {
+                    self.openMainView()
+                } else {
+                    self.openProfileView()
+                }
+                
                 
             } else {
                 self.showAuthScreen()
@@ -200,10 +222,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
     }
     
+    func openProfileView() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let rootVC = window?.rootViewController else { return }
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let controller = CreateProfileViewController()
+        
+        
+        if rootVC.childViewControllers.count == 0 {
+            self.window?.rootViewController = controller
+            self.window?.makeKeyAndVisible()
+            self.listenToAuth()
+            
+        } else {
+            window?.rootViewController?.dismiss(animated: false, completion: {
+                self.window?.rootViewController = controller
+                self.window?.makeKeyAndVisible()
+                self.listenToAuth()
+            })
+        }
+    }
+    
     func openMainView() {
         
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        UserService.observeCurrentUser()
+        
         UserService.observeCurrentUserSettings()
         nService.clear()
         nService.initialFetch()
@@ -376,6 +419,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                         config.dimMode = .gray(interactive: true)
                        SwiftMessages.show(config: config, view: messageView)
                     } else if let auth = auth {
+                        UserDefaults.standard.removeObject(forKey: "Email")
                         hud.textLabel.text = "Authenticated!"
                         self.getUserProfile(uid: auth.user.uid)
                     }

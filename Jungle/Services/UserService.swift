@@ -25,6 +25,7 @@ class UserService {
     
     static var lastPostedAt:Date?
     
+    static var anonMode = true
     
     static var currentUser:User?
     static var currentUserSettings = UserSettings(locationServices: false, pushNotifications: false, safeContentMode: true)
@@ -59,50 +60,7 @@ class UserService {
     
     
     static var recentlyPosted  = false
-    static func getUser(_ uid:String, completion: @escaping (_ user:User?)->()) {
-        
-        let ref = firestore.collection("users").document(uid)
-        ref.getDocument { snapshot, error in
-            print("LOL!")
-            var user:User?
-            if let error = error {
-                print ("ERROR: \(error.localizedDescription)")
-            }
-            if let snapshot = snapshot {
-                let data = snapshot.data()
-                
-                if let type = data?["type"] as? String {
-                    var lastPostedAt:Date?
-                    if let lastPostTimestamp = data?["lastPostedAt"] as? Double {
-                        lastPostedAt = Date(timeIntervalSince1970: lastPostTimestamp)
-                    }
-                    
-                    user = User(uid: uid, authType: type, lastPostedAt: lastPostedAt)
-                }
-            }
-            return completion(user)
-        }
-    }
     
-    static func observeCurrentUser() {
-        guard let user = currentUser else { return }
-        let ref = firestore.collection("users").document(user.uid)
-        ref.addSnapshotListener { snapshot, error in
-            if let snapshot = snapshot {
-                let data = snapshot.data()
-                
-                if let type = data?["type"] as? String {
-                    var lastPostedAt:Date?
-                    if let lastPostTimestamp = data?["lastPostedAt"] as? Double {
-                        lastPostedAt = Date(timeIntervalSince1970: lastPostTimestamp)
-                    }
-                    
-                    currentUser = User(uid: user.uid, authType: type, lastPostedAt: lastPostedAt)
-                    NotificationCenter.default.post(name: UserService.userUpdatedNotification, object: nil)
-                }
-            }
-        }
-    }
     static var userSettingsHandle:UInt?
     static func observeCurrentUserSettings() {
         guard let uid = Auth.auth().currentUser?.uid else { return }

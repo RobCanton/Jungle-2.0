@@ -122,9 +122,12 @@ class CameraHUDView:UIView {
         // Custom Color
         //hexColor(from: "42E695"), hexColor(from: "3BB2B8")
         //hexColor(from: "5B247A"), hexColor(from: "1BCEDF")
-        textOnlyBG.setColors([hexColor(from: "574BCD"),
-                              hexColor(from: "2999AD"),
-                              hexColor(from: "41E975")])
+        
+        //[hexColor(from: "574BCD"),
+        //hexColor(from: "2999AD"),
+        //hexColor(from: "41E975")
+        textOnlyBG.setColors([hexColor(from: "#007F4A"),
+                              hexColor(from: "#00594C")])
         
         
         textOnlyBG.alpha = 0.0
@@ -140,7 +143,7 @@ class CameraHUDView:UIView {
         addSubview(whiteBar)
         whiteBar.translatesAutoresizingMaskIntoConstraints = false
         whiteBar.heightAnchor.constraint(equalToConstant: 1.5).isActive = true
-        whiteBar.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20).isActive = true
+        whiteBar.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20 + 32 + 6).isActive = true
         whiteBar.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20).isActive = true
         whiteBar.topAnchor.constraint(equalTo: topAnchor, constant: 64.0).isActive = true
         whiteBar.alpha = 0.0
@@ -148,13 +151,13 @@ class CameraHUDView:UIView {
         
         textViewPlaceholder = UILabel(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 50))
         textViewPlaceholder.textColor = UIColor.white.withAlphaComponent(0.4)
-        textViewPlaceholder.font = Fonts.medium(ofSize: 22.0)
+        textViewPlaceholder.font = Fonts.light(ofSize: 22)
         textViewPlaceholder.text = "Write something..."
         textViewPlaceholder.alpha = 0.0
         addSubview(textViewPlaceholder)
         
         textViewPlaceholder.translatesAutoresizingMaskIntoConstraints = false
-        textViewPlaceholder.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24).isActive = true
+        textViewPlaceholder.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24 + 32 + 6).isActive = true
         textViewPlaceholder.isUserInteractionEnabled = false
         textViewPlaceholder.topAnchor.constraint(equalTo: topAnchor, constant: 72).isActive = true
         
@@ -195,13 +198,16 @@ class CameraHUDView:UIView {
         modeScrollBar.heightAnchor.constraint(equalToConstant: 52.0).isActive = true
         modeScrollBar.delegate = self
         
+
+        
         textView = UITextView(frame: .zero)
         textView.backgroundColor = UIColor.clear
-        textView.textContainerInset = UIEdgeInsetsMake(8, 20, 0, 20)
+        textView.textContainerInset = UIEdgeInsetsMake(8, 20 + 32 + 6, 0, 20)
         textView.textColor = UIColor.white
         textView.keyboardAppearance = .dark
+        textView.tintColor = UIColor.white
         textView.keyboardType = .twitter
-        textView.font = Fonts.medium(ofSize: 22.0)
+        textView.font = Fonts.light(ofSize: 22)
         textView.delegate = self
         textView.isScrollEnabled = false
         
@@ -260,6 +266,20 @@ class CameraHUDView:UIView {
         nextButton.setImage(UIImage(named:"pencil"), for: .normal)
         nextButton.backgroundColor = accentColor
         nextButton.titleLabel?.font = Fonts.semiBold(ofSize: 14)
+        
+        let anonSwitch = AnonSwitch(frame:.zero)
+        
+        self.addSubview(anonSwitch)
+        anonSwitch.translatesAutoresizingMaskIntoConstraints = false
+        anonSwitch.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20).isActive = true
+        anonSwitch.topAnchor.constraint(equalTo: topAnchor, constant: 64.0 + 4).isActive = true
+        anonSwitch.widthAnchor.constraint(equalToConstant: 32).isActive = true
+        anonSwitch.heightAnchor.constraint(equalToConstant: 32).isActive = true
+        anonSwitch.layer.borderColor = UIColor.white.cgColor
+        anonSwitch.layer.borderWidth = 1.0
+        anonSwitch.layer.cornerRadius = 16
+        anonSwitch.clipsToBounds = true
+        anonSwitch.setAnonMode(to: UserService.anonMode)
         
         nextButton.contentEdgeInsets = UIEdgeInsetsMake(12, 12, 12, 12)
         addSubview(nextButton)
@@ -744,11 +764,7 @@ extension CameraHUDView: UIScrollViewDelegate {
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-//        if scrollView.contentOffset.x == bounds.width {
-//            textView.resignFirstResponder()
-//        } else if scrollView.contentOffset.x == bounds.width * 2 {
-//            textView.becomeFirstResponder()
-//        }
+
     }
 }
 

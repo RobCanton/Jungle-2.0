@@ -95,6 +95,7 @@ class PostsService {
                 return completion([])
             } else if let data = result?.data as? [String:Any],
                 let results = data["results"] as? [[String:Any]]{
+                print("RECENT POSTS: \(results)")
                 var posts = [Post]()
                 for data in results {
                     if let post = Post.parse(data: data) {

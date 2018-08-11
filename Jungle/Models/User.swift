@@ -15,10 +15,10 @@ enum AuthType {
 class User {
     private(set) var uid:String
     private(set) var authType:AuthType
-    private(set) var lastPostedAt:Date?
+    private(set) var profile:Profile?
 
     
-    init(uid:String, authType:String, lastPostedAt: Date?) {
+    init(uid:String, authType:String, profile:Profile?) {
         self.uid = uid
         switch authType {
         case "anonymous":
@@ -31,6 +31,37 @@ class User {
             self.authType = .anonymous
             break
         }
-        self.lastPostedAt = lastPostedAt
+        self.profile = profile
+    }
+}
+
+class Profile {
+    private(set) var username:String
+    private(set) var avatarURL:URL
+    private(set) var avatarThumbnailURL:URL
+    
+    init(username:String, avatarURL:URL, avatarThumbnailURL:URL) {
+        self.username = username
+        self.avatarURL = avatarURL
+        self.avatarThumbnailURL = avatarThumbnailURL
+    }
+    
+    static func parse(_ data:[String:Any]) -> Profile? {
+        var profileData = data
+        if let _profileData = data["profile"] as? [String:Any] {
+            profileData = _profileData
+        }
+        
+        if let username = profileData["username"] as? String,
+            let avatarData = profileData["avatar"] as? [String:Any],
+            let avatarURLStr = avatarData["high"] as? String,
+            let avatarThumbnailURLStr = avatarData["low"] as? String,
+            let avatarURL = URL(string: avatarURLStr),
+            let avatarThumbnail = URL(string: avatarThumbnailURLStr) {
+            
+            return Profile(username: username, avatarURL: avatarURL, avatarThumbnailURL: avatarThumbnail)
+        }
+        
+        return nil
     }
 }
