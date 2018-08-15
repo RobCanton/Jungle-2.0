@@ -317,6 +317,8 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         
         observePostSubscription()
         observePostLexicon()
+        
+        commentBar.anonSwitch.setProfileImage()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -836,6 +838,15 @@ extension CommentsViewController: CommentBarDelegate {
 }
 
 extension CommentsViewController: CommentCellDelegate {
+    func postOpen(profile: Profile) {
+        let controller = UserProfileViewController()
+        controller.profile = profile
+        pushTransitionManager.navBarHeight = nil
+        controller.interactor = pushTransitionManager.interactor
+        controller.transitioningDelegate = pushTransitionManager
+        self.present(controller, animated: true, completion: nil)
+    }
+    
     func postOpen(tag: String) {
         let vc = SearchViewController()
         vc.initialSearch = tag

@@ -13,7 +13,7 @@ import Alamofire
 import Pulley
 import Firebase
 import UserNotifications
-
+import Smile
 
 protocol UploadProgressDelegate {
     func uploadedDidComplete()
@@ -101,16 +101,20 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         super.viewWillAppear(animated)
         observeNotificationsCount()
         
+        //let list = Smile.list()
         
+        //let cat = Smile.emojiCategories
+        //print("EMOJI LIST: \(cat)")
         tabBar.items?[4].isEnabled = true
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let timeoutRef = firestore.collection("userTimeouts").document(uid)
-        timeoutRef.addSnapshotListener { snapshot, error in
-            if let data = snapshot?.data() {
+        
+        let timeoutRef = database.child("users/timeout/\(uid)")
+        timeoutRef.observe(.value, with: { snapshot in
+            if let data = snapshot.value as? [String:Any] {
                 UserService.timeout = UserService.parseTimeout(data)
                 self.updatePostTimer()
             }
-        }
+        })
     }
     
     var notificationsCountHandle:UInt?
@@ -143,6 +147,8 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
             let controller = CameraViewController()
             self.present(controller, animated: true, completion: nil)
         } else {
+            
+            
             let error = MessageView.viewFromNib(layout: .cardView)
             var minutes:String
             if timeout.minsLeft == 0 {
@@ -164,6 +170,9 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
             config.presentationStyle = .bottom
             
             messageWrapper.show(config: config, view: error)
+            guard let uid = Auth.auth().currentUser?.uid else { return }
+            let ref = database.child("users/timeout/\(uid)/notifyOnComplete")
+            ref.setValue(true)
         }
     }
     

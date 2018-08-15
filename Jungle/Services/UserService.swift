@@ -148,6 +148,64 @@ class UserService {
             }
         }
     }
+    
+    static let userImageCache = NSCache<NSString, UIImage>()
+    fileprivate static func downloadUserImage(uid:String, _ quality:ProfileImageQuality, completion:@escaping(_ image:UIImage?)->()) {
+        let imageRef = storage.child("userProfile/\(uid)/\(quality.rawValue).jpg")
+        
+        // Download in memory with a maximum allowed size of 2MB (2 * 1024 * 1024 bytes)
+        imageRef.getData(maxSize: 1 * 1024 * 1024) { (data, error) -> Void in
+            if (error != nil) {
+                print("Error - \(error!.localizedDescription)")
+                completion(nil)
+            } else {
+                var image:UIImage?
+                if data != nil {
+                    image = UIImage(data: data!)
+                }
+                return completion(image)
+            }
+        }
+    }
+    
+    static func retrieveUserImage(uid: String, _ quality: ProfileImageQuality, completion: @escaping (_ image:UIImage?, _ fromFile:Bool)->()) {
+        let key = NSString(string: "\(uid)-\(quality.rawValue)")
+        if let image = userImageCache.object(forKey: key) {
+            completion(image, true)
+        } else {
+            downloadUserImage(uid: uid, quality) { image in
+                if image != nil {
+                    userImageCache.setObject(image!, forKey: key)
+                }
+                completion(image, false)
+            }
+        }
+    }
+    
+    static func uploadProfileImage(_ image:UIImage, quality:ProfileImageQuality, completion: @escaping ((_ success:Bool)->())) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let storageRef = Storage.storage().reference().child("userProfile/\(uid)/\(quality.rawValue).jpg")
+        
+        var _quality:CGFloat
+        switch quality {
+        case .high:
+            _quality = 0.8
+            break
+        case .low:
+            _quality = 0.3
+            break
+        }
+        
+        guard let imageData = UIImageJPEGRepresentation(image, _quality) else { return }
+        
+        let metaData = StorageMetadata()
+        metaData.contentType = "image/jpg"
+        
+        storageRef.putData(imageData, metadata: metaData) { metaData, error in
+            completion(error == nil)
+        }
+    }
+
 
 }
 

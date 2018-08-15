@@ -14,12 +14,17 @@ import Firebase
 class GPSService: NSObject, CLLocationManagerDelegate {
     
     static let locationUpdatedNotification = Notification.Name.init("LocationUpdated")
+    static let regionUpdatedNotification = Notification.Name.init("RegionUpdated")
     
     fileprivate var locationManager: CLLocationManager?
     fileprivate var lastLocation: CLLocation?
     fileprivate var currentAccuracy:Double?
     
-    private(set) var region:Region?
+    private(set) var region:Region? {
+        didSet {
+            NotificationCenter.default.post(name: GPSService.regionUpdatedNotification, object: self)
+        }
+    }
     fileprivate var lastSignificantLocation: CLLocation? {
         didSet {
             if let location = lastSignificantLocation {
@@ -49,7 +54,19 @@ class GPSService: NSObject, CLLocationManagerDelegate {
     }
     
     func requestAuthorization() {
-        self.locationManager?.requestWhenInUseAuthorization()
+        let status = authorizationStatus()
+        switch status {
+        case .notDetermined:
+            self.locationManager?.requestWhenInUseAuthorization()
+            break
+        case .restricted, .denied:
+            let settingsUrl = URL(string: UIApplicationOpenSettingsURLString)!
+            UIApplication.shared.open(settingsUrl)
+            break
+        case .authorizedAlways, .authorizedWhenInUse:
+            break
+        }
+        
     }
     
     func setAccurateGPS(_ accurate:Bool) {

@@ -209,4 +209,57 @@ class SearchService {
         }
     }
     
+    static func userPosts(username:String, offset:Int, completion: @escaping(_ posts:[Post])->()) {
+        
+        let params = [
+            "username": username,
+            "length": 15,
+            "offset": offset,
+            ] as [String:Any]
+        
+        functions.httpsCallable("userPosts").call(params) { result, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([])
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
+                
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.append(post)
+                    }
+                }
+                print("POSTS: \(posts)")
+                return completion(posts)
+            }
+        }
+    }
+    
+    static func userComments(username:String, offset:Int, completion: @escaping(_ posts:[Post])->()) {
+        
+        let params = [
+            "username": username,
+            "length": 15,
+            "offset": offset,
+            ] as [String:Any]
+        
+        functions.httpsCallable("userComments").call(params) { result, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([])
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
+                
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.append(post)
+                    }
+                }
+                
+                return completion(posts)
+            }
+        }
+    }
 }

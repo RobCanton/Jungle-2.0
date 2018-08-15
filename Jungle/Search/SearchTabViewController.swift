@@ -42,6 +42,8 @@ class SearchTabViewController:JViewController, RCSearchBarDelegate {
     var pushTransitionManager = PushTransitionManager()
     var trendingHashtagsNode:TrendingHashtagsNode!
     var searchBar:RCSearchBarView!
+    var tabScrollView:DualScrollView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = bgColor
@@ -61,15 +63,23 @@ class SearchTabViewController:JViewController, RCSearchBarDelegate {
         searchBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         searchBar.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
         
+        searchBar.setup(withDelegate: self)
+        searchBar.textField.isUserInteractionEnabled = false
+        
+        for gesture in searchBar.textBubble.gestureRecognizers ?? [] {
+            searchBar.textBubble.removeGestureRecognizer(gesture)
+        }
+        
         let bgImageView = UIImageView(image: UIImage(named:"GreenBox"))
         view.insertSubview(bgImageView, belowSubview: searchBar)
         bgImageView.translatesAutoresizingMaskIntoConstraints = false
         bgImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         bgImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         bgImageView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        bgImageView.heightAnchor.constraint(equalToConstant:  titleViewHeight).isActive = true
+        bgImageView.heightAnchor.constraint(equalToConstant:  titleViewHeight + 32.0).isActive = true
         
-        view.layoutIfNeeded()
+        let tap = UITapGestureRecognizer(target: self, action: #selector(showSearchView))
+        searchBar.textBubble.addGestureRecognizer(tap)
         
         trendingHashtagsNode = TrendingHashtagsNode()
         view.addSubview(trendingHashtagsNode.view)
@@ -77,12 +87,25 @@ class SearchTabViewController:JViewController, RCSearchBarDelegate {
         trendingHashtagsNode.view.translatesAutoresizingMaskIntoConstraints = false
         trendingHashtagsNode.view.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
         trendingHashtagsNode.view.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
-        trendingHashtagsNode.view.topAnchor.constraint(equalTo: layout.topAnchor, constant: 50).isActive = true
+        trendingHashtagsNode.view.topAnchor.constraint(equalTo: searchBar.bottomAnchor).isActive = true
         trendingHashtagsNode.view.bottomAnchor.constraint(equalTo: layout.bottomAnchor).isActive = true
         trendingHashtagsNode.delegate = self
+        trendingHashtagsNode.backgroundColor = bgColor
+        
         view.layoutIfNeeded()
         
-        searchBar.setup(withDelegate: self)
+    }
+    
+    @objc func showSearchView() {
+        print("SHOW DAT SEARCH!")
+        
+        let vc = SearchViewController()
+        let navBarHeight = 50 + UIApplication.deviceInsets.top
+        pushTransitionManager.navBarHeight = navBarHeight
+        vc.interactor = pushTransitionManager.interactor
+        vc.transitioningDelegate = pushTransitionManager
+        vc.searchOnAppear = true
+        self.present(vc, animated: false, completion: nil)
     }
     
     override func viewDidLayoutSubviews() {

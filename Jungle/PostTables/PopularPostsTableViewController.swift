@@ -32,6 +32,7 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
         context?.cancelBatchFetching()
 
         state = .empty
+        SearchService.getTrendingHastags()
         PostsService.getPopularPosts(offset: state.posts.count) { posts in
 
             let action = PostsStateController.Action.endBatchFetch(posts: posts)

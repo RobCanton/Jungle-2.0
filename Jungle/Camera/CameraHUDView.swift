@@ -23,6 +23,7 @@ protocol CameraHUDProtocol {
     func getCurrentImage() -> CIImage?
     func setCameraEffect(_ effect:String?, _ intensity:Float?)
     func switchCameraMode(_ mode:CameraMode)
+    func permissionsGranted(_ granted:Bool)
 }
 
 class CameraHUDView:UIView {
@@ -81,6 +82,12 @@ class CameraHUDView:UIView {
     var textOnlyBG:PastelView!
     var textMax:CGFloat = 0.0
     var whiteBar:UIView!
+    
+    var anonSwitch:AnonSwitch!
+    
+    var permissionsView:UIView?
+    var cameraPermissionButton:UIButton?
+    var microphonePermissionButton:UIButton?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -198,8 +205,6 @@ class CameraHUDView:UIView {
         modeScrollBar.heightAnchor.constraint(equalToConstant: 52.0).isActive = true
         modeScrollBar.delegate = self
         
-
-        
         textView = UITextView(frame: .zero)
         textView.backgroundColor = UIColor.clear
         textView.textContainerInset = UIEdgeInsetsMake(8, 20 + 32 + 6, 0, 20)
@@ -267,19 +272,18 @@ class CameraHUDView:UIView {
         nextButton.backgroundColor = accentColor
         nextButton.titleLabel?.font = Fonts.semiBold(ofSize: 14)
         
-        let anonSwitch = AnonSwitch(frame:.zero)
+        anonSwitch = AnonSwitch(frame:.zero)
         
-        self.addSubview(anonSwitch)
+        addSubview(anonSwitch)
         anonSwitch.translatesAutoresizingMaskIntoConstraints = false
         anonSwitch.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20).isActive = true
         anonSwitch.topAnchor.constraint(equalTo: topAnchor, constant: 64.0 + 4).isActive = true
         anonSwitch.widthAnchor.constraint(equalToConstant: 32).isActive = true
         anonSwitch.heightAnchor.constraint(equalToConstant: 32).isActive = true
-        anonSwitch.layer.borderColor = UIColor.white.cgColor
-        anonSwitch.layer.borderWidth = 1.0
         anonSwitch.layer.cornerRadius = 16
         anonSwitch.clipsToBounds = true
         anonSwitch.setAnonMode(to: UserService.anonMode)
+        anonSwitch.alpha = 0.0
         
         nextButton.contentEdgeInsets = UIEdgeInsetsMake(12, 12, 12, 12)
         addSubview(nextButton)
@@ -308,13 +312,13 @@ class CameraHUDView:UIView {
 
         postButton = UIButton(type: .custom)
         postButton.setTitle("Post", for: .normal)
-        postButton.titleLabel?.font = Fonts.semiBold(ofSize: 14)
-        postButton.setTitleColor(hexColor(from: "42E695"), for: .normal)
+        postButton.titleLabel?.font = Fonts.bold(ofSize: 14)
+        postButton.setTitleColor(accentColor, for: .normal)
         postButton.setTitleColor(UIColor.gray, for: .disabled)
         postButton.backgroundColor = UIColor.white
         addSubview(postButton)
         postButton.translatesAutoresizingMaskIntoConstraints = false
-        postButton.contentEdgeInsets = UIEdgeInsetsMake(10, 16, 10, 16)
+        postButton.contentEdgeInsets = UIEdgeInsetsMake(8, 14, 8, 14)
         postButton.sizeToFit()
         postButton.layer.cornerRadius = postButton.frame.height / 2
         postButton.clipsToBounds = true
@@ -322,9 +326,9 @@ class CameraHUDView:UIView {
         postButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16).isActive = true
         postButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor).isActive = true
         postButton.alpha = 0.0
-        postButton.applyShadow(radius: 6.0, opacity: 0.15, offset: CGSize(width: 0, height: 3.0), color: UIColor.black, shouldRasterize: false)
+        postButton.applyShadow(radius: 4.0, opacity: 0.125, offset: CGSize(width: 0, height: 2.0), color: UIColor.black, shouldRasterize: false)
         
-        activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .white)
+        activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .gray)
         activityIndicator.hidesWhenStopped = true
         addSubview(activityIndicator)
         
@@ -377,6 +381,157 @@ class CameraHUDView:UIView {
         optionsBarBottomAnchor = optionsBar.bottomAnchor.constraint(equalTo: bottomAnchor)
         optionsBarBottomAnchor.isActive = true
         optionsBar.handleTag = handleTag
+        
+    }
+    
+    var permissionStackView:UIStackView?
+    var permissionBarView:UIView?
+    
+    func showPermissionOptions (_ cameraAccess: AVAuthorizationStatus, _ microphoneAccess: AVAuthorizationStatus) {
+        var height:CGFloat = 0.0
+        if cameraAccess != .authorized {
+            height += 70
+        }
+        
+        if microphoneAccess != .authorized {
+            height += 70
+        }
+        
+        
+        
+        permissionsView = UIImageView(image: UIImage(named:"Box2"))
+        
+        permissionsView!.isUserInteractionEnabled = true
+        permissionsView!.backgroundColor = tagColor//UIColor.white.withAlphaComponent(0.35)
+        addSubview(permissionsView!)
+        permissionsView!.translatesAutoresizingMaskIntoConstraints = false
+        permissionsView!.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
+        permissionsView!.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -40).isActive = true
+        permissionsView!.widthAnchor.constraint(equalToConstant: 240).isActive = true
+        //permissionsView!.heightAnchor.constraint(equalToConstant: height).isActive = true
+        permissionsView!.layer.cornerRadius = 12.0
+        permissionsView!.clipsToBounds = true
+        
+        permissionStackView = UIStackView(frame: permissionsView!.bounds)
+        permissionStackView!.axis = .vertical
+        permissionStackView!.distribution = .fillProportionally
+        permissionsView!.addSubview(permissionStackView!)
+        
+        permissionStackView!.translatesAutoresizingMaskIntoConstraints = false
+        permissionStackView!.leadingAnchor.constraint(equalTo: permissionsView!.leadingAnchor).isActive = true
+        permissionStackView!.topAnchor.constraint(equalTo: permissionsView!.topAnchor).isActive = true
+        permissionStackView!.trailingAnchor.constraint(equalTo: permissionsView!.trailingAnchor).isActive = true
+        permissionStackView!.bottomAnchor.constraint(equalTo: permissionsView!.bottomAnchor).isActive = true
+        
+        
+        let buttonSelectedColor = UIColor.black.withAlphaComponent(0.25)
+        
+        cameraPermissionButton = UIButton(type: .custom)
+        cameraPermissionButton!.setTitle("Allow Camera Access", for: .normal)
+        cameraPermissionButton!.setTitleColor(UIColor.white, for: .normal)
+        cameraPermissionButton!.setBackgroundColor(color: buttonSelectedColor, forState: .selected)
+        cameraPermissionButton!.setBackgroundColor(color: buttonSelectedColor, forState: .highlighted)
+        cameraPermissionButton!.setBackgroundColor(color: buttonSelectedColor, forState: .focused)
+        cameraPermissionButton!.titleLabel?.font = Fonts.regular(ofSize: 18.0)
+        cameraPermissionButton?.addTarget(self, action: #selector(handlePermissionTap), for: .touchUpInside)
+        cameraPermissionButton?.heightAnchor.constraint(equalToConstant: 70).isActive = true
+        
+        microphonePermissionButton = UIButton(type: .custom)
+        microphonePermissionButton!.setTitle("Allow Microphone Access", for: .normal)
+        microphonePermissionButton!.setTitleColor(UIColor.white, for: .normal)
+        microphonePermissionButton!.setBackgroundColor(color: buttonSelectedColor, forState: .selected)
+        microphonePermissionButton!.setBackgroundColor(color: buttonSelectedColor, forState: .highlighted)
+        microphonePermissionButton!.setBackgroundColor(color: buttonSelectedColor, forState: .focused)
+        microphonePermissionButton!.titleLabel?.font = Fonts.regular(ofSize: 18.0)
+        microphonePermissionButton?.heightAnchor.constraint(equalToConstant: 70).isActive = true
+        microphonePermissionButton?.addTarget(self, action: #selector(handlePermissionTap), for: .touchUpInside)
+        
+        if cameraAccess != .authorized {
+            permissionStackView!.addArrangedSubview(cameraPermissionButton!)
+        }
+        
+        if microphoneAccess != .authorized {
+            permissionStackView!.addArrangedSubview(microphonePermissionButton!)
+        }
+        
+        if cameraAccess != .authorized, microphoneAccess != .authorized {
+            permissionBarView = UIView()
+            permissionBarView!.backgroundColor = UIColor.white
+            permissionBarView!.heightAnchor.constraint(equalToConstant: 1.0).isActive = true
+            permissionsView!.addSubview(permissionBarView!)
+            permissionBarView!.translatesAutoresizingMaskIntoConstraints = false
+            permissionStackView!.insertArrangedSubview(permissionBarView!, at: 1)
+        }
+    }
+    
+    @objc func handlePermissionTap(_ target:UIButton) {
+        switch target {
+        case cameraPermissionButton:
+            let cameraAccess = AVCaptureDevice.authorizationStatus(for: AVMediaType.video)
+            if cameraAccess == .notDetermined {
+                AVCaptureDevice.requestAccess(for: AVMediaType.video) { granted in
+                    DispatchQueue.main.async {
+                        if granted {
+                            self.permissionStackView?.removeArrangedSubview(self.cameraPermissionButton!)
+                            self.cameraPermissionButton?.removeFromSuperview()
+                            if let bar = self.permissionBarView {
+                                self.permissionStackView?.removeArrangedSubview(bar)
+                                bar.removeFromSuperview()
+                            }
+                            
+                            if self.permissionStackView!.arrangedSubviews.count == 0 {
+                                self.permissionsView?.removeFromSuperview()
+                            }
+                            
+                            let microphoneGranted = AVCaptureDevice.authorizationStatus(for: AVMediaType.audio) == .authorized
+                            self.delegate?.permissionsGranted(microphoneGranted)
+                        } else {
+                            
+                        }
+                    }
+                }
+            } else if cameraAccess == .denied || cameraAccess == .restricted {
+                let settingsUrl = URL(string: UIApplicationOpenSettingsURLString)!
+                UIApplication.shared.open(settingsUrl)
+            }
+            
+            break
+        case microphonePermissionButton:
+            let microphoneAccess = AVCaptureDevice.authorizationStatus(for: AVMediaType.audio)
+            if microphoneAccess == .notDetermined {
+                AVCaptureDevice.requestAccess(for: AVMediaType.audio) { granted in
+                    DispatchQueue.main.async {
+                        if granted {
+                            self.permissionStackView?.removeArrangedSubview(self.microphonePermissionButton!)
+                            self.microphonePermissionButton?.removeFromSuperview()
+                            if let bar = self.permissionBarView {
+                                self.permissionStackView?.removeArrangedSubview(bar)
+                                bar.removeFromSuperview()
+                            }
+                            
+                            if self.permissionStackView!.arrangedSubviews.count == 0 {
+                                self.permissionsView?.removeFromSuperview()
+                            }
+                            
+                            
+                            let cameraGranted = AVCaptureDevice.authorizationStatus(for: AVMediaType.video) == .authorized
+                            self.delegate?.permissionsGranted(cameraGranted)
+                            
+                            
+                        } else {
+                            
+                        }
+                    }
+                }
+            } else if microphoneAccess == .denied || microphoneAccess == .restricted {
+                let settingsUrl = URL(string: UIApplicationOpenSettingsURLString)!
+                UIApplication.shared.open(settingsUrl)
+            }
+            
+            break
+        default:
+            break
+        }
         
     }
     
@@ -502,6 +657,7 @@ class CameraHUDView:UIView {
                 self.postButton.alpha = 1.0
                 self.blurView.effect = UIBlurEffect(style: .dark)
                 self.textView.alpha = 1.0
+                self.anonSwitch.alpha = 1.0
                 self.whiteBar.alpha = 1.0
             })
         } else {
@@ -513,6 +669,7 @@ class CameraHUDView:UIView {
                 self.postButton.alpha = 0.0
                 self.blurView.effect = nil
                 self.textView.alpha = 0.0
+                self.anonSwitch.alpha = 0.0
                 self.whiteBar.alpha = 0.0
             }, completion: { _ in
             
@@ -739,18 +896,22 @@ extension CameraHUDView: UIScrollViewDelegate {
             modeScrollBar?.setProgress(progress, index: 0)
             delegate?.switchCameraMode(progress > 0.5 ? .video : .photo)
             textView?.alpha = 0.0
+            anonSwitch?.alpha = 0.0
             whiteBar?.alpha = 0.0
             textViewPlaceholder?.alpha = 0.0
+            permissionsView?.alpha = 1.0
         } else {
             let progress = (offsetX - viewWidth) / viewWidth
             let reverseProgress = 1 - progress
             modeScrollBar?.setProgress(progress, index: 1)
             textOnlyBG?.alpha = progress
             recordButton?.alpha = reverseProgress
+            permissionsView?.alpha = reverseProgress
             switchCameraButton?.alpha = reverseProgress
             flashButton?.alpha = reverseProgress
             effectsButton?.alpha = reverseProgress
             textView?.alpha = progress
+            anonSwitch?.alpha = progress
             whiteBar?.alpha = progress
             textViewPlaceholder?.alpha = progress
             postButton?.alpha = progress

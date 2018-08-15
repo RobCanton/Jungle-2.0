@@ -44,6 +44,7 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
         collectionNode.backgroundColor = UIColor.clear
         collectionNode.clipsToBounds = false
         NotificationCenter.default.addObserver(self, selector: #selector(handleTrendingTagsNotification), name: SearchService.trendingTagsNotification, object: nil)
+        
     }
     
     @objc func handleTrendingTagsNotification() {
@@ -210,7 +211,7 @@ class TrendingCellNode:ASCellNode {
         pastelNode.staticGradient()
         dimNode.cornerRadius = 6.0
         dimNode.clipsToBounds = true
-        self.view.applyShadow(radius: 6, opacity: 0.3, offset: CGSize(width:0, height: 3), color: .black, shouldRasterize: false)
+        self.view.applyShadow(radius: 6, opacity: 0.25, offset: CGSize(width:0, height: 3), color: .black, shouldRasterize: false)
         self.clipsToBounds = false
         
         let gradient = CAGradientLayer()

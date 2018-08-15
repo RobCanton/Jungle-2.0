@@ -93,24 +93,28 @@ class RecentPostsTableViewController: PostsTableViewController {
     }
     
     func listenForNewPosts() {
-        guard state.posts.count > 0 else { return }
         newPostsListener?.remove()
+        
         let postsRef = firestore.collection("posts")
             .whereField("status", isEqualTo: "active")
             .whereField("parent", isEqualTo: "NONE")
-            .whereField("createdAt", isGreaterThan: state.posts[0].createdAt.timeIntervalSince1970 * 1000)
-            .order(by: "createdAt", descending: true)
-            .limit(to: 1)
         
+        var query:Query
+        if state.posts.count > 0 {
+            query = postsRef.whereField("createdAt", isGreaterThan: state.posts[0].createdAt.timeIntervalSince1970 * 1000)
+                .order(by: "createdAt", descending: true)
+                .limit(to: 1)
+        } else {
+            query = postsRef.order(by: "createdAt", descending: true).limit(to: 1)
+        }
         
-        
-        newPostsListener = postsRef.addSnapshotListener() { snapshot, err in
+        newPostsListener = query.addSnapshotListener() { snapshot, err in
             if let err = err {
                 print("Error getting documents: \(err)")
             } else {
                 if snapshot!.documents.count > 0 {
                     let firstDoc = snapshot!.documents[0]
-                    if let post = Post.parse(id: firstDoc.documentID, firstDoc.data()) {
+                    if let _ = Post.parse(id: firstDoc.documentID, firstDoc.data()) {
                         self.toggleNewPosts(visible: true, animated: true)
                     }
                 }

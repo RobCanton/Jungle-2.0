@@ -31,7 +31,7 @@ public extension UIViewController {
 class StickersView:UIView, ASCollectionDelegate, ASCollectionDataSource {
     var collectionNode:ASCollectionNode!
     var addSticker: ((_ sticker:UIImage)->())?
-    var stickers = Emojis.smiliesAndPeople
+    var stickers = Emojis.catergorizedEmojis
     
 
     override init(frame: CGRect) {
@@ -66,34 +66,34 @@ class StickersView:UIView, ASCollectionDelegate, ASCollectionDataSource {
     }
     
     func numberOfSections(in collectionNode: ASCollectionNode) -> Int {
-        return 1
-    }
-    
-    func collectionNode(_ collectionNode: ASCollectionNode, numberOfItemsInSection section: Int) -> Int {
         return stickers.count
     }
     
+    func collectionNode(_ collectionNode: ASCollectionNode, numberOfItemsInSection section: Int) -> Int {
+        return stickers[section].count
+    }
+    
     func collectionNode(_ collectionNode: ASCollectionNode, nodeForItemAt indexPath: IndexPath) -> ASCellNode {
-        let cell = StickerCellNode(stickers[indexPath.row])
+        let sticker = stickers[indexPath.section][indexPath.row]
+        let cell = StickerCellNode(sticker)
         cell.style.width = ASDimension(unit: .points, value: (collectionNode.bounds.width - 32) / 7)
         cell.style.height = ASDimension(unit: .points, value: (collectionNode.bounds.width - 32) / 7)
         return cell
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, didSelectItemAt indexPath: IndexPath) {
-        //pulleyViewController?.setDrawerPosition(position: .collapsed, animated: true)
-        //let cell = collectionNode.nodeForItem(at: indexPath) as! StickerCellNode
-        let image = "\(stickers[indexPath.row])".image(size: 500)
+        let sticker = stickers[indexPath.section][indexPath.row]
+        let image = sticker.image(size: 500)
         addSticker?(image)
     }
 }
 
 class StickerCellNode:ASCellNode {
     var titleNode = ASTextNode()
-    required init(_ character:Character) {
+    required init(_ emoji:String) {
         super.init()
         automaticallyManagesSubnodes = true
-        titleNode.attributedText = NSAttributedString(string: "\(character)", attributes: [
+        titleNode.attributedText = NSAttributedString(string: emoji, attributes: [
             NSAttributedStringKey.font: Fonts.medium(ofSize: 44)
             ])
     }

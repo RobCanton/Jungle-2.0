@@ -64,8 +64,9 @@ class CaptionBar:UIView, ASCollectionDelegate, ASCollectionDataSource {
         collectionNode.dataSource = self
         collectionNode.allowsMultipleSelection = true
         collectionNode.reloadData()
+        
     }
-    
+
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -107,7 +108,13 @@ class CaptionBar:UIView, ASCollectionDelegate, ASCollectionDataSource {
         
         let cell = collectionNode.nodeForItem(at: indexPath)
         if let locationCellNode = cell as? LocationCellNode {
-            locationCellNode.setHighlighted(true)
+            if gpsService.isAuthorized() {
+                locationCellNode.setHighlighted(true)
+            } else {
+                gpsService.requestAuthorization()
+                collectionNode.deselectItem(at: indexPath, animated: true)
+            }
+            
         } else if let tagCell = cell as? HashtagCellNode {
             handleTag?("#\(hashtags[indexPath.item].hastag)")
             tagCell.setActivated()
@@ -149,24 +156,36 @@ class LocationCellNode:ASCellNode {
     required init(region:Region?) {
         super.init()
         
+        let authorized = gpsService.isAuthorized()
+        
         automaticallyManagesSubnodes = true
         backgroundColor = UIColor.black.withAlphaComponent(0.5)
         insets = UIEdgeInsetsMake(0, 0, 0, 6)
         buttonNode.setImage(UIImage(named:"PinLarge"), for: .normal)
         buttonNode.contentSpacing = 0.0
-        if let locationStr = region?.locationShortStr {
+        if authorized {
+            if let locationStr = region?.locationShortStr {
+                buttonNode.imageNode.alpha = 1.0
+                buttonNode.setAttributedTitle(NSAttributedString(string: locationStr, attributes: [
+                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
+                    NSAttributedStringKey.foregroundColor: UIColor.white
+                    ]), for: .normal)
+            } else {
+                buttonNode.imageNode.alpha = 0.5
+                buttonNode.setAttributedTitle(NSAttributedString(string: "Unknown", attributes: [
+                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
+                    NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.5)
+                    ]), for: .normal)
+            }
+        } else {
+            backgroundColor = tagColor
             buttonNode.imageNode.alpha = 1.0
-            buttonNode.setAttributedTitle(NSAttributedString(string: locationStr, attributes: [
+            buttonNode.setAttributedTitle(NSAttributedString(string: "Add Location", attributes: [
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
                 NSAttributedStringKey.foregroundColor: UIColor.white
                 ]), for: .normal)
-        } else {
-            buttonNode.imageNode.alpha = 0.5
-            buttonNode.setAttributedTitle(NSAttributedString(string: "Unknown", attributes: [
-                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0),
-                NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.5)
-                ]), for: .normal)
         }
+        
     }
     
     func setHighlighted(_ highlighted:Bool) {

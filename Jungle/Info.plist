@@ -37,15 +37,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>For taking Photos &amp; Videos.</string>
+	<string>Needed to capture photos &amp; videos with your camera device.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need it bro.</string>
+	<string>Used to find posts near you and can be included with your posts to identify your general location.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>For recording audio in videos.</string>
+	<string>Needed to capture audio in your video recordings.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs it bro</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>For generating captions from your recorded videos.</string>
+	<string>Needed to select a profile photo.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AzoSans-Light.otf</string>

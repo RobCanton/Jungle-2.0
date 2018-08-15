@@ -67,12 +67,15 @@ class PostCommentCellNode: ASCellNode {
         avatarNode.clipsToBounds = true
         
         avatarImageNode.image = nil
-        
+        avatarImageNode.url = nil
         subnameNode.isHidden = true
         
         if let profile = post.profile {
             avatarNode.backgroundColor = tertiaryColor
-            avatarImageNode.url = profile.avatarThumbnailURL
+            
+            UserService.retrieveUserImage(uid: profile.uid, .high) { image, _ in
+                self.avatarImageNode.image = image
+            }
             usernameNode.attributedText = NSAttributedString(string: profile.username , attributes: [
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: titleSize),
                 NSAttributedStringKey.foregroundColor: UIColor.black
@@ -84,6 +87,7 @@ class PostCommentCellNode: ASCellNode {
             avatarImageNode.imageModificationBlock = { image in
                 return image.maskWithColor(color: post.anon.color) ?? image
             }
+            self.avatarImageNode.url = nil
             UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, _ in
                 self.avatarImageNode.image = image
             }
@@ -159,6 +163,9 @@ class PostCommentCellNode: ASCellNode {
                 }
             }
         }
+        
+        avatarImageNode.addTarget(self, action: #selector(handleAvatarTap), forControlEvents: .touchUpInside)
+        avatarImageNode.isUserInteractionEnabled = true
     }
     
     var actionsRow:CommentActionsRow!
@@ -245,8 +252,6 @@ class PostCommentCellNode: ASCellNode {
         contentStack.spacing = 2.0
         
         let contentInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 0), child: contentStack)
-   
-        
         
         let mainInsetSpec = ASInsetLayoutSpec(insets: mainInsets, child: contentInset)
         let dividerStack = ASStackLayoutSpec.vertical()
@@ -277,10 +282,6 @@ class PostCommentCellNode: ASCellNode {
             self.actionsRow.setLiked(post.liked, animated: false)
         })
         
-//        commentsRef = database.child("posts/meta/\(post.key)/numReplies")
-//        commentsRefHandle = commentsRef?.observe(.value, with: { snapshot in
-//            post.numReplies = snapshot.value as? Int ?? 0
-//        })
     }
     
     func stopObservingPost() {
@@ -307,9 +308,18 @@ class PostCommentCellNode: ASCellNode {
         super.didExitVisibleState()
         stopObservingPost()
     }
+    
+    @objc func handleAvatarTap() {
+        guard let profile = post?.profile else { return }
+        delegate?.postOpen(profile: profile)
+    }
 }
 
 extension PostCommentCellNode: PostActionsDelegate {
+    func postOpen(profile: Profile) {
+        delegate?.postOpen(profile: profile)
+    }
+    
     func openTag(_ tag: String) {
         
     }
@@ -327,7 +337,7 @@ extension PostCommentCellNode: PostActionsDelegate {
         print("liked!")
         guard let post = self.post, !post.deleted else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let ref = database.ref.child("posts/likes/\(post.key)/\(uid)")
+        let ref = database.child("posts/likes/\(post.key)/\(uid)")
         post.liked = !post.liked
         if post.liked {
             post.numLikes += 1

@@ -15,7 +15,7 @@ enum AuthType {
 class User {
     private(set) var uid:String
     private(set) var authType:AuthType
-    private(set) var profile:Profile?
+    var profile:Profile?
 
     
     init(uid:String, authType:String, profile:Profile?) {
@@ -36,14 +36,15 @@ class User {
 }
 
 class Profile {
-    private(set) var username:String
-    private(set) var avatarURL:URL
-    private(set) var avatarThumbnailURL:URL
     
-    init(username:String, avatarURL:URL, avatarThumbnailURL:URL) {
+    private(set) var uid:String
+    private(set) var username:String
+    var gradient:[String]
+    
+    init(uid:String, username:String, gradient: [String]) {
+        self.uid = uid
         self.username = username
-        self.avatarURL = avatarURL
-        self.avatarThumbnailURL = avatarThumbnailURL
+        self.gradient = gradient
     }
     
     static func parse(_ data:[String:Any]) -> Profile? {
@@ -52,14 +53,12 @@ class Profile {
             profileData = _profileData
         }
         
-        if let username = profileData["username"] as? String,
-            let avatarData = profileData["avatar"] as? [String:Any],
-            let avatarURLStr = avatarData["high"] as? String,
-            let avatarThumbnailURLStr = avatarData["low"] as? String,
-            let avatarURL = URL(string: avatarURLStr),
-            let avatarThumbnail = URL(string: avatarThumbnailURLStr) {
-            
-            return Profile(username: username, avatarURL: avatarURL, avatarThumbnailURL: avatarThumbnail)
+        if let uid = profileData["uid"] as? String,
+            let username = profileData["username"] as? String {
+            let gradient = profileData["gradient"] as? [String] ?? [String]()
+            return Profile(uid:uid,
+                           username: username,
+                           gradient: gradient)
         }
         
         return nil

@@ -232,6 +232,15 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
 }
 
 extension LightboxViewController : SinglePostDelegate {
+    func postOpen(profile: Profile) {
+        let controller = UserProfileViewController()
+        controller.profile = profile
+        pushTransitionManager.navBarHeight = nil
+        controller.interactor = pushTransitionManager.interactor
+        controller.transitioningDelegate = pushTransitionManager
+        self.present(controller, animated: true, completion: nil)
+    }
+    
     func openTag(_ tag: String) {
         pushTransitionManager.navBarHeight = nil
         

@@ -82,7 +82,7 @@ struct Alerts {
     static func showAnonAlert(withMessage message: String, inWrapper wrapper:SwiftMessages?=nil) -> MessageView {
         
         let alert = MessageView.viewFromNib(layout: .statusLine)
-        alert.backgroundView.backgroundColor = UIColor(white: 0.45, alpha: 1.0)
+        alert.backgroundView.backgroundColor = tagColor//UIColor(white: 0.45, alpha: 1.0)
         alert.bodyLabel?.textColor = UIColor.white
         alert.bodyLabel?.font = Fonts.semiBold(ofSize: 12.0)
         alert.configureContent(body: message)
@@ -91,6 +91,7 @@ struct Alerts {
         config.duration = SwiftMessages.Duration.seconds(seconds: 3.0)
         config.presentationContext = .window(windowLevel: UIWindowLevelStatusBar)
         config.preferredStatusBarStyle = UIStatusBarStyle.lightContent
+        
         
         if wrapper != nil {
             wrapper!.hideAll()

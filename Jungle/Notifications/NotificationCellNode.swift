@@ -100,33 +100,36 @@ class NotificationCellNode:ASCellNode {
         guard let notification = self.notification else { return }
         if let postVotesNotification = notification as? PostVotesNotification,
             let post = postVotesNotification.post {
-            var name:String
-            var color:UIColor
             
-            if let profile = postVotesNotification.profile {
-                name = profile.username
-                color = UIColor.black
+            if let profile = postVotesNotification.post?.profile {
+                
                 self.previewNode.isHidden = true
                 self.avatarImageNode.isHidden = false
-                self.avatarImageNode.url = profile.avatarThumbnailURL
+                
+                UserService.retrieveUserImage(uid: profile.uid, .low) { image, _ in
+                    self.avatarImageNode.image = image
+                }
+               
                 self.avatarNode.backgroundColor = tertiaryColor
-            } else {
-                name = postVotesNotification.anon.displayName
-                color = postVotesNotification.anon.color
+            } else if let anon = postVotesNotification.post?.anon  {
+                
                 self.previewNode.url = nil
                 self.previewNode.isHidden = false
                 self.avatarImageNode.isHidden = true
-                UserService.retrieveAnonImage(withName: postVotesNotification.anon.animal.lowercased()) { image, _ in
-                    self.previewNode.image = image?.maskWithColor(color: postVotesNotification.anon.color)
+                UserService.retrieveAnonImage(withName: anon.animal.lowercased()) { image, _ in
+                    self.previewNode.image = image?.maskWithColor(color: anon.color)
                 }
-                self.avatarNode.backgroundColor = postVotesNotification.anon.color.withAlphaComponent(0.25)
+                self.avatarNode.backgroundColor = anon.color.withAlphaComponent(0.25)
             }
             
-            let newVotes = postVotesNotification.newVotes - 1
-            let others = newVotes > 1 ? "others" : "other"
-            let midfix = newVotes > 0 ? " + \(newVotes) \(others)" : ""
             let postType = post.parent == nil ? "post" : "comment"
-            let notificationStr = "\(name)\(midfix) liked your \(postType)"
+            var likesStr:String
+            if postVotesNotification.newVotes == 1 {
+                likesStr = "1 like"
+            } else {
+                likesStr = "\(postVotesNotification.newVotes) likes"
+            }
+            let notificationStr = "Someone liked your \(postType) · \(likesStr)"
             
             let titleStr = NSMutableAttributedString(string: notificationStr)
             titleStr.addAttributes([
@@ -134,17 +137,11 @@ class NotificationCellNode:ASCellNode {
                 NSAttributedStringKey.foregroundColor: UIColor.gray
                 ], range: NSRange(location: 0, length: notificationStr.count))
             
-            titleStr.addAttributes([
-                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
-                NSAttributedStringKey.foregroundColor: color
-                ], range: NSRange(location: 0, length: name.count))
+//            titleStr.addAttributes([
+//                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
+//                NSAttributedStringKey.foregroundColor: color
+//                ], range: NSRange(location: 0, length: name.count))
             
-            if midfix.count > 0 {
-                titleStr.addAttributes([
-                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
-                    NSAttributedStringKey.foregroundColor: UIColor.darkGray
-                    ], range: NSRange(location: name.count + 3, length: midfix.count - 3))
-            }
             titleNode.attributedText = titleStr
             
             bodyNode.maximumNumberOfLines = 3
@@ -168,7 +165,11 @@ class NotificationCellNode:ASCellNode {
                 
                 self.previewNode.isHidden = true
                 self.avatarImageNode.isHidden = false
-                self.avatarImageNode.url = profile.avatarThumbnailURL
+                
+                UserService.retrieveUserImage(uid: profile.uid, .low) { image, _ in
+                    self.avatarImageNode.image = image
+                }
+                
                 self.avatarNode.backgroundColor = tertiaryColor
             } else {
                 name = reply.anon.displayName

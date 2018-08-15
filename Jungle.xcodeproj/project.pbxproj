@@ -45,6 +45,8 @@
 		B04E788020D426E7007AF840 /* SearchPostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04E787F20D426E7007AF840 /* SearchPostsTableViewController.swift */; };
 		B0528D6920CAD39A006FFB88 /* PostVideoNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0528D6820CAD39A006FFB88 /* PostVideoNode.swift */; };
 		B0528D6B20CAE19C006FFB88 /* Interactor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0528D6A20CAE19C006FFB88 /* Interactor.swift */; };
+		B054A1502120E190000A3B35 /* WebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B054A14F2120E190000A3B35 /* WebViewController.swift */; };
+		B054A1522120E9C8000A3B35 /* UserProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B054A1512120E9C8000A3B35 /* UserProfileViewController.swift */; };
 		B06B114C20E2AD5B0064FFC4 /* EffectsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B06B114B20E2AD5B0064FFC4 /* EffectsBar.swift */; };
 		B06C0CE520C5B3480017EA6B /* CommentsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B06C0CE420C5B3480017EA6B /* CommentsViewController.swift */; };
 		B06C0CE720C5D25B0017EA6B /* PostCommentCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B06C0CE620C5D25B0017EA6B /* PostCommentCellNode.swift */; };
@@ -65,6 +67,10 @@
 		B07F611820454516005010B7 /* LightboxViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F611720454516005010B7 /* LightboxViewController.swift */; };
 		B07F991920C4E27C001ECBCC /* Utilties.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F991820C4E27C001ECBCC /* Utilties.swift */; };
 		B07F991E20C51901001ECBCC /* SinglePostCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F991D20C51901001ECBCC /* SinglePostCellNode.swift */; };
+		B08856E621227F6D00F4C52D /* UserProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08856E521227F6D00F4C52D /* UserProfileHeaderView.swift */; };
+		B08856E82122BAC600F4C52D /* UserPostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08856E72122BAC600F4C52D /* UserPostsTableViewController.swift */; };
+		B08856EA2122BD0400F4C52D /* UserCommentsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08856E92122BD0400F4C52D /* UserCommentsTableViewController.swift */; };
+		B08856EC2123B7FD00F4C52D /* MyProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08856EB2123B7FD00F4C52D /* MyProfileViewController.swift */; };
 		B089C53F20E0188E0067806C /* FileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B089C53E20E0188E0067806C /* FileService.swift */; };
 		B089C54120E0450C0067806C /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B089C54020E0450C0067806C /* NotificationService.swift */; };
 		B089D293210652BF009FAFC0 /* EnableLocationServicesCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B089D292210652BF009FAFC0 /* EnableLocationServicesCellNode.swift */; };
@@ -171,6 +177,8 @@
 		B04E787F20D426E7007AF840 /* SearchPostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPostsTableViewController.swift; sourceTree = "<group>"; };
 		B0528D6820CAD39A006FFB88 /* PostVideoNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostVideoNode.swift; sourceTree = "<group>"; };
 		B0528D6A20CAE19C006FFB88 /* Interactor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interactor.swift; sourceTree = "<group>"; };
+		B054A14F2120E190000A3B35 /* WebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewController.swift; sourceTree = "<group>"; };
+		B054A1512120E9C8000A3B35 /* UserProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileViewController.swift; sourceTree = "<group>"; };
 		B06B114B20E2AD5B0064FFC4 /* EffectsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectsBar.swift; sourceTree = "<group>"; };
 		B06C0CE420C5B3480017EA6B /* CommentsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentsViewController.swift; sourceTree = "<group>"; };
 		B06C0CE620C5D25B0017EA6B /* PostCommentCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostCommentCellNode.swift; sourceTree = "<group>"; };
@@ -191,6 +199,10 @@
 		B07F611720454516005010B7 /* LightboxViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightboxViewController.swift; sourceTree = "<group>"; };
 		B07F991820C4E27C001ECBCC /* Utilties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilties.swift; sourceTree = "<group>"; };
 		B07F991D20C51901001ECBCC /* SinglePostCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePostCellNode.swift; sourceTree = "<group>"; };
+		B08856E521227F6D00F4C52D /* UserProfileHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileHeaderView.swift; sourceTree = "<group>"; };
+		B08856E72122BAC600F4C52D /* UserPostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPostsTableViewController.swift; sourceTree = "<group>"; };
+		B08856E92122BD0400F4C52D /* UserCommentsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCommentsTableViewController.swift; sourceTree = "<group>"; };
+		B08856EB2123B7FD00F4C52D /* MyProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyProfileViewController.swift; sourceTree = "<group>"; };
 		B089C53E20E0188E0067806C /* FileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileService.swift; sourceTree = "<group>"; };
 		B089C54020E0450C0067806C /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		B089D292210652BF009FAFC0 /* EnableLocationServicesCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnableLocationServicesCellNode.swift; sourceTree = "<group>"; };
@@ -203,7 +215,7 @@
 		B09C1A0820EBF270000640CB /* PostButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostButton.swift; sourceTree = "<group>"; };
 		B09CAFDF20492F34009C3901 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
 		B0A4C02F20D482DA003B7E90 /* ReplyBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyBar.swift; sourceTree = "<group>"; };
-		B0A5F55820C6F534002D3D95 /* StickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerViewController.swift; sourceTree = "<group>"; };
+		B0A5F55820C6F534002D3D95 /* StickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StickerViewController.swift; path = /Users/robertcanton/Documents/Xcode/Jungle/Jungle/Camera/StickerViewController.swift; sourceTree = "<absolute>"; };
 		B0A5F55A20C705F6002D3D95 /* StickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerView.swift; sourceTree = "<group>"; };
 		B0AA490720D1CFB700B0FC8A /* one_more_thing.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = one_more_thing.mp3; sourceTree = "<group>"; };
 		B0AA490920D2336C00B0FC8A /* KVVideoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KVVideoManager.swift; sourceTree = "<group>"; };
@@ -353,6 +365,8 @@
 				B0D81F6D20B2344700ED5A10 /* MyRecentPostsTableViewController.swift */,
 				B0D98F892106B24800A25692 /* MyCommentsTableViewController.swift */,
 				B0FECD6D2106F7CF0087F2A3 /* LikedPostsTableViewController.swift */,
+				B08856E72122BAC600F4C52D /* UserPostsTableViewController.swift */,
+				B08856E92122BD0400F4C52D /* UserCommentsTableViewController.swift */,
 				B0B0EC8620D3527700D1E094 /* PopularPostsHeaderCellNode.swift */,
 				B0CE8C4F2116E7BA004EE687 /* NewPostsButton.swift */,
 				B0058C6F203BDACF00510EEC /* NewPostsView.swift */,
@@ -397,7 +411,11 @@
 				B0932E8220A557F1004E62E2 /* ProfileHeaderView.swift */,
 				B0932E8020A55451004E62E2 /* ProfileHeaderView.xib */,
 				B0B1F30320FE4E4A00AD24D0 /* SettingsViewController.swift */,
+				B054A14F2120E190000A3B35 /* WebViewController.swift */,
 				B0B1F30520FE4E7900AD24D0 /* SettingsStoryboard.storyboard */,
+				B054A1512120E9C8000A3B35 /* UserProfileViewController.swift */,
+				B08856EB2123B7FD00F4C52D /* MyProfileViewController.swift */,
+				B08856E521227F6D00F4C52D /* UserProfileHeaderView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -680,14 +698,17 @@
 				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac/GoogleToolboxForMac.framework",
 				"${BUILT_PRODUCTS_DIR}/JGProgressHUD/JGProgressHUD.framework",
 				"${BUILT_PRODUCTS_DIR}/JaneSliderControl/JaneSliderControl.framework",
+				"${BUILT_PRODUCTS_DIR}/MXParallaxHeader/MXParallaxHeader.framework",
 				"${BUILT_PRODUCTS_DIR}/PINCache/PINCache.framework",
 				"${BUILT_PRODUCTS_DIR}/PINOperation/PINOperation.framework",
 				"${BUILT_PRODUCTS_DIR}/PINRemoteImage/PINRemoteImage.framework",
 				"${BUILT_PRODUCTS_DIR}/Pastel/Pastel.framework",
+				"${BUILT_PRODUCTS_DIR}/Popover/Popover.framework",
 				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
 				"${BUILT_PRODUCTS_DIR}/Pulley/Pulley.framework",
 				"${BUILT_PRODUCTS_DIR}/Regift/Regift.framework",
 				"${BUILT_PRODUCTS_DIR}/ScrollableGraphView/ScrollableGraphView.framework",
+				"${BUILT_PRODUCTS_DIR}/Smile/Smile.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftGifOrigin/SwiftGifOrigin.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftMessages/SwiftMessages.framework",
 				"${BUILT_PRODUCTS_DIR}/TGPControls/TGPControls.framework",
@@ -711,14 +732,17 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleToolboxForMac.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JGProgressHUD.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JaneSliderControl.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MXParallaxHeader.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINCache.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINOperation.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINRemoteImage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Pastel.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Popover.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Pulley.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Regift.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ScrollableGraphView.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Smile.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftGifOrigin.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftMessages.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/TGPControls.framework",
@@ -793,6 +817,7 @@
 				B0FECD6E2106F7CF0087F2A3 /* LikedPostsTableViewController.swift in Sources */,
 				B0338CA420C26FA700B1E1DF /* RecordButton.swift in Sources */,
 				B0B29DDB2037408900FBE5FF /* AuthViewController.swift in Sources */,
+				B08856EA2122BD0400F4C52D /* UserCommentsTableViewController.swift in Sources */,
 				B089C53F20E0188E0067806C /* FileService.swift in Sources */,
 				B00293732118270A0058198A /* ACRCircleView.swift in Sources */,
 				B01B7A5721139101000B1835 /* RecentLightboxViewController.swift in Sources */,
@@ -821,6 +846,7 @@
 				B0150C762119134A0036113A /* EmailViewController.swift in Sources */,
 				B0A5F55B20C705F6002D3D95 /* StickerView.swift in Sources */,
 				B0E11B7A203A904500EF0814 /* UploadService.swift in Sources */,
+				B054A1522120E9C8000A3B35 /* UserProfileViewController.swift in Sources */,
 				B0D98F8A2106B24800A25692 /* MyCommentsTableViewController.swift in Sources */,
 				B073271120E1B9A9005D4AB2 /* C.swift in Sources */,
 				B0C917AA20B3851D0067AE67 /* ContentSettings.swift in Sources */,
@@ -829,6 +855,8 @@
 				B04C2DC420A6E5D900ED65C8 /* HomeTitleView.swift in Sources */,
 				B0EF6D5620EEA390004300B6 /* BinaryTree.swift in Sources */,
 				B0C917A820B373500067AE67 /* ContentSettingsViewController.swift in Sources */,
+				B08856E621227F6D00F4C52D /* UserProfileHeaderView.swift in Sources */,
+				B08856EC2123B7FD00F4C52D /* MyProfileViewController.swift in Sources */,
 				B09C1A0520EB0F8A000640CB /* StickerPack.swift in Sources */,
 				B03291DE206AF12A00B8A0C7 /* UserService.swift in Sources */,
 				B00F66AA203F3475002FCDA0 /* ActiveTextNode.swift in Sources */,
@@ -850,6 +878,7 @@
 				B0338CA220C267F800B1E1DF /* CaptureSessionView.swift in Sources */,
 				B0017D8D204A10FB00E20DE8 /* PushTransitionAnimation.swift in Sources */,
 				B07F611420454438005010B7 /* ImagePresentAnimationController.swift in Sources */,
+				B054A1502120E190000A3B35 /* WebViewController.swift in Sources */,
 				B0B29DF020374BC800FBE5FF /* LoginViewController.swift in Sources */,
 				B027651E2080993D00C9CA63 /* RCSearchBarView.swift in Sources */,
 				B0338C9E20C22D0600B1E1DF /* NewPostCellNode.swift in Sources */,
@@ -859,6 +888,7 @@
 				B0F50ED72037A6E100037343 /* Anon.swift in Sources */,
 				B073271520E1BAC6005D4AB2 /* ImageEffects.swift in Sources */,
 				B0A5F55920C6F534002D3D95 /* StickerViewController.swift in Sources */,
+				B08856E82122BAC600F4C52D /* UserPostsTableViewController.swift in Sources */,
 				B028FFCE20B16953006FAA4B /* PopularPostsTableViewController.swift in Sources */,
 				B03291DC206A396100B8A0C7 /* VerificationViewController.swift in Sources */,
 				B0B29DEE2037454200FBE5FF /* Extensions.swift in Sources */,

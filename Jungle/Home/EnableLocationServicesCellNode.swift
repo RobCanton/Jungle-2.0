@@ -27,7 +27,7 @@ class EnableLocationServicesCellNode:ASCellNode {
                                                         NSAttributedStringKey.foregroundColor: UIColor.darkGray,
                                                         NSAttributedStringKey.paragraphStyle: centerParagraph
                                                         ])
-        titleNode.textContainerInset = UIEdgeInsetsMake(0, 32, 0, 32)
+        titleNode.textContainerInset = UIEdgeInsetsMake(0, 44, 0, 44)
         
         let buttonTitle = NSAttributedString(string: "Authorize GPS",
                                             attributes: [
@@ -36,7 +36,7 @@ class EnableLocationServicesCellNode:ASCellNode {
                                                 NSAttributedStringKey.paragraphStyle: centerParagraph
             ])
         buttonNode.setAttributedTitle(buttonTitle, for: .normal)
-        buttonNode.setBackgroundImage(UIImage(named:"NavBarGradient1"), for: .normal)
+        buttonNode.setBackgroundImage(UIImage(named:"GreenBox"), for: .normal)
         buttonContainerNode.automaticallyManagesSubnodes = true
         buttonContainerNode.layoutSpecBlock = { _, _ in
             return ASInsetLayoutSpec(insets: .zero, child: self.buttonNode)

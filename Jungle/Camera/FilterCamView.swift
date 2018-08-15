@@ -50,9 +50,19 @@ class FilterCamView:UIView {
         
     }
     
+    
+    
+    var cameraPermissionButton:UIButton!
+    var microphonePermissionButton:UIButton!
+    
     func setup() {
+        
         self.setupVideoPreviewView()
         self.setupCaptureSession()
+    }
+    
+    @objc func handleCameraPermission() {
+        print("ASDWE!")
     }
 
     

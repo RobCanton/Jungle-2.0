@@ -157,6 +157,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch))
         hudView.addGestureRecognizer(pinchGesture)
         hudView.isUserInteractionEnabled = true
+        
     }
     
     @objc func handlePinch(_ gesture:UIPinchGestureRecognizer) {
@@ -173,13 +174,26 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         })
         
         hudView.observeKeyboard(true)
+        hudView.anonSwitch.setProfileImage()
         
-        self.captureView.setup()
+        let cameraAccess = AVCaptureDevice.authorizationStatus(for: AVMediaType.video)
+        let microphoneAccess = AVCaptureDevice.authorizationStatus(for: AVMediaType.audio)
         
+        if cameraAccess == .authorized, microphoneAccess == .authorized {
+            self.captureView.setup()
+        } else {
+            self.hudView.showPermissionOptions(cameraAccess, microphoneAccess)
+        }
+        
+        regionUpdated()
+
+        NotificationCenter.default.addObserver(self, selector: #selector(regionUpdated), name: GPSService.regionUpdatedNotification, object: nil)
+    }
+    
+    @objc func regionUpdated() {
         location = gpsService.getLastLocation()
         region = gpsService.region
         hudView.optionsBar.region = region
-
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -192,6 +206,8 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         destroyCameraSession()
         destroyCaptured()
         hudView.observeKeyboard(false)
+        
+        NotificationCenter.default.removeObserver(self, name: GPSService.regionUpdatedNotification, object: nil)
     }
     
     
@@ -255,6 +271,8 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     
     func handlePost() {
         hudView.startPostAnimation()
+        hudView.modeScrollBar.isHidden = true
+        hudView.isUserInteractionEnabled = false
         hudView.textView.resignFirstResponder()
         if !hudView.optionsBar.includeRegion {
             self.region = nil
@@ -265,43 +283,64 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             self.processVideoWithWatermark(videoURL: url) { _compressedVideoURL in
                 
                 DispatchQueue.main.async {
-                    
-                    //alert.configureContent(body: "Uploading...")
-                    
                     if let compressedVideoURL = _compressedVideoURL {
-                        UploadService.uploadPost(text: self.hudView.textView.text,
-                                                 image: nil,
-                                                 videoURL: compressedVideoURL,
-                                                 gif: nil,
-                                                 region:self.region,
-                                                 location: self.location)
-                        UserService.recentlyPosted = true
-                        let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
-                        self.dismiss(animated: true, completion: nil)
+                        UploadService.getNewPostID { postID in
+                            if let postID = postID {
+                                UploadService.uploadPost(postID: postID,
+                                                         text: self.hudView.textView.text,
+                                                         image: nil,
+                                                         videoURL: compressedVideoURL,
+                                                         gif: nil,
+                                                         region:self.region,
+                                                         location: self.location)
+                                
+                                let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
+                                self.dismiss(animated: true, completion: nil)
+                            } else {
+                                let _ = Alerts.showFailureAlert(withMessage: "Failed to upload.")
+                            }
+                        }
+                        
                     }
                 }
             }
         } else if let image = photoPreviewView.image {
-            UploadService.uploadPost(text: self.hudView.textView.text,
-                                     image: image,
-                                     videoURL: nil,
-                                     gif: nil,
-                                     region:self.region,
-                                     location: self.location)
-            UserService.recentlyPosted = true
-            let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
-            self.dismiss(animated: true, completion: nil)
+            
+            UploadService.getNewPostID { postID in
+                if let postID = postID {
+                    UploadService.uploadPost(postID: postID,
+                                             text: self.hudView.textView.text,
+                                             image: image,
+                                             videoURL: nil,
+                                             gif: nil,
+                                             region:self.region,
+                                             location: self.location)
+                    
+                    let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
+                    self.dismiss(animated: true, completion: nil)
+                } else {
+                    let _ = Alerts.showFailureAlert(withMessage: "Failed to upload.")
+                }
+            }
+            
         } else {
-            print("POSTING WITHOUT ATTACHMENTS!")
-            UploadService.uploadPost(text: self.hudView.textView.text,
-                                     image: nil,
-                                     videoURL: nil,
-                                     gif: nil,
-                                     region:self.region,
-                                     location: self.location)
-            UserService.recentlyPosted = true
-            let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
-            self.dismiss(animated: true, completion: nil)
+            UploadService.getNewPostID { postID in
+                if let postID = postID {
+                    UploadService.uploadPost(postID: postID,
+                                             text: self.hudView.textView.text,
+                                             image: nil,
+                                             videoURL: nil,
+                                             gif: nil,
+                                             region:self.region,
+                                             location: self.location)
+                    
+                    let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
+                    self.dismiss(animated: true, completion: nil)
+                } else {
+                    let _ = Alerts.showFailureAlert(withMessage: "Failed to upload.")
+                }
+            }
+            
         }
         
         
@@ -340,6 +379,12 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             }
             cameraMode = mode
             
+        }
+    }
+    
+    func permissionsGranted(_ granted: Bool) {
+        if granted {
+            self.captureView.setup()
         }
     }
     
@@ -471,7 +516,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
                     print("success")
                     return completion(movieUrl)
                     
-                    break
+                break
                 case .cancelled:
                     print("cancelled")
                     break

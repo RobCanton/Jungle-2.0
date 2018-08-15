@@ -254,6 +254,15 @@ extension PostsTableViewController: PostCellDelegate {
         return self
     }
     
+    func postOpen(profile: Profile) {
+        let controller = UserProfileViewController()
+        controller.profile = profile
+        pushTransitionManager.navBarHeight = nil
+        controller.interactor = pushTransitionManager.interactor
+        controller.transitioningDelegate = pushTransitionManager
+        self.present(controller, animated: true, completion: nil)
+    }
+    
     func postOpen(tag: String) {
         let vc = SearchViewController()
         vc.initialSearch = tag

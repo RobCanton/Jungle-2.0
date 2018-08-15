@@ -9,11 +9,16 @@
 import Foundation
 import UIKit
 import AsyncDisplayKit
+import SwiftMessages
+
+protocol AnonSwitchDelegate:class {
+    func anonDidSwitch()
+}
 
 class AnonSwitch:UIView {
     
-
-    var avatarImageView:ASNetworkImageNode!
+    weak var delegate:AnonSwitchDelegate?
+    var avatarImageView:ASImageNode!
     var anonSwitchView:UIImageView!
     var anonButton:UIButton!
     
@@ -46,11 +51,6 @@ class AnonSwitch:UIView {
         
         avatarImageView.view.clipsToBounds = true
         
-        if let profile = UserService.currentUser?.profile {
-            avatarImageView.shouldCacheImage = true
-            avatarImageView.url = profile.avatarThumbnailURL
-        }
-        
         anonSwitchView = UIImageView(image: nil)
         self.addSubview(anonSwitchView)
         anonSwitchView.translatesAutoresizingMaskIntoConstraints = false
@@ -68,6 +68,8 @@ class AnonSwitch:UIView {
         anonButton.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
         anonButton.addTarget(self, action: #selector(handleAnonSwitch), for: .touchUpInside)
         
+        self.layer.borderWidth = 1.0
+        
         self.layer.cornerRadius = 16.0
         self.clipsToBounds = true
     }
@@ -76,14 +78,24 @@ class AnonSwitch:UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func setProfileImage() {
+        if let profile = UserService.currentUser?.profile {
+            UserService.retrieveUserImage(uid: profile.uid, .low) { image, _ in
+                self.avatarImageView.image = image
+            }
+        }
+    }
+    
     func display(profile:Profile) {
         anonMode = false
         isUserInteractionEnabled = false
         backgroundColor = tertiaryColor
         avatarImageView.backgroundColor = UIColor.clear
         avatarImageView.imageModificationBlock = nil
-        avatarImageView.shouldCacheImage = true
-        avatarImageView.url = profile.avatarThumbnailURL
+        
+        UserService.retrieveUserImage(uid: profile.uid, .low) { image, _ in
+            self.avatarImageView.image = image
+        }
         self.anonSwitchView.image = nil
         self.avatarImageView.alpha = 1.0
         
@@ -91,13 +103,12 @@ class AnonSwitch:UIView {
         avatarLeadingAnchor.constant = 0.0
         avatarBottomAnchor.constant = 0.0
         avatarTrailingAnchor.constant = 0.0
+        
         self.layoutIfNeeded()
     }
     func display(anon:Anon) {
         anonMode = true
         isUserInteractionEnabled = false
-        avatarImageView.shouldCacheImage = true
-        avatarImageView.url = nil
         UserService.retrieveAnonImage(withName: anon.animal.lowercased()) { image, _ in
             self.avatarImageView.image = image
         }
@@ -121,14 +132,22 @@ class AnonSwitch:UIView {
         if anon {
             self.anonSwitchView.image = UIImage(named: "anon_switch_on_animated_10")
             self.avatarImageView.alpha = 0.25
+            self.layer.borderColor = UIColor.white.cgColor
         } else {
             self.anonSwitchView.image = nil
             self.avatarImageView.alpha = 1.0
+            self.layer.borderColor = UIColor.clear.cgColor
             
         }
     }
     
     @objc func handleAnonSwitch() {
+        
+        if UserService.currentUser?.profile == nil {
+            print("CANT SWITCH!")
+            showCreateProfilePrompt()
+            return
+        }
         self.anonButton.isEnabled = false
         UserService.anonMode = !UserService.anonMode
         anonMode = UserService.anonMode
@@ -139,6 +158,7 @@ class AnonSwitch:UIView {
             }
             UIView.animate(withDuration: 0.4, animations: {
                 self.avatarImageView.alpha = 0.20
+                self.layer.borderColor = UIColor.white.cgColor
             })
         } else {
             if let profile = UserService.currentUser?.profile {
@@ -149,9 +169,11 @@ class AnonSwitch:UIView {
             }
             UIView.animate(withDuration: 0.4, animations: {
                 self.avatarImageView.alpha = 1.0
+                self.layer.borderColor = UIColor.clear.cgColor
             })
         }
         
+        delegate?.anonDidSwitch()
     }
     
     func animateNextTick(imagePath:String, _ index:Int, _ last:Int, _ completion: @escaping ()->()) {
@@ -159,7 +181,7 @@ class AnonSwitch:UIView {
         anonSwitchView.image = image
         let newIndex = index + 1
         if newIndex <= last {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.025, execute: {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.035, execute: {
                 self.animateNextTick(imagePath: imagePath, newIndex, last, completion)
             })
         } else {
@@ -168,4 +190,40 @@ class AnonSwitch:UIView {
         }
     }
 
+    func showCreateProfilePrompt() {
+        let messageView: MessageView = MessageView.viewFromNib(layout: .centeredView)
+        messageView.configureBackgroundView(width: 250)
+        messageView.configureContent(title: "You are anonymous", body: "To set your own username and avatar create a public profile. You can go back to being anonymous at anytime.", iconImage: UIImage(named:"anon_switch_on_animated_10"), iconText: "", buttonImage: nil, buttonTitle: "Create a Profile") { _ in
+            
+            SwiftMessages.hide()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: {
+                let controller = CreateProfileViewController()
+                controller.popupMode = true
+                let top = UIApplication.topViewController()
+                top?.present(controller, animated: true, completion: nil)
+            })
+        }
+        messageView.titleLabel?.font = Fonts.semiBold(ofSize: 17.0)
+        messageView.bodyLabel?.font = Fonts.regular(ofSize: 14.0)
+        
+        messageView.iconImageView?.backgroundColor = hexColor(from: "#005B51")
+        messageView.iconImageView?.layer.cornerRadius = messageView.iconImageView!.bounds.width / 2
+        
+        let button = messageView.button!
+        button.backgroundColor = accentColor
+        button.titleLabel!.font = Fonts.semiBold(ofSize: 16.0)
+        button.setTitleColor(UIColor.white, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 12.0, left: 16.0, bottom: 12.0, right: 16.0)
+        button.sizeToFit()
+        button.layer.cornerRadius = messageView.button!.bounds.height / 2
+        button.clipsToBounds = true
+        
+        messageView.backgroundView.backgroundColor = UIColor.init(white: 0.97, alpha: 1)
+        messageView.backgroundView.layer.cornerRadius = 12
+        var config = SwiftMessages.defaultConfig
+        config.presentationStyle = .center
+        config.duration = .forever
+        config.dimMode = .gray(interactive: true)
+        SwiftMessages.show(config: config, view: messageView)
+    }
 }

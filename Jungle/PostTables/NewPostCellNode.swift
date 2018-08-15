@@ -166,13 +166,18 @@ class PostNode:ASDisplayNode {
         avatarNode.style.width = ASDimension(unit: .points, value: 32)
         
         avatarImageNode.image = nil
+        avatarImageNode.url = nil
         
         if let profile = post.profile {
             titleNode.attributedText = NSAttributedString(string: profile.username, attributes: [
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
                 NSAttributedStringKey.foregroundColor: UIColor.black
                 ])
-            self.avatarImageNode.url = profile.avatarThumbnailURL
+            
+            UserService.retrieveUserImage(uid: profile.uid, .low) { image, _ in
+                self.avatarImageNode.image = image
+            }
+            
             avatarImageNode.imageModificationBlock = { image in
                 return image
             }
@@ -260,6 +265,14 @@ class PostNode:ASDisplayNode {
             }
         }
         
+        avatarImageNode.addTarget(self, action: #selector(handleAvatarTap), forControlEvents: .touchUpInside)
+        avatarImageNode.isUserInteractionEnabled = true
+    }
+    
+    @objc func handleAvatarTap() {
+        print("AVATAR TAP!")
+        guard let profile = post?.profile else { return }
+        delegate?.postOpen(profile: profile)
     }
     
     override func didLoad() {

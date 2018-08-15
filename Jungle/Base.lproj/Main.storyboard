@@ -285,10 +285,10 @@
             </objects>
             <point key="canvasLocation" x="2462" y="937"/>
         </scene>
-        <!--Profile View Controller-->
+        <!--My Profile View Controller-->
         <scene sceneID="FfU-40-lAQ">
             <objects>
-                <viewController id="Ooo-dC-FoE" customClass="ProfileViewController" customModule="Jungle" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="Ooo-dC-FoE" customClass="MyProfileViewController" customModule="Jungle" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="2Mq-4s-90w">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="618"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

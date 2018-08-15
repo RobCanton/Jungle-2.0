@@ -27,15 +27,19 @@ class AvatarNode:ASDisplayNode {
         backgroundColor = UIColor.white
         backNode.backgroundColor = UIColor.white
         imageNode.shouldCacheImage = true
+        imageNode.image = nil
         
         if let profile = post.profile {
             self.imageInset = 0.0
-            imageNode.url = profile.avatarThumbnailURL
+            
+            UserService.retrieveUserImage(uid: profile.uid, .low) { image, _ in
+                self.imageNode.image = image
+            }
             imageNode.imageModificationBlock = nil
         } else {
             self.imageInset = imageInset
+            
             UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
-                print("GOT ANON ICON FROMFILE: \(fromFile)")
                 self.imageNode.image = image
             }
             
@@ -134,6 +138,7 @@ class ContentOverlayNode:ASControlNode {
             ])
         
         
+        avatarNode.imageNode.addTarget(self, action: #selector(handleAvatarTap), forControlEvents: .touchUpInside)
     }
     
     var locationButton:UIButton!
@@ -213,6 +218,11 @@ class ContentOverlayNode:ASControlNode {
         postTextNode.setText(text: post.text, withSize: 15.0, normalColor: .white, activeColor: tagColor)
         actionsRow.setBlocked(false)
     }
+    
+    @objc func handleAvatarTap() {
+        guard let profile = self.post?.profile else { return }
+        delegate?.postOpen(profile: profile)
+    }
 }
 
 protocol SinglePostDelegate:class {
@@ -220,11 +230,16 @@ protocol SinglePostDelegate:class {
     func searchLocation(_ locationStr:String)
     func openTag(_ tag:String)
     func openLogin()
+    func postOpen(profile:Profile)
 }
 
 class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostActionsDelegate {
     func openTag(_ tag: String) {
         delegate?.openTag(tag)
+    }
+    
+    func postOpen(profile: Profile) {
+        delegate?.postOpen(profile: profile)
     }
     
     func handleMoreButton() {
@@ -260,11 +275,15 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
             }
         }
         
+        contentNode.avatarNode.imageNode.addTarget(self, action: #selector(handleAvatarTap), forControlEvents: .touchUpInside)
+        contentNode.avatarNode.imageNode.isUserInteractionEnabled = true
+        
         contentOverlay = ContentOverlayNode(post: post, delegate: self)
         
         contentOverlay.addTarget(self, action: #selector(handleOverlayTap), forControlEvents: .touchUpInside)
         
         contentNode.blockedButtonNode?.addTarget(self, action: #selector(handleUnblock), forControlEvents: .touchUpInside)
+        
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
@@ -302,30 +321,18 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
         guard let post = self.post else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        //let ref = database.ref.child("posts/likes/\(post.key)/\(uid)")
+        let ref = database.child("posts/likes/\(post.key)/\(uid)")
         post.liked = !post.liked
         contentOverlay.actionsRow.setLiked(post.liked, animated: true)
-        
-        let likedParams:[String:Any] = [
-            "postID": post.key,
-            "isAnon": UserService.anonMode,
-            "liked": post.liked,
-        ]
         
         if post.liked {
             post.numLikes += 1
             contentOverlay.setNumLikes(post.numLikes)
+            ref.setValue(true)
         } else {
             post.numLikes -= 1
             contentOverlay.setNumLikes(post.numLikes)
-        }
-        
-        functions.httpsCallable("setPostLike").call(likedParams) { result, error in
-            if let data = result?.data as? [String:Any] {
-                print("SET POST LIKE DATA: \(data)")
-            } else {
-                print("Error: \(error?.localizedDescription)")
-            }
+            ref.setValue(false)
         }
     }
     
@@ -397,6 +404,11 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
     
     func mutedVideo(_ muted:Bool) {
         contentNode.videoNode.muted = muted
+    }
+    
+    @objc func handleAvatarTap() {
+        guard let profile = post?.profile else { return }
+        delegate?.postOpen(profile: profile)
     }
     
 }

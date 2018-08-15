@@ -30,4 +30,7 @@ target 'Jungle' do
   pod 'Differ'
   pod "Pastel"
   pod 'JGProgressHUD'
+  pod 'Popover'
+  pod 'MXParallaxHeader'
+  pod 'Smile'
 end

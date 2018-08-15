@@ -17,6 +17,7 @@ protocol CommentCellDelegate:class {
     func handleReply(_ reply:Post)
     func handleMore(_ post:Post)
     func postOpen(tag:String)
+    func postOpen(profile:Profile)
 }
 
 protocol CommentBarDelegate:class {
@@ -29,6 +30,7 @@ protocol PostCellDelegate:class {
     func postOptions(_ post:Post)
     func postParentVC() -> UIViewController
     func postOpen(tag:String)
+    func postOpen(profile:Profile)
 }
 
 
@@ -249,20 +251,35 @@ extension Date
         let components = calendar.dateComponents([.day, .hour, .minute, .second], from: self, to: Date())
         
         if components.day! >= 365 {
+            if components.day! / 365 < 2 {
+                return "1 year ago"
+            }
             return "\(components.day! / 365) years ago"
         }
         
         if components.day! >= 7 {
+            if components.day! / 7 < 2 {
+                return "1 week ago"
+            }
             return "\(components.day! / 7) weeks ago"
         }
         
         if components.day! > 0 {
+            if components.day! == 1 {
+                return "1 day ago"
+            }
             return "\(components.day!) days ago"
         }
         else if components.hour! > 0 {
+            if components.hour! == 1 {
+                return "1 hour ago"
+            }
             return "\(components.hour!) hours ago"
         }
         else if components.minute! > 0 {
+            if components.minute! == 1 {
+                return "1 minute ago"
+            }
             return "\(components.minute!) minutes ago"
         }
         return "Now"
@@ -417,4 +434,20 @@ extension UIApplication {
         }
         return UIEdgeInsetsMake(20, 0, 0, 0)
     }
+}
+
+extension UIButton {
+    
+    func setBackgroundColor(color: UIColor, forState: UIControlState) {
+        
+        UIGraphicsBeginImageContext(CGSize(width: 1, height: 1))
+        UIGraphicsGetCurrentContext()!.setFillColor(color.cgColor)
+        UIGraphicsGetCurrentContext()!.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
+        let colorImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        
+        self.setBackgroundImage(colorImage, for: forState)
+    }
+    
 }

@@ -11,6 +11,7 @@ import UIKit
 import AsyncDisplayKit
 import Firebase
 import SwiftMessages
+import Popover
 
 class JViewController:UIViewController {
     var shouldHideStatusBar:Bool = false
@@ -68,6 +69,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
         titleView.tabScrollView.delegate = self
         
+        
         let contentView = titleView.contentView!
         
         anonSwitch = AnonSwitch(frame: .zero)
@@ -77,8 +79,6 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         anonSwitch.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
         anonSwitch.widthAnchor.constraint(equalToConstant: 32.0).isActive = true
         anonSwitch.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
-        anonSwitch.layer.borderColor = UIColor.white.cgColor
-        anonSwitch.layer.borderWidth = 1.0
         
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
         pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
@@ -135,11 +135,16 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        anonSwitch.setProfileImage()
         anonSwitch.setAnonMode(to: UserService.anonMode)
+        
         if ContentSettings.recentlyUpdated {
             pagerNode.reloadData()
             ContentSettings.recentlyUpdated = false
-        } 
+        }
+        
+
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -288,3 +293,4 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
 class ContainerCellNode:ASCellNode {
     
 }
+

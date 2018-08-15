@@ -81,6 +81,9 @@ class PostContentNode:ASDisplayNode {
         if let _ = post.blockedMessage {
             videoNode.muted = true
             videoNode.isHidden = true
+            
+            usernameNode.isHidden = true
+            avatarNode.isHidden = true
             spinnerNode.alpha = 0.0
             blockedMessageNode = ASDisplayNode()
             backgroundColor = .clear
@@ -111,41 +114,44 @@ class PostContentNode:ASDisplayNode {
             }
             
         } else {
-            if post.attachments.isVideo {
-                usernameNode.isHidden = true
-                avatarNode.isHidden = true
-                setupVideo(post)
-            } else if post.attachments.isImage {
-                usernameNode.isHidden = true
-                avatarNode.isHidden = true
-                setupImage(post)
-            } else {
-                usernameNode.isHidden = false
-                avatarNode.isHidden = false
-                spinnerNode.stopAnimating()
-                spinnerNode.alpha = 0.0
-                imageNode.isHidden = true
-                videoNode.isHidden = true
-                subnameNode.isHidden = false
-                timeNode.isHidden = false
-                //backgroundColor = accentColor
-                let paragraphStyle = NSMutableParagraphStyle()
-                paragraphStyle.alignment = .center
-                
-                textNode.textContainerInset = UIEdgeInsetsMake(16,24,16,24)
-                textNode.setText(text: post.text, withSize: 24.0, normalColor: .white, activeColor: UIColor.white.withAlphaComponent(0.67))
-                //textNode.maximumNumberOfLines = 7
-                
-//                textNode.attributedText = NSAttributedString(string: post.text, attributes: [
-//                    NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(1.0),
-//                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 24.0)
-//                ])
-            }
-            
+            setup()
+        }
+        
+        
+    }
+    
+    func setup() {
+        guard let post = self.post else { return }
+        if post.attachments.isVideo {
+            setupVideo(post)
+        } else if post.attachments.isImage {
+            setupImage(post)
+        } else {
+            setupText(post)
         }
     }
     
+    func setupText(_ post:Post) {
+        usernameNode.isHidden = false
+        avatarNode.isHidden = false
+        spinnerNode.stopAnimating()
+        spinnerNode.alpha = 0.0
+        imageNode.isHidden = true
+        videoNode.isHidden = true
+        subnameNode.isHidden = false
+        timeNode.isHidden = false
+        //backgroundColor = accentColor
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        
+        textNode.textContainerInset = UIEdgeInsetsMake(16,24,16,24)
+        textNode.setText(text: post.text, withSize: 24.0, normalColor: .white, activeColor: UIColor.white.withAlphaComponent(0.67))
+    }
+    
     func setupVideo(_ post:Post) {
+        
+        usernameNode.isHidden = true
+        avatarNode.isHidden = true
         videoNode.isHidden = false
         videoNode.muted = false
         spinnerNode.isHidden = false
@@ -172,6 +178,8 @@ class PostContentNode:ASDisplayNode {
     }
     
     func setupImage(_ post:Post) {
+        usernameNode.isHidden = true
+        avatarNode.isHidden = true
         videoNode.isHidden = true
         videoNode.muted = true
         imageNode.isHidden = false
@@ -208,7 +216,7 @@ class PostContentNode:ASDisplayNode {
         guard let post = self.post else { return }
         self.blockedMessageNode?.isHidden = true
         self.spinnerNode.alpha = 1.0
-        self.setupVideo(post)
+        self.setup()
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
@@ -267,4 +275,5 @@ class PostContentNode:ASDisplayNode {
         //videoNode.
         //pastelNode.pastelView.layer.speed = 0.0
     }
+    
 }

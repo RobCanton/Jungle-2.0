@@ -33,6 +33,14 @@ class CreateProfileViewController:UIViewController {
     var stackBottomConstraint:NSLayoutConstraint!
     
     var imagePicker:UIImagePickerController!
+    var skipActivityIndicator:UIActivityIndicatorView!
+    var skipButton:UIButton!
+    
+    var cancelButton:UIButton!
+    
+    var popupMode = false
+    
+    let ACCEPTABLE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -70,7 +78,7 @@ class CreateProfileViewController:UIViewController {
         titleView.trailingAnchor.constraint(equalTo: bannerView.trailingAnchor).isActive = true
         titleView.heightAnchor.constraint(equalToConstant: 64).isActive = true
         
-        let skipButton = UIButton(type: .custom)
+        skipButton = UIButton(type: .custom)
         skipButton.setTitle("Skip", for: .normal)
         skipButton.setTitleColor(UIColor.white, for: .normal)
         skipButton.titleLabel?.font = Fonts.bold(ofSize: 17.0)
@@ -78,6 +86,25 @@ class CreateProfileViewController:UIViewController {
         skipButton.translatesAutoresizingMaskIntoConstraints = false
         skipButton.trailingAnchor.constraint(equalTo: titleView.trailingAnchor, constant: -20).isActive = true
         skipButton.centerYAnchor.constraint(equalTo: titleView.centerYAnchor).isActive = true
+        skipButton.addTarget(self, action: #selector(handleSkip), for: .touchUpInside)
+        
+        cancelButton = UIButton(type: .custom)
+        cancelButton.setTitle("Cancel", for: .normal)
+        cancelButton.setTitleColor(UIColor.white, for: .normal)
+        cancelButton.titleLabel?.font = Fonts.medium(ofSize: 17.0)
+        titleView.addSubview(cancelButton)
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        cancelButton.leadingAnchor.constraint(equalTo: titleView.leadingAnchor, constant: 20).isActive = true
+        cancelButton.centerYAnchor.constraint(equalTo: titleView.centerYAnchor).isActive = true
+        cancelButton.addTarget(self, action: #selector(handleCancel), for: .touchUpInside)
+        
+        skipActivityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .white)
+        view.addSubview(skipActivityIndicator)
+        skipActivityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        skipActivityIndicator.centerXAnchor.constraint(equalTo: skipButton.centerXAnchor).isActive = true
+        skipActivityIndicator.centerYAnchor.constraint(equalTo: skipButton.centerYAnchor).isActive = true
+        skipActivityIndicator.hidesWhenStopped = true
+        skipActivityIndicator.stopAnimating()
         
         contentView = UIView()
         bannerView.addSubview(contentView)
@@ -187,6 +214,7 @@ class CreateProfileViewController:UIViewController {
         textField.keyboardType = .emailAddress
         textField.autocapitalizationType = .none
         textField.textColor = UIColor.white
+        textField.textAlignment = .center
         textField.font = Fonts.regular(ofSize: 17.0)
         textField.attributedPlaceholder = NSAttributedString(string: "Username", attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 20.0),
@@ -199,6 +227,7 @@ class CreateProfileViewController:UIViewController {
         textField.topAnchor.constraint(equalTo: textContainer.topAnchor).isActive = true
         textField.bottomAnchor.constraint(equalTo: textContainer.bottomAnchor).isActive = true
         textField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        textField.delegate = self
         self.view.layoutIfNeeded()
     }
     
@@ -206,6 +235,13 @@ class CreateProfileViewController:UIViewController {
         super.viewWillAppear(animated)
         pastelView.startStatic()
         
+        if popupMode {
+            skipButton.isHidden = true
+            cancelButton.isHidden = false
+        } else {
+            skipButton.isHidden = false
+            cancelButton.isHidden = true
+        }
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
         
@@ -239,37 +275,80 @@ class CreateProfileViewController:UIViewController {
     }
     
     @objc func handleSubmit() {
-        guard let user = Auth.auth().currentUser else { return }
+        
         guard let avatar = avatarImageView.image else { return }
         guard let username = textField.text else { return }
         
+        view.isUserInteractionEnabled = false
         toggleSubmitButton(enabled: false)
         submitButton.setTitle("Creating...", for: .normal)
         
-        uploadProfileImage(avatar, quality: .high) { url in
-            self.uploadProfileImage(avatar, quality: .low) { thumbnailURL in
-                if let url = url, let thumbnailURL = thumbnailURL {
-                    let data:[String:Any] = [
-                        "username": username,
-                        "avatar": [
-                            "high": url.absoluteString,
-                            "low": thumbnailURL.absoluteString
-                        ]
-                    ]
-                    
-                    functions.httpsCallable("createUserProfile").call(data) { result, error in
-                        if let data = result?.data as? [String:Any] {
-                            print("CREATED PROFILE: \(data)")
-                            appProtocol?.openMainView()
+        UserService.uploadProfileImage(avatar, quality: .high) { _ in
+            UserService.uploadProfileImage(avatar, quality: .low) { _ in
+                
+                let data:[String:Any] = [
+                    "username": username
+                ]
+                
+                functions.httpsCallable("createUserProfile").call(data) { result, error in
+                    if let data = result?.data as? [String:Any] {
+                        print("CREATED PROFILE: \(data)")
+                        UserService.currentUser?.profile = Profile.parse(data)
+                        if self.popupMode {
+                            self.dismiss(animated: true, completion: nil)
                         } else {
-                            print("ERROR: \(error?.localizedDescription)")
+                            appProtocol?.openMainView()
                         }
+                        
+                    } else {
+                        self.showError(error?.localizedDescription ?? "Please try again")
                     }
                 }
+                
             }
         }
     }
     
+    
+    func showError(_ msg:String) {
+        view.isUserInteractionEnabled = true
+        let error = MessageView.viewFromNib(layout: .cardView)
+        
+        error.configureContent(title: "Error", body: msg, iconImage: Icon.errorLight.image)
+        error.button?.removeFromSuperview()
+        error.accessibilityPrefix = "error"
+        error.configureTheme(.error, iconStyle: .default)
+        error.configureDropShadow()
+        error.configureTheme(backgroundColor: UIColor(white: 0.4, alpha: 1.0), foregroundColor: .white)
+        var config = SwiftMessages.Config.init()
+        config.presentationContext = .viewController(self)
+        config.duration = .seconds(seconds: 5.0)
+        
+        SwiftMessages.show(config: config, view: error)
+        
+        toggleSubmitButton(enabled: true)
+        submitButton.setTitle("Create Profile", for: .normal)
+    }
+    
+    @objc func handleSkip() {
+        print("SKIP!")
+        view.isUserInteractionEnabled = false
+        skipButton.isHidden = true
+        skipActivityIndicator.startAnimating()
+        
+        functions.httpsCallable("skipCreateProfile").call { result, error in
+            appProtocol?.openMainView()
+        }
+    }
+    
+    @objc func handleCancel() {
+        print("CANCEL!")
+        textField.resignFirstResponder()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: {
+            self.dismiss(animated: true, completion: nil)
+        })
+        
+    }
 }
 
 
@@ -290,44 +369,30 @@ extension CreateProfileViewController: UIImagePickerControllerDelegate, UINaviga
         picker.dismiss(animated: true, completion: nil)
     }
     
-    func uploadProfileImage(_ image:UIImage, quality:ProfileImageQuality, completion: @escaping ((_ url:URL?)->())) {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        let storageRef = Storage.storage().reference().child("userProfile/\(uid)/\(quality.rawValue).jpg")
-        
-        var _quality:CGFloat
-        switch quality {
-        case .high:
-            _quality = 0.8
-            break
-        case .low:
-            _quality = 0.3
-            break
-        }
-        
-        guard let imageData = UIImageJPEGRepresentation(image, _quality) else { return }
-        
-        let metaData = StorageMetadata()
-        metaData.contentType = "image/jpg"
-        
-        storageRef.putData(imageData, metadata: metaData) { metaData, error in
-            storageRef.downloadURL { url, error in
-                completion(url)
-            }
-        }
-    }
-    
 }
 
 extension CreateProfileViewController: UITextFieldDelegate {
     @objc func textFieldDidChange(_ textField:UITextField) {
         let text = textField.text ?? ""
-        toggleSubmitButton(enabled: !text.isEmpty && avatarImageView.image != nil)
+        toggleSubmitButton(enabled: text.count >= 6 && avatarImageView.image != nil)
     }
     
     func toggleSubmitButton(enabled: Bool) {
         self.submitButton.isEnabled = enabled
         self.submitButton.alpha = enabled ? 1.0 : 0.67
     }
+    
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        guard let text = textField.text else { return true }
+        let newLength = text.count + string.count - range.length
+        
+        if newLength > 20 { return false }
+        let cs = CharacterSet(charactersIn: ACCEPTABLE_CHARACTERS).inverted
+        let filtered: String = (string.components(separatedBy: cs) as NSArray).componentsJoined(by: "")
+        
+        return (string == filtered)
+    }
+    
 }
 
 enum ProfileImageQuality:String {

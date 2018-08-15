@@ -168,7 +168,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Jungle/Search/RCSearchBarView.swift"
-            timestampString = "555286819.241676"
+            timestampString = "555802244.411014"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "160"
@@ -184,11 +184,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Jungle/Search/SearchViewController.swift"
-            timestampString = "555286819.2417459"
+            timestampString = "555911125.282516"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "83"
-            endingLineNumber = "83"
+            startingLineNumber = "84"
+            endingLineNumber = "84"
             landmarkName = "viewDidLoad()"
             landmarkType = "7">
          </BreakpointContent>
@@ -200,11 +200,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Jungle/Camera/CameraViewController.swift"
-            timestampString = "555650901.592346"
+            timestampString = "555907542.105725"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "346"
-            endingLineNumber = "346"
+            startingLineNumber = "391"
+            endingLineNumber = "391"
             landmarkName = "processVideoWithWatermark(videoURL:completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -216,13 +216,29 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Jungle/Auth/EmailViewController.swift"
-            timestampString = "555650901.5924079"
+            timestampString = "555887191.306514"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "262"
             endingLineNumber = "262"
             landmarkName = "EmailViewController"
             landmarkType = "3">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Jungle/Camera/CameraHUDView.swift"
+            timestampString = "556004848.194271"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "301"
+            endingLineNumber = "301"
+            landmarkName = "init(frame:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

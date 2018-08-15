@@ -130,7 +130,7 @@ class UploadService {
         }
     }
     
-    fileprivate static func getNewPostID(completion: @escaping(_ postID:String?)->()) {
+    static func getNewPostID(completion: @escaping(_ postID:String?)->()) {
         functions.httpsCallable("requestNewPostID").call { result, error in
             guard let data = result?.data as? [String:Any], let postID = data["postID"] as? String else {
                 return completion(nil)
@@ -212,10 +212,12 @@ class UploadService {
     }
     
     
-    static func uploadPost(text:String, image:UIImage?, videoURL:URL?, gif:GIF?=nil, region:Region?=nil, location:CLLocation?=nil) {
+    static func uploadPost(postID:String, text:String, image:UIImage?, videoURL:URL?, gif:GIF?=nil, region:Region?=nil, location:CLLocation?=nil) {
         NSLog("RSC: uploadPost - Start")
+        UserService.recentlyPosted = true
         guard let uid = Auth.auth().currentUser?.uid else { return }
         var parameters: [String: Any] = [
+            "postID": postID,
             "uid" : uid,
             "text" : text,
             "isAnonymous" : UserService.anonMode
@@ -233,109 +235,98 @@ class UploadService {
                 
             ]
         }
-        NSLog("getNewPost - Start")
-        getNewPostID { _postID in
-            NSLog("getNewPost - End")
-            
-            guard let postID = _postID else {
-                Alerts.showFailureAlert(withMessage: "Failed to upload.")
-                return }
-
-            pendingPostKey = postID
-            parameters["postID"] = postID
-                
-            if let gif = gif {
-                parameters["attachments"] = [
-                    "images": [
-                        [
-                            "url": gif.original_url.absoluteString,
-                            "source": "GIF",
-                            "order": 0,
-                            "color": "0xFFFFFF",
-                            "type": "GIF",
-                            "dimensions": [
-                                "width": gif.contentSize.width,
-                                "height": gif.contentSize.height,
-                                "ratio": gif.contentSize.width / gif.contentSize.height
-                                ] as [String:Any]
-                        ]
+        
+        if let gif = gif {
+            parameters["attachments"] = [
+                "images": [
+                    [
+                        "url": gif.original_url.absoluteString,
+                        "source": "GIF",
+                        "order": 0,
+                        "color": "0xFFFFFF",
+                        "type": "GIF",
+                        "dimensions": [
+                            "width": gif.contentSize.width,
+                            "height": gif.contentSize.height,
+                            "ratio": gif.contentSize.width / gif.contentSize.height
+                            ] as [String:Any]
                     ]
                 ]
-                
-                UploadService.addNewPost(withID: postID, parameters: parameters)
-            } else if let image = image {
-                
-                uploadImage(postID: postID, image: image) { success in
-                    if success {
-                        parameters["attachments"] = [
-                            "image": [
-                                "size": [
-                                    "width": image.size.width,
-                                    "height": image.size.height,
-                                    "ratio": image.size.width / image.size.height
-                                ]
+            ]
+            
+            UploadService.addNewPost(withID: postID, parameters: parameters)
+        } else if let image = image {
+            
+            uploadImage(postID: postID, image: image) { success in
+                if success {
+                    parameters["attachments"] = [
+                        "image": [
+                            "size": [
+                                "width": image.size.width,
+                                "height": image.size.height,
+                                "ratio": image.size.width / image.size.height
                             ]
                         ]
-                        UploadService.addNewPost(withID: postID, parameters: parameters)
-                    }
+                    ]
+                    UploadService.addNewPost(withID: postID, parameters: parameters)
                 }
-                
-            } else if let url = videoURL {
-                let urlAsset = AVURLAsset(url: url, options: nil)
-                let track =  urlAsset.tracks(withMediaType: AVMediaType.video)
-                let videoTrack:AVAssetTrack = track[0] as AVAssetTrack
-                let size = videoTrack.naturalSize
-                NSLog("RSC: uploadVideo - Start")
-                var videoLength:Float64?
-                var videoUploaded = false
-                var thumbnailUploaded = false
-                
-                uploadVideoStill(url: url, postID: postID) { success in
-                    if success {
-                        UploadService.uploadVideo(pathName: "video.mp4", videoURL: url, postID: postID) { success, _vidLength in
-                            NSLog("RSC: uploadVideo - End")
-                            videoUploaded = success
-                            videoLength = _vidLength
-                            if videoUploaded, thumbnailUploaded, videoLength != nil {
-                                parameters["attachments"] = [
-                                    "video": [
-                                        "length": videoLength!,
-                                        "size": [
-                                            "width": size.width,
-                                            "height": size.height,
-                                            "ratio": size.width / size.height
-                                        ]
-                                    ]
-                                ]
-                                
-                                UploadService.addNewPost(withID: postID, parameters: parameters)
-                                
-                            }
-                        }
-                        
-                        UploadService.createGif(videoURL: url, postID: postID) { success in
-                            thumbnailUploaded = success
-                            if thumbnailUploaded, videoUploaded, videoLength != nil {
-                                parameters["attachments"] = [
-                                    "video": [
-                                        "length": videoLength!,
-                                        "size": [
-                                            "width": size.width,
-                                            "height": size.height,
-                                            "ratio": size.width / size.height
-                                        ]
-                                    ]
-                                ]
-                                
-                                UploadService.addNewPost(withID: postID, parameters: parameters)
-                            }
-                        }
-                    }
-                }
-                
-            } else {
-                UploadService.addNewPost(withID: postID, parameters: parameters)
             }
+            
+        } else if let url = videoURL {
+            let urlAsset = AVURLAsset(url: url, options: nil)
+            let track =  urlAsset.tracks(withMediaType: AVMediaType.video)
+            let videoTrack:AVAssetTrack = track[0] as AVAssetTrack
+            let size = videoTrack.naturalSize
+            NSLog("RSC: uploadVideo - Start")
+            var videoLength:Float64?
+            var videoUploaded = false
+            var thumbnailUploaded = false
+            
+            uploadVideoStill(url: url, postID: postID) { success in
+                if success {
+                    UploadService.uploadVideo(pathName: "video.mp4", videoURL: url, postID: postID) { success, _vidLength in
+                        NSLog("RSC: uploadVideo - End")
+                        videoUploaded = success
+                        videoLength = _vidLength
+                        if videoUploaded, thumbnailUploaded, videoLength != nil {
+                            parameters["attachments"] = [
+                                "video": [
+                                    "length": videoLength!,
+                                    "size": [
+                                        "width": size.width,
+                                        "height": size.height,
+                                        "ratio": size.width / size.height
+                                    ]
+                                ]
+                            ]
+                            
+                            UploadService.addNewPost(withID: postID, parameters: parameters)
+                            
+                        }
+                    }
+                    
+                    UploadService.createGif(videoURL: url, postID: postID) { success in
+                        thumbnailUploaded = success
+                        if thumbnailUploaded, videoUploaded, videoLength != nil {
+                            parameters["attachments"] = [
+                                "video": [
+                                    "length": videoLength!,
+                                    "size": [
+                                        "width": size.width,
+                                        "height": size.height,
+                                        "ratio": size.width / size.height
+                                    ]
+                                ]
+                            ]
+                            
+                            UploadService.addNewPost(withID: postID, parameters: parameters)
+                        }
+                    }
+                }
+            }
+            
+        } else {
+            UploadService.addNewPost(withID: postID, parameters: parameters)
         }
     }
     

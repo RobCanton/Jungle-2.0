@@ -16,6 +16,7 @@ protocol PostActionsDelegate:class {
     func handleMoreButton()
     func handleLocationButton()
     func openTag(_ tag:String)
+    func postOpen(profile:Profile)
 }
 
 class SinglePostActionsView:UIView {

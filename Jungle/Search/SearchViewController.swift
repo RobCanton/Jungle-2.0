@@ -22,6 +22,7 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource, 
     var topPostsVC:SearchPostsTableViewController!
     var latestPostsVC:SearchPostsTableViewController!
     var searchBar:RCSearchBarView!
+    var searchOnAppear = false
     
     var interactor:Interactor? = nil
     
@@ -135,6 +136,21 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource, 
             latestPostsVC?.setSearch(text: search)
             initialSearch = nil
         }
+        
+        if self.searchOnAppear {
+            self.searchBar.leftButton.alpha = 0.0
+        }
+        DispatchQueue.main.async {
+            if self.searchOnAppear {
+                self.searchOnAppear = false
+                self.searchBar.beginEditing()
+            }
+        }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {

@@ -19,7 +19,7 @@ var firestore:Firestore {
 }
 
 var database:DatabaseReference {
-    return Database.database().reference()
+    return Database.database().reference().child("app")
 }
 
 var storage:StorageReference {
@@ -99,19 +99,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             self.showAuthScreen()
         }
     
-        GIFService.getTopTrendingGif { _gif in
-            if let gif = _gif {
-                let thumbnailDataTask = URLSession.shared.dataTask(with: gif.thumbnail_url) { data, _, _ in
-                    DispatchQueue.main.async {
-                        if let data = data {
-                            GIFService.tendingGIFImage = UIImage.gif(data: data)
-
-                        }
-                    }
-                }
-                thumbnailDataTask.resume()
-            }
-        }
+//        GIFService.getTopTrendingGif { _gif in
+//            if let gif = _gif {
+//                let thumbnailDataTask = URLSession.shared.dataTask(with: gif.thumbnail_url) { data, _, _ in
+//                    DispatchQueue.main.async {
+//                        if let data = data {
+//                            GIFService.tendingGIFImage = UIImage.gif(data: data)
+//
+//                        }
+//                    }
+//                }
+//                thumbnailDataTask.resume()
+//            }
+//        }
         
         do {
             try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
@@ -193,15 +193,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                                             safeContentMode: safeContentMode)
                 
                 var profile:Profile?
+                var skipCreateProfile = false
                 if let profileData = data["profile"] as? [String:Any] {
-                    if let username = profileData["username"] as? String,
-                        let avatarData = profileData["avatar"] as? [String:Any],
-                        let avatarURLStr = avatarData["high"] as? String,
-                        let avatarThumbnailURLStr = avatarData["low"] as? String,
-                        let avatarURL = URL(string: avatarURLStr),
-                        let avatarThumbnailURL = URL(string: avatarThumbnailURLStr) {
+                    skipCreateProfile = profileData["skipCreateProfile"] as? Bool ?? false
+                    if let uid = profileData["uid"] as? String,
+                        let username = profileData["username"] as? String {
+                        let gradient = profileData["gradient"] as? [String] ?? [String]()
                         
-                        profile = Profile(username: username, avatarURL: avatarURL, avatarThumbnailURL: avatarThumbnailURL)
+                        profile = Profile(uid: uid, username: username, gradient: gradient)
                     }
                 }
                 
@@ -209,7 +208,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 UserService.currentUser = User(uid: uid, authType: type, profile: profile)
                 UserService.timeout = timeout
                 
-                if profile != nil {
+                if profile != nil || skipCreateProfile {
                     self.openMainView()
                 } else {
                     self.openProfileView()
@@ -378,8 +377,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             guard let link = dynamiclink?.url?.absoluteString else { return }
             guard let email = UserDefaults.standard.string(forKey: "Email") else { return }
             let hud = JGProgressHUD(style: .dark)
-//            hud.indicatorView?.setUpFor(.dark, vibrancyEnabled: true)
-//            hud.textLabel.textColor = UIColor.white
             hud.textLabel.text = "Authenticating..."
             hud.show(in: top.view, animated: true)
             

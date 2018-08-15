@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import Firebase
+import JGProgressHUD
 
 
 class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSource {
@@ -39,8 +40,6 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         let type:OptionType
     }
 
-    
-//    Option(title: OptionKey.locationServices, description: "Your location is used to find posts near you. When you post, your location coordinates are used to identify your general location (city/town/region). Your precise location is never shared without your permission.", type: .toggle),
     var options:[Int:[Option]] = [
         0: [
             Option(title: OptionKey.pushNotifications, description: "You will receive alerts when users interact with your posts and posts you are subscribed to.", type: .toggle),
@@ -48,8 +47,8 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         ],
         1 : [],
         2 : [
-            Option(title: OptionKey.termsOfService, description: "", type: .button),
             Option(title: OptionKey.privacyPolicy, description: "", type: .button),
+            Option(title: OptionKey.termsOfService, description: "", type: .button),
             Option(title: OptionKey.logout, description: "", type: .boldButton)
         ]
     ]
@@ -217,6 +216,16 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         if options[indexPath.section]!.count > 0 {
             let option = options[indexPath.section]![indexPath.row]
             switch option.title {
+            case .termsOfService:
+                if let url = URL(string: "https://jungle-anonymous.firebaseapp.com/tos.html") {
+                    UIApplication.shared.open(url, options: [:])
+                }
+                break
+            case .privacyPolicy:
+                if let url = URL(string: "https://jungle-anonymous.firebaseapp.com/privacypolicy.html") {
+                    UIApplication.shared.open(url, options: [:])
+                }
+                break
             case .logout:
                 showLogoutOptions()
                 break
@@ -250,16 +259,27 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         
         let alert = UIAlertController(title: "Are you sure you want to logout?", message: nil, preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "Logout", style: .destructive, handler: { _ in
-            do {
-                
+            
+            guard let uid = Auth.auth().currentUser?.uid else { return }
+            
+            let hud = JGProgressHUD(style: .dark)
+            hud.textLabel.text = "Logging out..."
+            hud.show(in: self.view, animated: true)
+            
+            let tokenRef = database.child("users/fcmToken/\(uid)")
+            tokenRef.removeValue { _, _ in
                 nService.clear()
                 UserService.currentUser = nil
                 UserService.lastPostedAt = nil
+                do {
+                    try Auth.auth().signOut()
+                } catch {
+                    print("ERROR: \(error.localizedDescription)")
+                }
+                hud.dismiss()
                 
-                try Auth.auth().signOut()
-            } catch {
-                print("ERROR: \(error.localizedDescription)")
             }
+            
         }))
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))

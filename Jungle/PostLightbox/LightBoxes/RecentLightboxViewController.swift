@@ -87,4 +87,23 @@ class MyLikesLightboxViewController:LightboxViewController {
     }
 }
 
+class UserPostsLightboxViewController:LightboxViewController {
+    var username:String!
+    
+    override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
+        SearchService.userPosts(username: username, offset: state.posts.count) { posts in
+            completion(posts)
+        }
+    }
+}
+
+class UserCommentsLightboxViewController:LightboxViewController {
+    var username:String!
+    
+    override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
+        SearchService.userComments(username: username, offset: state.posts.count) { posts in
+            completion(posts)
+        }
+    }
+}
 
