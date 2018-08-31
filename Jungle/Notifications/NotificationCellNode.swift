@@ -84,9 +84,9 @@ class NotificationCellNode:ASCellNode {
             NSAttributedStringKey.foregroundColor: UIColor.clear
             ])
         
-        if let likesNotification = notification as? PostVotesNotification {
+        if let _ = notification as? PostVotesNotification {
             previewImageNode = IconNode(image: UIImage(named:"like"), insets: UIEdgeInsetsMake(1, 1, 1, 1), color: likeColor)
-        } else if let replyNotification = notification as? PostReplyNotification {
+        } else if let _ = notification as? PostReplyNotification {
             previewImageNode = IconNode(image: UIImage(named:"comment"), insets: UIEdgeInsetsMake(2, 1, 1, 1), color: tagColor)
         }
         
@@ -152,9 +152,7 @@ class NotificationCellNode:ASCellNode {
                 ])
             
         } else if let replyNotification = notification as? PostReplyNotification,
-            let reply = replyNotification.reply,
-            let post = replyNotification.post {
-            
+            let reply = replyNotification.reply {
             
             var name:String
             var color:UIColor

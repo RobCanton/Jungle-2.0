@@ -22,7 +22,7 @@ class UserProfileHeaderView:UIView {
     var tabScrollView:DualScrollView!
     var titleView:JTitleView!
     var contentView:UIView!
-    override init(frame: CGRect) {
+    init(frame:CGRect, topInset:CGFloat) {
         super.init(frame: frame)
         self.preservesSuperviewLayoutMargins = false
         self.insetsLayoutMarginsFromSafeArea = false
@@ -73,7 +73,7 @@ class UserProfileHeaderView:UIView {
         contentView.addSubview(avatarView)
         avatarView.translatesAutoresizingMaskIntoConstraints = false
         avatarView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true
-        //avatarView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -18 - 12).isActive = true
+        
         avatarView.widthAnchor.constraint(equalToConstant: 96).isActive = true
         avatarView.heightAnchor.constraint(equalToConstant: 96).isActive = true
         
@@ -103,13 +103,13 @@ class UserProfileHeaderView:UIView {
         usernameButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: 0).isActive = true
         self.layoutIfNeeded()
         
-        titleView = JTitleView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 50), topInset: 20)
+        titleView = JTitleView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 50), topInset: topInset)
         addSubview(titleView)
         titleView.translatesAutoresizingMaskIntoConstraints = false
         titleView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
         titleView.topAnchor.constraint(equalTo: topAnchor, constant: 0).isActive = true
         titleView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
-        titleView.heightAnchor.constraint(equalToConstant: 70).isActive = true
+        titleView.heightAnchor.constraint(equalToConstant: 50 + topInset).isActive = true
         titleView.leftButton.setImage(UIImage(named:"back"), for: .normal)
         titleView.rightButton.setImage(UIImage(named:"more_white"), for: .normal)
         titleView.titleLabel.text = nil
@@ -121,8 +121,9 @@ class UserProfileHeaderView:UIView {
         let gradient = CAGradientLayer()
         gradient.colors = [UIColor.clear.cgColor, UIColor.black.cgColor]
         
-        let startPercent = NSNumber(value: Float(20 / UIScreen.main.bounds.height))
-        let endPercent = NSNumber(value: Float(32 / UIScreen.main.bounds.height))
+        let startPercent = NSNumber(value: Float(topInset / UIScreen.main.bounds.height))
+        let endPercent = NSNumber(value: Float((topInset + 12) / UIScreen.main.bounds.height))
+        
         gradient.locations = [startPercent, endPercent]
         gradient.frame = CGRect(x: 0, y: 0, width: contentView.bounds.width, height: UIScreen.main.bounds.height)
         contentView.layer.mask = gradient
@@ -169,13 +170,8 @@ class UserProfileHeaderView:UIView {
     
     func setProgress(_ progress:CGFloat) {
         print("PROGRESS: \(progress)")
-        
-        let alpha = progress * progress * progress
-        //avatarView.alpha = alpha
-        //usernameLabel.alpha = alpha
-        //titleView.titleLabel.alpha = (1 - progress) * (1 - progress) * (1 - progress)
-        //gradient?.frame = contentView.bounds
     }
+    
 }
 
 

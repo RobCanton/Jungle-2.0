@@ -7,7 +7,6 @@ target 'Jungle' do
 
 
   # Pods for Jungle
-  pod 'Alamofire', '~> 4.5'
   pod 'Firebase/Core'
   pod 'Firebase/Auth'
   pod 'Firebase/Database'
@@ -18,8 +17,6 @@ target 'Jungle' do
   pod 'Firebase/DynamicLinks'
   pod 'Texture'
   pod 'SwiftMessages'
-  pod 'ScrollableGraphView', :git => 'https://github.com/barnaclejive/ScrollableGraphView', :branch => 'master'
-  pod 'SwiftGifOrigin', '~> 1.6.1'
   pod 'UICircularProgressRing'
   pod 'TGPControls'
   pod "Regift"
@@ -32,5 +29,6 @@ target 'Jungle' do
   pod 'JGProgressHUD'
   pod 'Popover'
   pod 'MXParallaxHeader'
-  pod 'Smile'
+  pod 'Fabric', '~> 1.7.9'
+  pod 'Crashlytics', '~> 3.10.5'
 end

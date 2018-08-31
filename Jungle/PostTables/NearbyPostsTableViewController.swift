@@ -39,7 +39,6 @@ class NearbyPostsTableViewController: PostsTableViewController {
     }
     
     func handleAuthorizeGPSTap() {
-        print("handleAuthorizeGPSTap")
         let status = gpsService.authorizationStatus()
         switch status {
         case .authorizedAlways:

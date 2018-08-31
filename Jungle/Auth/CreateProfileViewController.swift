@@ -256,7 +256,6 @@ class CreateProfileViewController:UIViewController {
     }
     
     @objc func keyboardWillShow(notification:Notification) {
-        print("keyboardWillShow")
         guard let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return }
         stackBottomConstraint.constant = -(keyboardSize.height + 24.0)
         
@@ -264,8 +263,6 @@ class CreateProfileViewController:UIViewController {
     }
     
     @objc func keyboardWillHide(notification:Notification) {
-        print("keyboardWillHide")
-        
         self.stackBottomConstraint.constant = -16
         self.view.layoutIfNeeded()
     }
@@ -292,7 +289,7 @@ class CreateProfileViewController:UIViewController {
                 
                 functions.httpsCallable("createUserProfile").call(data) { result, error in
                     if let data = result?.data as? [String:Any] {
-                        print("CREATED PROFILE: \(data)")
+                        UserService.anonMode = false
                         UserService.currentUser?.profile = Profile.parse(data)
                         if self.popupMode {
                             self.dismiss(animated: true, completion: nil)
@@ -342,7 +339,6 @@ class CreateProfileViewController:UIViewController {
     }
     
     @objc func handleCancel() {
-        print("CANCEL!")
         textField.resignFirstResponder()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: {
             self.dismiss(animated: true, completion: nil)

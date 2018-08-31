@@ -209,7 +209,6 @@ class SearchViewController:JViewController, ASPagerDelegate, ASPagerDataSource, 
 
 extension SearchViewController: RCSearchBarDelegate {
     func handleLeftButton() {
-        print("DISMISS YO!")
         self.dismiss(animated: true, completion: nil)
     }
     

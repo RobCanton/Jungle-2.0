@@ -55,7 +55,7 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = hexColor(from: "#eff0e9")
+        view.backgroundColor = hexColor(from: "#EFEFEF")
         let topInset = UIApplication.deviceInsets.top
         let titleViewHeight = 50 + topInset
         
@@ -89,7 +89,7 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         //tableNode.view.separatorStyle = .none
         tableNode.view.showsVerticalScrollIndicator = true
         tableNode.view.delaysContentTouches = false
-        tableNode.view.backgroundColor = hexColor(from: "#eff0e9")
+        tableNode.view.backgroundColor = hexColor(from: "#EFEFEF")
         tableNode.view.tableFooterView = UIView()
         tableNode.delegate = self
         tableNode.dataSource = self
@@ -203,7 +203,7 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         } else {
             let gapCell = ASCellNode()
             gapCell.style.height = ASDimension(unit: .points, value: 12.0)
-            gapCell.backgroundColor = hexColor(from: "#eff0e9")
+            gapCell.backgroundColor = hexColor(from: "#EFEFEF")
             gapCell.selectionStyle = .none
             return gapCell
         }
@@ -285,12 +285,6 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         self.present(alert, animated: true, completion: nil)
         
-    }
-    
-    func showLoginView() {
-        print("showLoginView")
-        let loginVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "AuthViewController") as! AuthViewController
-        self.present(loginVC, animated: true, completion: nil)
     }
     
 }

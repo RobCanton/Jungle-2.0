@@ -26,9 +26,9 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
         super.init()
         
         automaticallyManagesSubnodes = true
-        backgroundColor = UIColor.clear
+        backgroundColor = UIColor.white
         
-        style.height = ASDimension(unit: .points, value: 202)
+        style.height = ASDimension(unit: .points, value: 190)
         
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 12
@@ -39,7 +39,7 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
         collectionNode.delegate = self
         collectionNode.dataSource = self
         collectionNode.contentInset = UIEdgeInsetsMake(8, 12, 8, 12)
-        collectionNode.style.height = ASDimension(unit: .points, value: 190)
+        collectionNode.style.height = ASDimension(unit: .points, value: 180)
         collectionNode.reloadData()
         collectionNode.backgroundColor = UIColor.clear
         collectionNode.clipsToBounds = false
@@ -48,7 +48,6 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
     }
     
     @objc func handleTrendingTagsNotification() {
-        print("TRENDING TAGS UPDATED YO!")
         hashtags = SearchService.trendingHashtags
         collectionNode.reloadData()
     }
@@ -58,7 +57,7 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
         collectionNode.view.showsHorizontalScrollIndicator = false
     }
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 0, 8, 0), child: collectionNode)
+        return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 0, 6, 0), child: collectionNode)
     }
     
     func numberOfSections(in collectionNode: ASCollectionNode) -> Int {
@@ -114,7 +113,7 @@ class BadgeNode:ASDisplayNode {
         let sizeHeight = UILabel.size(text: "\(title)", width: 100, font: Fonts.semiBold(ofSize: 14.0))
         
         badgeSize = CGSize(width: sizeWidth.width + 14, height: sizeHeight.height + 14)
-        print("BADGE WIDTH: \(badgeSize)")
+        
         containerNode.style.height = ASDimension(unit: .points, value: badgeSize.height)
         if badgeSize.width < badgeSize.height {
             containerNode.style.width = ASDimension(unit: .points, value: badgeSize.height)
@@ -187,12 +186,20 @@ class TrendingCellNode:ASCellNode {
         paragraphStyle.alignment = .center
         
         titleNode.maximumNumberOfLines = 1
+        
         titleNode.attributedText = NSAttributedString(string: "#\(tag.hastag)", attributes: [
             NSAttributedStringKey.foregroundColor: UIColor.white,
             NSAttributedStringKey.font: Fonts.bold(ofSize: 14.0),
             NSAttributedStringKey.paragraphStyle: paragraphStyle
             ])
-        let subtitle = "\(tag.count) recent posts"
+        
+        var subtitle:String
+        if tag.count == 1 {
+            subtitle = "1 recent post"
+        } else {
+            subtitle = "\(tag.count) recent posts"
+        }
+        
         subtitleNode.attributedText = NSAttributedString(string: subtitle, attributes: [
             NSAttributedStringKey.foregroundColor: UIColor.white,
             NSAttributedStringKey.font: Fonts.medium(ofSize: 11.5),
@@ -226,7 +233,7 @@ class TrendingCellNode:ASCellNode {
     }
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         pastelNode.style.width = ASDimension(unit: .points, value: 130)
-        pastelNode.style.height = ASDimension(unit: .points, value: 190)
+        pastelNode.style.height = ASDimension(unit: .points, value: 180)
         let centerText = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: textNode)
         let imageOverlay = ASOverlayLayoutSpec(child: pastelNode, overlay: imageNode)
         let textOverlay = ASOverlayLayoutSpec(child: imageOverlay, overlay: centerText)

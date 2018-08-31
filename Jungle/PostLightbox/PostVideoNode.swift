@@ -69,7 +69,7 @@ class PostContentNode:ASDisplayNode {
         
         
         
-        timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNowWithAgo() , attributes: [
+        timeNode.attributedText = NSAttributedString(string: "1h ago" , attributes: [
             NSAttributedStringKey.font: Fonts.regular(ofSize: 15.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
@@ -158,7 +158,6 @@ class PostContentNode:ASDisplayNode {
         imageNode.isHidden = true
         UploadService.retrieveVideo(withKey: post.key) { vidURL, fromFile in
             if let url = vidURL {
-                print("WE GOT THE VIDEO DATA")
                 DispatchQueue.main.async {
                     
                     self.videoNode.shouldAutoplay = true
@@ -171,8 +170,6 @@ class PostContentNode:ASDisplayNode {
                     self.videoNode.gravity = AVLayerVideoGravity.resizeAspectFill.rawValue
                 }
                 
-            } else{
-                print("NO VIDEO DATA")
             }
         }
     }
@@ -186,7 +183,6 @@ class PostContentNode:ASDisplayNode {
         spinnerNode.isHidden = false
         
         UploadService.retrieveImage(withKey: post.key) { image, _ in
-            print("WE GOT DA IMAGE: \(image)")
             self.imageNode.image = image
         }
     }
@@ -199,9 +195,9 @@ class PostContentNode:ASDisplayNode {
         
         let gradient = CAGradientLayer()
         gradient.frame = UIScreen.main.bounds
-        gradient.colors = [UIColor.clear.cgColor, UIColor(white: 0.0, alpha: 0.25).cgColor]
+        gradient.colors = [UIColor.clear.cgColor, UIColor(white: 0.0, alpha: 0.35).cgColor]
         gradient.locations = [0.0, 1.0]
-        gradient.startPoint = CGPoint(x: 0.0, y: 0.5)
+        gradient.startPoint = CGPoint(x: 0.0, y: 0.4)
         gradient.endPoint = CGPoint(x: 0.0, y: 1.0)
         gradientNode.view.layer.addSublayer(gradient)
         gradientNode.isUserInteractionEnabled = false

@@ -13,6 +13,9 @@ import Photos
 import Speech
 import CoreLocation
 
+
+var demoPic:UIImage?
+
 enum CameraState {
     case initiating, running, recording, editing, stickers, writing
 }
@@ -59,8 +62,8 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             endLoopVideo()
             hudView.runningState()
             captureView.isHidden = false
-            photoPreviewView.isHidden = true
-            photoPreviewView.image = nil
+            photoPreviewView.isHidden = false
+            //photoPreviewView.image = nil
             videoURL = nil
             break
         case .recording:
@@ -107,9 +110,10 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        demoPic = UIImage(named:"cooldude-pixel")!
         view.backgroundColor = UIColor.black
         captureView = FilterCamView(frame: view.bounds)
+        captureView.handleEndRecording = stopRecording
         view.addSubview(captureView)
         
         captureView.translatesAutoresizingMaskIntoConstraints = false
@@ -126,7 +130,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         previewView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         previewView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
-        photoPreviewView = UIImageView(image:nil)
+        photoPreviewView = UIImageView(image:demoPic)
         view.addSubview(photoPreviewView)
         photoPreviewView.translatesAutoresizingMaskIntoConstraints = false
         photoPreviewView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
@@ -135,15 +139,14 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         photoPreviewView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         photoPreviewView.backgroundColor = UIColor.clear
         photoPreviewView.isUserInteractionEnabled = false
+        photoPreviewView.contentMode = .scaleAspectFill
         
         hudView = CameraHUDView(frame: view.bounds)
         transition(toState: .running)
         view.addSubview(hudView)
-        //hudView.isHidden = true
-        
-        //let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleRecordPress))
+
         let recordTap = UITapGestureRecognizer(target: self, action: #selector(handleRecordTap))
-        //longPress.minimumPressDuration = 0.0
+        
         hudView.recordButton.isUserInteractionEnabled = true
         hudView.recordButton.addGestureRecognizer(recordTap)
         hudView.isUserInteractionEnabled = true
@@ -156,6 +159,11 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         hudView.delegate = self
         let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch))
         hudView.addGestureRecognizer(pinchGesture)
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleSwitchCamera))
+        tap.numberOfTapsRequired = 2
+        hudView.addGestureRecognizer(tap)
+        
         hudView.isUserInteractionEnabled = true
         
     }
@@ -188,6 +196,20 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         regionUpdated()
 
         NotificationCenter.default.addObserver(self, selector: #selector(regionUpdated), name: GPSService.regionUpdatedNotification, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(willResignActive), name: Notification.Name.UIApplicationWillResignActive, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: Notification.Name.UIApplicationWillEnterForeground, object: nil)
+    }
+    
+    @objc func willEnterForeground() {
+        if state == .editing, videoURL != nil {
+            videoPlayer.play()
+        }
+    }
+    
+    @objc func willResignActive() {
+        stopRecording()
     }
     
     @objc func regionUpdated() {
@@ -208,6 +230,9 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         hudView.observeKeyboard(false)
         
         NotificationCenter.default.removeObserver(self, name: GPSService.regionUpdatedNotification, object: nil)
+        
+        NotificationCenter.default.removeObserver(self, name: Notification.Name.UIApplicationWillResignActive, object: nil)
+         NotificationCenter.default.removeObserver(self, name: Notification.Name.UIApplicationWillEnterForeground, object: nil)
     }
     
     
@@ -246,7 +271,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         }
     }
     
-    func handleSwitchCamera() {
+    @objc func handleSwitchCamera() {
         captureView.switchCamera()
         hudView.flashButton.isHidden = !captureView.isBackCameraActive
     }
@@ -306,16 +331,32 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             }
         } else if let image = photoPreviewView.image {
             
+            var newImage = image
+            if hudView.stickersOverlay.subviews.count > 0,
+                let overlayImage = hudView.stickersOverlay.snapshot(of: hudView.stickersOverlay.bounds, _isOpaque: false)?.image {
+                let size = view.bounds.size
+                UIGraphicsBeginImageContext(size)
+                
+                let areaSize = view.bounds
+                image.draw(in: areaSize)
+                
+                overlayImage.draw(in: areaSize, blendMode: .normal, alpha: 1.0)
+                
+                newImage = UIGraphicsGetImageFromCurrentImageContext()!
+                UIGraphicsEndImageContext()
+            }
+            
+            
             UploadService.getNewPostID { postID in
                 if let postID = postID {
                     UploadService.uploadPost(postID: postID,
                                              text: self.hudView.textView.text,
-                                             image: image,
+                                             image: newImage,
                                              videoURL: nil,
                                              gif: nil,
                                              region:self.region,
                                              location: self.location)
-                    
+
                     let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
                     self.dismiss(animated: true, completion: nil)
                 } else {
@@ -395,13 +436,10 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         let asset = AVAsset(url: videoURL)
         asset.loadValuesAsynchronously(forKeys: ["playable", "tracks"]) {
             DispatchQueue.main.async {
-                
             
             let videoTracks =  asset.tracks(withMediaType: AVMediaType.video)
-            //print("TRACK!: \(track)")
+
             let audioTracks = asset.tracks(withMediaType: .audio)
-            print("VIDEO TRACKS: \(videoTracks)")
-            print("AUDIO TRACKS: \(audioTracks)")
             let videoTrack:AVAssetTrack = videoTracks[0] as AVAssetTrack
             
             let view = self.view!
@@ -433,7 +471,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             
             for i in 0..<hudView.stickersOverlay.subviews.count {
                 let s = hudView.stickersOverlay.subviews[i] as! StickerView
-                //let sFrame = s.frame
+                
                 let imageView = s.imageNode!
                 let watermarkImage = imageView.image!
                 
@@ -449,7 +487,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
                 watermarklayer.contents = watermark
                 
                 let screenSize = UIScreen.main.bounds.size
-                print("RXC - ss:\(screenSize) | vs: \(size)")
+                
                 let m:CGFloat = size.height / screenSize.height
                 let y = view.bounds.height - sFrame.origin.y - sFrame.height
                 watermarklayer.frame = CGRect(x: sFrame.origin.x * m,
@@ -515,8 +553,6 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
                 case .completed:
                     print("success")
                     return completion(movieUrl)
-                    
-                break
                 case .cancelled:
                     print("cancelled")
                     break
@@ -541,17 +577,15 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     }
     
     func getCurrentImage() -> CIImage? {
+        if demoPic != nil {
+            return CIImage(image:demoPic!)
+        }
         return captureView.currentImage
     }
     
     func setCameraEffect(_ effect:String?, _ intensity:Float?) {
         captureView.effectName = effect
         captureView.intensity = intensity
-    }
-    
-    @objc func handleCaptionBack() {
-        let controller = ConfigurePostViewController()
-        self.navigationController?.pushViewController(controller, animated: true)
     }
     
     var videoURL:URL?
@@ -563,42 +597,46 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
                 transition(toState: .recording)
                 break
             case .photo:
-                captureView.capturePhoto { image in
-                    self.photoPreviewView.image = image
+                if demoPic != nil {
+                    self.photoPreviewView.image = demoPic
                     self.transition(toState: .editing)
+                } else {
+                    captureView.capturePhoto { image in
+                        self.photoPreviewView.image = image
+                        self.transition(toState: .editing)
+                    }
                 }
+                
                 break
             case .text:
                 break
             }
             break
         case .recording:
-            
-            self.captureView.stopRecording() { _url in
-                guard let url = _url else { return }
-                self.videoURL = url
-                self.videoPlayer.replaceCurrentItem(with: AVPlayerItem(url: url))
-                self.playerLayer = AVPlayerLayer(player: self.videoPlayer)
-                self.playerLayer!.frame = self.view.bounds
-                self.previewView.layer.insertSublayer(self.playerLayer!, at: 0)
-                self.playerLayer!.player?.actionAtItemEnd = .none
-                self.loopVideo()
-                self.transition(toState: .editing)
-            }
+            stopRecording()
             break
         default:
             break
+        }
+    }
+    
+    @objc func stopRecording() {
+        self.captureView.stopRecording() { _url in
+            guard let url = _url else { return }
+            self.videoURL = url
+            self.videoPlayer.replaceCurrentItem(with: AVPlayerItem(url: url))
+            self.playerLayer = AVPlayerLayer(player: self.videoPlayer)
+            self.playerLayer!.frame = self.view.bounds
+            self.previewView.layer.insertSublayer(self.playerLayer!, at: 0)
+            self.playerLayer!.player?.actionAtItemEnd = .none
+            self.loopVideo()
+            self.transition(toState: .editing)
         }
     }
 
     func recordVideo() {
         hudView.recordButton.startRecording()
     }
-    
-    func stopRecordingVideo() {
-        //self.state = .endRecording
-    }
-    
     
     func loopVideo() {
         NotificationCenter.default.addObserver(forName: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil, queue: nil) { notification in
@@ -611,60 +649,4 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         NotificationCenter.default.removeObserver(NSNotification.Name.AVPlayerItemDidPlayToEndTime, name: nil, object: nil)
     }
 }
-//
-//
-//func transcribeRecording(completion: @escaping ((_ transcription:String?)->())) {
-//    //guard let videoURL = videoURL else { return }
-//    
-//    
-//    let audioEngine = AVAudioEngine()
-//    let speechRecognizer = SFSpeechRecognizer()
-//    let request = SFSpeechAudioBufferRecognitionRequest()
-//    var recognitionTask:SFSpeechRecognitionTask?
-//    
-//    
-//    let asset = AVAsset(url: videoURL)
-//    asset.loadValuesAsynchronously(forKeys: ["playable", "tracks"]) {
-//        DispatchQueue.main.async {
-//            
-//            let fileManager = FileManager.default
-//            let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-//            let filePath = documentDirectory.appendingPathComponent("output_audio.m4a")
-//            
-//            do {
-//                try fileManager.removeItem(at: filePath)
-//            } catch {
-//                print("UHUH")
-//            }
-//            asset.writeAudioTrackToURL(filePath) { completed, error in
-//                guard completed, error == nil else { return }
-//                
-//                SFSpeechRecognizer.requestAuthorization { authStatus in
-//                    if (authStatus == .authorized) {
-//                        // Get the party started and watch for results in the completion block.
-//                        // It gets fired every time a new word (aka transcription) gets detected.
-//                        let request = SFSpeechURLRecognitionRequest(url: filePath)
-//                        
-//                        speechRecognizer?.recognitionTask(with: request, resultHandler: { (result, error) in
-//                            
-//                            if let result = result {
-//                                var transcription:String?
-//                                if result.isFinal {
-//                                    transcription = result.bestTranscription.formattedString
-//                                }
-//                                completion(transcription)
-//                            } else {
-//                                print("ERROR: \(error?.localizedDescription)")
-//                            }
-//                            
-//                        })
-//                    } else {
-//                        print("Error: Speech-API not authorized!");
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    
-//    
-//}
+

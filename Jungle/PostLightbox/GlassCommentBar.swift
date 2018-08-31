@@ -156,7 +156,6 @@ class GlassCommentBar:UIView, UITextViewDelegate {
         textView.text = ""
         textViewDidChange(textView)
         self.sendButton.backgroundColor = hexColor(from: "BEBEBE")
-        //placeHolderTextView.isHidden = false
     }
     
     func textViewDidChange(_ textView: UITextView) {
@@ -175,8 +174,6 @@ class GlassCommentBar:UIView, UITextViewDelegate {
                 self.sendButton.backgroundColor = hexColor(from: "BEBEBE")
             })
         }
-        //delegate?.commentTextDidChange(height: height)
-        //placeHolderTextView.isHidden = textView.text != ""
     }
     
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {

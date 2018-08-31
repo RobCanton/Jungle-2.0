@@ -9,11 +9,10 @@
 import Foundation
 import UIKit
 import SwiftMessages
-import Alamofire
 import Pulley
 import Firebase
 import UserNotifications
-import Smile
+import Crashlytics
 
 protocol UploadProgressDelegate {
     func uploadedDidComplete()
@@ -38,12 +37,16 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
     
     var progressView:ACRCircleView!
     
+    var notificationsRef:DatabaseReference?
+    var notificationsCountHandle:UInt?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         mainProtocol = self
         
         tabBar.barTintColor = currentTheme.tabBarColor
-        let pHeight = tabBar.bounds.height * 0.80
+        let gapHeight = tabBar.bounds.height * 0.10
+        let pHeight = tabBar.bounds.height - gapHeight * 2
         postButtonContainer = UIView(frame: CGRect(x: 0, y: 0, width: pHeight, height: pHeight))
         
         tabBar.addSubview(postButtonContainer)
@@ -52,7 +55,7 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         //postButtonContainer.backgroundColor = accentColor
         postButtonContainer.translatesAutoresizingMaskIntoConstraints = false
         postButtonContainer.centerXAnchor.constraint(equalTo: tabBar.centerXAnchor).isActive = true
-        postButtonContainer.centerYAnchor.constraint(equalTo: tabBar.centerYAnchor).isActive = true
+        postButtonContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -gapHeight).isActive = true
         postButtonWidth = postButtonContainer.widthAnchor.constraint(equalToConstant: pHeight)
         postButtonWidth.isActive = true
         postButtonHeight = postButtonContainer.heightAnchor.constraint(equalToConstant:  pHeight)
@@ -69,16 +72,14 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         postButton.addTarget(self, action: #selector(openNewPostVC), for: .touchUpInside)
         postButtonContainer.addSubview(postButton)
         
-        
-        
         progressView = ACRCircleView(frame: postButtonContainer.bounds)
         progressView.baseColor = UIColor.clear
         progressView.tintColor = UIColor.white
         progressView.strokeWidth = 10
         progressView.transform = CGAffineTransform(scaleX: -1, y: 1)
         postButtonContainer.addSubview(progressView)
-        // Full circle "pie chart" style.
-         progressView.strokeWidth = progressView.bounds.width / 2
+        
+        progressView.strokeWidth = progressView.bounds.width / 2
         progressView.progress = 0.25
         progressView.alpha = 0.75
         progressView.isUserInteractionEnabled = false
@@ -101,10 +102,6 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         super.viewWillAppear(animated)
         observeNotificationsCount()
         
-        //let list = Smile.list()
-        
-        //let cat = Smile.emojiCategories
-        //print("EMOJI LIST: \(cat)")
         tabBar.items?[4].isEnabled = true
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
@@ -115,20 +112,27 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
                 self.updatePostTimer()
             }
         })
+        
     }
     
-    var notificationsCountHandle:UInt?
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if let handle = notificationsCountHandle {
+            notificationsRef?.removeObserver(withHandle: handle)
+        }
+    }
+    
     func observeNotificationsCount() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        let notificationsRef = database.child("users/notifications/\(uid)").queryOrdered(byChild: "seen").queryEqual(toValue: false)
+        notificationsRef = database.child("users/notifications/\(uid)")
         
         if let handle = notificationsCountHandle {
-            notificationsRef.removeObserver(withHandle: handle)
+            notificationsRef?.removeObserver(withHandle: handle)
         }
         
-        notificationsCountHandle = notificationsRef.observe(.value, with: { snapshot in
-            print("UNSEEN: \(snapshot.childrenCount)")
+        let query = notificationsRef?.queryOrdered(byChild: "seen").queryEqual(toValue: false)
+        notificationsCountHandle = query?.observe(.value, with: { snapshot in
             let count = snapshot.childrenCount
             let tabItems = self.tabBar.items!
             tabItems[3].badgeColor = tagColor
@@ -181,16 +185,12 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
         super.viewDidAppear(animated)
         uploadedDidComplete()
         NotificationService.authorizationStatus { _s in
-            print("RECENTLY POSTED: \(UserService.recentlyPosted)")
             switch _s {
             case .authorized:
-                print("AUTHORIZED")
                 break
             case .denied:
-                print("DENIED")
                 break
             case .notDetermined:
-                print("NOT DETERMINED MAN")
                 if UserService.currentUserSettings.pushNotifications {
                     NotificationService.showRequestAlert(self.messageWrapper)
                 } else if UserService.recentlyPosted, !UserService.currentUserSettings.pushNotifications {
@@ -213,9 +213,6 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
     
     
     func openLoginView() {
-//        let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
-//        blurView.frame = view.bounds
-//        view.addSubview(blurView)
         let controller = EmailViewController()
         self.present(controller, animated: true, completion: nil)
     }

@@ -94,11 +94,6 @@ class UserService {
         })
     }
     
-    static var isSignedIn:Bool {
-        guard let user = Auth.auth().currentUser else { return false }
-        return !user.isAnonymous
-    }
-    
     fileprivate  static func readAnonImageFromFile(withName name:String) -> UIImage? {
         let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let dataPath = documentsDirectory.appendingPathComponent("anon_icons/\(name).png")
@@ -111,7 +106,6 @@ class UserService {
         if let pngData = UIImagePNGRepresentation(image) {
             do {
                 try pngData.write(to: dataPath, options: [.atomic])
-                print("ICON WRITTEN TO DISK: \(name)")
             } catch {
                 print("Error writing to disk")
             }

@@ -10,17 +10,4 @@ import Foundation
 import UIKit
 import Firebase
 
-class InitialViewController:UIViewController {
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-//        Auth.auth().signInAnonymously() { (user, error) in
-//            if user != nil && error == nil {
-//                self.performSegue(withIdentifier: "toMain", sender: self)
-//            }
-//        }
-//
-//        //try! Auth.auth().signOut()
-    }
-}
+class InitialViewController:UIViewController {}

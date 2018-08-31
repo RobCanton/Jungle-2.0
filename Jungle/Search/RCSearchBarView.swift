@@ -102,25 +102,17 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         clearButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         clearButton.addTarget(self, action: #selector(handleClearButton), for: .touchUpInside)
     }
-    
-    
-    var gradient:CAGradientLayer?
-    
-    func addGradient() {
-        //gradient?.frame = self.bounds
-    }
-    
+
     @objc func beginEditing() {
         
         if !textField.isFirstResponder {
-            print("BECOME FIRST RESPONDER")
             textField.becomeFirstResponder()
         }
     }
     
     var defaultTextLeadingConstant:CGFloat = 0.0
     
-    func setup(withDelegate delegate:RCSearchBarDelegate) {
+    func setup(withDelegate delegate:RCSearchBarDelegate?=nil) {
         self.delegate = delegate
         textBubble.layer.cornerRadius = 4
         textBubble.clipsToBounds = true
@@ -142,6 +134,7 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         defaultTextLeadingConstant = leadingConstant
         textFieldLeadingAnchor.constant = defaultTextLeadingConstant
         textField.text = ""
+        self.layoutIfNeeded()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -164,7 +157,6 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
     
     func textFieldDidBeginEditing(_ textField: UITextField) {
         delegate?.searchDidBegin()
-        print("textFieldDidBeginEditing")
         UIView.animate(withDuration: 0.25, delay: 0.0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.2, options: .curveEaseOut, animations: {
             self.containerLeadingAnchor.constant = 12.0
             self.containerTrailingAnchor.constant = -80.0

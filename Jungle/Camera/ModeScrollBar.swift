@@ -76,7 +76,7 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
     }
     
     func setProgress(_ progress:CGFloat, index:Int) {
-        print("PROGRESS: \(progress) INDEX: \(index)")
+        
         if index == 0 {
             titleLeadingAnchor.constant = anchorZeroVal - title1.bounds.width * progress
             title1.alpha = (1 - progress) * 0.6 + 0.4
@@ -94,7 +94,7 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
     }
     
     @objc func handleTab(_ sender:UIButton) {
-        print("oiuiouoiuioi")
+        
         switch sender {
         case title1:
             delegate?.tabScrollTo(index: 0)

@@ -52,7 +52,7 @@ class SearchService {
             "offset": offset,
             "searchType": type.rawValue
             ] as [String:Any]
-        print("QUERY PARAMS: \(params)")
+        
         functions.httpsCallable("searchPosts").call(params) { result, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
@@ -65,7 +65,7 @@ class SearchService {
                         posts.append(post)
                     }
                 }
-                print("Results: \(posts)")
+                
                 return completion(posts)
             }
         }
@@ -93,7 +93,7 @@ class SearchService {
                             posts.append(post)
                         }
                     }
-                    print("Results: \(posts)")
+                    
                     return completion(posts)
                 }
             }
@@ -230,7 +230,7 @@ class SearchService {
                         posts.append(post)
                     }
                 }
-                print("POSTS: \(posts)")
+                
                 return completion(posts)
             }
         }

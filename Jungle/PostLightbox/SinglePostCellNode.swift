@@ -150,7 +150,7 @@ class ContentOverlayNode:ASControlNode {
         
         actionsRow = SinglePostActionsView(frame: .zero)
         actionsRow.delegate = delegate
-        actionsRow.isUserInteractionEnabled = UserService.isSignedIn
+        actionsRow.isUserInteractionEnabled = true
         view.addSubview(actionsRow)
         usernameNode.view.applyShadow(radius: 4.0, opacity: 0.1, offset: .zero, color: UIColor.black, shouldRasterize: false)
         actionsRow.translatesAutoresizingMaskIntoConstraints = false
@@ -229,7 +229,6 @@ protocol SinglePostDelegate:class {
     func openComments(_ post:Post,_ showKeyboard:Bool)
     func searchLocation(_ locationStr:String)
     func openTag(_ tag:String)
-    func openLogin()
     func postOpen(profile:Profile)
 }
 
@@ -263,7 +262,6 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
         backgroundColor = UIColor.clear
         contentNode = PostContentNode(post: post)
         contentNode.textNode.tapHandler = { type, value in
-            print("TAPPED IT: \(value)")
             switch type {
             case .hashtag:
                 self.delegate?.openTag(value)
@@ -300,24 +298,18 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
     
     @objc func handleOverlayTap() {
         guard let post = self.post else { return }
-        if !UserService.isSignedIn {
-            delegate?.openLogin()
-            return
-        }
         if post.blockedMessage == nil || temporaryUnblock {
             delegate?.openComments(post, false)
         }
     }
     
     @objc func handleUnblock() {
-        guard let post = self.post else { return }
         temporaryUnblock = true
         contentNode.temporaryUnblock()
         contentOverlay.temporaryUnblock()
     }
     
     func handleLikeButton() {
-        print("liked!")
         guard let post = self.post else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
@@ -337,7 +329,6 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
     }
     
     func handleCommentButton() {
-        print("openComments!")
         guard let post = self.post else { return }
         delegate?.openComments(post, true)
     }

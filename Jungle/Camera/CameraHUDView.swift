@@ -98,8 +98,6 @@ class CameraHUDView:UIView {
         
         textMax = frame.height * 0.4
         
-        
-        
         stickersOverlay = UIView()
         addSubview(stickersOverlay)
         stickersOverlay.translatesAutoresizingMaskIntoConstraints = false
@@ -126,13 +124,6 @@ class CameraHUDView:UIView {
         // Custom Duration
         textOnlyBG.animationDuration = 12
         
-        // Custom Color
-        //hexColor(from: "42E695"), hexColor(from: "3BB2B8")
-        //hexColor(from: "5B247A"), hexColor(from: "1BCEDF")
-        
-        //[hexColor(from: "574BCD"),
-        //hexColor(from: "2999AD"),
-        //hexColor(from: "41E975")
         textOnlyBG.setColors([hexColor(from: "#007F4A"),
                               hexColor(from: "#00594C")])
         
@@ -627,6 +618,8 @@ class CameraHUDView:UIView {
         stickerButton.isHidden = false
         stickersOverlay.isHidden = false
         stickersOverlay.isUserInteractionEnabled = true
+        
+        stickersView.setupStickers()
         closeButton.setStyle(.close, animated: true)
         
         recordButton.isHidden = true
@@ -696,7 +689,6 @@ class CameraHUDView:UIView {
     }
     
     @objc func addSticker(_ sticker:UIImage) {
-        print("ADD IT!")
         delegate?.handleClose()
         let dimensions = sticker.size
         let ratio = dimensions.height / dimensions.width
@@ -732,8 +724,6 @@ class CameraHUDView:UIView {
 
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0.25, options: .curveEaseOut, animations: {
             self.postButton.setTitleColor(UIColor.clear, for: .normal)
-            //self.postButton.setTitle("Posting", for: .normal)
-            //self.postButton.backgroundColor = UIColor.gray
             self.activityIndicator.alpha = 1.0
             self.layoutIfNeeded()
         }, completion: nil)
@@ -863,7 +853,6 @@ extension CameraHUDView:UITextViewDelegate {
         textView.isUserInteractionEnabled = true
         if height != currentTextHeight {
             currentTextHeight = height
-            print("CURRENT: \(currentTextHeight) | MAX: \(textMax)")
             if currentTextHeight > textMax {
                 textViewHeightAnchor.constant = textMax
                 textView.isScrollEnabled = true
@@ -875,8 +864,6 @@ extension CameraHUDView:UITextViewDelegate {
             }
             self.layoutIfNeeded()
         }
-//
-////        textViewHeightAnchor.constant = min(300, textView.contentSize.height + textView.textContainerInset.top)
         
     }
     
@@ -917,7 +904,6 @@ extension CameraHUDView: UIScrollViewDelegate {
             postButton?.alpha = progress
             delegate?.switchCameraMode(progress > 0.5 ? .text : .video)
         }
-        //delegate?.switchCameraMode(progress > 0.5 ? .photo : .video)
     }
     
     func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {

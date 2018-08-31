@@ -54,6 +54,7 @@ class MyProfileViewController:UserProfileViewController {
             }
             profile = _profile
         }
+        headerView.titleView.leftButton.isHidden = profile == nil
         super.viewWillAppear(animated)
     }
     
@@ -132,6 +133,37 @@ class MyProfileViewController:UserProfileViewController {
                 self.headerView.titleView.leftButton.isHidden = false
             }
         }
+    }
+    
+    override func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
+        
+        let cellNode = ASCellNode()
+        
+        cellNode.frame = pagerNode.bounds
+        cellNode.backgroundColor = hexColor(from: "#EFEFEF")
+        var controller:PostsTableViewController!
+        switch index {
+        case 0:
+            controller = MyPostsTableViewController()
+            break
+        case 1:
+            controller = MyCommentsTableViewController()
+            break
+        default:
+            break
+        }
+        controller.willMove(toParentViewController: self)
+        self.addChildViewController(controller)
+        controller.view.frame = cellNode.bounds
+        cellNode.addSubnode(controller.node)
+        let layoutGuide = cellNode.view.safeAreaLayoutGuide
+        controller.view.translatesAutoresizingMaskIntoConstraints = false
+        controller.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
+        controller.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
+        controller.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
+        controller.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
+        
+        return cellNode
     }
 }
 

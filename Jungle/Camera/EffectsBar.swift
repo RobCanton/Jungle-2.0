@@ -32,7 +32,7 @@ class EffectsBar:UIView, UICollectionViewDelegate, UICollectionViewDataSource {
         //("CIBloom", true),
         //("CIGloom", true),
         ("CIVignetteEffect", true),
-        ("CIColorPosterize", true),
+        ("CIColorPosterize", false),
         ("CIComicEffect", false),
         ("CIColorInvert", false)
     ]
@@ -118,7 +118,6 @@ class EffectsBar:UIView, UICollectionViewDelegate, UICollectionViewDataSource {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: {
                 for index in selectedIndexes {
                     self.collectionView.selectItem(at: index, animated: true, scrollPosition: .top)
-//                    let cell = self.collectionView.cellForItem(at: index) as! EffectCollectionViewCell
                     
                 }
             })
@@ -152,17 +151,11 @@ class EffectsBar:UIView, UICollectionViewDelegate, UICollectionViewDataSource {
         let effect = effects[indexPath.row]
         selectedEffect = effect.0
         
-        delegate?.setEffect(effect.0, 0.333)
+        delegate?.setEffect(effect.0, 0.5)
         
         if effect.1 {
             slider.reset()
             self.setBarPosition(.open, animated: true)
-//            self.collectionView.alpha = 0.0
-//            UIView.animate(withDuration: 0.1, animations: {
-//                self.sliderBox.alpha = 1.0
-//            }, completion: { _ in
-//
-//            })
         } else {
            self.setBarPosition(.open_partial, animated: true)
         }
@@ -183,12 +176,10 @@ class EffectsBar:UIView, UICollectionViewDelegate, UICollectionViewDataSource {
     
     @objc func sliderChanged() {
         let progress = slider.progress
-        print("PROGRESS: \(progress)")
         delegate?.setEffect(selectedEffect, progress)
     }
     
     @objc func handleCancel() {
-        print("HANDLE CANCEL!")
         selectedEffect = nil
         delegate?.setEffect(nil, nil)
         selectedEffect = nil
@@ -228,8 +219,6 @@ class EffectsBar:UIView, UICollectionViewDelegate, UICollectionViewDataSource {
         
         if animated {
             DispatchQueue.main.async {
-                print("ANIMATE IT!")
-                
                 let c1 = CGPoint(x: 0.23, y: 1)
                 let c2 = CGPoint(x: 0.32, y: 1)
                 let animator = UIViewPropertyAnimator(duration: 0.65, controlPoint1: c1, controlPoint2: c2, animations: {
@@ -331,7 +320,6 @@ class EffectCollectionViewCell:UICollectionViewCell {
     
     override var isSelected: Bool {
         didSet {
-            print("DID SELECT: \(isSelected)")
             if isSelected {
                 self.iconView.isHidden = false
                 self.imageView.alpha = 0.5

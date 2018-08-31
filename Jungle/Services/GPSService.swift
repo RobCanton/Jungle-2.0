@@ -8,7 +8,6 @@
 
 import Foundation
 import CoreLocation
-import Alamofire
 import Firebase
 
 class GPSService: NSObject, CLLocationManagerDelegate {

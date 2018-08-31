@@ -23,7 +23,6 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     
     var initialIndex:Int?
     var context:ASBatchContext?
-    var shouldBatchFetch = true
     
     var pushTransitionManager = PushTransitionManager()
     
@@ -45,6 +44,7 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         pagerNode.setDelegate(self)
         pagerNode.setDataSource(self)
         pagerNode.isHidden = true
+        
         let pagerView = pagerNode.view
         contentView.addSubview(pagerView)
         pagerView.translatesAutoresizingMaskIntoConstraints = false
@@ -90,11 +90,11 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         let post = state.posts[pagerNode.currentPageIndex]
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        if post.isYou {
+        if post.isYourPost {
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
                 self.handleDismiss()
                 UploadService.deletePost(post) { success in
-                    print("Post deleted: \(success)")
+                    
                 }
             }))
         } else {
@@ -268,10 +268,6 @@ extension LightboxViewController : SinglePostDelegate {
         self.present(vc, animated: true, completion: nil)
     }
     
-    func openLogin() {
-        let loginVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "AuthViewController") as! AuthViewController
-        self.present(loginVC, animated: true, completion: nil)
-    }
 }
 
 extension LightboxViewController: PulleyPrimaryContentControllerDelegate {

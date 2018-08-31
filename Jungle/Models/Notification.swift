@@ -53,7 +53,6 @@ class JNotification {
             case NotificationType.postVotes.rawValue:
                 if let postID = data["postID"] as? String,
                     let newVotes = data["numLikes"] as? Int {
-                    print("Notification Type Likes")
                     return PostVotesNotification(id: id, type: .postVotes, timestamp: timestamp,
                                                  seen: seen, profile: profile, anon: anon, postID: postID, newVotes: newVotes)
                 }
@@ -64,13 +63,12 @@ class JNotification {
                     let replyID = data["replyID"] as? String {
                     let mention = data["mention"] as? Bool ?? false
                     let replyToID = data["replyTo"] as? String
-                    print("Notification Type Reply")
+
                     return PostReplyNotification(id: id, type: .postVotes, timestamp: timestamp,
                                                  seen: seen, profile: profile, anon: anon, postID: postID, replyID: replyID,
                                                  replyToID: replyToID, mention: mention)
                 }
             default:
-                print("Notification Type Unknown")
                 return nil
             }
             

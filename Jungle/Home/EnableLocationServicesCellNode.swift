@@ -66,7 +66,6 @@ class EnableLocationServicesCellNode:ASCellNode {
     }
     
     @objc func handleButton() {
-        print("handleButton")
         handleTap?()
     }
 }

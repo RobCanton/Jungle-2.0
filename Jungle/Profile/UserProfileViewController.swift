@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import MXParallaxHeader
+import Firebase
 
 class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, MXScrollViewDelegate {
     
@@ -58,12 +59,13 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
         super.viewDidLoad()
         
         view.backgroundColor = UIColor.white
+         let topInset = UIApplication.deviceInsets.top
         
-        headerView = UserProfileHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 210))
+        headerView = UserProfileHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 190 + topInset), topInset: topInset)
         scrollView.parallaxHeader.view = headerView
-        scrollView.parallaxHeader.height = 210
+        scrollView.parallaxHeader.height = 190 + topInset
         scrollView.parallaxHeader.mode = MXParallaxHeaderMode.fill
-        scrollView.parallaxHeader.minimumHeight = 70 + 32
+        scrollView.parallaxHeader.minimumHeight = 50 + 32 + topInset
         scrollView.delegate = self
         
         if scrollView.superview == nil {
@@ -72,7 +74,7 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
 
         pagerNode.view.frame = CGRect(x: 0, y: 0,
                                       width: view.bounds.width,
-                                      height: view.bounds.height - (70 + 32))
+                                      height: view.bounds.height - (50 + 32 + topInset))
         if pagerNode.view.superview == nil {
             scrollView.addSubview(pagerNode.view)
         }
@@ -86,7 +88,15 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
         view.isUserInteractionEnabled = true
         
         headerView.titleView.leftButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
+        
+        headerView.titleView.rightButton.addTarget(self, action: #selector(handleMore), for: .touchUpInside)
+        
         headerView.tabScrollView.delegate = self
+        
+        if let uid = Auth.auth().currentUser?.uid,
+            let profile = profile {
+            headerView.titleView.rightButton.isHidden = uid == profile.uid
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -128,7 +138,7 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
         let cellNode = ASCellNode()
         guard let profile = profile else { return cellNode}
         cellNode.frame = pagerNode.bounds
-        cellNode.backgroundColor = index % 2 == 0 ? UIColor.blue : UIColor.yellow
+        cellNode.backgroundColor = hexColor(from: "#EFEFEF")
         var controller:PostsTableViewController!
         switch index {
         case 0:
@@ -157,7 +167,7 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         if scrollView == self.scrollView {
-            var progress = scrollView.parallaxHeader.progress
+            let progress = scrollView.parallaxHeader.progress
             
             if progress.isNaN {
                 return
@@ -173,6 +183,47 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
         }
     }
 
+    @objc func handleMore() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let profile = self.profile else { return }
+        guard uid != profile.uid else { return }
+        
+        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { _ in
+            let reportAlert = UIAlertController(title: "Why are you reporting this user?", message: "", preferredStyle: .alert)
+            reportAlert.addTextField { (textField : UITextField!) -> Void in
+                textField.placeholder = ""
+            }
+            let saveAction = UIAlertAction(title: "Send", style: .default, handler: { action in
+                let textField = reportAlert.textFields![0] as UITextField
+                let text = textField.text
+                
+                let ref = database.child("users/reports/\(profile.uid)/\(uid)")
+                let report:[String:Any] = [
+                    "message": text ?? "",
+                    "timestamp": [".sv" : "timestamp"]
+                ]
+                
+                ref.setValue(report) { error, ref in
+                    if let _ = error {
+                        Alerts.showFailureAlert(withMessage: "Failed to send report.")
+                    } else {
+                        Alerts.showSuccessAlert(withMessage: "Report sent!")
+                    }
+                }
+            })
+            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+            
+            reportAlert.addAction(saveAction)
+            reportAlert.addAction(cancelAction)
+            
+            self.present(reportAlert, animated: true, completion: nil)
+            
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
 }
 
 extension UserProfileViewController: TabScrollDelegate {

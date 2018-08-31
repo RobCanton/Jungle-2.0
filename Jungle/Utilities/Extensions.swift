@@ -174,9 +174,10 @@ extension UIView {
         self.layer.shouldRasterize = shouldRasterize
     }
     
-    func snapshot(of rect: CGRect? = nil) -> UIImageView? {
+    func snapshot(of rect: CGRect? = nil, _isOpaque:Bool?=nil) -> UIImageView? {
+        let opaque = _isOpaque ?? isOpaque
         
-        UIGraphicsBeginImageContextWithOptions(bounds.size, isOpaque, 0)
+        UIGraphicsBeginImageContextWithOptions(bounds.size, opaque, 0)
         drawHierarchy(in: bounds, afterScreenUpdates: true)
         let wholeImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()

@@ -27,17 +27,6 @@ class NearbyHeaderCellNode:ASCellNode {
         super.init()
         automaticallyManagesSubnodes = true
         self.selectionStyle = .none
-//        locationButton.laysOutHorizontally = true
-//        locationButton.contentHorizontalAlignment = .left
-//        locationButton.setImage(UIImage(named:"Pin"), for: .normal)
-//        locationButton.setTitle("Markham, ON", with: Fonts.semiBold(ofSize: 14.0), with: tertiaryColor, for: .normal)
-//        locationButton.contentSpacing = 0.0
-//
-//        distanceButton.laysOutHorizontally = true
-//        distanceButton.contentHorizontalAlignment = .right
-//        distanceButton.setTitle("Close", with: Fonts.semiBold(ofSize: 14.0), with: tertiaryColor, for: .normal)
-        
-        
     }
     
     override func didLoad() {
@@ -93,12 +82,6 @@ class NearbyHeaderCellNode:ASCellNode {
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         sliderNode.style.height = ASDimension(unit: .points, value: 32.0)
         return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 4, 4, 4), child: sliderNode)
-//        let horizontalStack = ASStackLayoutSpec.horizontal()
-//        horizontalStack.alignContent = .spaceBetween
-//        horizontalStack.justifyContent = .spaceBetween
-//        horizontalStack.children = [locationButton, distanceButton]
-//
-//        return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(4, 4, 4, 16), child: horizontalStack)
     }
     
     @objc func distanceChanged(_ sender: TGPDiscreteSlider, event:UIEvent) {

@@ -43,11 +43,6 @@ let subtitleColor = hexColor(from: "708078")
 let bgColor = hexColor(from: "#eff0e9")
 let likeColor = UIColor(rgb: (255, 102, 102))
 
-var listeningDict = [String:Bool]() {
-    didSet {
-        print("NEWFOUNDLAND: \(listeningDict)")
-    }
-}
 
 var safeAreaInsets:UIEdgeInsets = .zero
 
@@ -66,7 +61,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override  for customization after application launch.
+        
         appProtocol = self
         
         Messaging.messaging().delegate = self
@@ -75,7 +70,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let settings = FirestoreSettings()
         settings.isPersistenceEnabled = false
         settings.areTimestampsInSnapshotsEnabled = true
-        // Enable offline data persistence
         
         createDirectory("captured")
         createDirectory("user_content")
@@ -98,20 +92,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         } else {
             self.showAuthScreen()
         }
-    
-//        GIFService.getTopTrendingGif { _gif in
-//            if let gif = _gif {
-//                let thumbnailDataTask = URLSession.shared.dataTask(with: gif.thumbnail_url) { data, _, _ in
-//                    DispatchQueue.main.async {
-//                        if let data = data {
-//                            GIFService.tendingGIFImage = UIImage.gif(data: data)
-//
-//                        }
-//                    }
-//                }
-//                thumbnailDataTask.resume()
-//            }
-//        }
         
         do {
             try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
@@ -132,7 +112,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
         
         authListener = Auth.auth().addStateDidChangeListener { (auth, user) in
-            print("AUTH STATE CHANGED!: \(auth)")
+            
             if let _ = user {
                 
             } else {
@@ -165,7 +145,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             
             if let data = result?.data as? [String:Any], error == nil,
                 let type = data["type"] as? String {
-                print("USER ACCOUNT DATA: \(data)")
+                
                 var locationServices = false
                 var pushNotifications = false
                 var safeContentMode = false
@@ -196,16 +176,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 var skipCreateProfile = false
                 if let profileData = data["profile"] as? [String:Any] {
                     skipCreateProfile = profileData["skipCreateProfile"] as? Bool ?? false
-                    if let uid = profileData["uid"] as? String,
-                        let username = profileData["username"] as? String {
-                        let gradient = profileData["gradient"] as? [String] ?? [String]()
-                        
-                        profile = Profile(uid: uid, username: username, gradient: gradient)
-                    }
+                    profile = Profile.parse(profileData)
                 }
                 
                 UserService.currentUserSettings = settings
                 UserService.currentUser = User(uid: uid, authType: type, profile: profile)
+                UserService.anonMode = profile == nil
                 UserService.timeout = timeout
                 
                 if profile != nil || skipCreateProfile {
@@ -222,11 +198,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
     
     func openProfileView() {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
         guard let rootVC = window?.rootViewController else { return }
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let controller = CreateProfileViewController()
-        
         
         if rootVC.childViewControllers.count == 0 {
             self.window?.rootViewController = controller
@@ -276,7 +249,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func registerForPushNotifications() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) {
             (granted, error) in
-            print("Permission granted: \(granted)")
             guard granted else { return }
             self.getNotificationSettings()
         }
@@ -284,7 +256,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     
     func getNotificationSettings() {
         UNUserNotificationCenter.current().getNotificationSettings { (settings) in
-            print("Notification settings: \(settings)")
             DispatchQueue.main.async {
                 guard settings.authorizationStatus == .authorized else { return }
                 UIApplication.shared.registerForRemoteNotifications()
@@ -372,7 +343,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     
     func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
         let handled = DynamicLinks.dynamicLinks().handleUniversalLink(userActivity.webpageURL!) { (dynamiclink, error) in
-            print("APPLICATION RESTORATION HANDLER")
+           
             guard let top = UIApplication.topViewController() else { return }
             guard let link = dynamiclink?.url?.absoluteString else { return }
             guard let email = UserDefaults.standard.string(forKey: "Email") else { return }
@@ -381,10 +352,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             hud.show(in: top.view, animated: true)
             
             if Auth.auth().isSignIn(withEmailLink: link) {
-                print("IS SIGIN IN LINK!!!")
+               
                 Auth.auth().signIn(withEmail: email, link: link) { auth, error in
-                    print("ERROR: \(error?.localizedDescription)")
-                    
                     if let _ = error {
                         hud.dismiss(animated: true)
                         let messageView: MessageView = MessageView.viewFromNib(layout: .centeredView)
@@ -429,49 +398,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
     
     func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
-        print("OPEN FROM URL: \(url)")
-        
         return true
     }
-
-    
-//    @available(iOS 9.0, *)
-//    func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any]) -> Bool {
-//        print("OPEN FROM URL: \(url)")
-//        return application(app, open: url,
-//                           sourceApplication: options[UIApplicationOpenURLOptionsKey.sourceApplication] as? String,
-//                           annotation: "")
-//    }
-//
-//    open
-//
-//    func application(_ application: UIApplication, open url: URL, sourceApplication: String?, annotation: Any) -> Bool {
-//        print("DYNAMIC URL :\(url)")
-//        if let dynamicLink = DynamicLinks.dynamicLinks().dynamicLink(fromCustomSchemeURL: url) {
-//            // Handle the deep link. For example, show the deep-linked content or
-//            // apply a promotional offer to the user's account.
-//            // ...
-//            print("DYNAMIC LINK: \(dynamicLink)")
-//            let error = MessageView.viewFromNib(layout: .cardView)
-//
-//            error.configureContent(title: "Link", body: "\(dynamicLink)", iconImage: Icon.errorLight.image)
-//            error.button?.removeFromSuperview()
-//            error.configureTheme(.error, iconStyle: .default)
-//            error.configureDropShadow()
-//            error.configureTheme(backgroundColor: tagColor, foregroundColor: .white)
-//            var config = SwiftMessages.Config.init()
-//
-//            config.duration = .seconds(seconds: 10.0)
-//            config.presentationStyle = .top
-//
-//            SwiftMessages.show(config: config, view: error)
-//            return true
-//        }
-//        return false
-//    }
-
-    
-
 }
 
 extension UIApplication {

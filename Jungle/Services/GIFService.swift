@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import Alamofire
+import UIKit
 
 class GIFService {
     static let API_ROOT = "https://api.tenor.com/v1/"

@@ -15,7 +15,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>3.1</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -31,7 +31,7 @@
 		<dict/>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>3</string>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
 	<key>LSRequiresIPhoneOS</key>
@@ -45,28 +45,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Needed to select a profile photo.</string>
 	<key>UIAppFonts</key>
-	<array>
-		<string>AzoSans-Light.otf</string>
-		<string>AzoSans-Bold.otf</string>
-		<string>AzoSans-Medium.otf</string>
-		<string>AzoSans-Regular.otf</string>
-		<string>BioSans-SemiBold.otf</string>
-		<string>BioSans-Regular.otf</string>
-		<string>BioSans-Light.otf</string>
-		<string>BentonSans-Regular.otf</string>
-		<string>BentonSans-Medium.otf</string>
-		<string>BentonSans-Bold.otf</string>
-		<string>BentonSans-Light.otf</string>
-		<string>Usual-Regular.otf</string>
-		<string>Usual-Bold.otf</string>
-		<string>Usual-Medium.otf</string>
-		<string>Usual-Light.otf</string>
-		<string>Montserrat-Bold.otf</string>
-		<string>Montserrat-SemiBold.otf</string>
-		<string>Montserrat-Regular.otf</string>
-		<string>Montserrat-Medium.otf</string>
-		<string>Montserrat-Light.otf</string>
-	</array>
+	<array/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

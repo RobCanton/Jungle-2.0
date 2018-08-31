@@ -119,11 +119,6 @@ class CaptionBar:UIView, ASCollectionDelegate, ASCollectionDataSource {
             handleTag?("#\(hashtags[indexPath.item].hastag)")
             tagCell.setActivated()
         }
-
-        //let tag = hashtags[indexPath.row]
-        //handleTag?("#\(tag.hastag)")
-//        hashtags.remove(at: indexPath.row)
-//        collectionNode.deleteItems(at: [indexPath])
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, didHighlightItemAt indexPath: IndexPath) {

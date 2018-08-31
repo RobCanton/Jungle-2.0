@@ -10,14 +10,13 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import Firebase
-import Alamofire
 import Pulley
 
 enum PostsTableType {
     case newest, popular, nearby
 }
 
-class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonDelegate {
+class PostsTableViewController: ASViewController<ASDisplayNode> {
     
     var state = PostsStateController.State.empty
     
@@ -32,7 +31,7 @@ class PostsTableViewController: ASViewController<ASDisplayNode>, NewPostsButtonD
     var headerCell:ASCellNode {
         get {
             let cell = ASCellNode()
-            cell.style.height = ASDimension(unit: .points, value: 12.0)
+            cell.style.height = ASDimension(unit: .points, value: 0.0)
             cell.selectionStyle = .none
             return cell
         }
@@ -201,7 +200,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             return
         }
         let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
-        node?.postNode.setHighlighted(true)
+        node?.setHighlighted(true)
         
         let post = state.posts[indexPath.row]
         openSinglePost(post, index: indexPath.row)
@@ -234,17 +233,17 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     
     func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
-        node?.postNode.setHighlighted(false)
+        node?.setHighlighted(false)
     }
     
     func tableNode(_ tableNode: ASTableNode, didHighlightRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
-        node?.postNode.setHighlighted(true)
+        node?.setHighlighted(true)
     }
     
     func tableNode(_ tableNode: ASTableNode, didUnhighlightRowAt indexPath: IndexPath) {
         let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
-        node?.postNode.setHighlighted(false)
+        node?.setHighlighted(false)
     }
     
 }
@@ -280,24 +279,17 @@ extension PostsTableViewController: PostCellDelegate {
     func postOptions(_ post: Post) {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        if post.isYou {
+        if post.isYourPost {
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-                //self.newPostsListener?.remove()
                 UploadService.deletePost(post) { success in
-                    print("Post deleted: \(success)")
                     if success {
                         for i in 0..<self.state.posts.count {
                             let arrayPost = self.state.posts[i]
                             if arrayPost.key == post.key {
                                 let action = PostsStateController.Action.removePost(at: i)
                                 self.state = PostsStateController.handleAction(action, fromState: self.state)
-                                
-//                                if !self.state.isFirstLoad {
-//                                    self.listenForNewPosts()
-//                                }
                                 let indexPath = IndexPath(row: i, section: 1)
                                 
-                                //cell?.stopListeningToPost()
                                 self.tableNode.performBatchUpdates({
                                     self.tableNode.deleteRows(at: [indexPath], with: .top)
                                 }, completion: { _ in

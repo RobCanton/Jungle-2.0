@@ -67,7 +67,6 @@ class CaptionView:UIView {
         
         switch rec.state {
         case .began:
-            print("began")
             selectedView = self.hitTest(p, with: nil)
             if selectedView != nil {
                 self.bringSubview(toFront: selectedView!)
@@ -77,7 +76,6 @@ class CaptionView:UIView {
             if let subview = selectedView {
                 center = subview.center
                 let distance = sqrt(pow((center.x - p.x), 2.0) + pow((center.y - p.y), 2.0))
-                print("distance \(distance) threshold \(threshold)")
                 
                 if subview is UIImageView {
                     if distance > threshold {
@@ -92,12 +90,6 @@ class CaptionView:UIView {
             }
             
         case .ended:
-            print("ended")
-            if let subview = selectedView {
-                if subview is UIImageView {
-                    // do whatever
-                }
-            }
             selectedView = nil
             
         case .possible:

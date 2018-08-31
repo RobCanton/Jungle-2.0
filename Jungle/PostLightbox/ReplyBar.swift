@@ -57,7 +57,6 @@ class ReplyBar:UIView {
     
     func setReply(_ reply:Post?) {
         if let reply = reply {
-            //replyTopAnchor.constant = -32
             let prefix = "Replying to "
             let name = "@\(reply.anon.displayName)"
             let text = "\(prefix)\(name)"
@@ -75,7 +74,6 @@ class ReplyBar:UIView {
             
             
         } else {
-            //replyTopAnchor.constant = 0
             replyLabel.attributedText = nil
             
         }

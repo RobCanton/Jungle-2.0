@@ -65,8 +65,8 @@ class RecordButton:UIView {
         progressRing.outerRingColor = UIColor.clear
         progressRing.innerRingWidth = 5.0
         progressRing.innerCapStyle = .butt
-        let lightColor = hexColor(from: "a4e178")
-        let darkColor = hexColor(from: "82d993")
+        let lightColor = hexColor(from: "00CA65")
+        let darkColor = hexColor(from: "00937B")
         progressRing.gradientColors = [lightColor, darkColor]
         progressRing.gradientStartPosition = .top
         progressRing.gradientColorLocations = [0.0, 1.0]

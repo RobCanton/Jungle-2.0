@@ -39,9 +39,6 @@ class ASRoundShadowedImageNode:ASControlNode {
         self.clipsToBounds = false
         self.layer.masksToBounds = false
         applyShadow()
-        
-//        mainImageNode.addTarget(self, action: #selector(handleImageTap), forControlEvents: .touchUpInside)
-//        mainImageNode.isUserInteractionEnabled = true
     }
     
     

@@ -62,7 +62,7 @@ class NotificationService {
         if message != nil {
             msg = message!
         }
-        messageView.configureContent(title: "Recieve Push Notifications?", body: message, iconImage: nil, iconText: "🔔", buttonImage: nil, buttonTitle: "Enable Notifications") { _ in
+        messageView.configureContent(title: "Recieve Push Notifications?", body: msg, iconImage: nil, iconText: "🔔", buttonImage: nil, buttonTitle: "Enable Notifications") { _ in
             registerForPushNotifications()
             if let wrapper = messageWrapper {
                 wrapper.hide()
@@ -141,7 +141,6 @@ class NotificationObserver {
         if state.fetchingMore || state.endReached, !state.isFirstLoad { return }
         let oldState = self.state
         self.state = NotificationObserver.handleAction(.beginBatchFetch, fromState: oldState)
-        print("INITIAL FETCH!")
         fetchData { notifications, endReached in
             let oldState = self.state
             self.state = NotificationObserver.handleAction(.appendBatch(notifications: notifications), fromState: oldState)
@@ -164,11 +163,9 @@ class NotificationObserver {
             query = query.queryStarting(atValue: firstTimestamp)
         }
         query.observe(.childAdded, with: { snapshot in
-            print("NOTIFICATION ADDED")
             if let data = snapshot.value as? [String:Any],
                 let n = JNotification.parse(snapshot.key, data),
                 firstTimestamp != n.timestamp.timeIntervalSince1970 * 1000 {
-                print("WE GOT A NEW ONE: \(n.id)")
                 let oldState = self.state
                 self.state = NotificationObserver.handleAction(.insertNew(notification: n), fromState: oldState)
                 self.delegate?.newNotificationRecieved()
@@ -176,7 +173,6 @@ class NotificationObserver {
         })
         
         ref.observe(.childRemoved, with: { snapshot in
-            print("NOTIFICATION REMOVED: \(snapshot.value as? [String:Any])")
             
             if let data = snapshot.value as? [String:Any],
                 let n = JNotification.parse(snapshot.key, data) {
@@ -216,7 +212,6 @@ class NotificationObserver {
                 let childData = childSnapshot.value as? [String:Any],
                 let n = JNotification.parse(childSnapshot.key, childData),
                 lastID != n.timestamp.timeIntervalSince1970 * 1000{
-                    print("RXC N: \(n.timestamp.timeSinceNow())")
                     notifications.insert(n, at: 0)
                 }
             }

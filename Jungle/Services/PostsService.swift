@@ -8,7 +8,6 @@
 
 import Foundation
 import Firebase
-import Alamofire
 import MobileCoreServices
 import Photos
 import SwiftMessages
@@ -72,7 +71,7 @@ class PostsService {
                         posts.insert(post, at: 0)
                     }
                 }
-                print("Results: \(posts)")
+                
                 return completion(posts)
             }
             
@@ -95,7 +94,7 @@ class PostsService {
                 return completion([])
             } else if let data = result?.data as? [String:Any],
                 let results = data["results"] as? [[String:Any]]{
-                print("RECENT POSTS: \(results)")
+                
                 var posts = [Post]()
                 for data in results {
                     if let post = Post.parse(data: data) {
@@ -169,7 +168,7 @@ class PostsService {
         lexiconRef.getDocument { snapshot, error in
             var myAnonKey:String = ""
             if let error = error {
-                print("Error Getting Anon Key: \(error.localizedDescription)")
+                print("Error: \(error.localizedDescription)")
             } else if let dict = snapshot,
                 let key = dict["key"] as? String {
                 myAnonKey = key
@@ -236,7 +235,6 @@ class PostsService {
         }
         
         functions.httpsCallable("postReplies").call(params) { result, error in
-            print("RXC DID RETURN!")
             if let error = error {
                 print("Error: \(error.localizedDescription)")
                 return completion([])
@@ -253,34 +251,5 @@ class PostsService {
         }
     }
     
-    static func getSuggestedTags(forText text: String, completion: @escaping (_ tags:[String], _ trending:[String])->()) {
-        UploadService.userHTTPHeaders { uid, headers in
-            let parameters = [
-                "text": text
-            ] as [String:Any]
-            
-            
-            Alamofire.request("\(API_ENDPOINT)/tags/suggested", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
-                DispatchQueue.main.async {
-                    var tags = [String]()
-                    
-                    var trending = [String]()
-                    if let dict = response.result.value as? [String:Any],
-                    let results = dict["results"] as? [String:Any],
-                    let _tags = results["suggested"] as? [String:Bool],
-                    let _trending = results["trending"] as? [String] {
-                        for (t,_) in _tags{
-                            tags.append(t)
-                        }
-                        trending = _trending
-                    } else {
-                        print("Failed to get suggested tags")
-                    }
-                    
-                    return completion(tags, trending)
-                }
-            }
-        }
-    }
 
 }

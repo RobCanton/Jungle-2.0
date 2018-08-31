@@ -39,7 +39,7 @@ class CommentActionsRow: UIView {
         likeButton.fillColor = UIColor(rgb: (255, 102, 102))
         likeButton.image = WCLShineImage.custom(UIImage(named:"like")!)
         addSubview(likeButton)
-        //likeButton.addTarget(self, action: #selector(action), for: .valueChanged)
+        
         
         likeButton.translatesAutoresizingMaskIntoConstraints = false
         likeButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10).isActive = true

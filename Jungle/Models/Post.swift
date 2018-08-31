@@ -45,6 +45,16 @@ class Post {
     var topComment:Post?
     var vote = Vote.notvoted
     var isYou = false
+    var isYourPost:Bool {
+        
+        if let profile = profile,
+            let uid = Auth.auth().currentUser?.uid {
+            return profile.uid == uid
+        } else {
+            return isYou
+        }
+        
+    }
     var deleted = false
     var offenses:[String]
     var offensesStr:String {

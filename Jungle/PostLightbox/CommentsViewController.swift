@@ -349,18 +349,14 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
             self.didRecieveLexicon = true
             if let data = snapshot.value as? [String:Any] {
                 if let anon = Anon.parse(data) {
-                    print("WE GOT AN ANON!")
                     self.myAnon = anon
                 } else if let profile = Profile.parse(data) {
-                    print("WE GOT A PROFILE!")
                     self.myProfile = profile
                 }
-            } else {
-                print("WE GOT NO DATA!")
             }
             self.updateAnonSwitch()
         }, withCancel: { error in
-            print("WE GOT AN ERROR: \(error.localizedDescription)")
+            print("Error: \(error.localizedDescription)")
         })
     }
     
@@ -532,16 +528,12 @@ class CommentsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     
     func tableNode(_ tableNode: ASTableNode, willBeginBatchFetchWith context: ASBatchContext) {
         
-        //currentContext = context
-
-        print("RXC: willBeginBatchFetchWith - TOP")
         guard !topState.endReached else { return }
         DispatchQueue.main.async {
             let oldState = self.topState
             self.topState = CommentsViewController.handleAction(.beginBatchFetch, fromState: oldState)
             self.renderDiff(oldState)
         }
-        let ref = firestore.collection("posts").document(post.key).collection("comments").order(by: "createdAt", descending: false)
         
         CommentsViewController.fetchData(state: topState, post: post, lastPostID: topState.lastPostTimestamp) { replies, endReached in
             
@@ -659,7 +651,6 @@ extension CommentsViewController: KeyboardAccessoryProtocol {
     @objc func keyboardWillHide(notification:Notification) {
         self.commentBarBottomAnchor?.constant = -20
         keyboardHeight = nil
-        //self.commentBar.setReply(nil)
 
         self.replyBar.setReply(nil)
         self.replyBottomAnchor.constant = 32
@@ -729,11 +720,9 @@ extension CommentsViewController: CommentBarDelegate {
                 completion(false, nil, nil)
             
                 if error.domain == FunctionsErrorDomain {
-                    let code = FunctionsErrorCode(rawValue: error.code)
-                    let message = error.localizedDescription
-                    let details = error.userInfo[FunctionsErrorDetailsKey]
-                    print("ERROR: \(code)-\(message)")
-                    
+//                    let code = FunctionsErrorCode(rawValue: error.code)
+//                    let message = error.localizedDescription
+//                    let details = error.userInfo[FunctionsErrorDetailsKey]
                 }
                 Alerts.showFailureAlert(withMessage: "Comment failed to send.")
                 return completion(false, nil, nil)
@@ -775,17 +764,16 @@ extension CommentsViewController: CommentBarDelegate {
             if let replyTo = _replyTo, replyTo != self.post.key {
                 reply.replyTo = replyTo
                 
-                print("Added reply to: \(replyTo)")
                 for i in 0..<self.topState.replies.count {
                     let stateReply = self.topState.replies[i]
                         if stateReply.key == replyTo {
-                            print("Found Correct reply")
+                            
                             stateReply.numReplies += 1
                             stateReply.replies.append(reply)
-                            //self.tableNode.reloadData()
+                            
                             self.tableNode.performBatch(animated: false, updates: {
                                 let indexSet = IndexSet(integer: i + 1)
-                                print("RELOADING TABLE SECTION for: \(stateReply.text)")
+                                
                                 self.tableNode.reloadSections(indexSet, with: .fade)
                             }, completion: { _ in
                                 var row = stateReply.replies.count
@@ -816,13 +804,10 @@ extension CommentsViewController: CommentBarDelegate {
                 
                 switch _s {
                 case .authorized:
-                    print("AUTHORIZED")
                     break
                 case .denied:
-                    print("DENIED")
                     break
                 case .notDetermined:
-                    print("NOT DETERMINED MAN")
                     let message = "Would you like to be notified when users interact with your posts and comments?"
                     NotificationService.showRequestAlert(nil, message: message)
                     break
@@ -864,7 +849,6 @@ extension CommentsViewController: CommentCellDelegate {
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
                 
                 UploadService.deletePost(post) { success in
-                    print("Post deleted: \(success)")
                     let state = self.topState
                     if success {
                         for i in 0..<state.replies.count {

@@ -143,7 +143,6 @@ strip_invalid_archs() {
 
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/BoringSSL/openssl.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Differ/Differ.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/DynamicButton/DynamicButton.framework"
@@ -160,9 +159,6 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Pulley/Pulley.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Regift/Regift.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/ScrollableGraphView/ScrollableGraphView.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/Smile/Smile.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/SwiftGifOrigin/SwiftGifOrigin.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftMessages/SwiftMessages.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/TGPControls/TGPControls.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Texture/AsyncDisplayKit.framework"
@@ -176,7 +172,6 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/BoringSSL/openssl.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Differ/Differ.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/DynamicButton/DynamicButton.framework"
@@ -193,9 +188,6 @@ if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Pulley/Pulley.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Regift/Regift.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/ScrollableGraphView/ScrollableGraphView.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/Smile/Smile.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/SwiftGifOrigin/SwiftGifOrigin.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftMessages/SwiftMessages.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/TGPControls/TGPControls.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Texture/AsyncDisplayKit.framework"

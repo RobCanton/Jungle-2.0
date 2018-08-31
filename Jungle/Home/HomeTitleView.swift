@@ -26,9 +26,9 @@ class JTitleView:UIView {
         self.insetsLayoutMarginsFromSafeArea = false
         self.preservesSuperviewLayoutMargins = false
         
-        self.backgroundColor = currentTheme.backgroundColor
-        backgroundImage = UIImageView(image: UIImage(named:"GreenBox"))
-        //backgroundImage.isHidden = true
+        self.backgroundColor = hexColor(from: "00B86A")//currentTheme.backgroundColor
+        backgroundImage = UIImageView(image: nil)
+        
         backgroundImage.frame = bounds
         addSubview(backgroundImage)
         backgroundImage.translatesAutoresizingMaskIntoConstraints = false
@@ -155,7 +155,6 @@ class TabScrollView:UIView {
     }
     
     func setProgress(_ progress:CGFloat, index:Int) {
-        print("PROGRESS: \(progress)")
         if index == 0 {
             barLeadingAnchor.constant = (homeTabWidth + 15) * progress
             barWidthAnchor.constant = homeTabWidth + (popularTabWidth - homeTabWidth) * progress
@@ -171,7 +170,6 @@ class TabScrollView:UIView {
     }
     
     @objc func handleTab(_ sender:UIButton) {
-        print("HANDLE TAB!")
         switch sender {
         case homeButton:
             delegate?.tabScrollTo(index: 0)
@@ -287,7 +285,6 @@ class DualScrollView:UIView {
     }
     
     @objc func handleTab(_ sender:UIButton) {
-        print("HANDLE TAB")
         switch sender {
         case button1:
             delegate?.tabScrollTo(index: 0)

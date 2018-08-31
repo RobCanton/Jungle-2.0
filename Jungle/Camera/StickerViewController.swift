@@ -31,7 +31,7 @@ public extension UIViewController {
 class StickersView:UIView, ASCollectionDelegate, ASCollectionDataSource {
     var collectionNode:ASCollectionNode!
     var addSticker: ((_ sticker:UIImage)->())?
-    var stickers = Emojis.catergorizedEmojis
+    var stickers:[[String]]!
     
 
     override init(frame: CGRect) {
@@ -39,6 +39,7 @@ class StickersView:UIView, ASCollectionDelegate, ASCollectionDataSource {
         self.preservesSuperviewLayoutMargins = false
         self.insetsLayoutMarginsFromSafeArea = false
         
+        stickers = [[String]]()
         
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 0
@@ -55,10 +56,18 @@ class StickersView:UIView, ASCollectionDelegate, ASCollectionDataSource {
         collectionView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         collectionView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
         layoutIfNeeded()
+        
+        collectionNode.contentInset = UIEdgeInsetsMake(0, 16, 0, 16)
         collectionNode.delegate = self
         collectionNode.dataSource = self
-        collectionNode.contentInset = UIEdgeInsetsMake(0, 16, 0, 16)
         collectionNode.reloadData()
+    }
+    
+    func setupStickers() {
+        if stickers.count == 0 {
+            stickers = Emojis.catergorizedEmojis
+            collectionNode.reloadData()
+        }
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -81,6 +90,11 @@ class StickersView:UIView, ASCollectionDelegate, ASCollectionDataSource {
         return cell
     }
     
+    func collectionNode(_ collectionNode: ASCollectionNode, willDisplayItemWith node: ASCellNode) {
+        let cell = node as? StickerCellNode
+        cell?.willDisplay()
+    }
+    
     func collectionNode(_ collectionNode: ASCollectionNode, didSelectItemAt indexPath: IndexPath) {
         let sticker = stickers[indexPath.section][indexPath.row]
         let image = sticker.image(size: 500)
@@ -90,16 +104,21 @@ class StickersView:UIView, ASCollectionDelegate, ASCollectionDataSource {
 
 class StickerCellNode:ASCellNode {
     var titleNode = ASTextNode()
+    var emoji:String!
     required init(_ emoji:String) {
         super.init()
+        self.emoji = emoji
         automaticallyManagesSubnodes = true
-        titleNode.attributedText = NSAttributedString(string: emoji, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 44)
-            ])
     }
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
         let centerTitle = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: titleNode)
         return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 0), child: centerTitle)
+    }
+    
+    func willDisplay() {
+        titleNode.attributedText = NSAttributedString(string: emoji, attributes: [
+            NSAttributedStringKey.font: Fonts.medium(ofSize: 44)
+            ])
     }
 }
 

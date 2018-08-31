@@ -8,7 +8,6 @@
 
 import Foundation
 import Firebase
-import Alamofire
 import MobileCoreServices
 import Photos
 import SwiftMessages
@@ -154,10 +153,10 @@ class UploadService {
     }
     
     static func deletePost(_ post:Post, completion: @escaping (_ success:Bool)->()) {
-        Alerts.showInfoAlert(withMessage: "Deleting...")
+        let _ = Alerts.showInfoAlert(withMessage: "Deleting...")
         functions.httpsCallable("postRemove").call(["postID": post.key]) { result, error in
             if let error = error {
-                print("ERROR: \(error)")
+                print("Error: \(error)")
                 Alerts.showFailureAlert(withMessage: "Failed to delete post.")
                 return completion(false)
             }
@@ -187,27 +186,6 @@ class UploadService {
             }
         } else {
             return completion(true)
-        }
-        
-//        for image in attachments.images {
-//            
-//            let imageRef = storage.child("userPosts/\(uid)/\(post.key)/\(image.order).\(image.type)")
-//            imageRef.delete(completion: { error in
-//                if error != nil {
-//                    print("ERROR: \(error?.localizedDescription)")
-//                }
-//            })
-//        }
-    }
-    
-    static func userHTTPHeaders(completion: @escaping (_ uid:String?, _ headers: HTTPHeaders?)->()) {
-        guard let user = Auth.auth().currentUser else { return completion(nil,nil) }
-        user.getIDToken() { token, error in
-            if token != nil && error == nil {
-                let headers: HTTPHeaders = ["Authorization": "Bearer \(token!)", "Accept": "application/json", "Content-Type" :"application/json"]
-                return completion(user.uid, headers)
-            }
-            return completion(nil,nil)
         }
     }
     
@@ -406,7 +384,6 @@ class UploadService {
     private static func uploadVideoStill(url:URL, postID:String, completion: @escaping(_ success:Bool)->()) {
         guard let uid = Auth.auth().currentUser?.uid else { return completion(false) }
         var image:UIImage?
-        print("GOT EM!")
         do {
             let asset = AVAsset(url: url)
             let imgGenerator = AVAssetImageGenerator(asset: asset)
@@ -419,16 +396,14 @@ class UploadService {
         }
         guard let videoStill = image else { return completion(false) }
         guard let jpegData = UIImageJPEGRepresentation(videoStill, 0.5) else { return completion (false) }
-        print("PUT IT")
         let storageRef = Storage.storage().reference().child("userPosts/\(uid)/\(postID)/thumbnail.jpg")
         
         let uploadMetadata = StorageMetadata()
         uploadMetadata.contentType = "image/jpg"
         
         storageRef.putData(jpegData as Data, metadata: uploadMetadata) { metaData, error in
-            print("DUN IT")
             if let error = error {
-                print("ERROR: \(error.localizedDescription)")
+                print("Error: \(error.localizedDescription)")
                 return completion(false)
             } else {
                 return completion(true)
@@ -575,11 +550,10 @@ class UploadService {
         } else {
             downloadImage(withKey: key) { data in
                 if data != nil {
-                    print("DATA NOT NIL")
                     writeImageToFile(withKey: key, data: data!)
                     return completion(UIImage(data: data!), false)
                 }
-                print("DATA IS NIL")
+
                 return completion(nil, false)
             }
         }

@@ -40,7 +40,6 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
             self.state = PostsStateController.handleAction(action, fromState: oldState)
             self.tableNode.reloadData()
             self.refreshControl.endRefreshing()
-
         }
 
         return

@@ -11,6 +11,7 @@ import UIKit
 import Pastel
 import Firebase
 import SwiftMessages
+import AsyncDisplayKit
 
 class EmailViewController:UIViewController {
     
@@ -37,6 +38,8 @@ class EmailViewController:UIViewController {
     var sentTitleLabel:UILabel!
     var sentDescLabel:UILabel!
     
+    var legalLabel:LegalNode!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = hexColor(from: "#EFEFEF")
@@ -44,15 +47,14 @@ class EmailViewController:UIViewController {
         pastelView.startPastelPoint = .top
         pastelView.endPastelPoint = .bottom
         
-        // Custom Duration
         pastelView.animationDuration = 12
         pastelView.setColors([hexColor(from: "00CA65"),
                               hexColor(from: "00937B")])
         pastelView.isUserInteractionEnabled = false
         pastelView.isHidden = false
         view.insertSubview(pastelView, at: 0)
-        //view.backgroundColor = UIColor.white
         
+        let layoutGuide = view.safeAreaLayoutGuide
         let topInset = UIApplication.deviceInsets.top
         let titleViewHeight = 50 + topInset
         
@@ -66,6 +68,18 @@ class EmailViewController:UIViewController {
         titleView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
         
+        legalLabel = LegalNode()
+        legalLabel.isUserInteractionEnabled = true
+        view.addSubview(legalLabel.view)
+        legalLabel.view.translatesAutoresizingMaskIntoConstraints = false
+        legalLabel.view.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        legalLabel.view.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        legalLabel.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: 0).isActive = true
+        legalLabel.view.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        
+        legalLabel.setText(withSize: 14.0, normalColor: UIColor.white.withAlphaComponent(0.5), activeColor: UIColor.white)
+        legalLabel.tapHandler = handleLegalTap
+        
         imageView = UIImageView(image: UIImage(named:"logo_alpha"))
         view.addSubview(imageView)
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -75,7 +89,7 @@ class EmailViewController:UIViewController {
         imageView.widthAnchor.constraint(equalToConstant: 192).isActive = true
         imageView.alpha = 1.0
         
-        iconView = UIImageView(image: UIImage(named:"mail-1"))
+        iconView = UIImageView(image: UIImage(named:"Mail"))
         view.addSubview(iconView)
         iconView.translatesAutoresizingMaskIntoConstraints = false
         iconView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
@@ -117,7 +131,7 @@ class EmailViewController:UIViewController {
         submitContainer.translatesAutoresizingMaskIntoConstraints = false
         submitContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16.0).isActive = true
         submitContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16.0).isActive = true
-        stackBottomConstraint = submitContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -16)
+        stackBottomConstraint = submitContainer.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -52)
         stackBottomConstraint.isActive = true
         
         submitContainer.heightAnchor.constraint(equalToConstant: 54.0).isActive = true
@@ -185,6 +199,19 @@ class EmailViewController:UIViewController {
         self.view.layoutIfNeeded()
     }
     
+    @objc func handleLegalTap(_ type:String) {
+        print("OPEN LEGAL: \(type)")
+        if type == "terms" {
+            if let url = URL(string: "https://jungle-anonymous.firebaseapp.com/tos.html") {
+                UIApplication.shared.open(url, options: [:])
+            }
+        } else if type == "privacyPolicy" {
+            if let url = URL(string: "https://jungle-anonymous.firebaseapp.com/privacypolicy.html") {
+                UIApplication.shared.open(url, options: [:])
+            }
+        }
+    }
+    
     @objc func handleDismiss() {
         textField.resignFirstResponder()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
@@ -205,7 +232,8 @@ class EmailViewController:UIViewController {
         self.submitButton.isEnabled = false
         self.submitButton.setTitle("Sending...", for: .normal)
         self.submitButton.alpha = 0.67
-        actionCodeSettings.url = URL(string: "https://www.example.com")
+        
+        actionCodeSettings.url = URL(string: "https://jungle-anonymous.firebaseapp.com/loginlink.html")
         // The sign-in operation has to always be completed in the app.
         actionCodeSettings.handleCodeInApp = true
         actionCodeSettings.setIOSBundleID(Bundle.main.bundleIdentifier!)
@@ -224,7 +252,6 @@ class EmailViewController:UIViewController {
                                     // Save the email locally so you don't need to ask the user for it again
                                     // if they open the link on the same device.
                                     UserDefaults.standard.set(email, forKey: "Email")
-                                    print("EMAIL TINGS ALL GOOD")
                                     self.proceed()
                                     // ...
         }
@@ -260,9 +287,6 @@ class EmailViewController:UIViewController {
         })
     }
     
-    @objc func handleEnterLink() {
-        guard let link = textField.text else { return }
-    }
     
     var hideStatusBar = false
     override func viewWillAppear(_ animated: Bool) {
@@ -277,12 +301,11 @@ class EmailViewController:UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
         
-        //textField.becomeFirstResponder()
     }
     
     @objc func keyboardWillShow(notification:Notification) {
-        print("keyboardWillShow")
         guard let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return }
+        legalLabel.alpha = 0.0
         if state == .linkSent {
             state = .enterEmail
         }
@@ -298,7 +321,6 @@ class EmailViewController:UIViewController {
             submitButton.isEnabled = true
             submitButton.alpha = 1.0
         } else {
-            print("WHAT!")
             textContainer.alpha = 0.5
             self.stackBottomConstraint.constant = -16
         }
@@ -307,8 +329,6 @@ class EmailViewController:UIViewController {
     }
     
     @objc func keyboardWillHide(notification:Notification) {
-        print("keyboardWillHide")
-
         self.textContainer.alpha = 0.5
         self.submitContainer.alpha = 0.5
         
@@ -324,3 +344,64 @@ class EmailViewController:UIViewController {
         return .lightContent
     }
 }
+
+
+class LegalNode:ASTextNode, ASTextNodeDelegate {
+    
+    var textString: String?
+    var attrString: NSMutableAttributedString?
+    
+    var tapHandler:((_ type: String)->())?
+    
+    public func setText(withSize size: CGFloat, normalColor: UIColor, activeColor: UIColor) {
+        self.delegate = self
+        self.isUserInteractionEnabled = true
+        self.passthroughNonlinkTouches = true
+        self.maximumNumberOfLines = 0
+        
+        self.linkAttributeNames = ["terms", "privacyPolicy"]
+        let terms = "Terms of Service"
+        let privacyPolicy = "Privacy Policy"
+        let prefix = "By using Jungle, you accept the\n"
+        let withTerms = "\(prefix)\(terms) and "
+        let fullText = "\(withTerms)\(privacyPolicy)."
+       
+        let attributedString = NSMutableAttributedString(string: fullText)
+        let count = attributedString.length
+        
+        //self.callBack = callBack
+        self.attrString = attributedString
+        self.textString = fullText
+        
+        let font = Fonts.light(ofSize: size)
+        // Set initial font attributes for our string
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        attrString?.addAttribute(NSAttributedStringKey.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: count))
+        attrString?.addAttribute(NSAttributedStringKey.font, value: font, range: NSRange(location: 0, length: count))
+        attrString?.addAttribute(NSAttributedStringKey.foregroundColor, value: normalColor, range: NSRange(location: 0, length: count))
+        
+        let termsRange = NSRange(location: prefix.utf8.count, length: terms.utf8.count)
+        attrString?.addAttribute(NSAttributedStringKey.foregroundColor, value: activeColor, range: termsRange)
+        attrString?.addAttributes([
+            NSAttributedStringKey(rawValue: "terms"): "terms",
+            NSAttributedStringKey.foregroundColor: activeColor
+            ], range: termsRange)
+        
+        let privacyPolicyRange = NSRange(location: withTerms.utf8.count, length: privacyPolicy.utf8.count)
+        
+        attrString?.addAttributes([
+            NSAttributedStringKey(rawValue: "privacyPolicy"): "privacyPolicy",
+            NSAttributedStringKey.foregroundColor: activeColor
+            ], range: privacyPolicyRange)
+        
+        self.attributedText = attrString
+    }
+    
+    func textNode(_ textNode: ASTextNode, tappedLinkAttribute attribute: String, value: Any, at point: CGPoint, textRange: NSRange) {
+        print("TAPPED!")
+        tapHandler?(attribute)
+    }
+    
+}
+

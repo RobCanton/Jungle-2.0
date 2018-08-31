@@ -8,8 +8,6 @@
 
 import Foundation
 
-
-
 class StickerPack {
     var id:String
     var name:String

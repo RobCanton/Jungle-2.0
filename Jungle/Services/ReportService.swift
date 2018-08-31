@@ -41,25 +41,11 @@ class ReportService {
             "timestamp": Date().timeIntervalSince1970 * 1000
         ]) { result, error in
             if let error = error {
-                print("ERROR: \(error.localizedDescription)")
+                print("Error: \(error.localizedDescription)")
                 Alerts.showFailureAlert(withMessage: "Failed to block user. Try again.")
             } else {
                 Alerts.showSuccessAlert(withMessage: "User blocked!")
             }
         }
-//        let userRef = firestore.collection("users").document(uid)
-//            .collection("blocked").document("\(post.key):\(post.anon.key)")
-//        userRef.setData([
-//            "post": post.key,
-//            "blockedID": post.anon.key,
-//            "timestamp": Date().timeIntervalSince1970 * 1000
-//            ], completion: { error in
-//                if let error = error {
-//                    print("ERROR: \(error.localizedDescription)")
-//                    Alerts.showFailureAlert(withMessage: "Failed to block user. Try again.")
-//                } else {
-//                    Alerts.showSuccessAlert(withMessage: "User blocked!")
-//                }
-//        })
     }
 }

@@ -16,11 +16,7 @@ class Reply {
     var text:String
     var createdAt:Date
     var numReplies:Int
-    var replies:[Reply] {
-        didSet {
-            print("DID SET THESE REPLIES: \(replies)")
-        }
-    }
+    var replies:[Reply]
     var votes:Int
     var vote = Vote.notvoted
     var endReached = true

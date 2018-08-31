@@ -16,13 +16,6 @@ class RecentPostsTableViewController: PostsTableViewController {
     var newPostsTopAnchor:NSLayoutConstraint!
     var newPostsListener:ListenerRegistration?
     
-    override var headerCell: ASCellNode {
-        let cell = ASCellNode()
-        cell.style.height = ASDimension(unit: .points, value: 12.0)
-        cell.selectionStyle = .none
-        return cell
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         let newPostsButton = NewPostsButton(frame: .zero)
@@ -52,7 +45,7 @@ class RecentPostsTableViewController: PostsTableViewController {
     }
     
     @objc func startRefreshing() {
-        //toggleNewPosts(visible: false, animated: true)
+        
         refreshControl.beginRefreshing()
         tableNode.setContentOffset(CGPoint(x: 0, y: -56), animated: true)
         toggleNewPosts(visible: false, animated: true)
@@ -69,7 +62,6 @@ class RecentPostsTableViewController: PostsTableViewController {
             firstTimestamp = state.posts[0].createdAt.timeIntervalSince1970 * 1000
         }
         
-        print("HANDLE REFRESH!")
         newPostsListener?.remove()
         PostsService.refreshNewPosts(startAfter: firstTimestamp) { _posts in
             self.refreshControl.endRefreshing()
@@ -129,7 +121,6 @@ class RecentPostsTableViewController: PostsTableViewController {
             if isFirstLoad {
                 self.listenForNewPosts()
             }
-            print("BOOY YEA CASHAW!")
         }
     }
 }

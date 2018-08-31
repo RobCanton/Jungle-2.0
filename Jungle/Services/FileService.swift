@@ -70,19 +70,16 @@ class FileService {
         // Download in memory with a maximum allowed size of 1MB (1 * 1024 * 1024 bytes)
         thumbnailRef.getData(maxSize: 4 * 1024 * 1024) { data, error in
             if let error = error {
-                print("WE GOT AN ERROR: \(error.localizedDescription)")
+                print("Error: \(error.localizedDescription)")
             }
-            print("YO")
             return completion(data)
         }
     }
     
     static func retrieveThumbnail(withKey key:String, completion: @escaping (_ image:UIImage?, _ fromFile:Bool)->()) {
         if let image = readThumbnailFromFile(withKey: key) {
-            print("READ FROM FILE")
             completion(image, true)
         } else {
-            print("DOWNLOAD!")
             downloadThumbnail(withKey: key) { data in
                 if data != nil  {
                     let _ = writeThumbnailToFile(withKey: key, data: data!)

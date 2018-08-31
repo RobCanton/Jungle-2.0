@@ -51,10 +51,6 @@ class FilterCamView:UIView {
     }
     
     
-    
-    var cameraPermissionButton:UIButton!
-    var microphonePermissionButton:UIButton!
-    
     func setup() {
         
         self.setupVideoPreviewView()
@@ -182,7 +178,9 @@ class FilterCamView:UIView {
         return filePath
     }
     
-    //MARK: private methods
+    var handleEndRecording:(()->())?
+    
+
     func startRecording() {
         if isCapturing == true {
             print("Can't start recording, already recording!")
@@ -218,11 +216,24 @@ class FilterCamView:UIView {
             size = CGSize(width: videoHeight, height: videoWidth)
         }
         
-        //self.cameraSwitchButton?.isHidden = true
-        //self.torchButton?.isHidden = true
-        
         self.videoWriter = VideoWriter(fileUrl: videoURL, size: size)
         self.isCapturing = true
+        
+        clock = 0
+        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(handleRecordingTimer), userInfo: nil, repeats: true)
+    }
+    
+    var timer:Timer?
+    var clock:Int = 0
+    
+    @objc func handleRecordingTimer() {
+        clock += 1
+        
+        if clock >= 30 {
+            timer?.invalidate()
+            handleEndRecording?()
+        }
+        
     }
     
     func stopRecording( completion: @escaping (_ url:URL?)->()) {
@@ -236,6 +247,7 @@ class FilterCamView:UIView {
             return completion(nil)
         }
         
+        timer?.invalidate()
         self.isCapturing = false
         self.videoWriter?.markAsFinished()
         //self.cameraSwitchButton?.isHidden = false
@@ -405,11 +417,6 @@ extension FilterCamView: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
 
         }
         
-//        guard let filteredImage = sourceImage else {
-//            print("Can't add filter ro image")
-//            return
-//        }
-        
         let sourceAspect = sourceExtent.size.width / sourceExtent.size.height
         let previewAspect = videoPreviewViewBounds.size.width / videoPreviewViewBounds.size.height
         
@@ -479,8 +486,5 @@ extension FilterCamView: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
         }
     }
     
-    @objc func handlePinch(_ gesture:UIPinchGestureRecognizer) {
-        print("PINCH: \(gesture.scale)")
-    }
 }
 

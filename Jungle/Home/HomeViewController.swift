@@ -53,7 +53,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         pagerNode = ASPagerNode()
         pagerNode.setDelegate(self)
         pagerNode.setDataSource(self)
-        pagerNode.backgroundColor = hexColor(from: "#eff0e9")
+        pagerNode.backgroundColor = hexColor(from: "#EFEFEF")
         view.addSubview(pagerNode.view)
         
         let layoutGuide = view.safeAreaLayoutGuide
@@ -86,47 +86,9 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         pagerNode.view.topAnchor.constraint(equalTo: titleView.bottomAnchor).isActive = true
         pagerNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
         pagerNode.view.delaysContentTouches = false
-        //pagerNode.view.isScrollEnabled = false
         pagerNode.view.panGestureRecognizer.delaysTouchesBegan = false
         pagerNode.reloadData()
         
-        //titleView.leftButton.addTarget(self, action: #selector(locationPicker), for: .touchUpInside)
-        
-        //titleView.rightButton.addTarget(self, action: #selector(openContentSettings), for: .touchUpInside)
-    }
-    
-
-    @objc func locationPicker() {
-        //print("IM SO COLD LIKE YAH")
-//        let alert = UIAlertController(title: "Set Location", message: nil, preferredStyle: .actionSheet)
-//        alert.addAction(UIAlertAction(title: "Markham", style: .default, handler: { _ in
-//            //SearchService.myCoords = LatLng(lat: 43.9050531135017, lng: -79.27830310499503)
-//        }))
-//        
-//        alert.addAction(UIAlertAction(title: "Toronto", style: .default, handler: { _ in
-//            //SearchService.myCoords = LatLng(lat: 43.6532, lng: -79.3832)
-//        }))
-//        
-//        alert.addAction(UIAlertAction(title: "New York", style: .default, handler: { _ in
-//            SearchService.myCoords = LatLng(lat: 40.7128, lng: -74.0060)
-//        }))
-//        
-//        alert.addAction(UIAlertAction(title: "San Francisco", style: .default, handler: { _ in
-//            SearchService.myCoords = LatLng(lat: 37.7749, lng: -122.4194)
-//        }))
-//        
-//        alert.addAction(UIAlertAction(title: "London", style: .default, handler: { _ in
-//            SearchService.myCoords = LatLng(lat: 51.5074, lng: -0.1278)
-//        }))
-//        
-//        alert.addAction(UIAlertAction(title: "Tokyo", style: .default, handler: { _ in
-//            SearchService.myCoords = LatLng(lat: 35.6895, lng: 139.6917)
-//        }))
-//        
-//        alert.addAction(UIAlertAction(title: "Mexico City", style: .default, handler: { _ in
-//            SearchService.myCoords = LatLng(lat: 19.4326, lng: 99.1332)
-//        }))
-//        self.present(alert, animated: true, completion: nil)
     }
     
     override func viewDidLayoutSubviews() {
@@ -151,12 +113,40 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         super.viewDidAppear(animated)
         if gpsService.isAuthorized() {
             gpsService.startUpdatingLocation()
-            print("GPS SERVICE IS AUTHORIZED")
-        } else {
-            print("GPS SERVICE IS NOT AUTHORIZED")
         }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        print("Is User signed In : \(UserService.isSignedIn)")
+        
+        let promptRef = database.child("users/prompts/\(uid)/anonSwitch1")
+        let topInset = UIApplication.deviceInsets.top
+        promptRef.observeSingleEvent(of: .value, with: { snapshot in
+            if !snapshot.exists() {
+                let text = "Tap here to toggle anonymous mode."
+                let size = UILabel.size(text: text, height: 44, font: Fonts.medium(ofSize: 14.0)).width
+                let height = UILabel.size(text: "Hey", width: self.view.bounds.width, font: Fonts.medium(ofSize: 14.0)).height
+                let anonSwitch = self.anonSwitch!
+                let startPoint = CGPoint(x: anonSwitch.center.x, y: anonSwitch.center.y + topInset + anonSwitch.bounds.width / 2)
+                let aView = UIView(frame: CGRect(x: 0, y: 0, width: size + 16, height: height + 24))
+               
+                let label = UILabel(frame: .zero)
+                label.text = text
+                label.font = Fonts.medium(ofSize: 14.0)
+                aView.addSubview(label)
+                label.translatesAutoresizingMaskIntoConstraints = false
+                
+                label.leadingAnchor.constraint(equalTo: aView.leadingAnchor, constant: 8).isActive = true
+                label.trailingAnchor.constraint(equalTo: aView.trailingAnchor, constant: -8).isActive = true
+                label.centerYAnchor.constraint(equalTo: aView.centerYAnchor, constant: 4).isActive = true
+                
+                aView.layoutIfNeeded()
+                
+                let popover = Popover()
+                popover.show(aView, point: startPoint)
+                
+                promptRef.setValue(true)
+            }
+        })
+        
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -213,21 +203,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     }
     
     func tabScrollTo(index: Int) {
-        print("SCROLL TO: \(index)")
         pagerNode.scrollToPage(at: index, animated: true)
-    }
-    func scrollTo() {
-//        switch header {
-//        case .home:
-//            pagerNode.scrollToPage(at: 0, animated: true)
-//            break
-//        case .popular:
-//            pagerNode.scrollToPage(at: 1, animated: true)
-//            break
-//        case .nearby:
-//            pagerNode.scrollToPage(at: 2, animated: true)
-//            break
-//        }
     }
     
     func authorizeGPS() {
@@ -290,7 +266,4 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     }
 }
 
-class ContainerCellNode:ASCellNode {
-    
-}
 
