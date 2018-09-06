@@ -22,8 +22,20 @@ class UserProfileHeaderView:UIView {
     var tabScrollView:DualScrollView!
     var titleView:JTitleView!
     var contentView:UIView!
-    init(frame:CGRect, topInset:CGFloat) {
+    
+    var usernameCenterAnchor:NSLayoutConstraint!
+    var avatarBottomAnchor:NSLayoutConstraint!
+    var descLabel:UILabel!
+    
+    var actionsRow:UIView!
+    
+    var descHeight:CGFloat = 0
+    var centerAdjustment:CGFloat = 0
+    var topInset:CGFloat = 0
+    init(frame:CGRect, topInset:CGFloat, nameHeight:CGFloat, descHeight:CGFloat, includeAvatar:Bool) {
         super.init(frame: frame)
+        self.topInset = topInset
+        self.descHeight = descHeight
         self.preservesSuperviewLayoutMargins = false
         self.insetsLayoutMarginsFromSafeArea = false
         
@@ -31,10 +43,7 @@ class UserProfileHeaderView:UIView {
         pastelView.startPastelPoint = .topRight
         pastelView.endPastelPoint = .bottomLeft
         
-        // Custom Duration
         pastelView.animationDuration = 10
-        
-        //pastelView.isUserInteractionEnabled = false
         addSubview(pastelView)
         pastelView.translatesAutoresizingMaskIntoConstraints = false
         pastelView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
@@ -60,13 +69,11 @@ class UserProfileHeaderView:UIView {
         
         contentView = UIView()
         addSubview(contentView)
-        //contentView.backgroundColor = UIColor.blue.withAlphaComponent(0.2)
         contentView.translatesAutoresizingMaskIntoConstraints = false
         contentView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
         contentView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         contentView.topAnchor.constraint(equalTo: topAnchor).isActive = true
         contentView.bottomAnchor.constraint(equalTo: tabScrollView.topAnchor).isActive = true
-        
         
         avatarView = UIView()
         avatarView.backgroundColor = UIColor.white.withAlphaComponent(0.5)
@@ -74,10 +81,12 @@ class UserProfileHeaderView:UIView {
         avatarView.translatesAutoresizingMaskIntoConstraints = false
         avatarView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true
         
-        avatarView.widthAnchor.constraint(equalToConstant: 96).isActive = true
-        avatarView.heightAnchor.constraint(equalToConstant: 96).isActive = true
+        avatarView.widthAnchor.constraint(equalToConstant: 100).isActive = true
+        avatarView.heightAnchor.constraint(equalToConstant: 100).isActive = true
         
-        avatarView.layer.cornerRadius = 96/2
+        avatarView.layer.borderColor = UIColor.white.cgColor
+        avatarView.layer.borderWidth = 1.5
+        avatarView.layer.cornerRadius = 50
         avatarView.clipsToBounds = true
 
         avatarImageView = ASNetworkImageNode()
@@ -88,22 +97,28 @@ class UserProfileHeaderView:UIView {
         avatarImageView.view.trailingAnchor.constraint(equalTo: avatarView.trailingAnchor).isActive = true
         avatarImageView.view.topAnchor.constraint(equalTo: avatarView.topAnchor).isActive = true
         avatarImageView.view.bottomAnchor.constraint(equalTo: avatarView.bottomAnchor).isActive = true
-
+        
         usernameButton = UIButton(type: .custom)
         usernameButton.setTitle(nil, for: .normal)
         usernameButton.setTitleColor(UIColor.white, for: .normal)
         usernameButton.titleLabel?.font = Fonts.bold(ofSize: 16.0)
-
         contentView.addSubview(usernameButton)
         usernameButton.translatesAutoresizingMaskIntoConstraints = false
-        usernameButton.topAnchor.constraint(equalTo: avatarView.bottomAnchor, constant: 0).isActive = true
-        usernameButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true
-        //usernameLabel.sizeToFit()
-        usernameButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
-        usernameButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: 0).isActive = true
-        self.layoutIfNeeded()
+        
+        let diff = (100 + 50 + topInset) - (topInset + 50 + 100 + (nameHeight - 10) + descHeight + 44)/2
+        centerAdjustment = includeAvatar ? nameHeight/2 + diff : diff
+        usernameCenterAnchor = usernameButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: centerAdjustment)
+        usernameCenterAnchor.isActive = true
+        usernameButton.titleLabel?.lineBreakMode = .byTruncatingTail
+        usernameButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 44).isActive = true
+        usernameButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -44).isActive = true
+        usernameButton.heightAnchor.constraint(equalToConstant: nameHeight).isActive = true
+        
+        avatarBottomAnchor = avatarView.bottomAnchor.constraint(equalTo: usernameButton.topAnchor, constant: 0)
+        avatarBottomAnchor.isActive = true
         
         titleView = JTitleView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 50), topInset: topInset)
+        //
         addSubview(titleView)
         titleView.translatesAutoresizingMaskIntoConstraints = false
         titleView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
@@ -118,15 +133,28 @@ class UserProfileHeaderView:UIView {
         titleView.backgroundImage.isHidden = true
         titleView.backgroundColor = UIColor.clear
         
-        let gradient = CAGradientLayer()
-        gradient.colors = [UIColor.clear.cgColor, UIColor.black.cgColor]
+        descLabel = UILabel()
+        descLabel.numberOfLines = 0
+        descLabel.textAlignment = .center
+        descLabel.font = Fonts.light(ofSize: 14.0)
+        descLabel.text = "Melrose has school on Monday Wednesday Thursday Saturday and all of these days. She can't make it to Wonderland because of her busy schedule."
+        descLabel.textColor = UIColor.white
+        contentView.addSubview(descLabel)
+        descLabel.translatesAutoresizingMaskIntoConstraints = false
+        descLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24.0).isActive = true
+        descLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24.0).isActive = true
+        descLabel.topAnchor.constraint(equalTo: avatarView.bottomAnchor, constant: 40).isActive = true
+        descLabel.heightAnchor.constraint(equalToConstant: descHeight).isActive = true
         
-        let startPercent = NSNumber(value: Float(topInset / UIScreen.main.bounds.height))
-        let endPercent = NSNumber(value: Float((topInset + 12) / UIScreen.main.bounds.height))
+        actionsRow = UIView()
+        contentView.addSubview(actionsRow)
+        actionsRow.translatesAutoresizingMaskIntoConstraints = false
+        actionsRow.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        actionsRow.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
+        actionsRow.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
+        actionsRow.topAnchor.constraint(equalTo: descLabel.bottomAnchor, constant: 0).isActive = true
         
-        gradient.locations = [startPercent, endPercent]
-        gradient.frame = CGRect(x: 0, y: 0, width: contentView.bounds.width, height: UIScreen.main.bounds.height)
-        contentView.layer.mask = gradient
+        self.layoutIfNeeded()
     }
     
     
@@ -134,6 +162,26 @@ class UserProfileHeaderView:UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    
+    func setGroup(_ group:Group) {
+        avatarView.isHidden = true
+        usernameButton.setTitle(group.name, for: .normal)
+        usernameButton.titleLabel?.font = Fonts.bold(ofSize: 20)
+        descLabel.text = group.desc
+        avatarImageView.image = nil
+        avatarImageView.url = nil
+        let bg = ASNetworkImageNode()
+        insertSubview(bg.view, at: 0)
+        bg.view.translatesAutoresizingMaskIntoConstraints = false
+        bg.view.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        bg.view.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        bg.view.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        bg.view.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        bg.url =  group.avatar_high
+        bg.alpha = 0.72
+        backgroundColor = UIColor.black
+        pastelView.isHidden = true
+    }
     
     func setProfile(_ profile:Profile?) {
         
@@ -143,7 +191,7 @@ class UserProfileHeaderView:UIView {
             UserService.retrieveUserImage(uid: profile.uid, .high) { image, _ in
                 self.avatarImageView.image = image
             }
-            usernameButton.setTitle(profile.username, for: .normal)
+            usernameButton.setTitle(profile.username.lowercased(), for: .normal)
             usernameButton.alpha = 1.0
             usernameButton.clipsToBounds = true
             var colors = [UIColor]()
@@ -170,6 +218,14 @@ class UserProfileHeaderView:UIView {
     
     func setProgress(_ progress:CGFloat) {
         print("PROGRESS: \(progress)")
+        
+        if progress <= 1.0 {
+            usernameCenterAnchor.constant = topInset/2 + (centerAdjustment-topInset/2) * progress
+            avatarBottomAnchor.constant = 15 * (1 - progress)
+            avatarView.alpha = progress
+            descLabel.alpha = progress
+            self.layoutIfNeeded()
+        }
     }
     
 }

@@ -28,6 +28,7 @@ class Post {
     private(set) var location:Region?
     private(set) var tags:[String]
     private(set) var score:Double
+    private(set) var group:Group
     var votes:Int
     var numLikes:Int
     var numReplies:Int
@@ -85,8 +86,19 @@ class Post {
         return nil
     }
     
+    var distance:Double?
+    var distanceStr:String? {
+        if let dist = distance {
+            if dist < 1 {
+                return "<1 KM"
+            }
+            return "\( numericShorthand(Int(dist))) KM"
+        }
+        return nil
+    }
+    
     init(key:String, profile:Profile?, anon:Anon, text:String, textClean:String, createdAt:Date, attachments:Attachments, location:Region?, tags:[String], score:Double, votes:Int, numLikes:Int,
-         numReplies:Int, replies:[Post], reports:Reports,parent:String?, replyTo:String?, gradient:[String]) {
+         numReplies:Int, replies:[Post], reports:Reports,parent:String?, replyTo:String?, gradient:[String], group: Group) {
         
         self.key = key
         self.profile = profile
@@ -107,6 +119,7 @@ class Post {
         self.replyTo = replyTo
         self.offenses = ContentSettings.checkContent(ofText: text)
         self.gradient = gradient
+        self.group = group
     }
     
     static func parse(id:String, _ data:[String:Any]) -> Post? {
@@ -117,7 +130,9 @@ class Post {
             let createdAt = data["createdAt"] as? Double,
             let votes = data["votes"] as? Int,
             let numReplies = data["numReplies"] as? Int,
-            let tags = data["hashtags"] as? [String] {
+            let tags = data["hashtags"] as? [String],
+            let groupID = data["group"] as? String,
+            let group = GroupsService.groupsDict[groupID] {
             
             let profile = Profile.parse(data)
             let anon = Anon.parse(data) ?? Anon(key: "", adjective: "", animal: "", color: .black)
@@ -160,7 +175,7 @@ class Post {
                 }
             }
             
-            post = Post(key: id, profile:profile, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:replies, reports: reports, parent: parent, replyTo: replyTo, gradient: gradient )
+            post = Post(key: id, profile:profile, anon: anon, text: text, textClean: textClean, createdAt: Date(timeIntervalSince1970: createdAt / 1000), attachments: attachments, location:location, tags: tags, score:score, votes: votes,numLikes: numLikes, numReplies: numReplies, replies:replies, reports: reports, parent: parent, replyTo: replyTo, gradient: gradient, group: group )
             post?.isYou = data["isYou"] as? Bool ?? false
             
             if let parentData = data["parentPost"] as? [String:Any] {
@@ -171,6 +186,10 @@ class Post {
             
             if let deleted = data["deleted"] as? Bool {
                 post?.deleted = deleted
+            }
+            
+            if let distance = data["distance"] as? Double {
+                post?.distance = distance
             }
         }
         return post
@@ -187,7 +206,8 @@ class Post {
             let createdAt = data["createdAt"] as? Double,
             let votes = data["votes"] as? Int,
             let numReplies = data["numReplies"] as? Int,
-            let tags = data["hashtags"] as? [String] {
+            let groupID = data["group"] as? String,
+            let group = GroupsService.groupsDict[groupID] {
             
             let profile = Profile.parse(data)
             let anon = Anon.parse(data) ?? Anon(key: "", adjective: "", animal: "", color: .black)
@@ -232,10 +252,10 @@ class Post {
             
             post = Post(key: id, profile: profile, anon: anon, text: text, textClean: textClean,
                         createdAt: Date(timeIntervalSince1970: createdAt / 1000),
-                        attachments: attachments, location:location, tags: tags,
+                        attachments: attachments, location:location, tags: [],
                         score:score, votes: votes,numLikes: numLikes,
                         numReplies: numReplies, replies: replies, reports: reports,
-                        parent: parent, replyTo: replyTo, gradient: gradient)
+                        parent: parent, replyTo: replyTo, gradient: gradient, group: group)
             post?.isYou = data["isYou"] as? Bool ?? false
             
             if let parentData = data["parentPost"] as? [String:Any] {
@@ -246,6 +266,10 @@ class Post {
             
             if let deleted = data["deleted"] as? Bool {
                 post?.deleted = deleted
+            }
+            
+            if let distance = data["distance"] as? Double {
+                post?.distance = distance
             }
         }
         return post

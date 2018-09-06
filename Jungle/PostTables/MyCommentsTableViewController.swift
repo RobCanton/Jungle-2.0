@@ -75,7 +75,7 @@ class MyCommentsTableViewController: PostsTableViewController {
             pulleyController.view.clipsToBounds = true
             pulleyController.drawerBackgroundVisualEffectView = nil
             pulleyController.backgroundDimmingOpacity = 0.35
-            pulleyController.topInset = 24
+            pulleyController.drawerTopInset = 24
             pulleyController.hidesBottomBarWhenPushed = true
             pulleyController.transitioningDelegate = transitionManager
             if let parentVC = self.parent as? JViewController {

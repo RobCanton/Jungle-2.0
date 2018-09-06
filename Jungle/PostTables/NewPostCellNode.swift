@@ -107,6 +107,8 @@ class PostNode:ASDisplayNode {
     var likeButton = ASButtonNode()
     var commentButton = ASButtonNode()
     
+    var locationNode = ASTextNode()
+    
     var post:Post?
     var shouldStopObserving = true
     
@@ -133,7 +135,7 @@ class PostNode:ASDisplayNode {
         
         likeButton.setImage(UIImage(named:"like"), for: .normal)
         likeButton.laysOutHorizontally = true
-        likeButton.contentSpacing = 1.0
+        likeButton.contentSpacing = 0.0
         likeButton.contentHorizontalAlignment = .middle
         likeButton.contentEdgeInsets = .zero
         likeButton.imageNode.imageModificationBlock = { image in
@@ -148,7 +150,7 @@ class PostNode:ASDisplayNode {
         
         commentButton.laysOutHorizontally = true
         commentButton.setImage(UIImage(named:"comment_small"), for: .normal)
-        commentButton.contentSpacing = 1.0
+        commentButton.contentSpacing = 0.0
         commentButton.contentHorizontalAlignment = .middle
         let commentTitle = NSMutableAttributedString(string: numericShorthand(post.numReplies), attributes: [
             NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
@@ -175,7 +177,7 @@ class PostNode:ASDisplayNode {
         
         if let profile = post.profile {
             titleNode.attributedText = NSAttributedString(string: profile.username, attributes: [
-                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 13.0),
                 NSAttributedStringKey.foregroundColor: UIColor.black
                 ])
             
@@ -191,7 +193,7 @@ class PostNode:ASDisplayNode {
             avatarImageNode.clipsToBounds = true
         } else {
             titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
-                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 13.0),
                 NSAttributedStringKey.foregroundColor: post.anon.color
                 ])
             UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
@@ -199,9 +201,9 @@ class PostNode:ASDisplayNode {
             }
             
             avatarImageNode.imageModificationBlock = { image in
-                return image.maskWithColor(color: post.anon.color) ?? image
+                return image.maskWithColor(color: UIColor.white.withAlphaComponent(0.75)) ?? image
             }
-            avatarNode.backgroundColor = post.anon.color.withAlphaComponent(0.30)
+            avatarNode.backgroundColor = post.anon.color//.withAlphaComponent(0.30)
             avatarImageNode.layer.cornerRadius = 0
             avatarImageNode.clipsToBounds = false
         }
@@ -231,18 +233,19 @@ class PostNode:ASDisplayNode {
             locationStr = " • \(location.locationShortStr)"
         }
         
-        let subtitleStr = "\(post.createdAt.timeSinceNow())\(locationStr)"
+        let subtitleStr = post.group.name
         
+        subtitleNode.maximumNumberOfLines = 1
         subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
             NSAttributedStringKey.font: Fonts.medium(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
+            NSAttributedStringKey.foregroundColor: tertiaryColor
             ])
         
         
         if let blockedMessage = post.blockedMessage {
             previewNode = PreviewNode(block: true)
             postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
+                NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
                 NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
                 ])
             
@@ -267,6 +270,24 @@ class PostNode:ASDisplayNode {
             }
         }
         
+        locationNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
+            NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
+            NSAttributedStringKey.foregroundColor: tertiaryColor
+            ])
+        
+        
+//        if let location = post.location {
+//            var locationStr = location.country
+////            if let myRegion = gpsService.region, location.countryCode == myRegion.countryCode {
+////                var locationStr = location.
+////            }
+//
+////            locationNode.attributedText = NSAttributedString(string: locationStr, attributes: [
+////                NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
+////                NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
+////                ])
+//        }
+        
         avatarImageNode.addTarget(self, action: #selector(handleAvatarTap), forControlEvents: .touchUpInside)
         avatarImageNode.isUserInteractionEnabled = true
     }
@@ -289,10 +310,11 @@ class PostNode:ASDisplayNode {
         
         let ss = ASStackLayoutSpec.horizontal()
         ss.children = [likeButton, commentButton]
-        ss.spacing = 16.0
+        ss.spacing = 12.0
         
+        let locationCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: locationNode)
         let actionStack = ASStackLayoutSpec.horizontal()
-        actionStack.children = [ss, moreButton]
+        actionStack.children = [ss]
         actionStack.spacing = 0.0
         actionStack.alignContent = .spaceBetween
         actionStack.justifyContent = .spaceBetween
@@ -303,9 +325,16 @@ class PostNode:ASDisplayNode {
         titleStack.children = [titleNode, subnameCenter]
         titleStack.spacing = 4.0
         
+        let headerRow = ASStackLayoutSpec.horizontal()
+        headerRow.children = [titleStack ,locationCenter]
+        headerRow.spacing = 0.0
+        headerRow.alignContent = .spaceBetween
+        headerRow.justifyContent = .spaceBetween
+        
         let headerStack = ASStackLayoutSpec.vertical()
-        headerStack.children = [titleStack, subtitleNode]
-        headerStack.spacing = 0.25
+        headerStack.children = [headerRow, subtitleNode]
+        headerStack.spacing = 0
+
         
         postTextNode.style.flexGrow = 1.0
         let contentStack = ASStackLayoutSpec.vertical()
@@ -317,9 +346,15 @@ class PostNode:ASDisplayNode {
         previewNode.style.height = ASDimension(unit: .points, value: 144)
         
         let stack = ASStackLayoutSpec.horizontal()
-        let contentInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(6, 0, 6, 6), child: contentStack)
+        var contentInsets:UIEdgeInsets = UIEdgeInsetsMake(0, 0, 0, 6)
+        if let post = post {
+            if post.attachments.isImage || post.attachments.isVideo {
+                contentInsets = UIEdgeInsetsMake(0, 0, 0, 6 + 8)
+            }
+        }
+        let contentInset = ASInsetLayoutSpec(insets: contentInsets, child: contentStack)
         stack.children = [contentInset]
-        stack.spacing = 8.0
+        stack.spacing = 8
         
         var headerInsets = UIEdgeInsetsMake(0,40,0,0)
         avatarNode.isHidden = false
@@ -351,10 +386,13 @@ class PostNode:ASDisplayNode {
         
         contentStack.children?.insert(headerOverlay, at: 0)
         
-        //stack.spacing = 0
-        let mainInsets = UIEdgeInsetsMake(4, 4, 4, 4)
         
-        return ASInsetLayoutSpec(insets: mainInsets, child: stack)
+        let bigStack = ASStackLayoutSpec.vertical()
+        bigStack.children = [stack]
+        //stack.spacing = 0
+        let mainInsets = UIEdgeInsetsMake(8, 4, 8, 4)
+        
+        return ASInsetLayoutSpec(insets: mainInsets, child: bigStack)
     }
     
     func setHighlighted(_ highlighted:Bool) {

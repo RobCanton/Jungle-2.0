@@ -115,12 +115,14 @@ class RecentPostsTableViewController: PostsTableViewController {
     }
     
     override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
-        PostsService.getRecentPosts(lastPost: state.posts.last) { posts in
-            let isFirstLoad = self.state.isFirstLoad
-            completion(posts)
-            if isFirstLoad {
-                self.listenForNewPosts()
-            }
-        }
+        
+        PostsService.getMyFeedPosts(offset: state.posts.count, completion: completion)
+//        PostsService.getRecentPosts(lastPost: state.posts.last) { posts in
+//            let isFirstLoad = self.state.isFirstLoad
+//            completion(posts)
+//            if isFirstLoad {
+//                self.listenForNewPosts()
+//            }
+//        }
     }
 }

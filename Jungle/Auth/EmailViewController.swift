@@ -39,7 +39,6 @@ class EmailViewController:UIViewController {
     var sentDescLabel:UILabel!
     
     var legalLabel:LegalNode!
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = hexColor(from: "#EFEFEF")
@@ -67,6 +66,7 @@ class EmailViewController:UIViewController {
         titleView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
         titleView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
+        
         
         legalLabel = LegalNode()
         legalLabel.isUserInteractionEnabled = true

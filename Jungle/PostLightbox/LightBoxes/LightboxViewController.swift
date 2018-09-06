@@ -31,6 +31,8 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     var pastelView:PastelView!
     var deviceInsets:UIEdgeInsets!
     
+    var groupButton:UIButton!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.black
@@ -72,6 +74,27 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         closeButton.tintColor = UIColor.white
         closeButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: .black, shouldRasterize: false)
         closeButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
+        
+        groupButton = UIButton(type: .custom)
+        groupButton.setTitle("Movies", for: .normal)
+        groupButton.titleLabel?.font = Fonts.semiBold(ofSize: 13.0)
+        groupButton.setTitleColor(UIColor.white, for: .normal)
+        groupButton.contentEdgeInsets = UIEdgeInsetsMake(0, 14, 0, 14)
+        //groupButton.backgroundColor = //accentColor//UIColor.black.withAlphaComponent(0.5)
+        groupButton.layer.borderColor = UIColor.white.cgColor
+        groupButton.layer.borderWidth = 1.5
+        groupButton.layer.cornerRadius = 14
+        groupButton.clipsToBounds = true
+        groupButton.sizeToFit()
+        
+        groupButton.addTarget(self, action: #selector(openGroup), for: .touchUpInside)
+        
+        view.addSubview(groupButton)
+        groupButton.translatesAutoresizingMaskIntoConstraints = false
+        groupButton.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        groupButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        groupButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor).isActive = true
+        groupButton.widthAnchor.constraint(lessThanOrEqualToConstant: view.bounds.width - 64 * 2).isActive = true
         
         moreButton = UIButton(frame: CGRect(x: 0, y: 0, width: 64.0, height: 64.0))
         moreButton.setImage(UIImage(named:"more_white"), for: .normal)
@@ -124,10 +147,13 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         
         if let initialIndex = initialIndex {
             DispatchQueue.main.async {
+                self.setGroupButton(withGroup: self.state.posts[initialIndex].group)
                 self.pagerNode.scrollToPage(at: initialIndex, animated: false)
                 self.pagerNode.isHidden = false
                 self.initialIndex = nil
             }
+        } else {
+            self.setGroupButton(withGroup: self.state.posts[self.pagerNode.currentPageIndex].group)
         }
         statusBarHidden = true
         UIView.animate(withDuration: 0.05, animations: {
@@ -229,12 +255,43 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         }
     }
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetX = scrollView.contentOffset.x
+        let centerX = offsetX + scrollView.bounds.width / 2
+        
+        let page = Int(centerX / scrollView.bounds.width)
+        print("page: \(page)")
+        let currentGroup = state.posts[page].group
+        setGroupButton(withGroup: currentGroup)
+        
+    }
+    
+    func setGroupButton(withGroup group:Group) {
+        if GroupsService.myGroupKeys[group.id] != nil {
+            groupButton.setTitle("\(group.name) ✓", for: .normal)
+            groupButton.setTitleColor(UIColor(white: 0.15, alpha: 1.0), for: .normal)
+            groupButton.backgroundColor = UIColor.white
+        } else {
+            groupButton.setTitle(group.name, for: .normal)
+            groupButton.setTitleColor(UIColor.white, for: .normal)
+            groupButton.backgroundColor = UIColor.clear
+        }
+    }
 }
 
 extension LightboxViewController : SinglePostDelegate {
     func postOpen(profile: Profile) {
         let controller = UserProfileViewController()
         controller.profile = profile
+        pushTransitionManager.navBarHeight = nil
+        controller.interactor = pushTransitionManager.interactor
+        controller.transitioningDelegate = pushTransitionManager
+        self.present(controller, animated: true, completion: nil)
+    }
+    
+    @objc func openGroup() {
+        let controller = GroupViewController()
+        controller.group = state.posts[pagerNode.currentPageIndex].group
         pushTransitionManager.navBarHeight = nil
         controller.interactor = pushTransitionManager.interactor
         controller.transitioningDelegate = pushTransitionManager
@@ -273,8 +330,12 @@ extension LightboxViewController : SinglePostDelegate {
 extension LightboxViewController: PulleyPrimaryContentControllerDelegate {
     func drawerChangedDistanceFromBottom(drawer: PulleyViewController, distance: CGFloat, bottomSafeArea: CGFloat) {
         let progress = min(max((distance) / (view.bounds.height / 2), 0), 1)
-        closeButton.alpha = 1 - progress
-        moreButton.alpha = 1 - progress
+        
+        let reverseAlpha = 1 - progress
+        closeButton.alpha = reverseAlpha
+        moreButton.alpha = reverseAlpha
+        groupButton.alpha = reverseAlpha
+        
         let scale = 1 - 0.05 * progress
         contentView.clipsToBounds = true
         contentView.layer.cornerRadius = 12 * progress

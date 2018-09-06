@@ -182,6 +182,10 @@ class Fonts {
         return UIFont.italicSystemFont(ofSize: size)
     }
     
+    static func stylizedRegular(ofSize size: CGFloat) -> UIFont {
+        return UIFont(name: "BalooTammudu-Regular", size: size)!
+    }
+    
 }
 
 class Theme {

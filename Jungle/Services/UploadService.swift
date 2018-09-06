@@ -190,7 +190,7 @@ class UploadService {
     }
     
     
-    static func uploadPost(postID:String, text:String, image:UIImage?, videoURL:URL?, gif:GIF?=nil, region:Region?=nil, location:CLLocation?=nil) {
+    static func uploadPost(postID:String, text:String, group:Group?, image:UIImage?, videoURL:URL?, gif:GIF?=nil, region:Region?=nil, location:CLLocation?=nil) {
         NSLog("RSC: uploadPost - Start")
         UserService.recentlyPosted = true
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -201,10 +201,14 @@ class UploadService {
             "isAnonymous" : UserService.anonMode
         ]
         
+        if let group = group {
+            parameters["group"] = group.id
+        }
+        
         if let region = region, let location = location {
             parameters["location"] = [
-                "lat": location.coordinate.latitude,
-                "lng": location.coordinate.longitude,
+                "lat": 43.6529,//location.coordinate.latitude,
+                "lng": -79.3849,//location.coordinate.longitude,
                 "region": [
                     "city": region.city,
                     "country": region.country,
@@ -218,7 +222,7 @@ class UploadService {
             parameters["attachments"] = [
                 "images": [
                     [
-                        "url": gif.original_url.absoluteString,
+                        "url": gif.high_url.absoluteString,
                         "source": "GIF",
                         "order": 0,
                         "color": "0xFFFFFF",

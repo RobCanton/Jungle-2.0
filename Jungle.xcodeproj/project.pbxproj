@@ -16,6 +16,22 @@
 		B007D5262049CC52009A6B84 /* RegexParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B007D5252049CC52009A6B84 /* RegexParser.swift */; };
 		B00F66AA203F3475002FCDA0 /* ActiveTextNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */; };
 		B0150C762119134A0036113A /* EmailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0150C752119134A0036113A /* EmailViewController.swift */; };
+		B016885B213BDD2F009ADB2B /* GroupCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B016885A213BDD2F009ADB2B /* GroupCellNode.swift */; };
+		B016885D213BDD60009ADB2B /* CreateGroupCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B016885C213BDD60009ADB2B /* CreateGroupCellNode.swift */; };
+		B016885F213DDB3F009ADB2B /* CreateGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B016885E213DDB3F009ADB2B /* CreateGroupView.swift */; };
+		B0168861213E0327009ADB2B /* GIFCollectionNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0168860213E0327009ADB2B /* GIFCollectionNode.swift */; };
+		B0168863213E035E009ADB2B /* MosaicCollectionViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0168862213E035E009ADB2B /* MosaicCollectionViewLayout.swift */; };
+		B0168865213E4A8B009ADB2B /* SearchResultsTableNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0168864213E4A8B009ADB2B /* SearchResultsTableNode.swift */; };
+		B0168867213E72C2009ADB2B /* GroupHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0168866213E72C2009ADB2B /* GroupHeaderView.swift */; };
+		B0168870213F7DE9009ADB2B /* Mukta-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B0168869213F7DDB009ADB2B /* Mukta-Regular.ttf */; };
+		B0168871213F7DE9009ADB2B /* Mukta-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B016886A213F7DDE009ADB2B /* Mukta-Medium.ttf */; };
+		B0168872213F7DE9009ADB2B /* Mukta-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B016886B213F7DE0009ADB2B /* Mukta-ExtraLight.ttf */; };
+		B0168873213F7DE9009ADB2B /* Mukta-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B016886C213F7DE2009ADB2B /* Mukta-SemiBold.ttf */; };
+		B0168874213F7DE9009ADB2B /* Mukta-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B016886D213F7DE4009ADB2B /* Mukta-Bold.ttf */; };
+		B0168875213F7DE9009ADB2B /* Mukta-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B016886E213F7DE6009ADB2B /* Mukta-ExtraBold.ttf */; };
+		B0168876213F7DE9009ADB2B /* Mukta-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B016886F213F7DE8009ADB2B /* Mukta-Light.ttf */; };
+		B0168878213F7F0C009ADB2B /* BalooTammudu-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B0168877213F7F0B009ADB2B /* BalooTammudu-Regular.ttf */; };
+		B016887E213F81BA009ADB2B /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B0B29DE72037408900FBE5FF /* Info.plist */; };
 		B01B7A542112E1E2000B1835 /* PostsStateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01B7A532112E1E2000B1835 /* PostsStateController.swift */; };
 		B01B7A5721139101000B1835 /* RecentLightboxViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01B7A5621139101000B1835 /* RecentLightboxViewController.swift */; };
 		B01E2A56203D4B4F006C8C2D /* PostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */; };
@@ -23,12 +39,16 @@
 		B028FFCC20B163FF006FAA4B /* RecentPostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B028FFCB20B163FF006FAA4B /* RecentPostsTableViewController.swift */; };
 		B028FFCE20B16953006FAA4B /* PopularPostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B028FFCD20B16953006FAA4B /* PopularPostsTableViewController.swift */; };
 		B028FFD020B16A87006FAA4B /* NearbyPostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B028FFCF20B16A87006FAA4B /* NearbyPostsTableViewController.swift */; };
+		B02A6DD9213B3DA800B4AED3 /* GroupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02A6DD8213B3DA800B4AED3 /* GroupViewController.swift */; };
+		B02A6DDB213B445900B4AED3 /* GroupPostsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02A6DDA213B445800B4AED3 /* GroupPostsTableViewController.swift */; };
 		B03291DE206AF12A00B8A0C7 /* UserService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03291DD206AF12A00B8A0C7 /* UserService.swift */; };
 		B0338C9820C1DD5C00B1E1DF /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0338C9720C1DD5C00B1E1DF /* CameraViewController.swift */; };
 		B0338C9E20C22D0600B1E1DF /* NewPostCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0338C9D20C22D0600B1E1DF /* NewPostCellNode.swift */; };
 		B0338CA020C24DA700B1E1DF /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0338C9F20C24DA700B1E1DF /* User.swift */; };
 		B0338CA420C26FA700B1E1DF /* RecordButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0338CA320C26FA700B1E1DF /* RecordButton.swift */; };
 		B0338CA820C32DF200B1E1DF /* CaptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0338CA720C32DF200B1E1DF /* CaptionView.swift */; };
+		B03533D32140C13F0066E7F7 /* GroupCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03533D22140C13F0066E7F7 /* GroupCardView.swift */; };
+		B03533D5214109130066E7F7 /* GroupsSwiperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03533D4214109130066E7F7 /* GroupsSwiperView.swift */; };
 		B03ECD3420AE24B3007E79B0 /* NearbyHeaderCellNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03ECD3320AE24B3007E79B0 /* NearbyHeaderCellNode.swift */; };
 		B042253420E2029200CA9531 /* EffectsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B042253320E2029200CA9531 /* EffectsButton.swift */; };
 		B04C2DC420A6E5D900ED65C8 /* HomeTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04C2DC320A6E5D900ED65C8 /* HomeTitleView.swift */; };
@@ -98,6 +118,8 @@
 		B0E11B7A203A904500EF0814 /* UploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E11B79203A904500EF0814 /* UploadService.swift */; };
 		B0E2335B2083FA240072B1B3 /* NotificationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E2335A2083FA240072B1B3 /* NotificationsViewController.swift */; };
 		B0E2335D2083FE660072B1B3 /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E2335C2083FE660072B1B3 /* Notification.swift */; };
+		B0E3A38E213A14C0001CC963 /* OptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E3A38D213A14C0001CC963 /* OptionsView.swift */; };
+		B0E3A390213A5631001CC963 /* GroupsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E3A38F213A5631001CC963 /* GroupsService.swift */; };
 		B0E4A2202047F6A700037D0C /* Group.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E4A21F2047F6A700037D0C /* Group.swift */; };
 		B0F4943D207C762E00C987D6 /* GIFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F4943C207C762E00C987D6 /* GIFService.swift */; };
 		B0F50ECC203775E900037343 /* ASRoundShadowedImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F50ECB203775E900037343 /* ASRoundShadowedImage.swift */; };
@@ -121,6 +143,21 @@
 		B007D5252049CC52009A6B84 /* RegexParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegexParser.swift; sourceTree = "<group>"; };
 		B00F66A9203F3475002FCDA0 /* ActiveTextNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTextNode.swift; sourceTree = "<group>"; };
 		B0150C752119134A0036113A /* EmailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailViewController.swift; sourceTree = "<group>"; };
+		B016885A213BDD2F009ADB2B /* GroupCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCellNode.swift; sourceTree = "<group>"; };
+		B016885C213BDD60009ADB2B /* CreateGroupCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateGroupCellNode.swift; sourceTree = "<group>"; };
+		B016885E213DDB3F009ADB2B /* CreateGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateGroupView.swift; sourceTree = "<group>"; };
+		B0168860213E0327009ADB2B /* GIFCollectionNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFCollectionNode.swift; sourceTree = "<group>"; };
+		B0168862213E035E009ADB2B /* MosaicCollectionViewLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MosaicCollectionViewLayout.swift; sourceTree = "<group>"; };
+		B0168864213E4A8B009ADB2B /* SearchResultsTableNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsTableNode.swift; sourceTree = "<group>"; };
+		B0168866213E72C2009ADB2B /* GroupHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupHeaderView.swift; sourceTree = "<group>"; };
+		B0168869213F7DDB009ADB2B /* Mukta-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Mukta-Regular.ttf"; sourceTree = "<group>"; };
+		B016886A213F7DDE009ADB2B /* Mukta-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Mukta-Medium.ttf"; sourceTree = "<group>"; };
+		B016886B213F7DE0009ADB2B /* Mukta-ExtraLight.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Mukta-ExtraLight.ttf"; sourceTree = "<group>"; };
+		B016886C213F7DE2009ADB2B /* Mukta-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Mukta-SemiBold.ttf"; sourceTree = "<group>"; };
+		B016886D213F7DE4009ADB2B /* Mukta-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Mukta-Bold.ttf"; sourceTree = "<group>"; };
+		B016886E213F7DE6009ADB2B /* Mukta-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Mukta-ExtraBold.ttf"; sourceTree = "<group>"; };
+		B016886F213F7DE8009ADB2B /* Mukta-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Mukta-Light.ttf"; sourceTree = "<group>"; };
+		B0168877213F7F0B009ADB2B /* BalooTammudu-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "BalooTammudu-Regular.ttf"; sourceTree = "<group>"; };
 		B01B7A532112E1E2000B1835 /* PostsStateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsStateController.swift; sourceTree = "<group>"; };
 		B01B7A5621139101000B1835 /* RecentLightboxViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentLightboxViewController.swift; sourceTree = "<group>"; };
 		B01E2A55203D4B4F006C8C2D /* PostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsTableViewController.swift; sourceTree = "<group>"; };
@@ -128,6 +165,8 @@
 		B028FFCB20B163FF006FAA4B /* RecentPostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentPostsTableViewController.swift; sourceTree = "<group>"; };
 		B028FFCD20B16953006FAA4B /* PopularPostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopularPostsTableViewController.swift; sourceTree = "<group>"; };
 		B028FFCF20B16A87006FAA4B /* NearbyPostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyPostsTableViewController.swift; sourceTree = "<group>"; };
+		B02A6DD8213B3DA800B4AED3 /* GroupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupViewController.swift; sourceTree = "<group>"; };
+		B02A6DDA213B445800B4AED3 /* GroupPostsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupPostsTableViewController.swift; sourceTree = "<group>"; };
 		B03291D8206A235100B8A0C7 /* Jungle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Jungle.entitlements; sourceTree = "<group>"; };
 		B03291DD206AF12A00B8A0C7 /* UserService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserService.swift; sourceTree = "<group>"; };
 		B0338C9720C1DD5C00B1E1DF /* CameraViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
@@ -135,6 +174,8 @@
 		B0338C9F20C24DA700B1E1DF /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		B0338CA320C26FA700B1E1DF /* RecordButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordButton.swift; sourceTree = "<group>"; };
 		B0338CA720C32DF200B1E1DF /* CaptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptionView.swift; sourceTree = "<group>"; };
+		B03533D22140C13F0066E7F7 /* GroupCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCardView.swift; sourceTree = "<group>"; };
+		B03533D4214109130066E7F7 /* GroupsSwiperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsSwiperView.swift; sourceTree = "<group>"; };
 		B03ECD3320AE24B3007E79B0 /* NearbyHeaderCellNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyHeaderCellNode.swift; sourceTree = "<group>"; };
 		B042253320E2029200CA9531 /* EffectsButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectsButton.swift; sourceTree = "<group>"; };
 		B04C2DC320A6E5D900ED65C8 /* HomeTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTitleView.swift; sourceTree = "<group>"; };
@@ -206,6 +247,8 @@
 		B0E11B79203A904500EF0814 /* UploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadService.swift; sourceTree = "<group>"; };
 		B0E2335A2083FA240072B1B3 /* NotificationsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsViewController.swift; sourceTree = "<group>"; };
 		B0E2335C2083FE660072B1B3 /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
+		B0E3A38D213A14C0001CC963 /* OptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsView.swift; sourceTree = "<group>"; };
+		B0E3A38F213A5631001CC963 /* GroupsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsService.swift; sourceTree = "<group>"; };
 		B0E4A21F2047F6A700037D0C /* Group.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Group.swift; sourceTree = "<group>"; };
 		B0F4943C207C762E00C987D6 /* GIFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFService.swift; sourceTree = "<group>"; };
 		B0F50ECB203775E900037343 /* ASRoundShadowedImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRoundShadowedImage.swift; sourceTree = "<group>"; };
@@ -248,6 +291,22 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
+		B0168868213F7DC7009ADB2B /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				B016886D213F7DE4009ADB2B /* Mukta-Bold.ttf */,
+				B016886E213F7DE6009ADB2B /* Mukta-ExtraBold.ttf */,
+				B016886B213F7DE0009ADB2B /* Mukta-ExtraLight.ttf */,
+				B016886F213F7DE8009ADB2B /* Mukta-Light.ttf */,
+				B016886A213F7DDE009ADB2B /* Mukta-Medium.ttf */,
+				B0168869213F7DDB009ADB2B /* Mukta-Regular.ttf */,
+				B016886C213F7DE2009ADB2B /* Mukta-SemiBold.ttf */,
+				B0168877213F7F0B009ADB2B /* BalooTammudu-Regular.ttf */,
+			);
+			name = Fonts;
+			path = Services/Fonts;
+			sourceTree = "<group>";
+		};
 		B01B7A55211390DD000B1835 /* LightBoxes */ = {
 			isa = PBXGroup;
 			children = (
@@ -263,6 +322,7 @@
 				B0E11B79203A904500EF0814 /* UploadService.swift */,
 				B089C53E20E0188E0067806C /* FileService.swift */,
 				B07F610E2044ECFF005010B7 /* PostsService.swift */,
+				B0E3A38F213A5631001CC963 /* GroupsService.swift */,
 				B09CAFDF20492F34009C3901 /* SearchService.swift */,
 				B07F61062043D05A005010B7 /* AlertService.swift */,
 				B07F610C2044C93B005010B7 /* GPSService.swift */,
@@ -281,6 +341,13 @@
 				B073271620E1BB99005D4AB2 /* FilterCamView.swift */,
 				B0338C9720C1DD5C00B1E1DF /* CameraViewController.swift */,
 				B0FFAA1620C6465E0065E75F /* CameraHUDView.swift */,
+				B0E3A38D213A14C0001CC963 /* OptionsView.swift */,
+				B016885E213DDB3F009ADB2B /* CreateGroupView.swift */,
+				B0168860213E0327009ADB2B /* GIFCollectionNode.swift */,
+				B0168864213E4A8B009ADB2B /* SearchResultsTableNode.swift */,
+				B0168862213E035E009ADB2B /* MosaicCollectionViewLayout.swift */,
+				B016885A213BDD2F009ADB2B /* GroupCellNode.swift */,
+				B016885C213BDD60009ADB2B /* CreateGroupCellNode.swift */,
 				B0ACABDF210F762F002DD94B /* ModeScrollBar.swift */,
 				B07E01A7210B91D2005FF8B0 /* PostOptionsBar.swift */,
 				B07E01A5210B7F41005FF8B0 /* GroupsTableNode.swift */,
@@ -312,9 +379,12 @@
 				B0D98F892106B24800A25692 /* MyCommentsTableViewController.swift */,
 				B0FECD6D2106F7CF0087F2A3 /* LikedPostsTableViewController.swift */,
 				B08856E72122BAC600F4C52D /* UserPostsTableViewController.swift */,
+				B02A6DDA213B445800B4AED3 /* GroupPostsTableViewController.swift */,
 				B08856E92122BD0400F4C52D /* UserCommentsTableViewController.swift */,
 				B0B0EC8620D3527700D1E094 /* PopularPostsHeaderCellNode.swift */,
 				B0CE8C4F2116E7BA004EE687 /* NewPostsButton.swift */,
+				B02A6DD8213B3DA800B4AED3 /* GroupViewController.swift */,
+				B0168866213E72C2009ADB2B /* GroupHeaderView.swift */,
 			);
 			path = PostTables;
 			sourceTree = "<group>";
@@ -403,6 +473,7 @@
 				B0932E7D20A3FD2A004E62E2 /* Profile */,
 				B0F50ED32037A6AC00037343 /* Models */,
 				B0F50ED1203784F600037343 /* UI Elements */,
+				B0168868213F7DC7009ADB2B /* Fonts */,
 				B01E2A5D203E0B59006C8C2D /* Services */,
 				B0F50ED22037850C00037343 /* Utilities */,
 				B0B29DE42037408900FBE5FF /* LaunchScreen.storyboard */,
@@ -437,6 +508,8 @@
 			children = (
 				B0B29DF120375AD500FBE5FF /* MainTabBarController.swift */,
 				B0B29DF52037663D00FBE5FF /* HomeViewController.swift */,
+				B03533D4214109130066E7F7 /* GroupsSwiperView.swift */,
+				B03533D22140C13F0066E7F7 /* GroupCardView.swift */,
 				B0D95308211D2867000CD647 /* AnonSwitch.swift */,
 				B089D292210652BF009FAFC0 /* EnableLocationServicesCellNode.swift */,
 				B04C2DC320A6E5D900ED65C8 /* HomeTitleView.swift */,
@@ -568,11 +641,20 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B016887E213F81BA009ADB2B /* Info.plist in Resources */,
 				B0AA490C20D234E300B0FC8A /* silence.mp3 in Resources */,
 				B0B29DE62037408900FBE5FF /* LaunchScreen.storyboard in Resources */,
+				B0168876213F7DE9009ADB2B /* Mukta-Light.ttf in Resources */,
+				B0168875213F7DE9009ADB2B /* Mukta-ExtraBold.ttf in Resources */,
 				B0F50ECE20377B3400037343 /* GoogleService-Info.plist in Resources */,
+				B0168872213F7DE9009ADB2B /* Mukta-ExtraLight.ttf in Resources */,
+				B0168878213F7F0C009ADB2B /* BalooTammudu-Regular.ttf in Resources */,
 				B0B29DE32037408900FBE5FF /* Assets.xcassets in Resources */,
+				B0168870213F7DE9009ADB2B /* Mukta-Regular.ttf in Resources */,
+				B0168871213F7DE9009ADB2B /* Mukta-Medium.ttf in Resources */,
 				B0B29DDE2037408900FBE5FF /* Main.storyboard in Resources */,
+				B0168874213F7DE9009ADB2B /* Mukta-Bold.ttf in Resources */,
+				B0168873213F7DE9009ADB2B /* Mukta-SemiBold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -590,9 +672,10 @@
 				"${BUILT_PRODUCTS_DIR}/Differ/Differ.framework",
 				"${BUILT_PRODUCTS_DIR}/DynamicButton/DynamicButton.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
-				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac/GoogleToolboxForMac.framework",
+				"${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework",
 				"${BUILT_PRODUCTS_DIR}/JGProgressHUD/JGProgressHUD.framework",
 				"${BUILT_PRODUCTS_DIR}/JaneSliderControl/JaneSliderControl.framework",
+				"${BUILT_PRODUCTS_DIR}/Koloda/Koloda.framework",
 				"${BUILT_PRODUCTS_DIR}/MXParallaxHeader/MXParallaxHeader.framework",
 				"${BUILT_PRODUCTS_DIR}/PINCache/PINCache.framework",
 				"${BUILT_PRODUCTS_DIR}/PINOperation/PINOperation.framework",
@@ -613,6 +696,7 @@
 				"${BUILT_PRODUCTS_DIR}/gRPC-RxLibrary/RxLibrary.framework",
 				"${BUILT_PRODUCTS_DIR}/leveldb-library/leveldb.framework",
 				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
+				"${BUILT_PRODUCTS_DIR}/pop/pop.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
@@ -620,9 +704,10 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Differ.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DynamicButton.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleToolboxForMac.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JGProgressHUD.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JaneSliderControl.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Koloda.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MXParallaxHeader.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINCache.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINOperation.framework",
@@ -643,6 +728,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxLibrary.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/leveldb.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/pop.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -696,6 +782,7 @@
 				B09CAFE020492F34009C3901 /* SearchService.swift in Sources */,
 				B0E4A2202047F6A700037D0C /* Group.swift in Sources */,
 				B0F4943D207C762E00C987D6 /* GIFService.swift in Sources */,
+				B0168863213E035E009ADB2B /* MosaicCollectionViewLayout.swift in Sources */,
 				B075EF3720CB9D05001C9988 /* CaptionBar.swift in Sources */,
 				B00124642068560A00E5F2A6 /* SearchTabViewController.swift in Sources */,
 				B0A4C03020D482DA003B7E90 /* ReplyBar.swift in Sources */,
@@ -705,6 +792,8 @@
 				B03ECD3420AE24B3007E79B0 /* NearbyHeaderCellNode.swift in Sources */,
 				B007D5262049CC52009A6B84 /* RegexParser.swift in Sources */,
 				B0ABF8D720DC587D0016FF0A /* ReportService.swift in Sources */,
+				B016885B213BDD2F009ADB2B /* GroupCellNode.swift in Sources */,
+				B0168861213E0327009ADB2B /* GIFCollectionNode.swift in Sources */,
 				B0528D6B20CAE19C006FFB88 /* Interactor.swift in Sources */,
 				B07F991920C4E27C001ECBCC /* Utilties.swift in Sources */,
 				B07F991E20C51901001ECBCC /* SinglePostCellNode.swift in Sources */,
@@ -712,16 +801,20 @@
 				B07F611820454516005010B7 /* LightboxViewController.swift in Sources */,
 				B09C1A0720EBD8D9000640CB /* CommentActionsRow.swift in Sources */,
 				B07F610D2044C93B005010B7 /* GPSService.swift in Sources */,
+				B016885D213BDD60009ADB2B /* CreateGroupCellNode.swift in Sources */,
 				B0D95307211CA74D000CD647 /* CreateProfileViewController.swift in Sources */,
 				B0C99BE6204E41A2000C2C90 /* ViewRepliesCellNode.swift in Sources */,
 				B0FECD6E2106F7CF0087F2A3 /* LikedPostsTableViewController.swift in Sources */,
+				B0168865213E4A8B009ADB2B /* SearchResultsTableNode.swift in Sources */,
 				B0338CA420C26FA700B1E1DF /* RecordButton.swift in Sources */,
 				B08856EA2122BD0400F4C52D /* UserCommentsTableViewController.swift in Sources */,
 				B089C53F20E0188E0067806C /* FileService.swift in Sources */,
+				B03533D32140C13F0066E7F7 /* GroupCardView.swift in Sources */,
 				B00293732118270A0058198A /* ACRCircleView.swift in Sources */,
 				B01B7A5721139101000B1835 /* RecentLightboxViewController.swift in Sources */,
 				B04E788020D426E7007AF840 /* SearchPostsTableViewController.swift in Sources */,
 				B0DA5A9F20D3863600E0F32C /* PushTransitionManager.swift in Sources */,
+				B02A6DD9213B3DA800B4AED3 /* GroupViewController.swift in Sources */,
 				B0E2335B2083FA240072B1B3 /* NotificationsViewController.swift in Sources */,
 				B0B29DE12037408900FBE5FF /* Jungle.xcdatamodeld in Sources */,
 				B06C0CE520C5B3480017EA6B /* CommentsViewController.swift in Sources */,
@@ -732,6 +825,7 @@
 				B0F50ED52037A6BA00037343 /* Post.swift in Sources */,
 				B0B29DF62037663D00FBE5FF /* HomeViewController.swift in Sources */,
 				B07E01A6210B7F41005FF8B0 /* GroupsTableNode.swift in Sources */,
+				B02A6DDB213B445900B4AED3 /* GroupPostsTableViewController.swift in Sources */,
 				B089D293210652BF009FAFC0 /* EnableLocationServicesCellNode.swift in Sources */,
 				B07F611620454461005010B7 /* ImageDismissAnimationController.swift in Sources */,
 				B01E2A56203D4B4F006C8C2D /* PostsTableViewController.swift in Sources */,
@@ -739,6 +833,7 @@
 				B0E2335D2083FE660072B1B3 /* Notification.swift in Sources */,
 				B0ACABE0210F762F002DD94B /* ModeScrollBar.swift in Sources */,
 				B0B0EC8720D3527700D1E094 /* PopularPostsHeaderCellNode.swift in Sources */,
+				B0E3A38E213A14C0001CC963 /* OptionsView.swift in Sources */,
 				B0150C762119134A0036113A /* EmailViewController.swift in Sources */,
 				B0A5F55B20C705F6002D3D95 /* StickerView.swift in Sources */,
 				B0E11B7A203A904500EF0814 /* UploadService.swift in Sources */,
@@ -763,8 +858,10 @@
 				B0B29DD92037408900FBE5FF /* AppDelegate.swift in Sources */,
 				B0338CA020C24DA700B1E1DF /* User.swift in Sources */,
 				B04D4E5420492737000A1033 /* SearchViewController.swift in Sources */,
+				B0168867213E72C2009ADB2B /* GroupHeaderView.swift in Sources */,
 				B0338C9820C1DD5C00B1E1DF /* CameraViewController.swift in Sources */,
 				B0D95309211D2867000CD647 /* AnonSwitch.swift in Sources */,
+				B016885F213DDB3F009ADB2B /* CreateGroupView.swift in Sources */,
 				B0528D6920CAD39A006FFB88 /* PostVideoNode.swift in Sources */,
 				B0AA490A20D2336C00B0FC8A /* KVVideoManager.swift in Sources */,
 				B07F610F2044ECFF005010B7 /* PostsService.swift in Sources */,
@@ -774,6 +871,7 @@
 				B0338C9E20C22D0600B1E1DF /* NewPostCellNode.swift in Sources */,
 				B0058C6E203BCD7200510EEC /* LoadingCellNode.swift in Sources */,
 				B028FFCC20B163FF006FAA4B /* RecentPostsTableViewController.swift in Sources */,
+				B0E3A390213A5631001CC963 /* GroupsService.swift in Sources */,
 				B0F50ED72037A6E100037343 /* Anon.swift in Sources */,
 				B073271520E1BAC6005D4AB2 /* ImageEffects.swift in Sources */,
 				B0A5F55920C6F534002D3D95 /* StickerViewController.swift in Sources */,
@@ -782,6 +880,7 @@
 				B0B29DEE2037454200FBE5FF /* Extensions.swift in Sources */,
 				B0D81F6E20B2344700ED5A10 /* MyRecentPostsTableViewController.swift in Sources */,
 				B0B1F30420FE4E4A00AD24D0 /* SettingsViewController.swift in Sources */,
+				B03533D5214109130066E7F7 /* GroupsSwiperView.swift in Sources */,
 				B06B114C20E2AD5B0064FFC4 /* EffectsBar.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

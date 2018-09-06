@@ -12,6 +12,7 @@ import AsyncDisplayKit
 import Firebase
 import SwiftMessages
 import Popover
+import Koloda
 
 class JViewController:UIViewController {
     var shouldHideStatusBar:Bool = false
@@ -68,18 +69,18 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         titleView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
         titleView.tabScrollView.delegate = self
+        titleView.rightButton.addTarget(self, action: #selector(handleShowGroupsButton), for: .touchUpInside)
         
-        
-        let contentView = titleView.contentView!
-        
+        let titleContentView = titleView.contentView!
+
         anonSwitch = AnonSwitch(frame: .zero)
-        contentView.addSubview(anonSwitch)
+        titleContentView.addSubview(anonSwitch)
         anonSwitch.translatesAutoresizingMaskIntoConstraints = false
-        anonSwitch.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16.0).isActive = true
-        anonSwitch.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
+        anonSwitch.leadingAnchor.constraint(equalTo: titleContentView.leadingAnchor, constant: 16.0).isActive = true
+        anonSwitch.centerYAnchor.constraint(equalTo: titleContentView.centerYAnchor).isActive = true
         anonSwitch.widthAnchor.constraint(equalToConstant: 32.0).isActive = true
         anonSwitch.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
-        
+
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
         pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         pagerNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
@@ -91,12 +92,42 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         
     }
     
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
+    @objc func handleShowGroupsButton() {
+        print("handleShowGroupsButton")
+        
+        let createGroupView = GroupsSwiperView(frame: self.view.bounds)
+        //sortOptionsView.radiusChangedHandler = handleRadiusChange
+        
+        let messageView = BaseView(frame: self.view.bounds)
+        messageView.installContentView(createGroupView)
+        messageView.preferredHeight = self.view.bounds.height
+        
+        createGroupView.closeHandler = {
+            SwiftMessages.hide()
+        }
+        
+        
+        
+        var config = SwiftMessages.defaultConfig
+        config.presentationContext = .window(windowLevel: UIWindowLevelStatusBar)
+        config.duration = .forever
+        config.presentationStyle = .center
+        config.dimMode = .blur(style: .dark, alpha: 1.0, interactive: true)//.gray(interactive: true)
+        config.interactiveHide = false
+        config.preferredStatusBarStyle = .lightContent
+        config.eventListeners.append() { event in
+            if case .didHide = event {
+                print("DID HIDE!")
+                self.reloadIfGroupsChanged()
+            }
+        }
+        
+        SwiftMessages.show(config: config, view: messageView)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
         
         anonSwitch.setProfileImage()
         anonSwitch.setAnonMode(to: UserService.anonMode)
@@ -104,16 +135,28 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         if ContentSettings.recentlyUpdated {
             pagerNode.reloadData()
             ContentSettings.recentlyUpdated = false
+        } else {
+            reloadIfGroupsChanged()
         }
         
 
     }
+    
+    func reloadIfGroupsChanged() {
+        if GroupsService.myGroupsDidChange {
+            pagerNode.reloadData()
+            GroupsService.myGroupsDidChange = false
+        }
+    }
+    
+    
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if gpsService.isAuthorized() {
             gpsService.startUpdatingLocation()
         }
+        
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
         
@@ -233,6 +276,8 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         config.duration = .forever
         config.dimMode = .color(color: UIColor(white: 0.25, alpha: 1.0), interactive: true)
         self.messageWrapper.show(config: config, view: messageView)
+        
+        
     }
     
     func enableLocationTapped() {
@@ -265,5 +310,3 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         return true
     }
 }
-
-

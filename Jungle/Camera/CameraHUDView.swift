@@ -12,6 +12,7 @@ import DynamicButton
 import JaneSliderControl
 import AsyncDisplayKit
 import Pastel
+import SwiftMessages
 
 protocol CameraHUDProtocol {
     func handleClose()
@@ -78,6 +79,8 @@ class CameraHUDView:UIView {
     var optionsBar:CaptionBar!
     var optionsBarBottomAnchor:NSLayoutConstraint!
     
+    var optionsTable:OptionsView!
+    
     var stickersView:StickersView!
     var textOnlyBG:PastelView!
     var textMax:CGFloat = 0.0
@@ -88,6 +91,9 @@ class CameraHUDView:UIView {
     var permissionsView:UIView?
     var cameraPermissionButton:UIButton?
     var microphonePermissionButton:UIButton?
+    var selectedGroup:Group?
+    
+    var messageWrapper = SwiftMessages()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -124,8 +130,8 @@ class CameraHUDView:UIView {
         // Custom Duration
         textOnlyBG.animationDuration = 12
         
-        textOnlyBG.setColors([hexColor(from: "#007F4A"),
-                              hexColor(from: "#00594C")])
+        textOnlyBG.setColors([hexColor(from: "#292929"),
+                              hexColor(from: "#292929")])
         
         
         textOnlyBG.alpha = 0.0
@@ -247,6 +253,17 @@ class CameraHUDView:UIView {
         switchCameraButton.heightAnchor.constraint(equalToConstant: 64).isActive = true
         switchCameraButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: .black, shouldRasterize: false)
         
+        optionsTable = OptionsView()
+        optionsTable.delegate = self
+        optionsTable.alpha = 0.0
+        
+        addSubview(optionsTable)
+        optionsTable.translatesAutoresizingMaskIntoConstraints = false
+        optionsTable.topAnchor.constraint(equalTo: topAnchor, constant: 64.0).isActive = true
+        optionsTable.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16).isActive = true
+        optionsTable.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        optionsTable.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16).isActive = true
+        
         closeButton = DynamicButton(style: .caretDown)
         closeButton.highlightStokeColor = UIColor.white
         closeButton.strokeColor = UIColor.white
@@ -302,14 +319,14 @@ class CameraHUDView:UIView {
         stickerButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: .black, shouldRasterize: false)
 
         postButton = UIButton(type: .custom)
-        postButton.setTitle("Post", for: .normal)
+        postButton.setTitle("Next", for: .normal)
         postButton.titleLabel?.font = Fonts.bold(ofSize: 14)
-        postButton.setTitleColor(accentColor, for: .normal)
-        postButton.setTitleColor(UIColor.gray, for: .disabled)
-        postButton.backgroundColor = UIColor.white
+        postButton.setTitleColor(UIColor.white, for: .normal)
+        postButton.setTitleColor(UIColor.lightGray, for: .disabled)
+        postButton.backgroundColor = accentColor
         addSubview(postButton)
         postButton.translatesAutoresizingMaskIntoConstraints = false
-        postButton.contentEdgeInsets = UIEdgeInsetsMake(8, 14, 8, 14)
+        postButton.contentEdgeInsets = UIEdgeInsetsMake(8, 16, 8, 16)
         postButton.sizeToFit()
         postButton.layer.cornerRadius = postButton.frame.height / 2
         postButton.clipsToBounds = true
@@ -319,7 +336,7 @@ class CameraHUDView:UIView {
         postButton.alpha = 0.0
         postButton.applyShadow(radius: 4.0, opacity: 0.125, offset: CGSize(width: 0, height: 2.0), color: UIColor.black, shouldRasterize: false)
         
-        activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .gray)
+        activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .white)
         activityIndicator.hidesWhenStopped = true
         addSubview(activityIndicator)
         
@@ -372,6 +389,7 @@ class CameraHUDView:UIView {
         optionsBarBottomAnchor = optionsBar.bottomAnchor.constraint(equalTo: bottomAnchor)
         optionsBarBottomAnchor.isActive = true
         optionsBar.handleTag = handleTag
+        optionsBar.isHidden = true
         
     }
     
@@ -671,6 +689,31 @@ class CameraHUDView:UIView {
         
     }
     
+    func optionsState(forward:Bool) {
+        if forward {
+            
+            textView.resignFirstResponder()
+            postButton.backgroundColor = UIColor.lightGray
+            postButton.setTitle("Post", for: .normal)
+            UIView.animate(withDuration: 0.25, animations: {
+                self.textView.alpha = 0.0
+                self.anonSwitch.alpha = 0.0
+                self.modeScrollBar.alpha = 0.0
+                self.optionsTable.alpha = 1.0
+            })
+        } else {
+            textView.becomeFirstResponder()
+            postButton.backgroundColor = accentColor
+            postButton.setTitle("Next", for: .normal)
+            UIView.animate(withDuration: 0.25, animations: {
+                self.textView.alpha = 1.0
+                self.modeScrollBar.alpha = 1.0
+                self.anonSwitch.alpha = 1.0
+                self.optionsTable.alpha = 0.0
+            })
+        }
+    }
+    
     func handleTag(_ tag:String) {
         if let last = textView.text.last {
             if last == " " {
@@ -918,5 +961,45 @@ extension CameraHUDView: UIScrollViewDelegate {
 extension CameraHUDView: TabScrollDelegate {
     func tabScrollTo(index: Int) {
         modePagerView.setContentOffset(CGPoint(x: bounds.width * CGFloat(index), y: 0), animated: true)
+    }
+}
+
+extension CameraHUDView:OptionsDelgate {
+    func didSelectGroup(_ group: Group?) {
+        selectedGroup = group
+        postButton.isEnabled = group != nil
+        postButton.backgroundColor = group != nil ? accentColor : UIColor.lightGray
+    }
+    
+    func didSelectNewGroup() {
+        print("Create new group!")
+        
+        let createGroupView = CreateGroupView(frame: self.bounds)
+        //sortOptionsView.radiusChangedHandler = handleRadiusChange
+        
+        let messageView = BaseView(frame: self.bounds)
+        messageView.installContentView(createGroupView)
+        messageView.preferredHeight = self.bounds.height
+        
+        //messageView.configureDropShadow()
+        var config = SwiftMessages.defaultConfig
+        config.presentationContext = .window(windowLevel: UIWindowLevelNormal)
+        config.duration = .forever
+        config.presentationStyle = .bottom
+        config.dimMode = .gray(interactive: true)
+        config.interactiveHide = true
+        
+        messageWrapper.show(config: config, view: messageView)
+        createGroupView.willAppear()
+        
+        createGroupView.closeHandler = {
+            self.messageWrapper.hide()
+        }
+        
+        createGroupView.createHandler = { group in
+            self.optionsTable.loadGroups()
+            self.optionsTable.selectGroup(group)
+            self.messageWrapper.hide()
+        }
     }
 }

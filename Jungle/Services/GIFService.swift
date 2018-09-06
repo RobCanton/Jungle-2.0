@@ -160,20 +160,22 @@ class GIF {
     var size:Double
     var contentSize:CGSize
     var aspectRatio:CGFloat
-    var original_url:URL
-    var thumbnail_url:URL
-    init(name:String, size:Double, contentSize:CGSize, original:URL, thumbnail:URL) {
+    var high_url:URL
+    var low_url:URL
+    init(name:String, size:Double, contentSize:CGSize, high:URL, low:URL) {
         self.name = name
         self.size = size
         self.contentSize = contentSize
         self.aspectRatio = contentSize.width / contentSize.height
-        self.original_url = original
-        self.thumbnail_url = thumbnail
+        self.high_url = high
+        self.low_url = low
+        
     }
     
     static func parse(from data:[String:Any]) -> GIF? {
-        var originalURL:URL?
-        var tinyURL:URL?
+        var highURL:URL?
+        var lowURL:URL?
+        
         var size:Double?
         var dimensions:CGSize?
         let id = data["id"] as? String
@@ -190,10 +192,10 @@ class GIF {
                             if let dimsArray = mediaData["dims"] as? [Double] {
                                 dimensions = CGSize(width: dimsArray[0], height: dimsArray[1])
                             }
-                            originalURL = url
+                            highURL = url
                             break
                         case "tinygif":
-                            tinyURL = url
+                            lowURL = url
                             break
                         default:
                             break
@@ -202,9 +204,11 @@ class GIF {
                 }
             }
         }
-        if id != nil, originalURL != nil, tinyURL != nil,
+        if id != nil, highURL != nil,  lowURL != nil,
             size != nil, dimensions != nil {
-            return GIF(name: id!, size: size!, contentSize: dimensions!, original: originalURL!, thumbnail: tinyURL!)
+            return GIF(name: id!, size: size!,
+                       contentSize: dimensions!,
+                       high: highURL!, low: lowURL!)
         }
         return nil
     }

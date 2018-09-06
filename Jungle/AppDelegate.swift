@@ -9,6 +9,7 @@
 import UIKit
 import CoreData
 import Firebase
+import FirebaseFirestore
 import AVFoundation
 import UserNotifications
 import SwiftMessages
@@ -38,7 +39,7 @@ let tagColor = hexColor(from: "#1696e0")
 let lightTagColor = hexColor(from: "#49bcff")
 let redColor = hexColor(from: "FF6B6B")
 let grayColor = UIColor(white: 0.75, alpha: 1.0)
-let tertiaryColor = hexColor(from: "BEBEBE")
+let tertiaryColor = hexColor(from: "a6a6a6")
 let subtitleColor = hexColor(from: "708078")
 let bgColor = hexColor(from: "#eff0e9")
 let likeColor = UIColor(rgb: (255, 102, 102))
@@ -58,7 +59,7 @@ var appProtocol:AppProtocol?
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate, AppProtocol {
 
     var window: UIWindow?
-
+    var requirementsLoaded = false
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
@@ -78,6 +79,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let db = Firestore.firestore()
         db.settings = settings
         
+        do {
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+        } catch {
+            print("error")
+        }
+        
+        Emojis.processEmojis()
+        GroupsService.observeGroups()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(didRequirementsLoad), name: GroupsService.notification_groupsUpdated, object: nil)
+        return true
+    }
+    
+    @objc func didRequirementsLoad() {
+        if requirementsLoaded { return }
+        requirementsLoaded = true
         if let user = Auth.auth().currentUser {
             user.getIDTokenForcingRefresh(true, completion: { token, error in
                 if token != nil, error == nil {
@@ -92,17 +111,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         } else {
             self.showAuthScreen()
         }
-        
-        do {
-            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
-            try AVAudioSession.sharedInstance().setActive(true)
-            
-        } catch {
-            print("error")
-        }
-        
-        Emojis.processEmojis()
-        return true
     }
     
     var authListener:AuthStateDidChangeListenerHandle?
@@ -164,6 +172,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                     
                     
                 }
+                
+                if let groups = data["groups"] as? [String:Bool] {
+                    GroupsService.myGroupKeys = groups
+                }
+                
                 if let timeoutData = data["timeout"] as? [String:Any] {
                     timeout = UserService.parseTimeout(timeoutData)
                 }
@@ -196,6 +209,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
     }
+    
+    
     
     func openProfileView() {
         guard let rootVC = window?.rootViewController else { return }

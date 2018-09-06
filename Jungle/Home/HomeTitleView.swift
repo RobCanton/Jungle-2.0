@@ -27,7 +27,7 @@ class JTitleView:UIView {
         self.preservesSuperviewLayoutMargins = false
         
         self.backgroundColor = hexColor(from: "00B86A")//currentTheme.backgroundColor
-        backgroundImage = UIImageView(image: nil)
+        backgroundImage = UIImageView(image: UIImage(named: "GreenBox"))
         
         backgroundImage.frame = bounds
         addSubview(backgroundImage)
@@ -194,10 +194,10 @@ class HomeTitleView:JTitleView {
     override init(frame: CGRect, topInset: CGFloat) {
         super.init(frame: frame, topInset: topInset)
         
-        //rightButton.setImage(UIImage(named:"Settings"), for: .normal)
+        rightButton.setImage(UIImage(named:"Groups"), for: .normal)
         //leftButton.setImage(UIImage(named:"Switches"), for: .normal)
         
-        tabScrollView = TabScrollView(frame: frame, titles: ["POPULAR", "LATEST", "NEARBY"])
+        tabScrollView = TabScrollView(frame: frame, titles: ["FEATURED", "LATEST", "NEARBY"])
         contentView.addSubview(tabScrollView)
         tabScrollView.translatesAutoresizingMaskIntoConstraints = false
         tabScrollView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true

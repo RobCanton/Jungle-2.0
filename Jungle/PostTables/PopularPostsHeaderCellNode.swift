@@ -185,9 +185,9 @@ class TrendingCellNode:ASCellNode {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         
-        titleNode.maximumNumberOfLines = 1
+        titleNode.maximumNumberOfLines = 3
         
-        titleNode.attributedText = NSAttributedString(string: "#\(tag.hastag)", attributes: [
+        titleNode.attributedText = NSAttributedString(string: post.group.name, attributes: [
             NSAttributedStringKey.foregroundColor: UIColor.white,
             NSAttributedStringKey.font: Fonts.bold(ofSize: 14.0),
             NSAttributedStringKey.paragraphStyle: paragraphStyle
@@ -222,7 +222,7 @@ class TrendingCellNode:ASCellNode {
         self.clipsToBounds = false
         
         let gradient = CAGradientLayer()
-        gradient.colors = [UIColor.black.withAlphaComponent(0.40).cgColor, UIColor.clear.cgColor]
+        gradient.colors = [UIColor.black.withAlphaComponent(0.50).cgColor, UIColor.clear.cgColor]
         gradient.locations = [0.0, 1.0]
         gradient.startPoint = CGPoint(x: 0, y: 1)
         gradient.endPoint = CGPoint(x: 0, y: 0.5)
@@ -240,8 +240,8 @@ class TrendingCellNode:ASCellNode {
         
         let contentOverlay = ASOverlayLayoutSpec(child: textOverlay, overlay: gradientNode)
         let titleStack = ASStackLayoutSpec.vertical()
-        titleStack.children = [titleNode, subtitleNode]
-        titleStack.spacing = 2.0
+        titleStack.children = [titleNode]
+        titleStack.spacing = 0.0
         titleStack.justifyContent = .end
         let titleStackInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 4, 4, 4), child: titleStack)
         let overlay = ASOverlayLayoutSpec(child: contentOverlay, overlay: titleStackInset)

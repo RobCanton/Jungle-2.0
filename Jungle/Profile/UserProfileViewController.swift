@@ -55,15 +55,25 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
     var pagerNode = ASPagerNode()
     
     var headerView:UserProfileHeaderView!
+    
+    let desc = "Melrose has school on Monday Wednesday Thursday Saturday and all of these days. She can't make it to Wonderland because of her busy schedule."
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = UIColor.white
-         let topInset = UIApplication.deviceInsets.top
         
-        headerView = UserProfileHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 190 + topInset), topInset: topInset)
+        let descHeight = UILabel.size(text: desc,
+                                      width: view.bounds.width - 48,
+                                      font: Fonts.light(ofSize: 14.0)).height
+        
+        let descHeightWithPadding = descHeight > 0 ? descHeight + 12 : 0
+        view.backgroundColor = UIColor.white
+        let topInset = UIApplication.deviceInsets.top
+        let bottomheight = descHeightWithPadding + 44
+        let x:CGFloat = 100 + 40 + bottomheight
+        headerView = UserProfileHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: x + 50  + 32 + topInset), topInset: topInset, nameHeight:0, descHeight: descHeightWithPadding, includeAvatar: true)
         scrollView.parallaxHeader.view = headerView
-        scrollView.parallaxHeader.height = 190 + topInset
+        scrollView.parallaxHeader.height = x + 50  + 32 + topInset
         scrollView.parallaxHeader.mode = MXParallaxHeaderMode.fill
         scrollView.parallaxHeader.minimumHeight = 50 + 32 + topInset
         scrollView.delegate = self
@@ -97,6 +107,8 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
             let profile = profile {
             headerView.titleView.rightButton.isHidden = uid == profile.uid
         }
+        
+        
     }
     
     override func viewDidAppear(_ animated: Bool) {

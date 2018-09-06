@@ -38,13 +38,16 @@ class AvatarNode:ASDisplayNode {
             imageNode.imageModificationBlock = nil
         } else {
             self.imageInset = imageInset
-            
+            backNode.backgroundColor = post.anon.color
+            backgroundColor = post.anon.color
+            layer.borderColor = UIColor.white.withAlphaComponent(0.5).cgColor
+            layer.borderWidth = 1.0
             UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
                 self.imageNode.image = image
             }
             
             imageNode.imageModificationBlock = { image in
-                return image.maskWithColor(color: post.anon.color) ?? image
+                return image.maskWithColor(color: UIColor.white.withAlphaComponent(0.75)) ?? image
             }
         }
         

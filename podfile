@@ -31,4 +31,5 @@ target 'Jungle' do
   pod 'MXParallaxHeader'
   pod 'Fabric', '~> 1.7.9'
   pod 'Crashlytics', '~> 3.10.5'
+  pod 'Koloda', '~> 4.4'
 end

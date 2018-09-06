@@ -194,8 +194,13 @@ class SearchService {
                         for postData in _posts {
                             if let post = Post.parse(data: postData) {
                                 posts.append(post)
+                                print("POST ADDED!")
+                            } else {
+                                print("NO POST")
                             }
                         }
+                        
+                        print("TRENDING DATA: \(data)")
                         
                         let tag = TrendingHashtag(hashtag: key, count: count, posts: posts)
                         tags.append(tag)
@@ -245,6 +250,33 @@ class SearchService {
             ] as [String:Any]
         
         functions.httpsCallable("userComments").call(params) { result, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([])
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
+                
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.append(post)
+                    }
+                }
+                
+                return completion(posts)
+            }
+        }
+    }
+    
+    static func groupPosts(groupID:String, offset:Int, completion: @escaping(_ posts:[Post])->()) {
+        
+        let params = [
+            "groupID": groupID,
+            "limit": 15,
+            "offset": offset,
+            ] as [String:Any]
+        
+        functions.httpsCallable("recentGroupPosts").call(params) { result, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
                 return completion([])

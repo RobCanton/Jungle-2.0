@@ -14,7 +14,7 @@ class RecordButton:UIView {
     
     var centerView:UIView!
     var blurView:UIVisualEffectView!
-    var progressRing:UICircularProgressRingView!
+    var progressRing:UICircularProgressRing!
     
     var centerViewWidthAnchor:NSLayoutConstraint!
     var blurViewWidthAnchor:NSLayoutConstraint!
@@ -46,7 +46,7 @@ class RecordButton:UIView {
         centerView.layer.cornerRadius = 25
         centerView.clipsToBounds = true
         
-        progressRing = UICircularProgressRingView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        progressRing = UICircularProgressRing(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
         // Change any of the properties you'd like
         addSubview(progressRing)
         
@@ -84,7 +84,7 @@ class RecordButton:UIView {
     }
     
     func reset() {
-        self.progressRing.setProgress(value: 0.0, animationDuration: 0.0)
+        self.progressRing.startProgress(to: 0.0, duration: 0.0)
         self.progressRingWidthAnchor.constant = 80
         self.blurViewWidthAnchor.constant = 80
         self.blurView.layer.cornerRadius = 40
@@ -116,10 +116,7 @@ class RecordButton:UIView {
     }
     
     func startRecording() {
-        progressRing.setProgress(value: 1.0, animationDuration: 30) {
-            print("Done animating!")
-            // Do anything your heart desires...
-        }
+        progressRing.startProgress(to: 1.0, duration: 30)
     }
     
 }

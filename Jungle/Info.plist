@@ -45,7 +45,10 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Needed to select a profile photo.</string>
 	<key>UIAppFonts</key>
-	<array/>
+	<array>
+		<string>BalooTammudu-Regular.ttf</string>
+		<string>Mukta-Regular.ttf</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

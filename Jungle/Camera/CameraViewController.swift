@@ -17,7 +17,7 @@ import CoreLocation
 var demoPic:UIImage?
 
 enum CameraState {
-    case initiating, running, recording, editing, stickers, writing
+    case initiating, running, recording, editing, stickers, writing, options
 }
 
 enum CameraMode {
@@ -58,6 +58,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         case .initiating:
             break
         case .running:
+            prevState = nil
             destroyCaptured()
             endLoopVideo()
             hudView.runningState()
@@ -97,20 +98,34 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             }
             break
         case .writing:
+            prevState = nil
             videoPlayer.pause()
             if state == .editing {
                 hudView.writingState(forward: true)
             } else if state == .running, cameraMode == .text {
                 hudView.writingState(forward: true)
+            } else if state == .options {
+                self.hudView.optionsState(forward: false)
+            }
+            break
+        case .options:
+            prevState = state
+            if state == .writing {
+                self.hudView.optionsState(forward: true)
+            } else if state == .running, cameraMode == .text {
+                self.hudView.optionsState(forward: true)
             }
             break
         }
+        
         self.state = newState
     }
     
+    var prevState:CameraState?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        demoPic = UIImage(named:"cooldude-pixel")!
+        //demoPic = UIImage(named:"cooldude-pixel")!
         view.backgroundColor = UIColor.black
         captureView = FilterCamView(frame: view.bounds)
         captureView.handleEndRecording = stopRecording
@@ -247,6 +262,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     }
     
     func handleClose() {
+        print("TO THE CLOSE!")
         switch state {
         case .running:
             if cameraMode == .text, hudView.textView.isFirstResponder {
@@ -265,6 +281,11 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
             break
         case .writing:
             transition(toState: .editing)
+            break
+        case .options:
+            if let prevState = prevState {
+                transition(toState: prevState)
+            }
             break
         default:
             break
@@ -295,96 +316,109 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     }
     
     func handlePost() {
-        hudView.startPostAnimation()
-        hudView.modeScrollBar.isHidden = true
-        hudView.isUserInteractionEnabled = false
-        hudView.textView.resignFirstResponder()
-        if !hudView.optionsBar.includeRegion {
-            self.region = nil
-            self.location = nil
-        }
         
-        if let url = videoURL {
-            self.processVideoWithWatermark(videoURL: url) { _compressedVideoURL in
-                
-                DispatchQueue.main.async {
-                    if let compressedVideoURL = _compressedVideoURL {
-                        UploadService.getNewPostID { postID in
-                            if let postID = postID {
-                                UploadService.uploadPost(postID: postID,
-                                                         text: self.hudView.textView.text,
-                                                         image: nil,
-                                                         videoURL: compressedVideoURL,
-                                                         gif: nil,
-                                                         region:self.region,
-                                                         location: self.location)
-                                
-                                let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
-                                self.dismiss(animated: true, completion: nil)
-                            } else {
-                                let _ = Alerts.showFailureAlert(withMessage: "Failed to upload.")
+        
+        if state == .running, cameraMode == .text {
+            transition(toState: .options)
+        } else if state == .writing {
+            transition(toState: .options)
+        } else if state == .options {
+            hudView.startPostAnimation()
+            hudView.modeScrollBar.isHidden = true
+            hudView.isUserInteractionEnabled = false
+            hudView.textView.resignFirstResponder()
+            if !hudView.optionsBar.includeRegion {
+                self.region = nil
+                self.location = nil
+            }
+            
+            let group = hudView.selectedGroup
+            
+            if let url = videoURL {
+                self.processVideoWithWatermark(videoURL: url) { _compressedVideoURL in
+                    
+                    DispatchQueue.main.async {
+                        if let compressedVideoURL = _compressedVideoURL {
+                            UploadService.getNewPostID { postID in
+                                if let postID = postID {
+                                    UploadService.uploadPost(postID: postID,
+                                                             text: self.hudView.textView.text,
+                                                             group: group,
+                                                             image: nil,
+                                                             videoURL: compressedVideoURL,
+                                                             gif: nil,
+                                                             region:self.region,
+                                                             location: self.location)
+                                    
+                                    let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
+                                    self.dismiss(animated: true, completion: nil)
+                                } else {
+                                    let _ = Alerts.showFailureAlert(withMessage: "Failed to upload.")
+                                }
                             }
+                            
                         }
-                        
                     }
                 }
-            }
-        } else if let image = photoPreviewView.image {
-            
-            var newImage = image
-            if hudView.stickersOverlay.subviews.count > 0,
-                let overlayImage = hudView.stickersOverlay.snapshot(of: hudView.stickersOverlay.bounds, _isOpaque: false)?.image {
-                let size = view.bounds.size
-                UIGraphicsBeginImageContext(size)
+            } else if let image = photoPreviewView.image {
                 
-                let areaSize = view.bounds
-                image.draw(in: areaSize)
-                
-                overlayImage.draw(in: areaSize, blendMode: .normal, alpha: 1.0)
-                
-                newImage = UIGraphicsGetImageFromCurrentImageContext()!
-                UIGraphicsEndImageContext()
-            }
-            
-            
-            UploadService.getNewPostID { postID in
-                if let postID = postID {
-                    UploadService.uploadPost(postID: postID,
-                                             text: self.hudView.textView.text,
-                                             image: newImage,
-                                             videoURL: nil,
-                                             gif: nil,
-                                             region:self.region,
-                                             location: self.location)
-
-                    let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
-                    self.dismiss(animated: true, completion: nil)
-                } else {
-                    let _ = Alerts.showFailureAlert(withMessage: "Failed to upload.")
-                }
-            }
-            
-        } else {
-            UploadService.getNewPostID { postID in
-                if let postID = postID {
-                    UploadService.uploadPost(postID: postID,
-                                             text: self.hudView.textView.text,
-                                             image: nil,
-                                             videoURL: nil,
-                                             gif: nil,
-                                             region:self.region,
-                                             location: self.location)
+                var newImage = image
+                if hudView.stickersOverlay.subviews.count > 0,
+                    let overlayImage = hudView.stickersOverlay.snapshot(of: hudView.stickersOverlay.bounds, _isOpaque: false)?.image {
+                    let size = view.bounds.size
+                    UIGraphicsBeginImageContext(size)
                     
-                    let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
-                    self.dismiss(animated: true, completion: nil)
-                } else {
-                    let _ = Alerts.showFailureAlert(withMessage: "Failed to upload.")
+                    let areaSize = view.bounds
+                    image.draw(in: areaSize)
+                    
+                    overlayImage.draw(in: areaSize, blendMode: .normal, alpha: 1.0)
+                    
+                    newImage = UIGraphicsGetImageFromCurrentImageContext()!
+                    UIGraphicsEndImageContext()
                 }
+                
+                
+                UploadService.getNewPostID { postID in
+                    if let postID = postID {
+                        UploadService.uploadPost(postID: postID,
+                                                 text: self.hudView.textView.text,
+                                                 group: group,
+                                                 image: newImage,
+                                                 videoURL: nil,
+                                                 gif: nil,
+                                                 region:self.region,
+                                                 location: self.location)
+                        
+                        let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
+                        self.dismiss(animated: true, completion: nil)
+                    } else {
+                        let _ = Alerts.showFailureAlert(withMessage: "Failed to upload.")
+                    }
+                }
+                
+            } else {
+                UploadService.getNewPostID { postID in
+                    if let postID = postID {
+                        UploadService.uploadPost(postID: postID,
+                                                 text: self.hudView.textView.text,
+                                                 group: group,
+                                                 image: nil,
+                                                 videoURL: nil,
+                                                 gif: nil,
+                                                 region:self.region,
+                                                 location: self.location)
+                        
+                        let _ = Alerts.showInfoAlert(withMessage: "Uploading...")
+                        self.dismiss(animated: true, completion: nil)
+                    } else {
+                        let _ = Alerts.showFailureAlert(withMessage: "Failed to upload.")
+                    }
+                }
+                
             }
             
         }
-        
-        
+
     }
     
     @objc func handleStickers() {

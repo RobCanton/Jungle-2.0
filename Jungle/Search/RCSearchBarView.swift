@@ -77,6 +77,7 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         
         let bubbleLayout = textBubble.safeAreaLayoutGuide
         
+        textField.returnKeyType = .search
         textField.translatesAutoresizingMaskIntoConstraints = false
         textFieldLeadingAnchor = textField.leadingAnchor.constraint(equalTo: bubbleLayout.leadingAnchor, constant: 12.0)
         textFieldLeadingAnchor.isActive = true
