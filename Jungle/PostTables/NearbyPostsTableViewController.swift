@@ -21,8 +21,8 @@ class NearbyPostsTableViewController: PostsTableViewController {
         return lightbox
     }
     
-    override var headerCell: ASCellNode {
-        get {
+    override func headerCell(for indexPath: IndexPath) -> ASCellNode {
+        if indexPath.row == 0 {
             if gpsService.isAuthorized() {
                 let cell = NearbyHeaderCellNode()
                 cell.delegate = self
@@ -35,6 +35,8 @@ class NearbyPostsTableViewController: PostsTableViewController {
                 cell.selectionStyle = .none
                 return cell
             }
+        } else {
+            return super.headerCell(for: indexPath)
         }
     }
     

@@ -41,7 +41,7 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         rightButton.setTitle("Cancel", for: .normal)
         rightButton.alpha = 0.0
         rightButton.setTitleColor(UIColor.white, for: .normal)
-        rightButton.titleLabel?.font = Fonts.medium(ofSize: 16.0)
+        rightButton.titleLabel?.font = Fonts.semiBold(ofSize: 16.0)
         rightButton.sizeToFit()
         rightButton.alpha = 0.0
         rightButton.addTarget(self, action: #selector(handleCancelButton), for: .touchUpInside)
@@ -49,10 +49,10 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         textFieldContainer = UIView()
         addSubview(textFieldContainer)
         textFieldContainer.translatesAutoresizingMaskIntoConstraints = false
-        containerLeadingAnchor = textFieldContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 44.0)
+        containerLeadingAnchor = textFieldContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 56)
         containerLeadingAnchor.isActive = true
         
-        containerTrailingAnchor = textFieldContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -44.0)
+        containerTrailingAnchor = textFieldContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -56)
         containerTrailingAnchor.isActive = true
         
         textFieldContainer.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
@@ -81,7 +81,7 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         textField.translatesAutoresizingMaskIntoConstraints = false
         textFieldLeadingAnchor = textField.leadingAnchor.constraint(equalTo: bubbleLayout.leadingAnchor, constant: 12.0)
         textFieldLeadingAnchor.isActive = true
-        textField.trailingAnchor.constraint(equalTo: bubbleLayout.trailingAnchor, constant: -44.0).isActive = true
+        textField.trailingAnchor.constraint(equalTo: bubbleLayout.trailingAnchor, constant: -56).isActive = true
         textField.topAnchor.constraint(equalTo: bubbleLayout.topAnchor, constant: 0.0).isActive = true
         textField.bottomAnchor.constraint(equalTo: bubbleLayout.bottomAnchor, constant: 0.0).isActive = true
         
@@ -117,12 +117,12 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         self.delegate = delegate
         textBubble.layer.cornerRadius = 4
         textBubble.clipsToBounds = true
-        textField.font = Fonts.medium(ofSize: 16.0)
+        textField.font = Fonts.regular(ofSize: 16.0)
         textField.textColor = UIColor.white
         textField.delegate = self
         textField.text = "Search"
         textField.attributedPlaceholder = NSAttributedString(string: "Search", attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 16.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 16.0),
             NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.5)
             ])
         let width = textWidth
@@ -183,8 +183,8 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
         }
         
         UIView.animate(withDuration: 0.25, delay: 0.0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.2, options: .curveEaseOut, animations: {
-            self.containerLeadingAnchor.constant = 44.0
-            self.containerTrailingAnchor.constant = -44.0
+            self.containerLeadingAnchor.constant = 56
+            self.containerTrailingAnchor.constant = -56
             self.textFieldLeadingAnchor.constant = leadingConstant
             self.layoutIfNeeded()
             self.rightButton.alpha = 0.0
@@ -217,8 +217,8 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
             }
         }
         
-        self.containerLeadingAnchor.constant = 44.0
-        self.containerTrailingAnchor.constant = -44.0
+        self.containerLeadingAnchor.constant = 56
+        self.containerTrailingAnchor.constant = -56
         self.textFieldLeadingAnchor.constant = leadingConstant
         self.layoutIfNeeded()
         self.rightButton.alpha = 0.0

@@ -40,9 +40,10 @@ class SearchTabViewController:JViewController {
     @IBOutlet weak var contentView: UIView!
     
     var pushTransitionManager = PushTransitionManager()
-    var trendingHashtagsNode:TrendingHashtagsNode!
     var searchBar:RCSearchBarView!
     var tabScrollView:DualScrollView!
+    
+    var anonSwitch:AnonSwitch!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -57,7 +58,6 @@ class SearchTabViewController:JViewController {
         
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         
-        let layout = view.safeAreaLayoutGuide
         searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         searchBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
@@ -70,6 +70,16 @@ class SearchTabViewController:JViewController {
             searchBar.textBubble.removeGestureRecognizer(gesture)
         }
         
+        let titleContentView = searchBar.contentView!
+        
+        anonSwitch = AnonSwitch(frame: .zero)
+        titleContentView.addSubview(anonSwitch)
+        anonSwitch.translatesAutoresizingMaskIntoConstraints = false
+        anonSwitch.leadingAnchor.constraint(equalTo: titleContentView.leadingAnchor, constant: 16.0).isActive = true
+        anonSwitch.centerYAnchor.constraint(equalTo: titleContentView.centerYAnchor).isActive = true
+        anonSwitch.widthAnchor.constraint(equalToConstant: 32.0).isActive = true
+        anonSwitch.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
+        
         let bgImageView = UIImageView(image: UIImage(named:"GreenBox"))
         view.insertSubview(bgImageView, belowSubview: searchBar)
         bgImageView.translatesAutoresizingMaskIntoConstraints = false
@@ -81,17 +91,17 @@ class SearchTabViewController:JViewController {
         let tap = UITapGestureRecognizer(target: self, action: #selector(showSearchView))
         searchBar.textBubble.addGestureRecognizer(tap)
         
-        trendingHashtagsNode = TrendingHashtagsNode()
-        view.addSubview(trendingHashtagsNode.view)
-        
-        trendingHashtagsNode.view.translatesAutoresizingMaskIntoConstraints = false
-        trendingHashtagsNode.view.leadingAnchor.constraint(equalTo: layout.leadingAnchor).isActive = true
-        trendingHashtagsNode.view.trailingAnchor.constraint(equalTo: layout.trailingAnchor).isActive = true
-        trendingHashtagsNode.view.topAnchor.constraint(equalTo: searchBar.bottomAnchor).isActive = true
-        trendingHashtagsNode.view.bottomAnchor.constraint(equalTo: layout.bottomAnchor).isActive = true
-        trendingHashtagsNode.delegate = self
-        trendingHashtagsNode.backgroundColor = bgColor
-        
+        let postsTableVC = BestPostsTableViewController()
+        postsTableVC.view.clipsToBounds = true
+        postsTableVC.willMove(toParentViewController: self)
+        self.addChildViewController(postsTableVC)
+        view.addSubview(postsTableVC.view)
+        postsTableVC.didMove(toParentViewController: self)
+        postsTableVC.view.translatesAutoresizingMaskIntoConstraints = false
+        postsTableVC.view.topAnchor.constraint(equalTo: searchBar.bottomAnchor).isActive = true
+        postsTableVC.view.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        postsTableVC.view.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        postsTableVC.view.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         view.layoutIfNeeded()
         
     }
@@ -121,152 +131,8 @@ class SearchTabViewController:JViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        trendingHashtagsNode.clearSelection()
-    }
-    
-}
-
-protocol TrendingHashtagsDelegate: class {
-    func open(hashtag:String)
-    func open(post:Post)
-}
-
-
-extension SearchTabViewController: TrendingHashtagsDelegate {
-    func open(post: Post) {
-//        let controller = SinglePostViewController()
-//        controller.hidesBottomBarWhenPushed = true
-//        controller.post = post
-//
-
-    }
-    
-    func open(hashtag: String) {
-        print("YOOO!")
-        let vc = SearchViewController()
-        vc.initialSearch = hashtag
-        var navBarHeight = 50 + UIApplication.deviceInsets.top
-        pushTransitionManager.navBarHeight = navBarHeight
-        vc.interactor = pushTransitionManager.interactor
-        vc.transitioningDelegate = pushTransitionManager
-        self.present(vc, animated: true, completion: nil)
-    }
-}
-
-
-
-class TrendingHashtagsNode:ASDisplayNode, ASTableDelegate, ASTableDataSource {
-    
-    var tableNode = ASTableNode()
-    var trendingHashtags = [TrendingHashtag]() {
-        didSet {
-            tableNode.reloadData()
-        }
-    }
-    
-    var refreshControl:UIRefreshControl!
-    
-    var selectedRow:IndexPath?
-    weak var delegate:TrendingHashtagsDelegate?
-    
-    override init() {
-        super.init()
-        backgroundColor = UIColor.clear
-        automaticallyManagesSubnodes = true
-        tableNode.delegate = self
-        tableNode.dataSource = self
-        tableNode.backgroundColor = UIColor.clear
         
-        trendingHashtags = SearchService.trendingHashtags
-    }
-    
-    override func didLoad() {
-        super.didLoad()
-        tableNode.view.separatorStyle = .none
-    }
-    
-    func clearSelection() {
-        if let row = selectedRow {
-            tableNode(tableNode, didDeselectRowAt: row)
-        }
-    }
-    
-    override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        return ASInsetLayoutSpec(insets: .zero, child: tableNode)
-    }
-    
-    func numberOfSections(in tableNode: ASTableNode) -> Int {
-        return 2
-    }
-    
-    func tableNode(_ tableNode: ASTableNode, numberOfRowsInSection section: Int) -> Int {
-        if section == 0 { return 1 }
-        return trendingHashtags.count
-    }
-    
-    func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
-        if indexPath.section == 0 {
-            let cell = ASTextCellNode()
-            cell.text = "Trending"
-            cell.textInsets = UIEdgeInsetsMake(16.0, 16.0, 12.0, 16.0)
-            cell.selectionStyle = .none
-            cell.textAttributes = [
-                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 24.0),
-                NSAttributedStringKey.foregroundColor: UIColor.black,
-                NSAttributedStringKey.paragraphStyle: paragraphStyle
-            ]
-            return cell
-        }
-        
-        let cell = ASTextCellNode()
-        cell.text = "#\(trendingHashtags[indexPath.row].hastag)"
-        cell.textInsets = UIEdgeInsetsMake(12.0, 16.0, 12.0, 16.0)
-        cell.textAttributes = [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 18.0),
-            NSAttributedStringKey.foregroundColor: tagColor,
-            NSAttributedStringKey.paragraphStyle: paragraphStyle
-        ]
-        cell.selectionStyle = .none
-        return cell
-    }
-    
-    func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
-        if indexPath.section == 0 { return }
-        selectedRow = indexPath
-        delegate?.open(hashtag: "#\(trendingHashtags[indexPath.row].hastag)")
-    }
-    
-    func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
-        if indexPath.section == 0 { return }
-        selectedRow = nil
-    }
-    
-    func tableNode(_ tableNode: ASTableNode, didHighlightRowAt indexPath: IndexPath) {
-        if indexPath.section == 0 { return }
-    }
-    
-    func tableNode(_ tableNode: ASTableNode, didUnhighlightRowAt indexPath: IndexPath) {
-        if indexPath.section == 0 { return }
-    }
-
-    override func didEnterVisibleState() {
-        super.didEnterVisibleState()
-        NotificationCenter.default.addObserver(self, selector: #selector(trendingHashtagsUpdated), name: SearchService.trendingTagsNotification, object: nil)
-    }
-    
-    override func didExitVisibleState() {
-        super.didExitVisibleState()
-        NotificationCenter.default.removeObserver(self, name: SearchService.trendingTagsNotification, object: nil)
-    }
-    
-    @objc func trendingHashtagsUpdated() {
-        trendingHashtags = SearchService.trendingHashtags
-        tableNode.reloadData()
+        anonSwitch.setProfileImage()
+        anonSwitch.setAnonMode(to: UserService.anonMode)
     }
 }

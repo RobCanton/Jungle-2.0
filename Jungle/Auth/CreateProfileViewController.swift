@@ -91,7 +91,7 @@ class CreateProfileViewController:UIViewController {
         cancelButton = UIButton(type: .custom)
         cancelButton.setTitle("Cancel", for: .normal)
         cancelButton.setTitleColor(UIColor.white, for: .normal)
-        cancelButton.titleLabel?.font = Fonts.medium(ofSize: 17.0)
+        cancelButton.titleLabel?.font = Fonts.semiBold(ofSize: 17.0)
         titleView.addSubview(cancelButton)
         cancelButton.translatesAutoresizingMaskIntoConstraints = false
         cancelButton.leadingAnchor.constraint(equalTo: titleView.leadingAnchor, constant: 20).isActive = true

@@ -26,6 +26,7 @@ class PreviewNode:ASDisplayNode {
         }
     
         automaticallyManagesSubnodes = true
+        self.layer.cornerRadius = 3.0
         self.clipsToBounds = true
         self.imageNode.backgroundColor = currentTheme.highlightedBackgroundColor
     }
@@ -54,11 +55,11 @@ class PostCellNode:ASCellNode {
     var postNode:PostNode!
     var dividerNode:ASDisplayNode!
     
-    required init(post:Post) {
+    required init(post:Post, rank:Int?=nil) {
         super.init()
         backgroundColor = UIColor.white
         contentNode = ASDisplayNode()
-        postNode = PostNode(post: post)
+        postNode = PostNode(post: post, rank: rank)
         automaticallyManagesSubnodes = true
         contentNode.automaticallyManagesSubnodes = true
         contentNode.layoutSpecBlock = { _,_ in
@@ -68,7 +69,6 @@ class PostCellNode:ASCellNode {
         dividerNode = ASDisplayNode()
         dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
         dividerNode.backgroundColor = UIColor(white: 0.85, alpha: 1.0)
-        
         
     }
     
@@ -114,10 +114,12 @@ class PostNode:ASDisplayNode {
     
     weak var delegate:PostCellDelegate?
     
-    required init(post:Post) {
+    var rank:Int?
+    required init(post:Post, rank:Int?=nil) {
         super.init()
         self.post = post
-        self.backgroundColor = currentTheme.backgroundColor//hexColor(from: "#333742")
+        self.rank = rank
+        backgroundColor = currentTheme.backgroundColor//hexColor(from: "#333742")
         automaticallyManagesSubnodes = true
         postTextNode.maximumNumberOfLines = post.attachments.isImage
             || post.attachments.isVideo ? 4 : 6
@@ -177,7 +179,7 @@ class PostNode:ASDisplayNode {
         
         if let profile = post.profile {
             titleNode.attributedText = NSAttributedString(string: profile.username, attributes: [
-                NSAttributedStringKey.font: Fonts.bold(ofSize: 13.0),
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 15.0),
                 NSAttributedStringKey.foregroundColor: UIColor.black
                 ])
             
@@ -193,7 +195,7 @@ class PostNode:ASDisplayNode {
             avatarImageNode.clipsToBounds = true
         } else {
             titleNode.attributedText = NSAttributedString(string: post.anon.displayName, attributes: [
-                NSAttributedStringKey.font: Fonts.bold(ofSize: 13.0),
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 14.0),
                 NSAttributedStringKey.foregroundColor: post.anon.color
                 ])
             UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
@@ -224,7 +226,7 @@ class PostNode:ASDisplayNode {
         subnameNode.backgroundColor = post.anon.color
         
         timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 13.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
             ])
         
@@ -237,7 +239,7 @@ class PostNode:ASDisplayNode {
         
         subtitleNode.maximumNumberOfLines = 1
         subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 13.0),
+            NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: tertiaryColor
             ])
         
@@ -245,14 +247,14 @@ class PostNode:ASDisplayNode {
         if let blockedMessage = post.blockedMessage {
             previewNode = PreviewNode(block: true)
             postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
                 NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
                 ])
             
         } else {
             previewNode = PreviewNode()
             
-            postTextNode.setText(text: post.text, withSize: 14.0,
+            postTextNode.setText(text: post.text, withFont: Fonts.light(ofSize: 16.0),
                                  normalColor: currentTheme.primaryTextColor, activeColor: currentTheme.secondaryAccentColor)
         }
         
@@ -270,10 +272,24 @@ class PostNode:ASDisplayNode {
             }
         }
         
-        locationNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
-            NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
-            NSAttributedStringKey.foregroundColor: tertiaryColor
-            ])
+        if let rank = rank {
+            if rank > 1 {
+                locationNode.attributedText = NSAttributedString(string: "\(rank).", attributes: [
+                    NSAttributedStringKey.font: Fonts.extraBold(ofSize: 16.0),
+                    NSAttributedStringKey.foregroundColor: UIColor(white: 0.35, alpha: 1.0)
+                    ])
+            } else {
+                locationNode.isHidden = true
+            }
+            
+        } else {
+            locationNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
+                NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
+                NSAttributedStringKey.foregroundColor: tertiaryColor
+                ])
+        }
+        
+        
         
         
 //        if let location = post.location {
@@ -304,6 +320,15 @@ class PostNode:ASDisplayNode {
         
         subnameNode.layer.cornerRadius = 2.0
         subnameNode.clipsToBounds = true
+        
+        if let rank = rank, rank == 1 {
+            let crown = UIImageView(image: UIImage(named: "Crowngray"))
+            view.addSubview(crown)
+            crown.translatesAutoresizingMaskIntoConstraints = false
+            crown.topAnchor.constraint(equalTo: view.topAnchor, constant: -4).isActive = true
+            crown.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4).isActive = true
+        }
+        
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
@@ -333,7 +358,7 @@ class PostNode:ASDisplayNode {
         
         let headerStack = ASStackLayoutSpec.vertical()
         headerStack.children = [headerRow, subtitleNode]
-        headerStack.spacing = 0
+        headerStack.spacing = -1
 
         
         postTextNode.style.flexGrow = 1.0
@@ -364,7 +389,7 @@ class PostNode:ASDisplayNode {
                 avatarNode.isHidden = true
                 avatarImageNode.isHidden = true
                 headerInsets = UIEdgeInsetsMake(0,0,0,0)
-                let previewNodeInsets = UIEdgeInsetsMake(0, 0, 0, 0)
+                let previewNodeInsets = UIEdgeInsetsMake(2, 0, 0, 0)
                 let insetPreviewNode = ASInsetLayoutSpec(insets: previewNodeInsets, child: previewNode)
                 stack.children?.insert(insetPreviewNode, at: 0)
                 contentStack.style.width = ASDimension(unit: .fraction, value: 0.74)
@@ -390,7 +415,7 @@ class PostNode:ASDisplayNode {
         let bigStack = ASStackLayoutSpec.vertical()
         bigStack.children = [stack]
         //stack.spacing = 0
-        let mainInsets = UIEdgeInsetsMake(8, 4, 8, 4)
+        let mainInsets = UIEdgeInsetsMake(6, 4, 8, 4)
         
         return ASInsetLayoutSpec(insets: mainInsets, child: bigStack)
     }

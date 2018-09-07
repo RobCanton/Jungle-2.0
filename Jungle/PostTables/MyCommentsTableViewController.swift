@@ -17,8 +17,8 @@ class MyCommentsTableViewController: PostsTableViewController {
         return MyCommentsLightboxViewController()
     }
     
-    override func postCell(_ post: Post) -> ASCellNode {
-        let cell = super.postCell(post) as! PostCellNode
+    override func postCell(for indexPath: IndexPath) -> ASCellNode {
+        let cell = super.postCell(for: indexPath) as! PostCellNode
         cell.postNode.commentButton.isHidden = true
         return cell
     }

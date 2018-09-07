@@ -227,7 +227,7 @@ class MainTabBarController:UITabBarController, UploadProgressDelegate, PushTrans
             self.messageWrapper.hide()
         }
         messageView.titleLabel?.font = Fonts.semiBold(ofSize: 16.0)
-        messageView.bodyLabel?.font = Fonts.medium(ofSize: 14.0)
+        messageView.bodyLabel?.font = Fonts.semiBold(ofSize: 14.0)
         
         
         let button = messageView.button!

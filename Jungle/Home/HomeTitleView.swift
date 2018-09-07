@@ -68,7 +68,7 @@ class JTitleView:UIView {
         titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
         titleLabel.textColor = UIColor.white
         titleLabel.textAlignment = .center
-        titleLabel.font = Fonts.semiBold(ofSize: 13.0)
+        titleLabel.font = Fonts.bold(ofSize: 13.0)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -108,7 +108,7 @@ class TabScrollView:UIView {
         tabStack.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         tabStack.spacing = 15
         
-        let buttonFont = Fonts.semiBold(ofSize: 13.0)
+        let buttonFont = Fonts.bold(ofSize: 13.0)
         homeButton = UIButton(type: .custom)
         homeButton.setTitle(titles[0], for: .normal)
         homeButton.setTitleColor(UIColor.white, for: .normal)

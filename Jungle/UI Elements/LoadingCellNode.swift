@@ -31,7 +31,7 @@ final class LoadingCellNode: ASCellNode {
         text.attributedText = NSAttributedString(
             string: "Loading…",
             attributes: [
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
                 NSAttributedStringKey.foregroundColor: UIColor.lightGray
             ])
         addSubnode(spinner)

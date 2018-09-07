@@ -133,14 +133,18 @@ class PostsService {
         }
         completion(post)
     }
-
-    static func getMyFeedPosts(offset: Int, completion: @escaping (_ posts:[Post])->()) {
+    
+    static func getMyFeedPosts(offset: Int, before:Double?, completion: @escaping (_ posts:[Post])->()) {
         
-        let params = [
+        var params = [
             "length": 15,
             "offset": offset,
             "groups": GroupsService.myGroupKeys
             ] as [String:Any]
+        
+        if let before = before {
+            params["before"] = before
+        }
         
         functions.httpsCallable("myFeedPosts").call(params) { result, error in
             

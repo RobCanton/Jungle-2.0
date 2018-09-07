@@ -77,7 +77,7 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         
         groupButton = UIButton(type: .custom)
         groupButton.setTitle("Movies", for: .normal)
-        groupButton.titleLabel?.font = Fonts.semiBold(ofSize: 13.0)
+        groupButton.titleLabel?.font = Fonts.bold(ofSize: 13.0)
         groupButton.setTitleColor(UIColor.white, for: .normal)
         groupButton.contentEdgeInsets = UIEdgeInsetsMake(0, 14, 0, 14)
         //groupButton.backgroundColor = //accentColor//UIColor.black.withAlphaComponent(0.5)
@@ -268,7 +268,7 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     
     func setGroupButton(withGroup group:Group) {
         if GroupsService.myGroupKeys[group.id] != nil {
-            groupButton.setTitle("\(group.name) ✓", for: .normal)
+            groupButton.setTitle(group.name, for: .normal)
             groupButton.setTitleColor(UIColor(white: 0.15, alpha: 1.0), for: .normal)
             groupButton.backgroundColor = UIColor.white
         } else {

@@ -32,7 +32,7 @@ class ReplyBar:UIView {
         replyDivider.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         
         replyLabel = UILabel(frame: bounds)
-        replyLabel.font = Fonts.medium(ofSize: 14.0)
+        replyLabel.font = Fonts.semiBold(ofSize: 14.0)
         replyLabel.textColor = grayColor
         addSubview(replyLabel)
         replyLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -67,7 +67,7 @@ class ReplyBar:UIView {
                 ])
             
             attributedText.addAttributes([
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
                 NSAttributedStringKey.foregroundColor: UIColor.gray
                 ], range: NSRange(location: 0, length: prefix.count))
             replyLabel.attributedText = attributedText

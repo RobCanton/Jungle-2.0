@@ -18,6 +18,10 @@ class Group {
     var numMembers:Int
     var numPosts:Int
     
+    var score:Double {
+        return Double(numMembers) + Double(numPosts) / 2
+    }
+    
     init(id:String, name:String, desc:String,
          avatar_low:URL, avatar_high:URL,
          numMembers:Int, numPosts:Int) {

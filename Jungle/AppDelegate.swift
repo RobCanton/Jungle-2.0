@@ -177,6 +177,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                     GroupsService.myGroupKeys = groups
                 }
                 
+                if let groups = data["groupsSkipped"] as? [String:Bool] {
+                    GroupsService.skippedGroupKeys = groups
+                }
+                
                 if let timeoutData = data["timeout"] as? [String:Any] {
                     timeout = UserService.parseTimeout(timeoutData)
                 }
@@ -377,7 +381,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                             SwiftMessages.hide()
                         }
                         messageView.titleLabel?.font = Fonts.semiBold(ofSize: 18.0)
-                        messageView.bodyLabel?.font = Fonts.medium(ofSize: 16.0)
+                        messageView.bodyLabel?.font = Fonts.regular(ofSize: 16.0)
                         
                         messageView.titleLabel?.textColor = UIColor.white
                         messageView.bodyLabel?.textColor = UIColor.white

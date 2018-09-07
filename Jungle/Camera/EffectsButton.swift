@@ -30,7 +30,7 @@ class EffectsButton:UIView {
         button = UIButton(type: .custom)
         button.setTitle("Effects", for: .normal)
         button.setTitleColor(UIColor.white, for: .normal)
-        button.titleLabel?.font = Fonts.medium(ofSize: 14.0)
+        button.titleLabel?.font = Fonts.semiBold(ofSize: 14.0)
         addSubview(button)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0).isActive = true

@@ -26,6 +26,8 @@ class NotificationsViewController:JViewController, ASTableDelegate, ASTableDataS
     
     var transitionManager = LightboxTransitionManager()
     
+    var anonSwitch:AnonSwitch!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -42,6 +44,15 @@ class NotificationsViewController:JViewController, ASTableDelegate, ASTableDataS
         titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
         
         titleView.titleLabel.text = "NOTIFICATIONS"
+        let titleContentView = titleView.contentView!
+        
+        anonSwitch = AnonSwitch(frame: .zero)
+        titleContentView.addSubview(anonSwitch)
+        anonSwitch.translatesAutoresizingMaskIntoConstraints = false
+        anonSwitch.leadingAnchor.constraint(equalTo: titleContentView.leadingAnchor, constant: 16.0).isActive = true
+        anonSwitch.centerYAnchor.constraint(equalTo: titleContentView.centerYAnchor).isActive = true
+        anonSwitch.widthAnchor.constraint(equalToConstant: 32.0).isActive = true
+        anonSwitch.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
         
         tableNode = ASTableNode()
         view.addSubview(tableNode.view)
@@ -68,6 +79,9 @@ class NotificationsViewController:JViewController, ASTableDelegate, ASTableDataS
         navigationController?.setNavigationBarHidden(true, animated: animated)
         calculateAndRenderDiffs()
         nService.delegate = self
+        
+        anonSwitch.setProfileImage()
+        anonSwitch.setAnonMode(to: UserService.anonMode)
         
     }
     

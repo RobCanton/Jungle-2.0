@@ -184,6 +184,7 @@ class SearchService {
     
     static func getTrendingHastags() {
         
+        var trendingGroups = [String]()
         functions.httpsCallable("trendingTags").call { result, error in
             if let data = result?.data as? [String:[String:Any]] {
                 var tags = [TrendingHashtag]()
@@ -201,14 +202,18 @@ class SearchService {
                         }
                         
                         print("TRENDING DATA: \(data)")
-                        
+                        if let first = posts.first,
+                            let group = GroupsService.groupsDict[first.group.id] {
+                            trendingGroups.append(group.id)
+                        }
                         let tag = TrendingHashtag(hashtag: key, count: count, posts: posts)
                         tags.append(tag)
                         
                     }
                 }
-                tags.sort(by: { return $0 > $1 })
                 
+                tags.sort(by: { return $0 > $1 })
+                GroupsService.trendingGroupKeys = trendingGroups
                 trendingHashtags = tags
             }
         }

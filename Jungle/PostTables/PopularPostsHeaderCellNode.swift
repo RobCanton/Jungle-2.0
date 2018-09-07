@@ -189,7 +189,7 @@ class TrendingCellNode:ASCellNode {
         
         titleNode.attributedText = NSAttributedString(string: post.group.name, attributes: [
             NSAttributedStringKey.foregroundColor: UIColor.white,
-            NSAttributedStringKey.font: Fonts.bold(ofSize: 14.0),
+            NSAttributedStringKey.font: Fonts.bold(ofSize: 15.0),
             NSAttributedStringKey.paragraphStyle: paragraphStyle
             ])
         
@@ -202,7 +202,7 @@ class TrendingCellNode:ASCellNode {
         
         subtitleNode.attributedText = NSAttributedString(string: subtitle, attributes: [
             NSAttributedStringKey.foregroundColor: UIColor.white,
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 11.5),
+            NSAttributedStringKey.font: Fonts.regular(ofSize: 11.5),
             NSAttributedStringKey.paragraphStyle: paragraphStyle
             ])
         dimNode.backgroundColor = UIColor.black
@@ -243,7 +243,7 @@ class TrendingCellNode:ASCellNode {
         titleStack.children = [titleNode]
         titleStack.spacing = 0.0
         titleStack.justifyContent = .end
-        let titleStackInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 4, 4, 4), child: titleStack)
+        let titleStackInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 4, 6, 4), child: titleStack)
         let overlay = ASOverlayLayoutSpec(child: contentOverlay, overlay: titleStackInset)
     
         return ASOverlayLayoutSpec(child: overlay, overlay: dimNode)

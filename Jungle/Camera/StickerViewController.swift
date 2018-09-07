@@ -117,7 +117,7 @@ class StickerCellNode:ASCellNode {
     
     func willDisplay() {
         titleNode.attributedText = NSAttributedString(string: emoji, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 44)
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 44)
             ])
     }
 }

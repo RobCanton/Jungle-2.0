@@ -41,7 +41,7 @@ class GroupsSwiperView: UIView {
         
         GroupsService.sortGroups()
         
-        groups = GroupsService.allGroups
+        sortGroups()
         
         kolodaView = KolodaView()
         contentView.addSubview(kolodaView)
@@ -56,9 +56,9 @@ class GroupsSwiperView: UIView {
         kolodaView.reloadData()
         
         let emptyLabel = UILabel()
-        emptyLabel.text = "No more groups!"
+        emptyLabel.text = "No more groups"
         emptyLabel.textColor = UIColor.white.withAlphaComponent(0.5)
-        emptyLabel.font = Fonts.bold(ofSize: 24)
+        emptyLabel.font = Fonts.semiBold(ofSize: 20)
         emptyLabel.textAlignment = .center
         contentView.insertSubview(emptyLabel, at: 0)
         emptyLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -164,6 +164,20 @@ class GroupsSwiperView: UIView {
             emptyLabel.isHidden = false
         })
     }
+    
+    func sortGroups() {
+        let allGroups = GroupsService.allGroups
+        var freshGroups = [Group]()
+        
+        for group in allGroups {
+            if GroupsService.skippedGroupKeys[group.id] == nil {
+                freshGroups.append(group)
+            }
+        }
+        groups = []
+        groups.append(contentsOf: freshGroups.sorted(by: { $0.score >  $1.score }))
+    }
+    
     @objc func handleClose() {
         closeHandler?()
     }
@@ -179,7 +193,6 @@ class GroupsSwiperView: UIView {
     @objc func handleSkipButton() {
         kolodaView.swipe(.left, force: true)
     }
-    
 }
 
 
@@ -203,6 +216,7 @@ extension GroupsSwiperView: KolodaViewDelegate, KolodaViewDataSource {
         } else if direction == .bottomLeft ||
             direction == .left ||
             direction == .topLeft {
+            GroupsService.skipGroup(id: group.id) { _ in }
         }
     }
     

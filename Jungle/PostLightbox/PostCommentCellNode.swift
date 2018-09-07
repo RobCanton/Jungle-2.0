@@ -119,7 +119,7 @@ class PostCommentCellNode: ASCellNode {
         
         timeNode.textContainerInset = UIEdgeInsetsMake(0,2,0,2)
         timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow() , attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: titleSize),
+            NSAttributedStringKey.font: Fonts.regular(ofSize: titleSize),
             NSAttributedStringKey.foregroundColor: tertiaryColor
             ])
         
@@ -147,12 +147,12 @@ class PostCommentCellNode: ASCellNode {
         
         if let blockedMessage = post.blockedMessage {
             postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
+                NSAttributedStringKey.font: Fonts.regular(ofSize: 15.0),
                 NSAttributedStringKey.foregroundColor: tertiaryColor
                 ])
             
         } else {
-            postTextNode.setText(text: post.text, withSize: 15.0, normalColor: .black, activeColor: tagColor)
+            postTextNode.setText(text: post.text, withFont: Fonts.regular(ofSize: 15.0), normalColor: .black, activeColor: tagColor)
             postTextNode.tapHandler = { type, str in
                 switch type {
                 case .hashtag:

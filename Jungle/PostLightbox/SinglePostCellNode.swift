@@ -92,12 +92,12 @@ class ContentOverlayNode:ASControlNode {
         if post.attachments.isImage || post.attachments.isVideo {
             if let blockedMessage = post.blockedMessage {
                 postTextNode.attributedText = NSAttributedString(string: blockedMessage, attributes: [
-                    NSAttributedStringKey.font: Fonts.medium(ofSize: 16.0),
+                    NSAttributedStringKey.font: Fonts.semiBold(ofSize: 16.0),
                     NSAttributedStringKey.foregroundColor: UIColor(white:0.67, alpha: 1.0)
                     ])
             } else {
                 
-                postTextNode.setText(text: post.text, withSize: 15.0, normalColor: .white, activeColor: tagColor)
+                postTextNode.setText(text: post.text, withFont: Fonts.regular(ofSize: 15.0), normalColor: .white, activeColor: tagColor)
                 postTextNode.tapHandler = { type, str in
                     switch type {
                     case .hashtag:
@@ -136,7 +136,7 @@ class ContentOverlayNode:ASControlNode {
         }
         
         timeNode.attributedText = NSAttributedString(string: post.createdAt.fullTimeSinceNow() , attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 13.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
         
@@ -218,7 +218,7 @@ class ContentOverlayNode:ASControlNode {
     
     func temporaryUnblock() {
         guard let post = self.post else { return }
-        postTextNode.setText(text: post.text, withSize: 15.0, normalColor: .white, activeColor: tagColor)
+        postTextNode.setText(text: post.text, withFont: Fonts.regular(ofSize: 15.0), normalColor: .white, activeColor: tagColor)
         actionsRow.setBlocked(false)
     }
     

@@ -109,6 +109,8 @@ class GroupViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, 
         
     }
     
+    
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
@@ -192,6 +194,44 @@ class GroupViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, 
     }
     
     @objc func handleMore() {
+        print("HANDLE IT!")
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { _ in
+            let reportAlert = UIAlertController(title: "Why are you reporting this group?", message: "", preferredStyle: .alert)
+            reportAlert.addTextField { (textField : UITextField!) -> Void in
+                textField.placeholder = ""
+            }
+            let saveAction = UIAlertAction(title: "Send", style: .default, handler: { action in
+                let textField = reportAlert.textFields![0] as UITextField
+                let text = textField.text
+                
+                let ref = database.child("groups/reports/\(self.group.id)/\(uid)")
+                let report:[String:Any] = [
+                    "message": text ?? "",
+                    "timestamp": [".sv" : "timestamp"]
+                ]
+                
+                ref.setValue(report) { error, ref in
+                    if let _ = error {
+                        Alerts.showFailureAlert(withMessage: "Failed to send report.")
+                    } else {
+                        Alerts.showSuccessAlert(withMessage: "Report sent!")
+                    }
+                }
+            })
+            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+            
+            reportAlert.addAction(saveAction)
+            reportAlert.addAction(cancelAction)
+            
+            self.present(reportAlert, animated: true, completion: nil)
+            
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        self.present(alert, animated: true, completion: nil)
     }
 }
 

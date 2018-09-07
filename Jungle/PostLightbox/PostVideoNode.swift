@@ -98,7 +98,7 @@ class PostContentNode:ASDisplayNode {
             paragraphStyle.alignment = .center
             blockedTitleNode?.attributedText = NSAttributedString(string: "Content Hidden", attributes: [
                 NSAttributedStringKey.paragraphStyle: paragraphStyle,
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 16.0),
+                NSAttributedStringKey.font: Fonts.regular(ofSize: 16.0),
                 NSAttributedStringKey.foregroundColor: UIColor.white
             ])
             blockedButtonNode = ASButtonNode()
@@ -145,7 +145,7 @@ class PostContentNode:ASDisplayNode {
         paragraphStyle.alignment = .center
         
         textNode.textContainerInset = UIEdgeInsetsMake(16,24,16,24)
-        textNode.setText(text: post.text, withSize: 24.0, normalColor: .white, activeColor: UIColor.white.withAlphaComponent(0.67))
+        textNode.setText(text: post.text, withFont: Fonts.regular(ofSize: 24.0), normalColor: .white, activeColor: UIColor.white.withAlphaComponent(0.67))
     }
     
     func setupVideo(_ post:Post) {
@@ -227,7 +227,7 @@ class PostContentNode:ASDisplayNode {
         
         let nameStack = ASStackLayoutSpec.vertical()
         nameStack.children = [usernameStack, timeNode]
-        nameStack.spacing = 2.0
+        nameStack.spacing = 0.0
         
         let titleStack = ASStackLayoutSpec.horizontal()
         titleStack.children = [avatarNode, nameStack ]
@@ -259,7 +259,7 @@ class PostContentNode:ASDisplayNode {
         if videoNode.asset != nil {
             self.videoNode.play()
         }
-        pastelNode.animate()
+        pastelNode.staticGradient()
     }
     
     override func didExitVisibleState() {

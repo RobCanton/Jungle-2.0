@@ -301,7 +301,7 @@ class SettingsDetailCellNode: ASCellNode {
         automaticallyManagesSubnodes = true
         titleNode.maximumNumberOfLines = 1
         titleNode.attributedText = NSAttributedString(string: option.title.rawValue, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
             NSAttributedStringKey.foregroundColor: UIColor.black
             ])
         subtitleNode.maximumNumberOfLines = 0
@@ -392,7 +392,7 @@ class SettingsButtonCellNode: ASCellNode {
                 ])
         } else {
             titleNode.attributedText = NSAttributedString(string: option.title.rawValue, attributes: [
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
                 NSAttributedStringKey.foregroundColor: UIColor.black
                 ])
         }

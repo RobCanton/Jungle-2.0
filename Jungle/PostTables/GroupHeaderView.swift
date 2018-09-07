@@ -123,7 +123,7 @@ class GroupHeaderView:UIView {
         titleView.leftButton.setImage(UIImage(named:"back"), for: .normal)
         titleView.rightButton.setImage(UIImage(named:"more_white"), for: .normal)
         titleView.titleLabel.text = nil
-        titleView.titleLabel.font = Fonts.semiBold(ofSize: 14.0)
+        titleView.titleLabel.font = Fonts.extraBold(ofSize: 14.0)
         titleView.titleLabel.alpha = 0.0
         titleView.backgroundImage.isHidden = true
         titleView.backgroundColor = UIColor.clear
@@ -140,7 +140,7 @@ class GroupHeaderView:UIView {
         infoLabel = UILabel()
         infoLabel.numberOfLines = 1
         infoLabel.textAlignment = .center
-        infoLabel.font = Fonts.medium(ofSize: 14.0)
+        infoLabel.font = Fonts.regular(ofSize: 14.0)
         
         infoLabel.textColor = UIColor.white
         infoRow.addSubview(infoLabel)
@@ -163,7 +163,7 @@ class GroupHeaderView:UIView {
         
         joinButton = UIButton(type: .custom)
         joinButton.setTitle("Join Group", for: .normal)
-        joinButton.titleLabel?.font = Fonts.semiBold(ofSize: 16.0)
+        joinButton.titleLabel?.font = Fonts.bold(ofSize: 16.0)
         joinButton.setTitleColor(UIColor.white, for: .normal)
         joinButton.layer.cornerRadius = 32/2
         joinButton.layer.borderColor = UIColor.white.cgColor
@@ -226,19 +226,19 @@ class GroupHeaderView:UIView {
         
         var membersStr:String
         if group.numMembers == 1 {
-            membersStr = "1 member"
+            membersStr = "1 Member"
         } else {
-            membersStr = "\(group.numMembers) members"
+            membersStr = "\(group.numMembers) Members"
         }
         
         var postsStr:String
         if group.numPosts == 1 {
-            postsStr = "1 post"
+            postsStr = "1 Post"
         } else {
-            postsStr = "\(group.numPosts) posts"
+            postsStr = "\(group.numPosts) Posts"
         }
         
-        infoLabel.text = "\(membersStr) · \(postsStr)"
+        infoLabel.text = "\(membersStr)   \(postsStr)"
         
         refreshJoinButton()
     }

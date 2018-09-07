@@ -30,7 +30,7 @@ class CreateGroupCellNode:ASCellNode {
         backgroundColor = UIColor.clear
         
         titleNode.attributedText = NSAttributedString(string: title, attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 18.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 18.0),
             NSAttributedStringKey.foregroundColor: UIColor.white
             ])
         

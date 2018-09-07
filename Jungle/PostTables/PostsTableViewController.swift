@@ -28,21 +28,30 @@ class PostsTableViewController: ASViewController<ASDisplayNode> {
     var transitionManager = LightboxTransitionManager()
     var pushTransitionManager = PushTransitionManager()
     
-    var headerCell:ASCellNode {
-        get {
-            let cell = ASCellNode()
-            cell.style.height = ASDimension(unit: .points, value: 0.0)
-            cell.selectionStyle = .none
-            return cell
-        }
+    
+    func numberOfHeaderCells() -> Int {
+        return 1
     }
+    
+    func headerCell(for indexPath:IndexPath) -> ASCellNode {
+        let cell = ASCellNode()
+        cell.style.height = ASDimension(unit: .points, value: 0.0)
+        cell.selectionStyle = .none
+        return cell
+    }
+    
+    func headerCell(didSelectRowAt indexPath:IndexPath) {}
+    func headerCell(didDeselectRowAt indexPath:IndexPath) {}
+    func headerCell(didHighlightRowAt indexPath:IndexPath) {}
+    func headerCell(didUnhighlightRowAt indexPath:IndexPath) {}
+    
     
     func lightBoxVC() -> LightboxViewController {
         return LightboxViewController()
     }
     
-    func postCell(_ post:Post) -> ASCellNode {
-        let cell = PostCellNode(post: post)
+    func postCell(for indexPath:IndexPath) -> ASCellNode {
+        let cell = PostCellNode(post: state.posts[indexPath.row])
         cell.postNode.delegate = self
         cell.selectionStyle = .none
         return cell
@@ -171,7 +180,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     
     func tableNode(_ tableNode: ASTableNode, numberOfRowsInSection section: Int) -> Int {
         if section == 0 {
-            return 1
+            return numberOfHeaderCells()
         }
         var count = state.posts.count
         if state.fetchingMore {
@@ -182,7 +191,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
         if indexPath.section == 0 {
-            return headerCell
+            return headerCell(for: indexPath)
         }
         let rowCount = self.tableNode(tableNode, numberOfRowsInSection: 1)
         
@@ -192,18 +201,19 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
             return node;
         }
         
-        return postCell(state.posts[indexPath.row])
+        return postCell(for:indexPath)
     }
     
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
         if indexPath.section == 0 {
-            return
+            headerCell(didSelectRowAt: indexPath)
+        } else {
+            let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
+            node?.setHighlighted(true)
+            
+            let post = state.posts[indexPath.row]
+            openSinglePost(post, index: indexPath.row)
         }
-        let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
-        node?.setHighlighted(true)
-        
-        let post = state.posts[indexPath.row]
-        openSinglePost(post, index: indexPath.row)
     }
     
     
@@ -232,16 +242,28 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
     }
     
     func tableNode(_ tableNode: ASTableNode, didDeselectRowAt indexPath: IndexPath) {
+        if indexPath.section == 0 {
+            headerCell(didDeselectRowAt: indexPath)
+            return
+        }
         let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
         node?.setHighlighted(false)
     }
     
     func tableNode(_ tableNode: ASTableNode, didHighlightRowAt indexPath: IndexPath) {
+        if indexPath.section == 0 {
+            headerCell(didHighlightRowAt: indexPath)
+            return
+        }
         let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
         node?.setHighlighted(true)
     }
     
     func tableNode(_ tableNode: ASTableNode, didUnhighlightRowAt indexPath: IndexPath) {
+        if indexPath.section == 0 {
+            headerCell(didUnhighlightRowAt: indexPath)
+            return
+        }
         let node = tableNode.nodeForRow(at: indexPath) as? PostCellNode
         node?.setHighlighted(false)
     }

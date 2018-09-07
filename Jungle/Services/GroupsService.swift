@@ -18,7 +18,8 @@ class GroupsService {
     static var notification_groupsUpdated = Notification.Name.init("groupsUpdated")
     
     static var myGroupKeys = [String:Bool]()
-    
+    static var skippedGroupKeys = [String:Bool]()
+    static var trendingGroupKeys = [String]()
     
     static var myGroups = [Group]()
     static var allGroups = [Group]()
@@ -83,7 +84,7 @@ class GroupsService {
     
     static func joinGroup(id:String, completion: @escaping (_ success:Bool)->()) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let update:[String:Any]  = [
+        let update:[String:Any?]  = [
             "users/groups/\(uid)/\(id)": true,
             "groups/members/\(id)/\(uid)": true
         ]
@@ -103,13 +104,44 @@ class GroupsService {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let update:[String:Any?] = [
             "users/groups/\(uid)/\(id)": nil,
-            "groups/members/\(id)/\(uid)": nil
+            "groups/members/\(id)/\(uid)": nil,
+            "users/groupsSkipped/\(uid)/\(id)": nil
         ]
         
         database.updateChildValues(update) { error, _ in
             if error == nil {
                 myGroupKeys[id] = nil
                 myGroupsDidChange = true
+                completion(true)
+            } else {
+                completion(false)
+            }
+        }
+    }
+    
+    static func skipGroup(id:String, completion: @escaping (_ success:Bool)->()) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let update:[String:Any] = [
+            "users/groupsSkipped/\(uid)/\(id)": true
+        ]
+        
+        database.updateChildValues(update) { error, _ in
+            if error == nil {
+                skippedGroupKeys[id] = true
+                completion(true)
+            } else {
+                completion(false)
+            }
+        }
+    }
+    
+    static func clearSkippedGroups(completion: @escaping (_ success:Bool)->()) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        let ref = database.child("users/groupsSkipped/\(uid)")
+        ref.removeValue { error, _ in
+            if error == nil {
+                skippedGroupKeys = [:]
                 completion(true)
             } else {
                 completion(false)

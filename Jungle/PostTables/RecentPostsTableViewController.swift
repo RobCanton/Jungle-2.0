@@ -61,15 +61,14 @@ class RecentPostsTableViewController: PostsTableViewController {
         if state.posts.count > 0 {
             firstTimestamp = state.posts[0].createdAt.timeIntervalSince1970 * 1000
         }
-        
         newPostsListener?.remove()
-        PostsService.refreshNewPosts(startAfter: firstTimestamp) { _posts in
+        PostsService.getMyFeedPosts(offset: state.posts.count, before: firstTimestamp) { _posts in
             self.refreshControl.endRefreshing()
-            
+
             let action = PostsStateController.Action.insertNewBatch(posts: _posts)
             let oldState = self.state
             self.state = PostsStateController.handleAction(action, fromState: oldState)
-            
+
             self.tableNode.performBatch(animated: false, updates: {
                 let indexPaths = (0..<_posts.count).map { index in
                     IndexPath(row: index, section: 1)
@@ -85,44 +84,46 @@ class RecentPostsTableViewController: PostsTableViewController {
     }
     
     func listenForNewPosts() {
-        newPostsListener?.remove()
-        
-        let postsRef = firestore.collection("posts")
-            .whereField("status", isEqualTo: "active")
-            .whereField("parent", isEqualTo: "NONE")
-        
-        var query:Query
-        if state.posts.count > 0 {
-            query = postsRef.whereField("createdAt", isGreaterThan: state.posts[0].createdAt.timeIntervalSince1970 * 1000)
-                .order(by: "createdAt", descending: true)
-                .limit(to: 1)
-        } else {
-            query = postsRef.order(by: "createdAt", descending: true).limit(to: 1)
-        }
-        
-        newPostsListener = query.addSnapshotListener() { snapshot, err in
-            if let err = err {
-                print("Error getting documents: \(err)")
-            } else {
-                if snapshot!.documents.count > 0 {
-                    let firstDoc = snapshot!.documents[0]
-                    if let _ = Post.parse(id: firstDoc.documentID, firstDoc.data()) {
-                        self.toggleNewPosts(visible: true, animated: true)
-                    }
-                }
-            }
-        }
+        print("LISTEN FOR NEW POSTS!")
+//        newPostsListener?.remove()
+//
+//        let postsRef = firestore.collection("posts")
+//            .whereField("status", isEqualTo: "active")
+//            .whereField("parent", isEqualTo: "NONE")
+//
+//        var query:Query
+//        if state.posts.count > 0 {
+//            query = postsRef.whereField("createdAt", isGreaterThan: state.posts[0].createdAt.timeIntervalSince1970 * 1000)
+//                .order(by: "createdAt", descending: true)
+//                .limit(to: 1)
+//        } else {
+//            query = postsRef.order(by: "createdAt", descending: true).limit(to: 1)
+//        }
+//
+//        newPostsListener = query.addSnapshotListener() { snapshot, err in
+//            if let err = err {
+//                print("Error getting documents: \(err)")
+//            } else {
+//                if snapshot!.documents.count > 0 {
+//                    let firstDoc = snapshot!.documents[0]
+//                    if let newPost = Post.parse(id: firstDoc.documentID, firstDoc.data()) {
+//                        if GroupsService.myGroupKeys[newPost.group.id] != nil {
+//                            self.toggleNewPosts(visible: true, animated: true)
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
     
     override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
         
-        PostsService.getMyFeedPosts(offset: state.posts.count, completion: completion)
-//        PostsService.getRecentPosts(lastPost: state.posts.last) { posts in
-//            let isFirstLoad = self.state.isFirstLoad
-//            completion(posts)
-//            if isFirstLoad {
-//                self.listenForNewPosts()
-//            }
-//        }
+        PostsService.getMyFeedPosts(offset: state.posts.count, before: nil) { posts in
+            let isFirstLoad = self.state.isFirstLoad
+            completion(posts)
+            if isFirstLoad {
+                self.listenForNewPosts()
+            }
+        }
     }
 }

@@ -93,7 +93,7 @@ class GroupCardView:UIView {
         titleLabel.textColor = UIColor.white
         //titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 3
-        titleLabel.font = Fonts.bold(ofSize: 32)
+        titleLabel.font = Fonts.extraBold(ofSize: 32)
         self.addSubview(titleLabel)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16.0).isActive = true
@@ -134,10 +134,18 @@ import Koloda
 
 class CardOverlayView: OverlayView {
     
+    var imageView:UIImageView!
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.layer.cornerRadius = 12
         self.clipsToBounds = true
+        self.translatesAutoresizingMaskIntoConstraints = false
+        imageView = UIImageView(frame: bounds)
+        imageView.image = nil
+        self.addSubview(imageView)
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        imageView.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -148,10 +156,13 @@ class CardOverlayView: OverlayView {
         didSet {
             switch overlayState {
             case .left? :
-                backgroundColor = UIColor.black.withAlphaComponent(0.4)
+                imageView.image = UIImage(named:"SkipOverlay")
+                backgroundColor = UIColor.black.withAlphaComponent(0.5)
             case .right? :
-                backgroundColor = accentColor.withAlphaComponent(0.4)
+                imageView.image = UIImage(named:"JoinOverlay")
+                backgroundColor = accentColor.withAlphaComponent(0.5)
             default:
+                imageView.image = nil
                 backgroundColor = UIColor.clear
             }
         }

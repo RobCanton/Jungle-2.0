@@ -30,7 +30,7 @@ class OptionsView:UIView, ASTableDelegate, ASTableDataSource {
         self.preservesSuperviewLayoutMargins = false
         self.insetsLayoutMarginsFromSafeArea = false
         
-        self.layer.cornerRadius = 12.0
+        self.layer.cornerRadius = 8
         self.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
         self.clipsToBounds = true
         

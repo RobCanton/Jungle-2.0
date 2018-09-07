@@ -165,15 +165,15 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
         promptRef.observeSingleEvent(of: .value, with: { snapshot in
             if !snapshot.exists() {
                 let text = "Tap here to toggle anonymous mode."
-                let size = UILabel.size(text: text, height: 44, font: Fonts.medium(ofSize: 14.0)).width
-                let height = UILabel.size(text: "Hey", width: self.view.bounds.width, font: Fonts.medium(ofSize: 14.0)).height
+                let size = UILabel.size(text: text, height: 44, font: Fonts.semiBold(ofSize: 14.0)).width
+                let height = UILabel.size(text: "Hey", width: self.view.bounds.width, font: Fonts.semiBold(ofSize: 14.0)).height
                 let anonSwitch = self.anonSwitch!
                 let startPoint = CGPoint(x: anonSwitch.center.x, y: anonSwitch.center.y + topInset + anonSwitch.bounds.width / 2)
                 let aView = UIView(frame: CGRect(x: 0, y: 0, width: size + 16, height: height + 24))
                
                 let label = UILabel(frame: .zero)
                 label.text = text
-                label.font = Fonts.medium(ofSize: 14.0)
+                label.font = Fonts.semiBold(ofSize: 14.0)
                 aView.addSubview(label)
                 label.translatesAutoresizingMaskIntoConstraints = false
                 
@@ -257,7 +257,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
             self.messageWrapper.hide()
         }
         messageView.titleLabel?.font = Fonts.semiBold(ofSize: 16.0)
-        messageView.bodyLabel?.font = Fonts.medium(ofSize: 14.0)
+        messageView.bodyLabel?.font = Fonts.regular(ofSize: 14.0)
         
         
         let button = messageView.button!

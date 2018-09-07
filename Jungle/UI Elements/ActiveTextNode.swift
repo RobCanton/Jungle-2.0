@@ -34,11 +34,11 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         let text = NSMutableAttributedString(string: str)
         text.addAttribute(NSAttributedStringKey.paragraphStyle, value: paragraph, range: NSRange(location: 0, length: str.count))
         text.addAttribute(NSAttributedStringKey.font, value: Fonts.semiBold(ofSize: 15.0), range: NSRange(location: 0, length: title.count))
-        text.addAttribute(NSAttributedStringKey.font, value: Fonts.medium(ofSize: 15.0), range: NSRange(location: title.count + 1, length: subtitle.count))
+        text.addAttribute(NSAttributedStringKey.font, value: Fonts.regular(ofSize: 15.0), range: NSRange(location: title.count + 1, length: subtitle.count))
         self.attributedText = text
     }
     
-    public func setText(text: String, withSize size: CGFloat, normalColor: UIColor, activeColor: UIColor) {
+    public func setText(text: String, withFont font: UIFont, normalColor: UIColor, activeColor: UIColor) {
         self.delegate = self
         self.isUserInteractionEnabled = true
         self.passthroughNonlinkTouches = true
@@ -51,18 +51,17 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         self.attrString = attributedString
         self.textString = text
         
-        let font = Fonts.light(ofSize: size)
         // Set initial font attributes for our string
         attrString?.addAttribute(NSAttributedStringKey.font, value: font, range: NSRange(location: 0, length: count))
         attrString?.addAttribute(NSAttributedStringKey.foregroundColor, value: normalColor, range: NSRange(location: 0, length: count))
         
         // Call a custom set Hashtag and Mention Attributes Function
-        setAttrWithName(color: activeColor, text: text, size: size)
+        setAttrWithName(color: activeColor, text: text)
         
     }
     
     
-    private func setAttrWithName(color: UIColor, text: String, size: CGFloat) {
+    private func setAttrWithName(color: UIColor, text: String) {
 
         let textLength = text.utf16.count
         let textRange = NSRange(location: 0, length: textLength)

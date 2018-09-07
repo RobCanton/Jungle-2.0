@@ -133,7 +133,7 @@ class NotificationCellNode:ASCellNode {
             
             let titleStr = NSMutableAttributedString(string: notificationStr)
             titleStr.addAttributes([
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
                 NSAttributedStringKey.foregroundColor: UIColor.gray
                 ], range: NSRange(location: 0, length: notificationStr.count))
             
@@ -193,7 +193,7 @@ class NotificationCellNode:ASCellNode {
             
             let titleStr = NSMutableAttributedString(string: notificationStr)
             titleStr.addAttributes([
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 15.0),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 15.0),
                 NSAttributedStringKey.foregroundColor: UIColor.gray
                 ], range: NSRange(location: 0, length: notificationStr.count))
             

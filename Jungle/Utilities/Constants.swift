@@ -157,35 +157,80 @@ class Emojis {
 
 }
 
+enum FontFamily:String {
+    case none = "NONE"
+    case nunito = "Nunito"
+    case nunitoSans = "NunitoSans"
+    case dosis = "Dosis"
+    case asap = "Asap"
+}
+
+let fontFamily = FontFamily.nunito
+
 class Fonts {
     
-    static func medium(ofSize size: CGFloat) -> UIFont {
-         return UIFont.systemFont(ofSize: size, weight: .medium)
-    }
-    
-    static func regular(ofSize size: CGFloat) -> UIFont {
-        return UIFont.systemFont(ofSize: size, weight: .regular)
+    static func extraLight(ofSize size: CGFloat) -> UIFont {
+        switch fontFamily {
+        case .none:
+            return UIFont.systemFont(ofSize: size, weight: .light)
+        default:
+            return UIFont(name: "\(fontFamily.rawValue)-ExtraLight", size: size)!
+        }
     }
     
     static func light(ofSize size: CGFloat) -> UIFont {
-        return UIFont.systemFont(ofSize: size, weight: .light)
+        switch fontFamily {
+        case .none:
+            return UIFont.systemFont(ofSize: size, weight: .light)
+        default:
+            return UIFont(name: "\(fontFamily.rawValue)-Light", size: size)!
+        }
+    }
+    
+    static func regular(ofSize size: CGFloat) -> UIFont {
+        switch fontFamily {
+        case .none:
+            return UIFont.systemFont(ofSize: size, weight: .regular)
+        default:
+            return UIFont(name: "\(fontFamily.rawValue)-Regular", size: size)!
+        }
     }
     
     static func semiBold(ofSize size: CGFloat) -> UIFont {
-        return UIFont.systemFont(ofSize: size, weight: .semibold)
+        switch fontFamily {
+        case .none:
+            return UIFont.systemFont(ofSize: size, weight: .semibold)
+        default:
+            return UIFont(name: "\(fontFamily.rawValue)-SemiBold", size: size)!
+        }
     }
+    
     static func bold(ofSize size: CGFloat) -> UIFont {
-        return UIFont.systemFont(ofSize: size, weight: .bold)
+        switch fontFamily {
+        case .none:
+            return UIFont.systemFont(ofSize: size, weight: .bold)
+        default:
+            return UIFont(name: "\(fontFamily.rawValue)-Bold", size: size)!
+        }
     }
     
-    static func italic(ofSize size: CGFloat) -> UIFont {
-        return UIFont.italicSystemFont(ofSize: size)
+    static func extraBold(ofSize size: CGFloat) -> UIFont {
+        switch fontFamily {
+        case .none:
+            return UIFont.systemFont(ofSize: size, weight: .bold)
+        default:
+            return UIFont(name: "\(fontFamily.rawValue)-ExtraBold", size: size)!
+        }
     }
     
-    static func stylizedRegular(ofSize size: CGFloat) -> UIFont {
-        return UIFont(name: "BalooTammudu-Regular", size: size)!
+    static func black(ofSize size: CGFloat) -> UIFont {
+        switch fontFamily {
+        case .none:
+            return UIFont.systemFont(ofSize: size, weight: .black)
+        default:
+            return UIFont(name: "\(fontFamily.rawValue)-Black", size: size)!
+        }
     }
-    
 }
 
 class Theme {

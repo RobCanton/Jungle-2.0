@@ -28,7 +28,7 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
         self.translatesAutoresizingMaskIntoConstraints = false
         title1 = UIButton(type: .custom)
         title1.setTitle("PHOTO", for: .normal)
-        title1.titleLabel?.font = Fonts.semiBold(ofSize: 14.0)
+        title1.titleLabel?.font = Fonts.bold(ofSize: 14.0)
         title1.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 12)
         title1.sizeToFit()
         title1.alpha = 0.4
@@ -41,7 +41,7 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
         
         title2 = UIButton(type: .custom)
         title2.setTitle("VIDEO", for: .normal)
-        title2.titleLabel?.font = Fonts.semiBold(ofSize: 14.0)
+        title2.titleLabel?.font = Fonts.bold(ofSize: 14.0)
         title2.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 12)
         title2.sizeToFit()
         title2.alpha = 1.0
@@ -52,7 +52,7 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
         
         title3 = UIButton(type: .custom)
         title3.setTitle("TEXT", for: .normal)
-        title3.titleLabel?.font = Fonts.semiBold(ofSize: 14.0)
+        title3.titleLabel?.font = Fonts.bold(ofSize: 14.0)
         title3.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 12)
         title3.sizeToFit()
         title3.alpha = 0.4

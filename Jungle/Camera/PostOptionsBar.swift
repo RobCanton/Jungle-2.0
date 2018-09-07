@@ -23,7 +23,7 @@ class PostOptionsBar:UIView {
         locationButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12).isActive = true
         locationButton.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         locationButton.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
-        locationButton.titleLabel?.font = Fonts.medium(ofSize: 14.0)
+        locationButton.titleLabel?.font = Fonts.semiBold(ofSize: 14.0)
         locationButton.setTitle("Markham, CA", for: .normal)
         locationButton.setImage(UIImage(named:"PinLarge"), for: .normal)
         locationButton.contentHorizontalAlignment = .leading

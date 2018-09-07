@@ -87,7 +87,7 @@ class GIFCollectionNode:ASDisplayNode, ASCollectionDelegate, ASCollectionDataSou
         searchBar.textBubble.backgroundColor = UIColor(white: 0.9, alpha: 1.0)
         searchBar.textField.textColor = UIColor.black
         searchBar.textField.attributedPlaceholder = NSAttributedString(string: "Search", attributes: [
-            NSAttributedStringKey.font: Fonts.medium(ofSize: 16.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 16.0),
             NSAttributedStringKey.foregroundColor: UIColor.black.withAlphaComponent(0.5)
             ])
         searchBar.rightButton.setTitleColor(UIColor.black, for: .normal)

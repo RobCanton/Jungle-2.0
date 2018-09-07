@@ -39,13 +39,13 @@ class GlassCellNode:ASCellNode {
         contentNode.layer.cornerRadius = 0.0
         var maskedCorners:CACornerMask = []
         if isTop {
-            contentNode.layer.cornerRadius = 12
+            contentNode.layer.cornerRadius = 8
             maskedCorners.insert(.layerMaxXMinYCorner)
             maskedCorners.insert(.layerMinXMinYCorner)
         }
         
         if isBottom {
-            contentNode.layer.cornerRadius = 12
+            contentNode.layer.cornerRadius = 8
             maskedCorners.insert(.layerMaxXMaxYCorner)
             maskedCorners.insert(.layerMinXMaxYCorner)
         }
@@ -88,7 +88,7 @@ class GroupCellNode:GlassCellNode {
             avatarNode.url = group.avatar_low
             titleNode.truncationMode = .byTruncatingTail
             titleNode.attributedText = NSAttributedString(string: group.name, attributes: [
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 18.0),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 18.0),
                 NSAttributedStringKey.foregroundColor: UIColor.white
                 ])
             
@@ -108,12 +108,12 @@ class GroupCellNode:GlassCellNode {
             avatarNode.url = nil
             avatarNode.image = UIImage(named:"Create44")
             titleNode.attributedText = NSAttributedString(string: "Create Group", attributes: [
-                NSAttributedStringKey.font: Fonts.medium(ofSize: 18.0),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 18.0),
                 NSAttributedStringKey.foregroundColor: UIColor.white
                 ])
         }
         
-        avatarNode.cornerRadius = 22
+        avatarNode.cornerRadius = 4
         avatarNode.clipsToBounds = true
         
         contentNode.style.height = ASDimension(unit: .points, value: 44 + 16)
