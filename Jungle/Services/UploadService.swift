@@ -152,6 +152,7 @@ class UploadService {
         }
     }
     
+    static let deletedNotification = Notification.Name.init("postDeleted")
     static func deletePost(_ post:Post, completion: @escaping (_ success:Bool)->()) {
         let _ = Alerts.showInfoAlert(withMessage: "Deleting...")
         functions.httpsCallable("postRemove").call(["postID": post.key]) { result, error in
@@ -162,6 +163,8 @@ class UploadService {
             }
             
             Alerts.showSuccessAlert(withMessage: "Deleted!")
+            
+            NotificationCenter.default.post(name: deletedNotification, object: nil, userInfo: ["postID": post.key])
             return completion(true)
         }
         
@@ -190,25 +193,26 @@ class UploadService {
     }
     
     
-    static func uploadPost(postID:String, text:String, group:Group?, image:UIImage?, videoURL:URL?, gif:GIF?=nil, region:Region?=nil, location:CLLocation?=nil) {
+    static func uploadPost(postID:String, text:String, group:Group, image:UIImage?, videoURL:URL?, gif:GIF?=nil, region:Region?=nil, location:CLLocation?=nil) {
         NSLog("RSC: uploadPost - Start")
         UserService.recentlyPosted = true
+        UserService.shouldPoll = true
+        if GroupsService.myGroupKeys[group.id] == nil {
+            GroupsService.addMyGroup(group)
+        }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         var parameters: [String: Any] = [
             "postID": postID,
             "uid" : uid,
             "text" : text,
+            "group": group.id,
             "isAnonymous" : UserService.anonMode
         ]
         
-        if let group = group {
-            parameters["group"] = group.id
-        }
-        
         if let region = region, let location = location {
             parameters["location"] = [
-                "lat": 43.6529,//location.coordinate.latitude,
-                "lng": -79.3849,//location.coordinate.longitude,
+                "lat": location.coordinate.latitude,
+                "lng": location.coordinate.longitude,
                 "region": [
                     "city": region.city,
                     "country": region.country,
@@ -217,6 +221,8 @@ class UploadService {
                 
             ]
         }
+        
+        print("UPLOAD PARAMS: \(parameters)")
         
         if let gif = gif {
             parameters["attachments"] = [

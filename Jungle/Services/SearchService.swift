@@ -203,7 +203,7 @@ class SearchService {
                         
                         print("TRENDING DATA: \(data)")
                         if let first = posts.first,
-                            let group = GroupsService.groupsDict[first.group.id] {
+                            let group = GroupsService.groupsDict[first.groupID] {
                             trendingGroups.append(group.id)
                         }
                         let tag = TrendingHashtag(hashtag: key, count: count, posts: posts)
@@ -280,6 +280,8 @@ class SearchService {
             "limit": 15,
             "offset": offset,
             ] as [String:Any]
+        
+        print("SEARCHING GROUP POSTS: \(params)")
         
         functions.httpsCallable("recentGroupPosts").call(params) { result, error in
             if let error = error {

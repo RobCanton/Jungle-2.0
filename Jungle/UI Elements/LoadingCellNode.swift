@@ -149,8 +149,8 @@ final class PastelNode: ASDisplayNode {
     
     override func didLoad() {
         super.didLoad()
-        pastelView.startPastelPoint = .topLeft
-        pastelView.endPastelPoint = .bottomRight
+        pastelView.startPastelPoint = .top
+        pastelView.endPastelPoint = .bottom
         
         // Custom Duration
         pastelView.animationDuration = 10

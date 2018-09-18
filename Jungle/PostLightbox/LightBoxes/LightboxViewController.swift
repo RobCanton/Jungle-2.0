@@ -68,7 +68,7 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         view.addSubview(closeButton)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24).isActive = true
-        closeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 24).isActive = true
+        closeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: deviceInsets.top).isActive = true
         closeButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
         closeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
         closeButton.tintColor = UIColor.white
@@ -76,11 +76,8 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         closeButton.addTarget(self, action: #selector(handleDismiss), for: .touchUpInside)
         
         groupButton = UIButton(type: .custom)
-        groupButton.setTitle("Movies", for: .normal)
-        groupButton.titleLabel?.font = Fonts.bold(ofSize: 13.0)
-        groupButton.setTitleColor(UIColor.white, for: .normal)
         groupButton.contentEdgeInsets = UIEdgeInsetsMake(0, 14, 0, 14)
-        //groupButton.backgroundColor = //accentColor//UIColor.black.withAlphaComponent(0.5)
+        
         groupButton.layer.borderColor = UIColor.white.cgColor
         groupButton.layer.borderWidth = 1.5
         groupButton.layer.cornerRadius = 14
@@ -99,10 +96,10 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         moreButton = UIButton(frame: CGRect(x: 0, y: 0, width: 64.0, height: 64.0))
         moreButton.setImage(UIImage(named:"more_white"), for: .normal)
         moreButton.tintColor = UIColor.white
-        contentView.addSubview(moreButton)
+        view.addSubview(moreButton)
         moreButton.translatesAutoresizingMaskIntoConstraints = false
-        moreButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
-        moreButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 0).isActive = true
+        moreButton.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        moreButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor).isActive = true
         moreButton.widthAnchor.constraint(equalToConstant: 64.0).isActive = true
         moreButton.heightAnchor.constraint(equalToConstant: 64.0).isActive = true
         moreButton.addTarget(self, action: #selector(handleMore), for: .touchUpInside)
@@ -110,15 +107,22 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     }
     
     @objc func handleMore() {
+        let index = pagerNode.currentPageIndex
+        guard index >= 0, index < state.posts.count else { return }
         let post = state.posts[pagerNode.currentPageIndex]
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
         if post.isYourPost {
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-                self.handleDismiss()
-                UploadService.deletePost(post) { success in
-                    
-                }
+                let confirmAlert = UIAlertController(title: "Delete post?", message: "This action is irreversible.\nIt can take up 15 minutes for a post to be completely deleted.", preferredStyle: .alert)
+                let delete = UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+                    self.handleDismiss()
+                    UploadService.deletePost(post) { success in }
+                })
+                confirmAlert.addAction(delete)
+                let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in })
+                confirmAlert.addAction(cancel)
+                self.present(confirmAlert, animated: true, completion: nil)
             }))
         } else {
             alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { _ in
@@ -147,13 +151,27 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         
         if let initialIndex = initialIndex {
             DispatchQueue.main.async {
-                self.setGroupButton(withGroup: self.state.posts[initialIndex].group)
+                let post = self.state.posts[initialIndex]
+                if let group = GroupsService.groupsDict[post.groupID] {
+                    self.setGroupButton(withGroup: group)
+                }
+                
                 self.pagerNode.scrollToPage(at: initialIndex, animated: false)
                 self.pagerNode.isHidden = false
                 self.initialIndex = nil
             }
         } else {
-            self.setGroupButton(withGroup: self.state.posts[self.pagerNode.currentPageIndex].group)
+            let index = self.pagerNode.currentPageIndex
+            if index >= 0, index < self.state.posts.count {
+                self.groupButton.isHidden = false
+                let post = self.state.posts[pagerNode.currentPageIndex]
+                if let group = GroupsService.groupsDict[post.groupID] {
+                    self.setGroupButton(withGroup: group)
+                }
+            } else {
+                self.groupButton.isHidden = true
+            }
+            
         }
         statusBarHidden = true
         UIView.animate(withDuration: 0.05, animations: {
@@ -202,9 +220,15 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
     }
     
     func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
-        let cell = SinglePostCellNode(post: state.posts[index], deviceInsets: deviceInsets)
-        cell.delegate = self
-        return cell
+        let post = state.posts[index]
+        if let group = GroupsService.groupsDict[post.groupID] {
+            let cell = SinglePostCellNode(post: post,
+                                          group: group,
+                                          deviceInsets: deviceInsets)
+            cell.delegate = self
+            return cell
+        }
+        return ASCellNode()
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, willBeginBatchFetchWith context: ASBatchContext) {
@@ -260,20 +284,45 @@ class LightboxViewController:UIViewController, ASPagerDelegate, ASPagerDataSourc
         let centerX = offsetX + scrollView.bounds.width / 2
         
         let page = Int(centerX / scrollView.bounds.width)
-        print("page: \(page)")
-        let currentGroup = state.posts[page].group
-        setGroupButton(withGroup: currentGroup)
+        if page >= 0, page < state.posts.count {
+            
+            groupButton.isHidden = false
+            let post = state.posts[page]
+            if let group = GroupsService.groupsDict[post.groupID] {
+                setGroupButton(withGroup: group)
+            }
+            moreButton.isHidden = false
+        } else {
+            groupButton.isHidden = true
+            moreButton.isHidden = false
+        }
         
     }
     
     func setGroupButton(withGroup group:Group) {
         if GroupsService.myGroupKeys[group.id] != nil {
-            groupButton.setTitle(group.name, for: .normal)
-            groupButton.setTitleColor(UIColor(white: 0.15, alpha: 1.0), for: .normal)
+            
+            let attrStr = NSMutableAttributedString(string: "\(group.name) ✓", attributes: [
+                NSAttributedStringKey.foregroundColor: UIColor(white: 0.15, alpha: 1.0),
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 13.0)
+                ])
+            
+            attrStr.addAttribute(NSAttributedStringKey.font,
+                                 value:  UIFont.boldSystemFont(ofSize: 13.0),
+                                 range: NSRange(location: group.name.count + 1, length: 1))
+            
+            groupButton.setAttributedTitle(attrStr, for: .normal)
             groupButton.backgroundColor = UIColor.white
         } else {
             groupButton.setTitle(group.name, for: .normal)
             groupButton.setTitleColor(UIColor.white, for: .normal)
+            
+            let attrStr = NSMutableAttributedString(string: "\(group.name)", attributes: [
+                NSAttributedStringKey.foregroundColor: UIColor.white,
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 13.0)
+                ])
+            
+            groupButton.setAttributedTitle(attrStr, for: .normal)
             groupButton.backgroundColor = UIColor.clear
         }
     }
@@ -290,8 +339,10 @@ extension LightboxViewController : SinglePostDelegate {
     }
     
     @objc func openGroup() {
+        let post = state.posts[pagerNode.currentPageIndex]
+        guard let group = GroupsService.groupsDict[post.groupID] else { return }
         let controller = GroupViewController()
-        controller.group = state.posts[pagerNode.currentPageIndex].group
+        controller.group = group
         pushTransitionManager.navBarHeight = nil
         controller.interactor = pushTransitionManager.interactor
         controller.transitioningDelegate = pushTransitionManager

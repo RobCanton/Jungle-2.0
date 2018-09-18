@@ -83,9 +83,9 @@ class PostCommentCellNode: ASCellNode {
             avatarImageNode.layer.cornerRadius = avatarSize/2
             avatarImageNode.clipsToBounds = true
         } else {
-            avatarNode.backgroundColor = post.anon.color.withAlphaComponent(0.30)
+            avatarNode.backgroundColor = post.anon.color
             avatarImageNode.imageModificationBlock = { image in
-                return image.maskWithColor(color: post.anon.color) ?? image
+                return image.maskWithColor(color: UIColor(white: 1.0, alpha: 0.75)) ?? image
             }
             self.avatarImageNode.url = nil
             UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, _ in
@@ -223,7 +223,7 @@ class PostCommentCellNode: ASCellNode {
         if let _ = post?.profile {
             avatarInsets = .zero
         } else {
-            avatarInsets = UIEdgeInsetsMake(4, 4, 4, 4)
+            avatarInsets = UIEdgeInsetsMake(5, 5, 5, 5)
         }
         
         let avatarInset = ASInsetLayoutSpec(insets: avatarInsets, child: avatarImageNode)

@@ -11,11 +11,15 @@ import UIKit
 import AsyncDisplayKit
 import MXParallaxHeader
 import Firebase
+import SwiftMessages
+import JGProgressHUD
 
 class GroupViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, MXScrollViewDelegate {
     
     var interactor:Interactor? = nil
     var group:Group!
+    var messageWrapper = SwiftMessages()
+    
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
@@ -134,6 +138,7 @@ class GroupViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, 
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        headerView.cleanUp()
     }
     
     @objc func handleDismiss() {
@@ -141,7 +146,7 @@ class GroupViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, 
     }
     
     func numberOfPages(in pagerNode: ASPagerNode) -> Int {
-        return 2
+        return 1
     }
     
     func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
@@ -150,17 +155,8 @@ class GroupViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, 
         
         cellNode.frame = pagerNode.bounds
         cellNode.backgroundColor = hexColor(from: "#EFEFEF")
-        var controller:PostsTableViewController!
-        switch index {
-        case 0:
-            controller = GroupPostsTableViewController(groupID: group.id)
-            break
-        case 1:
-            controller = GroupPostsTableViewController(groupID: group.id)
-            break
-        default:
-            break
-        }
+        let controller:PostsTableViewController = GroupPostsTableViewController(groupID: group.id)
+
         controller.willMove(toParentViewController: self)
         self.addChildViewController(controller)
         controller.view.frame = cellNode.bounds
@@ -193,45 +189,92 @@ class GroupViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, 
         }
     }
     
+    func showEditGroupView() {
+        let editGroupView = EditGroupView(frame: view.bounds, group: group)
+        
+        let messageView = BaseView(frame: view.bounds)
+        messageView.installContentView(editGroupView)
+        messageView.preferredHeight = view.bounds.height
+        
+        var config = SwiftMessages.defaultConfig
+        config.presentationContext = .window(windowLevel: UIWindowLevelNormal)
+        config.duration = .forever
+        config.presentationStyle = .bottom
+        config.prefersStatusBarHidden = true
+        config.dimMode = .blur(style: .dark, alpha: 1.0, interactive: true)
+        config.interactiveHide = true
+        
+        messageWrapper.show(config: config, view: messageView)
+        editGroupView.willAppear()
+        
+        editGroupView.closeHandler = {
+            self.messageWrapper.hide()
+        }
+        
+        editGroupView.createHandler = { group in
+            self.messageWrapper.hide()
+            
+            let hud = JGProgressHUD(style: JGProgressHUDStyle.dark)
+            hud.textLabel.text = "Group Updated!"
+            hud.tintColor = UIColor.white
+            
+            hud.indicatorView = JGProgressHUDSuccessIndicatorView()
+            hud.dismiss(afterDelay: 2.0, animated: true)
+            hud.show(in: self.view, animated: true)
+        }
+    }
+    
     @objc func handleMore() {
         print("HANDLE IT!")
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-        
-        alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { _ in
-            let reportAlert = UIAlertController(title: "Why are you reporting this group?", message: "", preferredStyle: .alert)
-            reportAlert.addTextField { (textField : UITextField!) -> Void in
-                textField.placeholder = ""
-            }
-            let saveAction = UIAlertAction(title: "Send", style: .default, handler: { action in
-                let textField = reportAlert.textFields![0] as UITextField
-                let text = textField.text
-                
-                let ref = database.child("groups/reports/\(self.group.id)/\(uid)")
-                let report:[String:Any] = [
-                    "message": text ?? "",
-                    "timestamp": [".sv" : "timestamp"]
-                ]
-                
-                ref.setValue(report) { error, ref in
-                    if let _ = error {
-                        Alerts.showFailureAlert(withMessage: "Failed to send report.")
-                    } else {
-                        Alerts.showSuccessAlert(withMessage: "Report sent!")
-                    }
+        if GroupsService.createdGroupKeys[group.id] == true {
+            let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+            
+            alert.addAction(UIAlertAction(title: "Edit Group", style: .default, handler: { _ in
+                self.showEditGroupView()
+            }))
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+            
+        } else {
+            let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+            
+            alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { _ in
+                let reportAlert = UIAlertController(title: "Why are you reporting this group?", message: "", preferredStyle: .alert)
+                reportAlert.addTextField { (textField : UITextField!) -> Void in
+                    textField.placeholder = ""
                 }
-            })
-            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-            
-            reportAlert.addAction(saveAction)
-            reportAlert.addAction(cancelAction)
-            
-            self.present(reportAlert, animated: true, completion: nil)
-            
-        }))
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        self.present(alert, animated: true, completion: nil)
+                let saveAction = UIAlertAction(title: "Send", style: .default, handler: { action in
+                    let textField = reportAlert.textFields![0] as UITextField
+                    let text = textField.text
+                    
+                    let ref = database.child("groups/reports/\(self.group.id)/\(uid)")
+                    let report:[String:Any] = [
+                        "message": text ?? "",
+                        "timestamp": [".sv" : "timestamp"]
+                    ]
+                    
+                    ref.setValue(report) { error, ref in
+                        if let _ = error {
+                            Alerts.showFailureAlert(withMessage: "Failed to send report.")
+                        } else {
+                            Alerts.showSuccessAlert(withMessage: "Report sent!")
+                        }
+                    }
+                })
+                let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+                
+                reportAlert.addAction(saveAction)
+                reportAlert.addAction(cancelAction)
+                
+                self.present(reportAlert, animated: true, completion: nil)
+                
+            }))
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+        }
+        
     }
 }
 

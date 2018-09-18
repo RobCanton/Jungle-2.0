@@ -53,7 +53,7 @@ class GroupsSwiperView: UIView {
         kolodaView.dataSource = self
         kolodaView.delegate = self
         kolodaView.countOfVisibleCards = 3
-        kolodaView.reloadData()
+        //kolodaView.reloadData()
         
         let emptyLabel = UILabel()
         emptyLabel.text = "No more groups"
@@ -156,10 +156,9 @@ class GroupsSwiperView: UIView {
         
         contentView.isUserInteractionEnabled = true
         let closeTap = UITapGestureRecognizer(target: self, action: #selector(handleClose))
-        //contentView.addGestureRecognizer(closeTap)
+        contentView.addGestureRecognizer(closeTap)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: {
-            self.contentView.addGestureRecognizer(closeTap)
             spinner.stopAnimating()
             emptyLabel.isHidden = false
         })

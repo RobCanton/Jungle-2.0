@@ -23,7 +23,20 @@ class OptionsView:UIView, ASTableDelegate, ASTableDataSource {
     
     var myGroups = [Group]()
     var groups = [Group]()
+    
+    var region:Region? {
+        didSet {
+            if let locationNode = locationNode{
+                locationNode.region = region
+            }
+        }
+    }
     //var isCreatingNewGroup = false
+    var locationNode:MyLocationCellNode!
+    
+    var includeLocation:Bool {
+        return locationNode.includeLocation
+    }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -46,6 +59,12 @@ class OptionsView:UIView, ASTableDelegate, ASTableDataSource {
         tableNode.backgroundColor = UIColor.clear
         tableNode.view.separatorStyle = .none
         tableNode.view.showsVerticalScrollIndicator = false
+        
+        locationNode = MyLocationCellNode(isTop: true, isBottom: true)
+        
+        locationNode.frame = CGRect(x: 0, y: 0, width: bounds.width, height: 60)
+        tableNode.view.tableHeaderView = locationNode.view
+        locationNode.region = self.region
         tableNode.contentInset = UIEdgeInsetsMake(0, 0, 16, 0)
         
         loadGroups()
@@ -61,7 +80,7 @@ class OptionsView:UIView, ASTableDelegate, ASTableDataSource {
     func selectGroup(_ group:Group) {
         for i in 0..<myGroups.count {
             if myGroups[i].id == group.id {
-                let indexPath = IndexPath(row: i, section:1)
+                let indexPath = IndexPath(row: i, section:2)
                 tableNode.selectRow(at: indexPath, animated: true, scrollPosition: .middle)
                 tableNode(tableNode, didSelectRowAt: indexPath)
                 return
@@ -70,7 +89,7 @@ class OptionsView:UIView, ASTableDelegate, ASTableDataSource {
         
         for j in 0..<groups.count {
             if groups[j].id == group.id {
-                let indexPath = IndexPath(row: j, section:3)
+                let indexPath = IndexPath(row: j, section:4)
                 tableNode.selectRow(at: indexPath, animated: true, scrollPosition: .middle)
                 tableNode(tableNode, didSelectRowAt: indexPath)
                 return
@@ -83,23 +102,25 @@ class OptionsView:UIView, ASTableDelegate, ASTableDataSource {
     }
     
     func numberOfSections(in tableNode: ASTableNode) -> Int {
-        return 6
+        return 5
     }
     
     func tableNode(_ tableNode: ASTableNode, numberOfRowsInSection section: Int) -> Int {
         switch section {
         case 0:
-            return myGroups.count > 0 ? 1 : 0
+            return 1
         case 1:
-            return myGroups.count
+            return myGroups.count > 0 || GroupsService.createdGroupKeys.count == 0 ? 1 : 0
         case 2:
-            return groups.count > 0 ? 1 : 0
+            var count = myGroups.count
+//            if GroupsService.createdGroupKeys.count == 0 {
+//                count += 1
+//            }
+            return count + 1
         case 3:
-            return groups.count
+            return groups.count > 0 ? 1 : 0
         case 4:
-            return 1
-        case 5:
-            return 1
+            return groups.count
         default:
             return 0
         }
@@ -108,6 +129,8 @@ class OptionsView:UIView, ASTableDelegate, ASTableDataSource {
     func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
         switch indexPath.section {
         case 0:
+            return ASCellNode()
+        case 1:
             let cell = ASTextCellNode()
             cell.text = "MY GROUPS"
             cell.textInsets = UIEdgeInsetsMake(8, 2, 4, 2)
@@ -120,13 +143,20 @@ class OptionsView:UIView, ASTableDelegate, ASTableDataSource {
             ]
             
             return cell
-        case 1:
+        case 2:
+            if indexPath.row == myGroups.count {
+                let cell = GroupCellNode(isTop: myGroups.count == 0,
+                                         isBottom: true,
+                                         group: nil)
+                cell.selectionStyle = .none
+                return cell
+            }
             let cell = GroupCellNode(isTop: indexPath.row == 0,
-                                     isBottom: indexPath.row == myGroups.count - 1,
+                                     isBottom: false,
                                      group: myGroups[indexPath.row])
             cell.selectionStyle = .none
             return cell
-        case 2:
+        case 3:
             let cell = ASTextCellNode()
             cell.text = "ALL GROUPS"
             cell.textInsets = UIEdgeInsetsMake(8, 2, 4, 2)
@@ -138,20 +168,10 @@ class OptionsView:UIView, ASTableDelegate, ASTableDataSource {
                 NSAttributedStringKey.paragraphStyle: paragraphStyle
             ]
             return cell
-        case 3:
+        case 4:
             let cell = GroupCellNode(isTop: indexPath.row == 0,
                                      isBottom: indexPath.row == groups.count - 1,
                                      group: groups[indexPath.row])
-            cell.selectionStyle = .none
-            return cell
-        case 4:
-            let cell = ASCellNode()
-            cell.style.height = ASDimension(unit: .points, value: 12.0)
-            return cell
-        case 5:
-            let cell = GroupCellNode(isTop: true,
-                                     isBottom: true,
-                                     group: nil)
             cell.selectionStyle = .none
             return cell
         default:
@@ -164,18 +184,19 @@ class OptionsView:UIView, ASTableDelegate, ASTableDataSource {
         let cell = tableNode.nodeForRow(at: indexPath) as? GlassCellNode
         cell?.setHighlighted(true)
         switch indexPath.section {
-        case 1:
-            delegate?.didSelectGroup(myGroups[indexPath.row])
+        case 2:
+            if indexPath.row == myGroups.count {
+                tableNode.deselectRow(at: indexPath, animated: true)
+                let cell = tableNode.nodeForRow(at: indexPath) as? GlassCellNode
+                cell?.setHighlighted(false)
+                delegate?.didSelectGroup(nil)
+                delegate?.didSelectNewGroup()
+            } else {
+                delegate?.didSelectGroup(myGroups[indexPath.row])
+            }
             break
-        case 3:
+        case 4:
             delegate?.didSelectGroup(groups[indexPath.row])
-            break
-        case 5:
-            tableNode.deselectRow(at: indexPath, animated: true)
-            let cell = tableNode.nodeForRow(at: indexPath) as? GlassCellNode
-            cell?.setHighlighted(false)
-            delegate?.didSelectGroup(nil)
-            delegate?.didSelectNewGroup()
             break
         default:
             break

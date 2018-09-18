@@ -20,6 +20,11 @@ class MyProfileViewController:UserProfileViewController {
     var pushTransition = PushTransitionManager()
     var imagePicker:UIImagePickerController!
     var gradientActivityIndicator:UIActivityIndicatorView!
+    
+    override func bottomHeight() -> CGFloat {
+        return 49
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -79,7 +84,7 @@ class MyProfileViewController:UserProfileViewController {
     func showCreateProfilePrompt() {
         let messageView: MessageView = MessageView.viewFromNib(layout: .centeredView)
         messageView.configureBackgroundView(width: 250)
-        messageView.configureContent(title: "You are anonymous", body: "To set your own username and avatar create a public profile. You can go back to being anonymous at anytime.", iconImage: UIImage(named:"anon_switch_on_animated_10"), iconText: "", buttonImage: nil, buttonTitle: "Create a Profile") { _ in
+        messageView.configureContent(title: "You are anonymous", body: "To set your own username and avatar create a public profile. You can still go back into hiding anytime!", iconImage: UIImage(named:"anon_switch_on_animated_10"), iconText: "", buttonImage: nil, buttonTitle: "Create a Profile") { _ in
             
             SwiftMessages.hide()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: {
@@ -114,25 +119,25 @@ class MyProfileViewController:UserProfileViewController {
     
     @objc func changeGradient() {
         print("changeGradient")
-        gradientActivityIndicator.startAnimating()
-        headerView.titleView.leftButton.isHidden = true
-        functions.httpsCallable("randomizeUserGradient").call { result, error in
-            if let data = result?.data as? [String:Any],
-                let gradient = data["gradient"] as? [String] {
-                print("DATA: \(data)")
-                UserService.currentUser?.profile?.gradient = gradient
-                var colors = [UIColor]()
-                for hex in gradient {
-                    colors.append(hexColor(from:hex))
-                }
-                self.headerView.pastelView.stop()
-                self.headerView.pastelView.setColors(colors)
-                self.headerView.pastelView.startStatic()
-                
-                self.gradientActivityIndicator.stopAnimating()
-                self.headerView.titleView.leftButton.isHidden = false
-            }
-        }
+//        gradientActivityIndicator.startAnimating()
+//        headerView.titleView.leftButton.isHidden = true
+//        functions.httpsCallable("randomizeUserGradient").call { result, error in
+//            if let data = result?.data as? [String:Any],
+//                let gradient = data["gradient"] as? [String] {
+//                print("DATA: \(data)")
+//                UserService.currentUser?.profile?.gradient = gradient
+//                var colors = [UIColor]()
+//                for hex in gradient {
+//                    colors.append(hexColor(from:hex))
+//                }
+//                self.headerView.pastelView.stop()
+//                self.headerView.pastelView.setColors(colors)
+//                self.headerView.pastelView.startStatic()
+//                
+//                self.gradientActivityIndicator.stopAnimating()
+//                self.headerView.titleView.leftButton.isHidden = false
+//            }
+//        }
     }
     
     override func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {

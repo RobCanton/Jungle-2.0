@@ -8,7 +8,6 @@
 
 import Foundation
 import Firebase
-import FirebaseFirestore
 
 class GroupsService {
     static var groups = [Group]()
@@ -18,6 +17,7 @@ class GroupsService {
     static var notification_groupsUpdated = Notification.Name.init("groupsUpdated")
     
     static var myGroupKeys = [String:Bool]()
+    static var createdGroupKeys = [String:Bool]()
     static var skippedGroupKeys = [String:Bool]()
     static var trendingGroupKeys = [String]()
     
@@ -26,35 +26,117 @@ class GroupsService {
     
     static var myGroupsDidChange = false
     
-    static func observeGroups() {
-        let ref = Firestore.firestore().collection("groups")
-        ref.addSnapshotListener { snapshot, error in
+    static var gradients = [[String]]()
+    
+    static var backgroundsFetched = false
+
+    static func fetchBackgrounds(completion: @escaping (() -> ())) {
+        let ref = firestore.collection("backgrounds")
+        let query = ref.order(by: "order")
+        query.addSnapshotListener { snapshot, error in
+            guard let documents = snapshot?.documents else { return }
+            
+            var _gradients = [[String]]()
+            for document in documents {
+                if let colors = document.data()["colors"] as? [String] {
+                    _gradients.append(colors)
+                }
+            }
+            
+            let isFirst = gradients.count == 0
+            gradients = _gradients
+            if isFirst {
+               return completion()
+            }
+        }
+    }
+    
+    static func fetchGroups(completion: @escaping (() -> ())) {
+        
+        let ref = database.child("/groups/info")
+        
+        
+        ref.observeSingleEvent(of: .value, with: { snapshot in
             var _groups = [Group]()
             var _groupsDict = [String:Group]()
-            if let snapshot = snapshot {
-                for doc in snapshot.documents {
-                    if let group = Group.parse(id: doc.documentID, doc.data()) {
-                        _groups.append(group)
-                        _groupsDict[doc.documentID] = group
-                    }
+            for child in snapshot.children {
+                let childSnapshot = child as! DataSnapshot
+                if let data = childSnapshot.value as? [String:Any],
+                    let group = Group.parse(id: childSnapshot.key, data) {
+                    _groups.append(group)
+                    _groupsDict[group.id] = group
                 }
             }
             
             groups = _groups
             groupsDict = _groupsDict
-            
+
             groupsFetched = true
-            NotificationCenter.default.post(name: notification_groupsUpdated, object: nil)
+            return completion()
+        
+        }, withCancel: { error in
+            print("ERROR: \(error.localizedDescription)")
+        })
+    }
+    
+    static func observeGroups() {
+        let ref = database.child("/groups/info")
+        
+        ref.observe(.childAdded, with: { snapshot in
+            if let data = snapshot.value as? [String:Any],
+                let group = Group.parse(id: snapshot.key, data) {
+                print("Add group!: \(group.name)")
+                removeGroup(group)
+                addGroup(group)
+            }
+        })
+        
+        ref.observe(.childChanged, with: { snapshot in
+            if let data = snapshot.value as? [String:Any],
+                let group = Group.parse(id: snapshot.key, data) {
+                print("Update group!: \(group.name)")
+                updateGroup(group)
+                
+                let notification = Notification.Name.init("group_updated:\(group.id)")
+                NotificationCenter.default.post(name: notification, object: nil)
+            }
+        })
+        
+        ref.observe(.childRemoved, with: { snapshot in
+            if let data = snapshot.value as? [String:Any],
+                let group = Group.parse(id: snapshot.key, data) {
+                print("Remove group!: \(group.name)")
+                removeGroup(group)
+            }
+        })
+    }
+    
+    static func updateGroup(_ group:Group) {
+        groupsDict[group.id] = group
+        if let index = indexOf(group: group) {
+            groups[index] = group
         }
     }
     
     static func addMyGroup(_ group:Group) {
-        groupsDict[group.id] = group
         myGroupKeys[group.id] = true
+        myGroupsDidChange = true
+        addGroup(group)
+    }
+    
+    static func addGroup(_ group:Group) {
+        groupsDict[group.id] = group
         if indexOf(group: group) == nil {
             groups.append(group)
         }
-        
+    }
+    
+    static func removeGroup(_ group:Group) {
+        groupsDict[group.id] = nil
+        myGroupKeys[group.id] = nil
+        if let index = indexOf(group: group) {
+            groups.remove(at: index)
+        }
     }
     
     static func sortGroups() {

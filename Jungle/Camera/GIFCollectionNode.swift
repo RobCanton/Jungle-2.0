@@ -52,7 +52,7 @@ class GIFCollectionNode:ASDisplayNode, ASCollectionDelegate, ASCollectionDataSou
         
         automaticallyManagesSubnodes = true
         let layout = MosaicCollectionViewLayout()
-        layout.numberOfColumns = 3
+        layout.numberOfColumns = 2
         layout.scrollDirection = .vertical
         layout.delegate = self
         
@@ -147,6 +147,7 @@ class GIFCollectionNode:ASDisplayNode, ASCollectionDelegate, ASCollectionDataSou
         let cell = collectionNode.nodeForItem(at: indexPath) as? GIFCellNode
         cell?.setSelected(true)
         delegate?.didSelect(gif: currentState.gifs[indexPath.row])
+        
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, didDeselectItemAt indexPath: IndexPath) {
@@ -288,6 +289,9 @@ extension GIFCollectionNode: RCSearchBarDelegate {
         
     }
     
+    func searchDidCancel() {
+    }
+    
     func searchDidBegin() {
         print("searchDidBegin")
     }
@@ -312,6 +316,7 @@ extension GIFCollectionNode: RCSearchBarDelegate {
 
 class GIFCellNode:ASCellNode {
     var imageNode = ASNetworkImageNode()
+    var overlayNode = ASImageNode()
     
     required init (gif:GIF) {
         super.init()
@@ -319,18 +324,37 @@ class GIFCellNode:ASCellNode {
         automaticallyManagesSubnodes = true
         imageNode.shouldCacheImage = true
         imageNode.url = gif.low_url
-        self.layer.borderColor = accentColor.cgColor
+        self.clipsToBounds = true
+        overlayNode.image = UIImage(named:"JoinPlain")
+        overlayNode.alpha = 0.0
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        return ASInsetLayoutSpec(insets: .zero, child: imageNode)
+        overlayNode.style.width = ASDimension(unit: .points, value: 32.0)
+        overlayNode.style.height = ASDimension(unit: .points, value: 32.0)
+        
+        let centerOverlay = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: overlayNode)
+        let overlay = ASOverlayLayoutSpec(child: imageNode, overlay: centerOverlay)
+        return ASInsetLayoutSpec(insets: .zero, child: overlay)
     }
     
+    var _selected:Bool = false
     func setSelected(_ selected:Bool) {
+        _selected = selected
         if selected {
-            self.layer.borderWidth = 4.0
+            UIView.animate(withDuration: 0.25, animations: {
+                self.layer.cornerRadius = 12.0
+                self.alpha = 0.67
+                self.overlayNode.alpha = 1.0
+                self.view.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+            })
         } else {
-            self.layer.borderWidth = 0.0
+            UIView.animate(withDuration: 0.25, animations: {
+                self.layer.cornerRadius = 0.0
+                self.alpha = 1.0
+                self.overlayNode.alpha = 0.0
+                self.view.transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
+            })
         }
     }
 }

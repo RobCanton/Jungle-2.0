@@ -88,7 +88,7 @@ class CreateGroupCellNode:ASCellNode {
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        var stack = ASStackLayoutSpec.vertical()
+        let stack = ASStackLayoutSpec.vertical()
         stack.children = [contentNode, dividerNode]
         return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 0, 0, 0), child: stack)
     }

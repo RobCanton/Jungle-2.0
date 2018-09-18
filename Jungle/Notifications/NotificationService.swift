@@ -37,6 +37,8 @@ class NotificationService {
                 case .denied:
                     ref.setValue(false)
                     return completion(.denied)
+                default:
+                    return
                 }
                 
             }

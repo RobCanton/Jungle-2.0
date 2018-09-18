@@ -33,14 +33,16 @@ class BestPostsTableViewController: PostsTableViewController {
     }
     
     override func headerCell(didSelectRowAt indexPath: IndexPath) {
-        let group = featuredGroups[indexPath.row]
         
         let bannerCell = tableNode.nodeForRow(at: indexPath) as? FeaturedGroupBannerCellNode
         bannerCell?.setHighlighted(true)
         
         let cell = tableNode.nodeForRow(at: indexPath) as? FeaturedGroupCellNode
         cell?.setHighlighted(true)
-        openGroup(group)
+        let _group = featuredGroups[indexPath.row]
+        if let group = GroupsService.groupsDict[_group.id] {
+            openGroup(group)
+        }
     }
     
     override func headerCell(didDeselectRowAt indexPath: IndexPath) {

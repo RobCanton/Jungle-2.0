@@ -19,9 +19,25 @@ class RecentLightboxViewController:LightboxViewController {
     }
 }
 
-class PopularLightboxViewController:LightboxViewController {
+class PopularLightboxViewController:LightboxViewController, ASBatchFetchingDelegate {
+    
+    var shouldBatchFetch = false
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        shouldBatchFetch = false
+        pagerNode.batchFetchingDelegate = self
+    }
+    
+    func shouldBatchFetch(for collectionNode: ASCollectionNode) -> Bool {
+        return shouldBatchFetch
+    }
+        
+    func shouldFetchBatch(withRemainingTime remainingTime: TimeInterval, hint: Bool) -> Bool {
+        return shouldBatchFetch
+    }
     override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
-        PostsService.getPopularPosts(offset: state.posts.count, completion: completion)
+//        PostsService.getPopularPosts(offset: state.posts.count, completion: completion)
     }
 }
 
@@ -106,4 +122,38 @@ class UserCommentsLightboxViewController:LightboxViewController {
         }
     }
 }
+
+class GroupLightboxViewController:LightboxViewController {
+    var groupID:String!
+    
+    override func numberOfPages(in pagerNode: ASPagerNode) -> Int {
+        return state.posts.count + 1
+    }
+    
+    override func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
+        if index == state.posts.count {
+            if let group = GroupsService.groupsDict[groupID]{
+                let cell = EndScreenCellNode(group: group)
+                return cell
+            }
+            return ASCellNode()
+        }
+        let post = state.posts[index]
+        if let group = GroupsService.groupsDict[post.groupID] {
+            let cell = SinglePostCellNode(post: post,
+                                          group: group,
+                                          deviceInsets: deviceInsets)
+            cell.delegate = self
+            return cell
+        }
+        return ASCellNode()
+    }
+    
+    override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
+        DispatchQueue.main.async {
+            return completion([])
+        }
+    }
+}
+
 

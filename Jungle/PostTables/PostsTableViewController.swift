@@ -51,10 +51,14 @@ class PostsTableViewController: ASViewController<ASDisplayNode> {
     }
     
     func postCell(for indexPath:IndexPath) -> ASCellNode {
-        let cell = PostCellNode(post: state.posts[indexPath.row])
-        cell.postNode.delegate = self
-        cell.selectionStyle = .none
-        return cell
+        let post = state.posts[indexPath.row]
+        if let group = GroupsService.groupsDict[post.groupID] {
+            let cell = PostCellNode(post: state.posts[indexPath.row], group: group)
+            cell.postNode.delegate = self
+            cell.selectionStyle = .none
+            return cell
+        }
+        return ASCellNode()
     }
     
     init() {
@@ -96,6 +100,35 @@ class PostsTableViewController: ASViewController<ASDisplayNode> {
         refreshControl.tintColor = UIColor.lightGray
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         tableNode.view.refreshControl = refreshControl
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleDeletedPost), name: UploadService.deletedNotification, object: nil)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+         NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc func handleDeletedPost(_ notification:Notification) {
+        guard let obj = notification.userInfo as? [String:Any] else { return }
+        guard let postID = obj["postID"] as? String else { return }
+        print("DELETED POST: \(postID)")
+        guard !state.fetchingMore else { return }
+        for i in 0..<state.posts.count{
+            let post = state.posts[i]
+            if post.key == postID {
+                print("WE GOT IT.. ITS AT: \(i)")
+                state = PostsStateController.handleAction(.removePost(at: i), fromState: state)
+                tableNode.performBatchUpdates({
+                    let indexPath = IndexPath(row: i, section: 1)
+                    self.tableNode.deleteRows(at: [indexPath], with: .automatic)
+                }, completion: nil)
+                return
+            }
+        }
     }
     
     func shouldBatchFetch(for tableNode: ASTableNode) -> Bool {
@@ -230,7 +263,7 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         pulleyController.view.clipsToBounds = true
         pulleyController.drawerBackgroundVisualEffectView = nil
         pulleyController.backgroundDimmingOpacity = 0.35
-        pulleyController.drawerTopInset = 24
+        pulleyController.drawerTopInset = UIApplication.edgeToEdgeInsets.top > 0 ? 0 : 24
         pulleyController.hidesBottomBarWhenPushed = true
         pulleyController.transitioningDelegate = transitionManager
         

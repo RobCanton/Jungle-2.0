@@ -134,8 +134,50 @@ class PostsService {
         completion(post)
     }
     
+    static func pollMyFeedPosts(before:Double?, completion: @escaping (_ posts:[Post])->()) {
+        
+        if GroupsService.myGroupKeys.count == 0 {
+            DispatchQueue.main.async {
+                return completion([])
+            }
+        }
+        var params = [
+            "length": 1,
+            "offset": 0,
+            "groups": GroupsService.myGroupKeys
+            ] as [String:Any]
+        
+        if let before = before {
+            params["before"] = before
+        }
+        
+        print("PARAMS: \(params)")
+        
+        functions.httpsCallable("myFeedPosts").call(params) { result, error in
+            
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return completion([])
+            } else if let data = result?.data as? [String:Any],
+                let results = data["results"] as? [[String:Any]]{
+                var posts = [Post]()
+                for data in results {
+                    if let post = Post.parse(data: data) {
+                        posts.append(post)
+                    }
+                }
+                return completion(posts)
+            }
+        }
+    }
+    
     static func getMyFeedPosts(offset: Int, before:Double?, completion: @escaping (_ posts:[Post])->()) {
         
+        if GroupsService.myGroupKeys.count == 0 {
+            DispatchQueue.main.async {
+                return completion([])
+            }
+        }
         var params = [
             "length": 15,
             "offset": offset,
@@ -145,6 +187,8 @@ class PostsService {
         if let before = before {
             params["before"] = before
         }
+        
+        print("PARAMS: \(params)")
         
         functions.httpsCallable("myFeedPosts").call(params) { result, error in
             
@@ -165,11 +209,10 @@ class PostsService {
     }
     
     
-    static func getPopularPosts(offset: Int, completion: @escaping (_ posts:[Post])->()) {
+    static func getPopularPosts( completion: @escaping (_ posts:[Post])->()) {
         
         let params = [
-            "length": 15,
-            "offset": offset
+            "length": 15
             ] as [String:Any]
         
         functions.httpsCallable("popularPosts").call(params) { result, error in

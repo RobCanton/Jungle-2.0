@@ -71,7 +71,7 @@ extension CIImage {
         guard let colorInvert = CIFilter(name: "CIColorInvert") else {
             return nil
         }
-        colorInvert.setValue(self, forKey: kCIInputImageKey)
+        colorInvert.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return colorInvert.outputImage
     }
     
@@ -82,7 +82,7 @@ extension CIImage {
             return nil
         }
         let i = intensity ?? 0
-        vignetteFilter.setValue(self, forKey: kCIInputImageKey)
+        vignetteFilter.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         let center = CIVector(x: self.extent.size.width/2, y: self.extent.size.height/2)
         vignetteFilter.setValue(center, forKey: kCIInputCenterKey)
         vignetteFilter.setValue(self.extent.size.height/2, forKey: kCIInputRadiusKey)
@@ -94,7 +94,7 @@ extension CIImage {
         guard let photoEffectInstant = CIFilter(name: "CIPhotoEffectInstant") else {
             return nil
         }
-        photoEffectInstant.setValue(self, forKey: kCIInputImageKey)
+        photoEffectInstant.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return photoEffectInstant.outputImage
     }
     
@@ -102,7 +102,7 @@ extension CIImage {
         guard let noirEffect = CIFilter(name: "CIPhotoEffectNoir") else {
             return nil
         }
-        noirEffect.setValue(self, forKey: kCIInputImageKey)
+        noirEffect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return noirEffect.outputImage
     }
     
@@ -110,7 +110,7 @@ extension CIImage {
         guard let effect = CIFilter(name: "CIPhotoEffectProcess") else {
             return nil
         }
-        effect.setValue(self, forKey: kCIInputImageKey)
+        effect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return effect.outputImage
     }
     
@@ -118,7 +118,7 @@ extension CIImage {
         guard let effect = CIFilter(name: "CIPhotoEffectTransfer") else {
             return nil
         }
-        effect.setValue(self, forKey: kCIInputImageKey)
+        effect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return effect.outputImage
     }
     
@@ -126,7 +126,7 @@ extension CIImage {
         guard let effect = CIFilter(name: "CIPhotoEffectChrome") else {
             return nil
         }
-        effect.setValue(self, forKey: kCIInputImageKey)
+        effect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return effect.outputImage
     }
     
@@ -134,7 +134,7 @@ extension CIImage {
         guard let effect = CIFilter(name: "CIPhotoEffectFade") else {
             return nil
         }
-        effect.setValue(self, forKey: kCIInputImageKey)
+        effect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return effect.outputImage
     }
     
@@ -142,7 +142,7 @@ extension CIImage {
         guard let effect = CIFilter(name: "CIColorPosterize") else {
             return nil
         }
-        effect.setValue(self, forKey: kCIInputImageKey)
+        effect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return effect.outputImage
     }
     
@@ -150,7 +150,7 @@ extension CIImage {
         guard let effect = CIFilter(name: "CIKaleidoscope") else {
             return nil
         }
-        effect.setValue(self, forKey: kCIInputImageKey)
+        effect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return effect.outputImage
     }
     
@@ -163,7 +163,7 @@ extension CIImage {
         let floatArr: [CGFloat] = [0,-v,0,-v,v * 4 + 1,-v,0,-v,0]
         let vector = CIVector(values: floatArr, count: floatArr.count)
         effect.setValue(vector, forKey: kCIInputWeightsKey)
-        effect.setValue(self, forKey: kCIInputImageKey)
+        effect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return effect.outputImage
     }
     
@@ -178,7 +178,7 @@ extension CIImage {
                                    0,0,0,0,10]
         let vector = CIVector(values: floatArr, count: floatArr.count)
         effect.setValue(vector, forKey: kCIInputWeightsKey)
-        effect.setValue(self, forKey: kCIInputImageKey)
+        effect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return effect.outputImage
     }
     
@@ -195,7 +195,7 @@ extension CIImage {
                                    0,0,-1,-1,-1,0,0]
         let vector = CIVector(values: floatArr, count: floatArr.count)
         effect.setValue(vector, forKey: kCIInputWeightsKey)
-        effect.setValue(self, forKey: kCIInputImageKey)
+        effect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return effect.outputImage
     }
     
@@ -208,7 +208,7 @@ extension CIImage {
         let floatArr: [CGFloat] = [val,-val,val,0,1, 0, -val, val, -val]
         let vector = CIVector(values: floatArr, count: floatArr.count)
         effect.setValue(vector, forKey: kCIInputWeightsKey)
-        effect.setValue(self, forKey: kCIInputImageKey)
+        effect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return effect.outputImage
     }
     
@@ -216,7 +216,7 @@ extension CIImage {
         guard let crystallize = CIFilter(name: "CICrystallize") else {
             return nil
         }
-        crystallize.setValue(self, forKey: kCIInputImageKey)
+        crystallize.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         let center = CIVector(x: self.extent.size.width/2, y: self.extent.size.height/2)
         crystallize.setValue(center, forKey: kCIInputCenterKey)
         crystallize.setValue(15, forKey: kCIInputRadiusKey)
@@ -228,7 +228,7 @@ extension CIImage {
         guard let comicEffect = CIFilter(name: "CIComicEffect") else {
             return nil
         }
-        comicEffect.setValue(self, forKey: kCIInputImageKey)
+        comicEffect.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         return comicEffect.outputImage
     }
     
@@ -237,7 +237,7 @@ extension CIImage {
             return nil
         }
         let i = intensity ?? 0
-        bloom.setValue(self, forKey: kCIInputImageKey)
+        bloom.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         bloom.setValue(5 + 10 * i, forKey: kCIInputRadiusKey)
         bloom.setValue(i, forKey: kCIInputIntensityKey)
         
@@ -251,7 +251,7 @@ extension CIImage {
             return nil
         }
         let i = intensity ?? 0
-        edges.setValue(self, forKey: kCIInputImageKey)
+        edges.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         edges.setValue(i, forKey: kCIInputIntensityKey)
         
         return edges.outputImage
@@ -261,7 +261,7 @@ extension CIImage {
         guard let edgeWork = CIFilter(name: "CIEdgeWork") else {
             return nil
         }
-        edgeWork.setValue(self, forKey: kCIInputImageKey)
+        edgeWork.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         edgeWork.setValue(1, forKey: kCIInputRadiusKey)
         
         return edgeWork.outputImage
@@ -272,7 +272,7 @@ extension CIImage {
             return nil
         }
         let i = intensity ?? 0
-        gloom.setValue(self, forKey: kCIInputImageKey)
+        gloom.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         //gloom.setValue(self.extent.size.height/2, forKey: kCIInputRadiusKey)
         gloom.setValue(i, forKey: kCIInputIntensityKey)
         
@@ -283,7 +283,7 @@ extension CIImage {
         guard let hexagonalPixellate = CIFilter(name: "CIHexagonalPixellate") else {
             return nil
         }
-        hexagonalPixellate.setValue(self, forKey: kCIInputImageKey)
+        hexagonalPixellate.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         let center = CIVector(x: self.extent.size.width/2, y: self.extent.size.height/2)
         hexagonalPixellate.setValue(center, forKey: kCIInputCenterKey)
         hexagonalPixellate.setValue(8, forKey: kCIInputScaleKey)
@@ -296,7 +296,7 @@ extension CIImage {
             return nil
         }
         let i = intensity ?? 0
-        highlightShadowAdjust.setValue(self, forKey: kCIInputImageKey)
+        highlightShadowAdjust.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         highlightShadowAdjust.setValue(i, forKey: Constants.CIEffectKeys.InputHighlightAmount)
         highlightShadowAdjust.setValue(i, forKey: Constants.CIEffectKeys.InputShadowAmount)
         
@@ -308,9 +308,11 @@ extension CIImage {
             return nil
         }
         let i = intensity ?? 0
-        pixellate.setValue(self, forKey: kCIInputImageKey)
+        pixellate.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         //let center = CIVector(x: self.extent.size.width/2, y: self.extent.size.height/2)
         //pixellate.setValue(center, forKey: kCIInputCenterKey)
+        
+        print("INTENSITY: \(intensity)")
         
         let f = Float(Int(50 * i))
         pixellate.setValue(f, forKey: kCIInputScaleKey)
@@ -322,7 +324,7 @@ extension CIImage {
         guard let pointillize = CIFilter(name: "CIPointillize") else {
             return nil
         }
-        pointillize.setValue(self, forKey: kCIInputImageKey)
+        pointillize.setValue(self.clampedToExtent(), forKey: kCIInputImageKey)
         let center = CIVector(x: self.extent.size.width/2, y: self.extent.size.height/2)
         pointillize.setValue(center, forKey: kCIInputCenterKey)
         pointillize.setValue(10, forKey: kCIInputRadiusKey)

@@ -16,7 +16,7 @@ import Firebase
 class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
     
     enum State {
-        case info, avatar
+        case info, background, avatar
     }
     
     var state = State.info
@@ -30,6 +30,7 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
     var descRow:UIView!
     var titleField:UITextField!
     var descTextView:UITextView!
+    var descHeightAnchor:NSLayoutConstraint!
     var descPlaceHolder:UILabel!
     var createView:UIView!
     var createButton:UIButton!
@@ -37,26 +38,31 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
     var closeHandler:(()->())?
     var createHandler:((_ group:Group)->())?
     var selectedGif:GIF?
+    var selectedGradient:[String]?
     
     var gifCollectionNode:GIFCollectionNode!
     var dynamicButton:DynamicButton!
     
-    var infoLabel:UILabel!
+    var gradientSelectorNode:GradientSelectorNode!
     
+    var descHeightMinimum:CGFloat = 0.0
+    var tagsView:TagsFieldView!
     let ACCEPTABLE_CHARACTERS = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`~!@#$%^&*()_+-=[]{}\\|;:',.\"/"
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         
+        let topInset = UIApplication.edgeToEdgeInsets.top
+        
         preservesSuperviewLayoutMargins = false
         insetsLayoutMarginsFromSafeArea = false
         translatesAutoresizingMaskIntoConstraints = false
-        contentView = UIView()
+        contentView = UIView(frame: CGRect(x: 16, y: 12, width: frame.width - 32, height: frame.height - (12 + topInset + 24)))
         contentView.backgroundColor = UIColor.white
         contentView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(contentView)
         contentView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16).isActive = true
-        contentView.topAnchor.constraint(equalTo: topAnchor, constant: 12).isActive = true
+        contentView.topAnchor.constraint(equalTo: topAnchor, constant: 12 + topInset).isActive = true
         contentView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16).isActive = true
         contentView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24).isActive = true
         
@@ -98,15 +104,13 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
         headerRow.heightAnchor.constraint(equalToConstant: 50).isActive = true
 
         titleField = UITextField()
-        //titleField.textAlignment = .center
-
         titleField.font = Fonts.semiBold(ofSize: 22.0)
-        titleField.keyboardAppearance = .dark
         titleField.attributedPlaceholder =
             NSAttributedString(string: "Enter a name...", attributes: [
                 NSAttributedStringKey.foregroundColor: tertiaryColor
                 ])
         titleField.textColor = UIColor.black
+        titleField.autocapitalizationType = .words
         headerRow.addSubview(titleField)
         titleField.translatesAutoresizingMaskIntoConstraints = false
         titleField.leadingAnchor.constraint(equalTo: headerRow.leadingAnchor, constant: 12).isActive = true
@@ -116,33 +120,37 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
         
         titleField.addTarget(self, action: #selector(titleTextDidChange), for: .valueChanged)
 
-        descRow = UIView()
+        descRow = UIView(frame:CGRect(x:0,y:0, width: contentView.bounds.width, height: 240))
         descRow.backgroundColor = UIColor.clear
 
+        let descPlaceholderText = "Write a description about your group and tell users what the discussions should be focused on."
+        descHeightMinimum = UILabel.size(text: descPlaceholderText, width: UIScreen.main.bounds.width - 32 - 24, font: Fonts.regular(ofSize: 16.0)).height
+        
         contentView.addSubview(descRow)
         descRow.translatesAutoresizingMaskIntoConstraints = false
         descRow.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
         descRow.topAnchor.constraint(equalTo: headerRow.bottomAnchor).isActive = true
         descRow.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
-        descRow.heightAnchor.constraint(equalToConstant: 240).isActive = true
+        descHeightAnchor = descRow.heightAnchor.constraint(equalToConstant: descHeightMinimum)
+        descHeightAnchor.isActive = true
 
         descTextView = UITextView()
-        descTextView.font = Fonts.regular(ofSize: 15.0)
+        descTextView.font = Fonts.regular(ofSize: 16.0)
         descTextView.textColor = UIColor.black
         descTextView.textContainerInset = .zero
-        descTextView.keyboardAppearance = .dark
         descRow.addSubview(descTextView)
         //descTextView.textAlignment = .center
         descTextView.translatesAutoresizingMaskIntoConstraints = false
         descTextView.leadingAnchor.constraint(equalTo: descRow.leadingAnchor, constant: 8).isActive = true
-        descTextView.trailingAnchor.constraint(equalTo: descRow.trailingAnchor, constant: -12).isActive = true
-        descTextView.topAnchor.constraint(equalTo: descRow.topAnchor, constant: 0).isActive = true
-        descTextView.bottomAnchor.constraint(equalTo: descRow.bottomAnchor, constant: -8).isActive = true
+        descTextView.trailingAnchor.constraint(equalTo: descRow.trailingAnchor, constant: -8).isActive = true
+        descTextView.topAnchor.constraint(equalTo: descRow.topAnchor).isActive = true
+        descTextView.bottomAnchor.constraint(equalTo: descRow.bottomAnchor).isActive = true
         descTextView.delegate = self
-
+        descTextView.isScrollEnabled = false
+        
         descPlaceHolder = UILabel()
-        descPlaceHolder.text = "Write a description about your group and tell users what the discussions should be focused on."
-        descPlaceHolder.font = Fonts.regular(ofSize: 14.0)
+        descPlaceHolder.text = descPlaceholderText
+        descPlaceHolder.font = Fonts.regular(ofSize: 16.0)
         descPlaceHolder.textColor = tertiaryColor
         descPlaceHolder.numberOfLines = 0
         descRow.addSubview(descPlaceHolder)
@@ -151,6 +159,15 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
         descPlaceHolder.leadingAnchor.constraint(equalTo: descRow.leadingAnchor, constant: 12).isActive = true
         descPlaceHolder.trailingAnchor.constraint(equalTo: descRow.trailingAnchor, constant: -12).isActive = true
         descPlaceHolder.topAnchor.constraint(equalTo: descRow.topAnchor, constant: 0).isActive = true
+        
+        tagsView = TagsFieldView(frame:.zero)
+        
+        contentView.addSubview(tagsView)
+        tagsView.translatesAutoresizingMaskIntoConstraints = false
+        tagsView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
+        tagsView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
+        tagsView.topAnchor.constraint(equalTo: descRow.bottomAnchor).isActive = true
+        tagsView.heightAnchor.constraint(equalToConstant: 44.0).isActive = true
 
         createButton = UIButton(type: .custom)
         createButton.contentEdgeInsets = UIEdgeInsetsMake(0, 16, 0, 16)
@@ -196,17 +213,18 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
         gifCollectionNode.alpha = 0.0
         gifCollectionNode.delegate = self
         
-        infoLabel = UILabel()
-        infoLabel.text = "Groups that are inactive for a period of time will be automatically flagged for deletion."
-        infoLabel.font = Fonts.regular(ofSize: 14.0)
-        infoLabel.textColor = tertiaryColor
-        infoLabel.numberOfLines = 0
-        addSubview(infoLabel)
-        //infoLabel.textAlignment = .center
-        infoLabel.translatesAutoresizingMaskIntoConstraints = false
-        infoLabel.leadingAnchor.constraint(equalTo: descRow.leadingAnchor, constant: 12).isActive = true
-        infoLabel.trailingAnchor.constraint(equalTo: descRow.trailingAnchor, constant: -12).isActive = true
-        infoLabel.bottomAnchor.constraint(equalTo: createButton.topAnchor, constant: -8).isActive = true
+        gradientSelectorNode = GradientSelectorNode()
+        
+        contentView.addSubview(gradientSelectorNode.view)
+        gradientSelectorNode.view.translatesAutoresizingMaskIntoConstraints = false
+        gradientSelectorNode.view.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
+        gradientSelectorNode.view.topAnchor.constraint(equalTo: titleView.bottomAnchor).isActive = true
+        gradientSelectorNode.view.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
+        gradientSelectorNode.view.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
+        gradientSelectorNode.alpha = 0.0
+        gradientSelectorNode.delegate = self
+
+        
         self.layoutIfNeeded()
     }
     
@@ -226,30 +244,83 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
         createButton.isEnabled = isComplete
     }
     
+    func checkBackground() {
+        createButton.isEnabled = selectedGradient != nil
+    }
+    
     func checkGroup() {
         let title = titleField.text ?? ""
         let desc = descTextView.text ?? ""
         let avatar = selectedGif
+        let background = selectedGradient
         
         let isComplete = !title.isEmpty && title.count >= 3 &&
-            title.count <= 30 && !desc.isEmpty && avatar != nil
+            title.count <= 30 && !desc.isEmpty && background != nil && avatar != nil
         createButton.isEnabled = isComplete
+    }
+    
+    @objc func handleClose() {
+        if state == .info {
+            closeHandler?()
+        } else if state == .background {
+            state = .info
+            titleView.titleLabel.text = "Create a Group"
+            titleField.becomeFirstResponder()
+            
+            createButton.setTitle("Next", for: .normal)
+            createButton.setTitle("Next", for: .disabled)
+            checkForm()
+            dynamicButton.setStyle(.close, animated: true)
+            UIView.animate(withDuration: 0.25, animations: {
+                self.titleField.alpha = 1.0
+                self.descTextView.alpha = 1.0
+                self.tagsView.alpha = 1.0
+                self.gradientSelectorNode.alpha = 0.0
+                self.gifCollectionNode.alpha = 0.0
+            })
+        } else {
+            state = .background
+            titleView.titleLabel.text = "Select a background"
+
+            createButton.setTitle("Next", for: .normal)
+            createButton.setTitle("Next", for: .disabled)
+            checkBackground()
+            
+            dynamicButton.setStyle(.caretLeft, animated: true)
+            UIView.animate(withDuration: 0.25, animations: {
+                self.gifCollectionNode.alpha = 0.0
+                self.gradientSelectorNode.alpha = 1.0
+            })
+        }
+        
     }
     
     @objc func handleNext() {
         if state == .info {
-            state = .avatar
-            titleView.titleLabel.text = "Select an Avatar"
+            state = .background
+            titleView.titleLabel.text = "Select a background"
             dynamicButton.setStyle(.caretLeft, animated: true)
             titleField.resignFirstResponder()
             descTextView.resignFirstResponder()
+            let _ = tagsView.resignFirstResponder()
+            checkBackground()
+            createButton.setTitle("Next", for: .normal)
+            UIView.animate(withDuration: 0.25, animations: {
+                self.titleField.alpha = 0.0
+                self.descTextView.alpha = 0.0
+                self.tagsView.alpha = 0.0
+                self.gifCollectionNode.alpha = 0.0
+                self.gradientSelectorNode.alpha = 1.0
+            })
+        } else if state == .background {
+            state = .avatar
+            titleView.titleLabel.text = "Select an Avatar"
             gifCollectionNode.searchTapped(titleField.text ?? "")
             createButton.isEnabled = false
             createButton.setTitle("Create Group", for: .normal)
             createButton.setTitle("Create Group", for: .disabled)
             UIView.animate(withDuration: 0.25, animations: {
-                self.titleField.alpha = 0.0
-                self.descTextView.alpha = 0.0
+                self.gradientSelectorNode.alpha = 0.0
                 self.gifCollectionNode.alpha = 1.0
             })
         } else {
@@ -268,6 +339,8 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
             let data:[String:Any] = [
                 "name": titleField.text!,
                 "desc": descTextView.text!,
+                "tags": tagsView.tags,
+                "gradient": selectedGradient!,
                 "avatar": [
                     "low": selectedGif!.low_url.absoluteString,
                     "high": selectedGif!.high_url.absoluteString
@@ -276,18 +349,46 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
             
             functions.httpsCallable("createGroup").call(data) { result, error in
                 if let data = result?.data as? [String:Any],
-                    let success = data["success"] as? Bool, success,
-                    let groupRaw = data["group"] as? [String:Any],
-                    let groupID = groupRaw["id"] as? String,
-                    let groupData = groupRaw["data"] as? [String:Any],
-                    let group = Group.parse(id: groupID, groupData) {
-                    print("DATA!: \(data)")
-                    GroupsService.addMyGroup(group)
-                    hud.dismiss()
-                    self.createHandler?(group)
+                    let success = data["success"] as? Bool {
+                    if success,
+                        let groupRaw = data["group"] as? [String:Any],
+                        let groupID = groupRaw["id"] as? String,
+                        let groupData = groupRaw["data"] as? [String:Any],
+                        let group = Group.parse(id: groupID, groupData) {
+                            print("DATA!: \(data)")
+                            GroupsService.createdGroupKeys[groupID] = true
+                            GroupsService.addMyGroup(group)
+                            hud.dismiss()
+                            self.createHandler?(group)
+                    } else if let msg = data["msg"] as? String {
+                        hud.dismiss()
+                        let errorHud = JGProgressHUD(style: .dark)
+                        errorHud.tapOnHUDViewBlock = { hudView in
+                            hudView.dismiss()
+                        }
+                        
+                        errorHud.tapOutsideBlock = { hudView in
+                            hudView.dismiss()
+                        }
+                        
+                        errorHud.indicatorView = JGProgressHUDErrorIndicatorView()
+                        errorHud.textLabel.text = "Error!"
+                        errorHud.detailTextLabel.text = msg
+                        errorHud.show(in: top.view, animated: true)
+                        errorHud.dismiss(afterDelay: 5.0)
+                        self.resetAfterError()
+                    }
                 }
             }
         }
+    }
+    
+    func resetAfterError() {
+        createButton.isEnabled = true
+        createButton.setTitle("Create Group", for: .normal)
+        createButton.setTitle("Create Group", for: .normal)
+        gifCollectionNode.isUserInteractionEnabled = true
+        dynamicButton.isUserInteractionEnabled = true
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -300,6 +401,7 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        
         guard let text = textField.text else { return true }
         let newLength = text.count + string.count - range.length
         
@@ -317,33 +419,45 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
     func textViewDidChange(_ textView: UITextView) {
         descPlaceHolder.isHidden = !textView.text.isEmpty
         checkForm()
-    }
-    
-    @objc func handleClose() {
-        if state == .info {
-            closeHandler?()
+        
+        let height = textView.sizeThatFits(CGSize(width: textView.bounds.width, height: CGFloat.infinity)).height
+        
+        if height > maxDescHeight {
+            descHeightAnchor.constant = maxDescHeight
+            descTextView.isScrollEnabled = true
+        } else if textView.text.isEmpty {
+            descHeightAnchor.constant = descHeightMinimum
+            descTextView.isScrollEnabled = false
         } else {
-            state = .info
-            titleView.titleLabel.text = "Create a Group"
-            titleField.becomeFirstResponder()
-            
-            createButton.setTitle("Next", for: .normal)
-            createButton.setTitle("Next", for: .disabled)
-            checkForm()
-            dynamicButton.setStyle(.close, animated: true)
-            UIView.animate(withDuration: 0.25, animations: {
-                self.titleField.alpha = 1.0
-                self.descTextView.alpha = 1.0
-                self.gifCollectionNode.alpha = 0.0
-            })
+            descHeightAnchor.constant = height
+            descTextView.isScrollEnabled = false
         }
         
+        self.layoutIfNeeded()
     }
+    
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        if (text == "\n") {
+            let _ = tagsView.becomeFirstResponder()
+            return false
+        }
+        
+        if textView.text.count + text.count > 300 {
+            return false
+        }
+        
+        return true
+    }
+    
+    var keyboardHeight:CGFloat = 0.0
+    var maxDescHeight:CGFloat = 0.0
     
     @objc func keyboardWillShow(notification: Notification) {
         guard let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return }
         createBottomAnchor.constant = -keyboardSize.height - 16
         createButton.alpha = 1.0
+        keyboardHeight = keyboardSize.height + 16 + 16 + 44
+        maxDescHeight = UIScreen.main.bounds.height - 8 - 44 - 50 - 4 - 44 - keyboardHeight
         self.layoutIfNeeded()
         
     }
@@ -361,3 +475,10 @@ extension CreateGroupView: GIFCollectionDelegate {
     }
 }
 
+
+extension CreateGroupView: GradientSelectorDelegate {
+    func didSelect(gradient: [String]?) {
+        selectedGradient = gradient
+        checkBackground()
+    }
+}

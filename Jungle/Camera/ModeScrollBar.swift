@@ -21,29 +21,35 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
     var delegate:TabScrollDelegate?
     
     var anchorZeroVal:CGFloat = 0
+    var barView:UIVisualEffectView!
+    var barViewWidthAnchor:NSLayoutConstraint!
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.preservesSuperviewLayoutMargins = false
         self.insetsLayoutMarginsFromSafeArea = false
         self.translatesAutoresizingMaskIntoConstraints = false
+        
         title1 = UIButton(type: .custom)
         title1.setTitle("PHOTO", for: .normal)
-        title1.titleLabel?.font = Fonts.bold(ofSize: 14.0)
+        title1.titleLabel?.font = Fonts.extraBold(ofSize: 14.0)
         title1.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 12)
         title1.sizeToFit()
         title1.alpha = 0.4
         addSubview(title1)
         title1.translatesAutoresizingMaskIntoConstraints = false
-         anchorZeroVal = bounds.width / 2 - title1.bounds.width / 2
+        
+        title2 = UIButton(type: .custom)
+        title2.setTitle("VIDEO", for: .normal)
+        title2.titleLabel?.font = Fonts.extraBold(ofSize: 14.0)
+        title2.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 12)
+        title2.sizeToFit()
+        
+        anchorZeroVal = bounds.width / 2 - title2.bounds.width / 2
+        
         titleLeadingAnchor = title1.leadingAnchor.constraint(equalTo: leadingAnchor, constant: anchorZeroVal)
         titleLeadingAnchor.isActive = true
         title1.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         
-        title2 = UIButton(type: .custom)
-        title2.setTitle("VIDEO", for: .normal)
-        title2.titleLabel?.font = Fonts.bold(ofSize: 14.0)
-        title2.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 12)
-        title2.sizeToFit()
         title2.alpha = 1.0
         addSubview(title2)
         title2.translatesAutoresizingMaskIntoConstraints = false
@@ -52,7 +58,7 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
         
         title3 = UIButton(type: .custom)
         title3.setTitle("TEXT", for: .normal)
-        title3.titleLabel?.font = Fonts.bold(ofSize: 14.0)
+        title3.titleLabel?.font = Fonts.extraBold(ofSize: 14.0)
         title3.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 12)
         title3.sizeToFit()
         title3.alpha = 0.4
@@ -62,13 +68,28 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
         title3.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         
         titleLeadingAnchor.constant = anchorZeroVal - title1.bounds.width
-        self.layoutIfNeeded()
+        
         
         title1.addTarget(self, action: #selector(handleTab), for: .touchUpInside)
         title2.addTarget(self, action: #selector(handleTab), for: .touchUpInside)
 
         title3.addTarget(self, action: #selector(handleTab), for: .touchUpInside)
-
+        
+        barView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
+        
+        barView.backgroundColor = UIColor.clear
+        insertSubview(barView, at: 0)
+        barView.translatesAutoresizingMaskIntoConstraints = false
+        barView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        barView.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
+        barView.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        barViewWidthAnchor = barView.widthAnchor.constraint(equalToConstant: title2.bounds.width + 8)
+        barViewWidthAnchor.isActive = true
+        
+        barView.layer.cornerRadius = 28 / 2
+        barView.clipsToBounds = true
+        
+        self.layoutIfNeeded()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -78,11 +99,17 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
     func setProgress(_ progress:CGFloat, index:Int) {
         
         if index == 0 {
+            let t1 = (title1.bounds.width + 8) * (1 - progress)
+            let t2 = (title2.bounds.width + 8) * progress
+            barViewWidthAnchor.constant = t1 + t2
             titleLeadingAnchor.constant = anchorZeroVal - title1.bounds.width * progress
             title1.alpha = (1 - progress) * 0.6 + 0.4
             title2.alpha = progress * 0.6 + 0.4
             title3.alpha = 0.4
         } else {
+            let t2 = (title2.bounds.width + 8) * (1 - progress)
+            let t3 = (title3.bounds.width + 8) * progress
+            barViewWidthAnchor.constant = t2 + t3
             titleLeadingAnchor.constant = anchorZeroVal - title1.bounds.width - title2.bounds.width * progress
             title1.alpha = 0.4
             title2.alpha = (1 - progress) * 0.6 + 0.4

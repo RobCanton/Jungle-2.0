@@ -69,8 +69,15 @@ class PopularPostsHeaderCellNode:ASCellNode, ASCollectionDelegate, ASCollectionD
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, nodeForItemAt indexPath: IndexPath) -> ASCellNode {
-        let cell = TrendingCellNode(tag:hashtags[indexPath.row])
-        return cell
+        let tag = hashtags[indexPath.row]
+        if let first = tag.posts.first,
+            let group = GroupsService.groupsDict[first.groupID] {
+            let cell = TrendingCellNode(tag:hashtags[indexPath.row],
+                                        firstPost: first,
+                                        group: group)
+            return cell
+        }
+        return ASCellNode()
     }
     
     func collectionNode(_ collectionNode: ASCollectionNode, didSelectItemAt indexPath: IndexPath) {
@@ -151,12 +158,14 @@ class TrendingCellNode:ASCellNode {
     var textNode = ASTextNode()
     var dimNode = ASDisplayNode()
     
-    required init(tag:TrendingHashtag) {
+    var groupGradient = [String]()
+    required init(tag:TrendingHashtag, firstPost post:Post, group:Group) {
         super.init()
         automaticallyManagesSubnodes = true
-        let post = tag.posts.first!
-        pastelNode = PastelNode(gradient: post.gradient)
-        imageNode.backgroundColor = UIColor.lightGray
+        
+        pastelNode = PastelNode(gradient: group.gradient)
+        groupGradient = group.gradient
+        imageNode.backgroundColor = UIColor.clear
         self.imageNode.shouldCacheImage = true
         
         if post.attachments.isVideo {
@@ -174,11 +183,11 @@ class TrendingCellNode:ASCellNode {
             let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = .center
             
-            self.textNode.maximumNumberOfLines = 7
-            self.textNode.textContainerInset = UIEdgeInsetsMake(2, 8, 26, 8)
+            self.textNode.maximumNumberOfLines = 6
+            self.textNode.textContainerInset = UIEdgeInsetsMake(8, 8, 32, 8)
             self.textNode.attributedText = NSAttributedString(string: post.text, attributes: [
-                NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.85),
-                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 12.0)
+                NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.80),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0)
                 ])
         }
         
@@ -187,7 +196,7 @@ class TrendingCellNode:ASCellNode {
         
         titleNode.maximumNumberOfLines = 3
         
-        titleNode.attributedText = NSAttributedString(string: post.group.name, attributes: [
+        titleNode.attributedText = NSAttributedString(string: group.name, attributes: [
             NSAttributedStringKey.foregroundColor: UIColor.white,
             NSAttributedStringKey.font: Fonts.bold(ofSize: 15.0),
             NSAttributedStringKey.paragraphStyle: paragraphStyle
@@ -221,11 +230,16 @@ class TrendingCellNode:ASCellNode {
         self.view.applyShadow(radius: 6, opacity: 0.25, offset: CGSize(width:0, height: 3), color: .black, shouldRasterize: false)
         self.clipsToBounds = false
         
+        let c = hexColor(from: groupGradient.last!)
         let gradient = CAGradientLayer()
-        gradient.colors = [UIColor.black.withAlphaComponent(0.50).cgColor, UIColor.clear.cgColor]
+        gradient.colors = [
+            c.cgColor,
+            c.withAlphaComponent(0.0).cgColor
+        ]
+        
         gradient.locations = [0.0, 1.0]
         gradient.startPoint = CGPoint(x: 0, y: 1)
-        gradient.endPoint = CGPoint(x: 0, y: 0.5)
+        gradient.endPoint = CGPoint(x: 0, y: 0.4)
         gradient.frame = view.bounds
         gradient.cornerRadius = 6.0
         gradient.masksToBounds = true
@@ -243,7 +257,7 @@ class TrendingCellNode:ASCellNode {
         titleStack.children = [titleNode]
         titleStack.spacing = 0.0
         titleStack.justifyContent = .end
-        let titleStackInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 4, 6, 4), child: titleStack)
+        let titleStackInset = ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 6, 6, 6), child: titleStack)
         let overlay = ASOverlayLayoutSpec(child: contentOverlay, overlay: titleStackInset)
     
         return ASOverlayLayoutSpec(child: overlay, overlay: dimNode)

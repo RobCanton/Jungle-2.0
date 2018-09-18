@@ -40,8 +40,8 @@ class AvatarNode:ASDisplayNode {
             self.imageInset = imageInset
             backNode.backgroundColor = post.anon.color
             backgroundColor = post.anon.color
-            layer.borderColor = UIColor.white.withAlphaComponent(0.5).cgColor
-            layer.borderWidth = 1.0
+            layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            layer.borderWidth = 1.5
             UserService.retrieveAnonImage(withName: post.anon.animal.lowercased()) { image, fromFile in
                 self.imageNode.image = image
             }
@@ -85,7 +85,7 @@ class ContentOverlayNode:ASControlNode {
         automaticallyManagesSubnodes = true
         postTextNode.maximumNumberOfLines = 4
         
-        avatarNode = AvatarNode(post: post, cornerRadius: 16, imageInset: 5)
+        avatarNode = AvatarNode(post: post, cornerRadius: 16, imageInset: 6)
         avatarNode.style.height = ASDimension(unit: .points, value: 32)
         avatarNode.style.width = ASDimension(unit: .points, value: 32)
         
@@ -97,7 +97,7 @@ class ContentOverlayNode:ASControlNode {
                     ])
             } else {
                 
-                postTextNode.setText(text: post.text, withFont: Fonts.regular(ofSize: 15.0), normalColor: .white, activeColor: tagColor)
+                postTextNode.setText(text: post.text, withFont: Fonts.regular(ofSize: 18.0), normalColor: .white, activeColor: tagColor)
                 postTextNode.tapHandler = { type, str in
                     switch type {
                     case .hashtag:
@@ -257,13 +257,13 @@ class SinglePostCellNode: ASCellNode, ASTableDelegate, ASTableDataSource, PostAc
     var commentNode:PostCommentCellNode!
     var deviceInsets:UIEdgeInsets = .zero
     
-    required init(post:Post, deviceInsets:UIEdgeInsets?=nil) {
+    required init(post:Post, group:Group, deviceInsets:UIEdgeInsets?=nil) {
         super.init()
         self.post = post
         self.deviceInsets = deviceInsets ?? .zero
          automaticallyManagesSubnodes = true
         backgroundColor = UIColor.clear
-        contentNode = PostContentNode(post: post)
+        contentNode = PostContentNode(post: post, group: group)
         contentNode.textNode.tapHandler = { type, value in
             switch type {
             case .hashtag:

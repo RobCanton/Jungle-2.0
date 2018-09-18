@@ -140,7 +140,7 @@ class EmailViewController:UIViewController {
         submitButton = UIButton(type: .custom)
         submitButton.setTitle("Enter", for: .normal)
         submitButton.setTitleColor(accentColor, for: .normal)
-        submitButton.titleLabel?.font = Fonts.semiBold(ofSize: 18)
+        submitButton.titleLabel?.font = Fonts.bold(ofSize: 18)
         submitButton.backgroundColor = UIColor.white//hexColor(from:"C0FFE8")
         submitButton.layer.cornerRadius = 4.0
         submitButton.clipsToBounds = true
@@ -190,13 +190,25 @@ class EmailViewController:UIViewController {
             NSAttributedStringKey.font: Fonts.regular(ofSize: 20.0),
             NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.5)
             ])
+        textField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         textBubble.addSubview(textField)
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.leadingAnchor.constraint(equalTo: textContainer.leadingAnchor, constant: 8).isActive = true
         textField.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor, constant: -8).isActive = true
         textField.topAnchor.constraint(equalTo: textContainer.topAnchor).isActive = true
         textField.bottomAnchor.constraint(equalTo: textContainer.bottomAnchor).isActive = true
+        
         self.view.layoutIfNeeded()
+    }
+    
+    @objc func textFieldDidChange() {
+        
+        let text = textField.text ?? ""
+        if text.isEmpty {
+            print("EMPTY")
+        } else {
+            print("VAL")
+        }
     }
     
     @objc func handleLegalTap(_ type:String) {

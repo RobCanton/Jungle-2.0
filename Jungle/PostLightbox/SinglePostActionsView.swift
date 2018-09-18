@@ -144,7 +144,7 @@ class SinglePostActionsView:UIView {
         locationButton.tintColor = UIColor.white
         //locationButton.setTitle(pair.locationShortStr, for: .normal)
         locationButton.setTitleColor(UIColor.white, for: .normal)
-        locationButton.setImage(UIImage(named:"Pin"), for: .normal)
+        locationButton.setImage(UIImage(named:"Pin-White"), for: .normal)
         locationButton.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         locationButton.contentHorizontalAlignment = .center
         locationButton.titleLabel?.font = Fonts.semiBold(ofSize: 12.0)

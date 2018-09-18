@@ -135,15 +135,31 @@ class TabScrollView:UIView {
         nearbyTabWidth = UILabel.size(text: titles[2], height: 50.0, font: buttonFont).width
         
         barView = UIView()
-        barView.backgroundColor = UIColor.white
+        barView.backgroundColor = UIColor.clear//white.withAlphaComponent(0.35)
         addSubview(barView)
         barView.translatesAutoresizingMaskIntoConstraints = false
         barWidthAnchor = barView.widthAnchor.constraint(equalToConstant: homeTabWidth)
         barWidthAnchor.isActive = true
-        barView.heightAnchor.constraint(equalToConstant: 2.0).isActive = true
+        barView.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        barView.layer.cornerRadius = 1.0
+        barView.clipsToBounds = true
+        
         barLeadingAnchor = barView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0)
         barLeadingAnchor.isActive = true
-        barView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: 0).isActive = true
+        barView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        barView.clipsToBounds = false
+        
+        let b = UIView()
+        b.backgroundColor = UIColor.white.withAlphaComponent(0.22)
+        barView.addSubview(b)
+        b.translatesAutoresizingMaskIntoConstraints = false
+        b.leadingAnchor.constraint(equalTo: barView.leadingAnchor, constant: -8).isActive = true
+        b.trailingAnchor.constraint(equalTo: barView.trailingAnchor, constant: 8).isActive = true
+        b.topAnchor.constraint(equalTo: barView.topAnchor).isActive = true
+        b.bottomAnchor.constraint(equalTo: barView.bottomAnchor).isActive = true
+        
+        b.layer.cornerRadius = 14
+        b.clipsToBounds = true
         
         popularButton.addTarget(self, action: #selector(handleTab), for: .touchUpInside)
         homeButton.addTarget(self, action: #selector(handleTab), for: .touchUpInside)
@@ -197,7 +213,7 @@ class HomeTitleView:JTitleView {
         rightButton.setImage(UIImage(named:"Groups"), for: .normal)
         //leftButton.setImage(UIImage(named:"Switches"), for: .normal)
         
-        tabScrollView = TabScrollView(frame: frame, titles: ["FEATURED", "LATEST", "NEARBY"])
+        tabScrollView = TabScrollView(frame: frame, titles: ["FEATURED", "MY GROUPS", "NEARBY"])
         contentView.addSubview(tabScrollView)
         tabScrollView.translatesAutoresizingMaskIntoConstraints = false
         tabScrollView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true

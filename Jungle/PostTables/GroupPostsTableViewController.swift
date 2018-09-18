@@ -47,7 +47,9 @@ class GroupPostsTableViewController: PostsTableViewController {
     
     override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
         SearchService.groupPosts(groupID: groupID, offset: state.posts.count) { posts in
+            
             completion(posts)
+            
         }
     }
 }

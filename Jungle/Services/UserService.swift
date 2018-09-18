@@ -21,11 +21,54 @@ class UserSettings {
     }
 }
 
+class Prompts {
+    var anonSwitch1:Bool
+    var autoJoinGroup:Bool
+    
+    init(anonSwitch1:Bool, autoJoinGroup:Bool) {
+        self.anonSwitch1 = anonSwitch1
+        self.autoJoinGroup = autoJoinGroup
+    }
+    
+    static func parse(_ data:[String:Any]) -> Prompts {
+        var anonSwitch1 = false
+        var autoJoinGroup = false
+        
+        if let promptsData = data["prompts"] as? [String:Any] {
+            if let _anonSwitch1 = promptsData["anonSwitch1"] as? Bool {
+                anonSwitch1 = _anonSwitch1
+            }
+            
+            if let _autoJoinGroup = promptsData["autoJoinGroup"] as? Bool {
+                autoJoinGroup = _autoJoinGroup
+            }
+        }
+        
+        return Prompts(anonSwitch1: anonSwitch1, autoJoinGroup: autoJoinGroup)
+    }
+    
+    func save_anonSwitch1() {
+        anonSwitch1 = true
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let promptRef = database.child("users/prompts/\(uid)/anonSwitch1")
+        promptRef.setValue(true)
+    }
+    
+    func save_autoJoinGroup() {
+        autoJoinGroup = true
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let promptRef = database.child("users/prompts/\(uid)/autoJoinGroup")
+        promptRef.setValue(true)
+    }
+}
+
+
 class UserService {
     
     static var lastPostedAt:Date?
     
     static var anonMode = true
+    
     
     static var currentUser:User?
     static var currentUserSettings = UserSettings(locationServices: false, pushNotifications: false, safeContentMode: true)
@@ -37,6 +80,7 @@ class UserService {
     }
     
     static  var timeout = Timeout(canPost: false, progress: 0.0, minsLeft: 0)
+    
     
     static func parseTimeout(_ data:[String:Any]) -> Timeout {
         if let canPost = data["canPost"] as? Bool {
@@ -54,12 +98,16 @@ class UserService {
         return Timeout(canPost: false, progress: 0, minsLeft: 0)
     }
     
+    static var prompts = Prompts(anonSwitch1: false,
+                                 autoJoinGroup: false)
+    
     
     static let userUpdatedNotification = NSNotification.Name.init("userUpdated")
     static let userSettingsUpdatedNotification = NSNotification.Name.init("userSettingsUpdated")
     
     
     static var recentlyPosted  = false
+    static var shouldPoll = false
     
     static var userSettingsHandle:UInt?
     static func observeCurrentUserSettings() {

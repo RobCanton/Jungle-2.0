@@ -16,6 +16,28 @@ class RecentPostsTableViewController: PostsTableViewController {
     var newPostsTopAnchor:NSLayoutConstraint!
     var newPostsListener:ListenerRegistration?
     
+    var openDiscoverGroupsHandler:(()->())?
+    
+    override func headerCell(for indexPath: IndexPath) -> ASCellNode {
+        let cell = NoticeCellNode(msg: "You aren't part of any groups!\nJoin a group to start seeing posts in your feed.",
+                                  buttonTitle: "Discover Groups")
+        cell.handleTap = openDiscoverGroups
+        let height = UIScreen.main.bounds.height - 49 - 70
+        cell.style.height = ASDimension(unit: .points, value: height)
+        cell.selectionStyle = .none
+        return cell
+    }
+    
+    func openDiscoverGroups() {
+        print("openDiscoverGroups")
+        openDiscoverGroupsHandler?()
+    }
+
+    
+    override func numberOfHeaderCells() -> Int {
+        return GroupsService.myGroupKeys.count == 0 ? 1 : 0
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         let newPostsButton = NewPostsButton(frame: .zero)
@@ -24,6 +46,19 @@ class RecentPostsTableViewController: PostsTableViewController {
         newPostsTopAnchor.isActive = true
         newPostsButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         newPostsButton.button.addTarget(self, action: #selector(startRefreshing), for: .touchUpInside)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if UserService.shouldPoll {
+            startPoll()
+        }
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        pollTimer?.invalidate()
+        pollTimer = nil
     }
     
     override func lightBoxVC() -> LightboxViewController {
@@ -44,6 +79,8 @@ class RecentPostsTableViewController: PostsTableViewController {
         }
     }
     
+    
+    
     @objc func startRefreshing() {
         
         refreshControl.beginRefreshing()
@@ -56,12 +93,14 @@ class RecentPostsTableViewController: PostsTableViewController {
     }
     
     override func handleRefresh() {
+        if GroupsService.myGroupKeys.count == 0 { return }
         toggleNewPosts(visible: false, animated: true)
         var firstTimestamp:Double?
         if state.posts.count > 0 {
             firstTimestamp = state.posts[0].createdAt.timeIntervalSince1970 * 1000
         }
-        newPostsListener?.remove()
+        pollTimer?.invalidate()
+        pollTimer = nil
         PostsService.getMyFeedPosts(offset: state.posts.count, before: firstTimestamp) { _posts in
             self.refreshControl.endRefreshing()
 
@@ -78,52 +117,55 @@ class RecentPostsTableViewController: PostsTableViewController {
                 if self.state.posts.count > 0 {
                     self.tableNode.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
                 }
-                self.listenForNewPosts()
             })
         }
     }
     
-    func listenForNewPosts() {
-        print("LISTEN FOR NEW POSTS!")
-//        newPostsListener?.remove()
-//
-//        let postsRef = firestore.collection("posts")
-//            .whereField("status", isEqualTo: "active")
-//            .whereField("parent", isEqualTo: "NONE")
-//
-//        var query:Query
-//        if state.posts.count > 0 {
-//            query = postsRef.whereField("createdAt", isGreaterThan: state.posts[0].createdAt.timeIntervalSince1970 * 1000)
-//                .order(by: "createdAt", descending: true)
-//                .limit(to: 1)
-//        } else {
-//            query = postsRef.order(by: "createdAt", descending: true).limit(to: 1)
-//        }
-//
-//        newPostsListener = query.addSnapshotListener() { snapshot, err in
-//            if let err = err {
-//                print("Error getting documents: \(err)")
-//            } else {
-//                if snapshot!.documents.count > 0 {
-//                    let firstDoc = snapshot!.documents[0]
-//                    if let newPost = Post.parse(id: firstDoc.documentID, firstDoc.data()) {
-//                        if GroupsService.myGroupKeys[newPost.group.id] != nil {
-//                            self.toggleNewPosts(visible: true, animated: true)
-//                        }
-//                    }
-//                }
-//            }
-//        }
+    var pollTimer:Timer?
+    var pollTicks = 0
+    var pollInterval:Double = 1
+    
+    func startPoll() {
+        pollInterval = 1
+        UserService.shouldPoll = false
+        
+        pollTimer?.invalidate()
+        pollTimer = nil
+        
+        pollTimer = Timer.scheduledTimer(timeInterval: pollInterval, target: self, selector: #selector(pollMyFeed), userInfo: nil, repeats: false)
+        
+    }
+    
+    @objc func pollMyFeed() {
+        var before:Double?
+        if let first = state.posts.first {
+            before = first.createdAt.timeIntervalSince1970 * 1000
+        }
+        
+        PostsService.pollMyFeedPosts(before: before) { posts in
+            if posts.count > 0 {
+                self.pollTicks = 0
+                self.pollInterval = 1
+                if !self.state.fetchingMore, !self.refreshControl.isRefreshing {
+                    self.toggleNewPosts(visible: true, animated: true)
+                }
+            } else {
+                self.pollNextTick()
+            }
+        }
+
+    }
+    
+    func pollNextTick() {
+        if pollTicks < 10 {
+        pollTicks += 1
+        pollInterval += 1
+        pollTimer = Timer.scheduledTimer(timeInterval: pollInterval, target: self, selector: #selector(pollMyFeed), userInfo: nil, repeats: false)
+        }
     }
     
     override func fetchData(state: PostsStateController.State, completion: @escaping ([Post]) -> ()) {
         
-        PostsService.getMyFeedPosts(offset: state.posts.count, before: nil) { posts in
-            let isFirstLoad = self.state.isFirstLoad
-            completion(posts)
-            if isFirstLoad {
-                self.listenForNewPosts()
-            }
-        }
+        PostsService.getMyFeedPosts(offset: state.posts.count, before: nil, completion: completion)
     }
 }

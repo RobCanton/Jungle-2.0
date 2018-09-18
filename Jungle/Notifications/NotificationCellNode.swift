@@ -185,6 +185,7 @@ class NotificationCellNode:ASCellNode {
             var notificationStr:String
             //let replyToID = replyNotification.replyToID ?? post.key
             
+            print("MENTION: \(replyNotification.mention)")
             if replyNotification.mention {
                 notificationStr = "\(name) mentioned you:"
             } else {

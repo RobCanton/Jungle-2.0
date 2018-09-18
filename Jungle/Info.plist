@@ -46,6 +46,7 @@
 	<string>Needed to select a profile photo.</string>
 	<key>UIAppFonts</key>
 	<array>
+		<string>KosugiMaru-Regular.ttf</string>
 		<string>NunitoSans-SemiBold.ttf</string>
 		<string>NunitoSans-Regular.ttf</string>
 		<string>NunitoSans-Light.ttf</string>

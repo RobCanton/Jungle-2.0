@@ -88,14 +88,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
         
         Emojis.processEmojis()
-        GroupsService.observeGroups()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(didRequirementsLoad), name: GroupsService.notification_groupsUpdated, object: nil)
+        GroupsService.fetchBackgrounds {
+            GroupsService.fetchGroups {
+                self.didRequirementsLoad()
+            }
+        }
+
         return true
     }
     
-    @objc func didRequirementsLoad() {
+    func didRequirementsLoad() {
         if requirementsLoaded { return }
+        GroupsService.observeGroups()
         requirementsLoaded = true
         if let user = Auth.auth().currentUser {
             user.getIDTokenForcingRefresh(true, completion: { token, error in
@@ -157,6 +161,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 var locationServices = false
                 var pushNotifications = false
                 var safeContentMode = false
+                
+                var anonMode:Bool?
                 var timeout = UserService.Timeout.init(canPost: false, progress: 0, minsLeft: 0)
                 
                 if let settings = data["settings"] as? [String:Any] {
@@ -170,11 +176,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                         safeContentMode = _safeContentMode
                     }
                     
+                    if let _anonMode = settings["anonMode"] as? Bool {
+                        anonMode = _anonMode
+                    }
+                    
                     
                 }
                 
+                
                 if let groups = data["groups"] as? [String:Bool] {
                     GroupsService.myGroupKeys = groups
+                }
+                
+                if let groups = data["groupsCreated"] as? [String:Bool] {
+                    GroupsService.createdGroupKeys = groups
                 }
                 
                 if let groups = data["groupsSkipped"] as? [String:Bool] {
@@ -185,6 +200,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                     timeout = UserService.parseTimeout(timeoutData)
                 }
                 
+                let prompts = Prompts.parse(data)
+                print("USER ACCOUNT: \(data)")
                 let settings = UserSettings(locationServices: locationServices,
                                             pushNotifications: pushNotifications,
                                             safeContentMode: safeContentMode)
@@ -198,8 +215,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 
                 UserService.currentUserSettings = settings
                 UserService.currentUser = User(uid: uid, authType: type, profile: profile)
-                UserService.anonMode = profile == nil
+                UserService.anonMode = anonMode != nil ? anonMode! : profile == nil
                 UserService.timeout = timeout
+                UserService.prompts = prompts
                 
                 if profile != nil || skipCreateProfile {
                     self.openMainView()

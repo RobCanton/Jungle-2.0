@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import SwiftMessages
+import Firebase
 
 protocol AnonSwitchDelegate:class {
     func anonDidSwitch()
@@ -112,18 +113,18 @@ class AnonSwitch:UIView {
         UserService.retrieveAnonImage(withName: anon.animal.lowercased()) { image, _ in
             self.avatarImageView.image = image
         }
-        backgroundColor = anon.color.withAlphaComponent(0.30)
+        backgroundColor = anon.color
         avatarImageView.backgroundColor = UIColor.clear
         avatarImageView.imageModificationBlock = { image in
-            return image.maskWithColor(color: anon.color) ?? image
+            return image.maskWithColor(color: UIColor(white: 1.0, alpha: 0.75)) ?? image
         }
         self.anonSwitchView.image = nil
         self.avatarImageView.alpha = 1.0
         
-        avatarTopAnchor.constant = 4.0
-        avatarLeadingAnchor.constant = 4.0
-        avatarBottomAnchor.constant = -4.0
-        avatarTrailingAnchor.constant = -4.0
+        avatarTopAnchor.constant = 5.0
+        avatarLeadingAnchor.constant = 5.0
+        avatarBottomAnchor.constant = -5.0
+        avatarTrailingAnchor.constant = -5.0
         self.layoutIfNeeded()
     }
     
@@ -142,7 +143,7 @@ class AnonSwitch:UIView {
     }
     
     @objc func handleAnonSwitch() {
-        
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         if UserService.currentUser?.profile == nil {
             print("CANT SWITCH!")
             showCreateProfilePrompt()
@@ -160,6 +161,7 @@ class AnonSwitch:UIView {
                 self.avatarImageView.alpha = 0.20
                 self.layer.borderColor = UIColor.white.cgColor
             })
+            
         } else {
             if let profile = UserService.currentUser?.profile {
                 let _ = Alerts.showAnonAlert(withMessage: "Switched to @\(profile.username).")
@@ -171,7 +173,11 @@ class AnonSwitch:UIView {
                 self.avatarImageView.alpha = 1.0
                 self.layer.borderColor = UIColor.clear.cgColor
             })
+            
         }
+        
+        let settingsRef = database.child("users/settings/\(uid)/anonMode")
+        settingsRef.setValue(UserService.anonMode)
         
         delegate?.anonDidSwitch()
     }
@@ -193,7 +199,7 @@ class AnonSwitch:UIView {
     func showCreateProfilePrompt() {
         let messageView: MessageView = MessageView.viewFromNib(layout: .centeredView)
         messageView.configureBackgroundView(width: 250)
-        messageView.configureContent(title: "You are anonymous", body: "To set your own username and avatar create a public profile. You can go back to being anonymous at anytime.", iconImage: UIImage(named:"anon_switch_on_animated_10"), iconText: "", buttonImage: nil, buttonTitle: "Create a Profile") { _ in
+        messageView.configureContent(title: "You are anonymous", body: "To set your own username and avatar create a public profile. You can still go back into hiding anytime!", iconImage: UIImage(named:"anon_switch_on_animated_10"), iconText: "", buttonImage: nil, buttonTitle: "Create a Profile") { _ in
             
             SwiftMessages.hide()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: {

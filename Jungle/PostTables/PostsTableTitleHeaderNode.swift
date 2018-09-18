@@ -17,20 +17,20 @@ class PostsTableTitleHeaderNode:ASCellNode {
         super.init()
         backgroundColor = UIColor.white
         automaticallyManagesSubnodes = true
-        
+        selectionStyle = .none
         titleNode = ASTextNode()
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         
         titleNode.attributedText = NSAttributedString(string: title, attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: UIColor(white: 0.35, alpha: 1.0),
+            NSAttributedStringKey.font: Fonts.extraBold(ofSize: 14.0),
+            NSAttributedStringKey.foregroundColor: UIColor(white: 0.67, alpha: 1.0),
             NSAttributedStringKey.paragraphStyle: paragraphStyle
             ])
         
         dividerNode = ASDisplayNode()
-        dividerNode.style.height = ASDimension(unit: .points, value: 1.0)
-        dividerNode.backgroundColor = UIColor(white: 0.35, alpha: 1.0)
+        dividerNode.style.height = ASDimension(unit: .points, value: 0.5)
+        dividerNode.backgroundColor = UIColor(white: 0.85, alpha: 1.0)
     }
     
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {

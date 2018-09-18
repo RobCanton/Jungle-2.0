@@ -11,6 +11,7 @@ import UIKit
 
 protocol RCSearchBarDelegate:class {
     func handleLeftButton()
+    func searchDidCancel()
     func searchTextDidChange(_ text: String?)
     func searchDidBegin()
     func searchDidEnd()
@@ -149,6 +150,7 @@ class RCSearchBarView:JTitleView, UITextFieldDelegate {
     
     @objc func handleCancelButton(_ sender: Any) {
         //self.textField.text = ""
+        delegate?.searchDidCancel()
         self.textField.endEditing(true)
     }
     

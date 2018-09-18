@@ -29,17 +29,17 @@ class PostContentNode:ASDisplayNode {
     var blockedIconNode:ASImageNode?
     var blockedTitleNode:ASTextNode?
     var blockedButtonNode:ASButtonNode?
-    required init(post: Post) {
+    required init(post: Post, group:Group) {
         super.init()
         self.post = post
-        pastelNode = PastelNode(gradient: post.gradient)
+        pastelNode = PastelNode(gradient: group.gradient)
         automaticallyManagesSubnodes = true
         videoNode.backgroundColor = UIColor.black
         imageNode.backgroundColor = UIColor.black
         
         textNode.isUserInteractionEnabled = true
         
-        avatarNode = AvatarNode(post: post, cornerRadius: 22, imageInset: 6)
+        avatarNode = AvatarNode(post: post, cornerRadius: 22, imageInset: 7)
         avatarNode.style.height = ASDimension(unit: .points, value: 44)
         avatarNode.style.width = ASDimension(unit: .points, value: 44)
         
@@ -192,12 +192,13 @@ class PostContentNode:ASDisplayNode {
         
         subnameNode.layer.cornerRadius = 2.0
         subnameNode.clipsToBounds = true
-        
+        guard let post = self.post else { return }
+        let intensity:CGFloat = post.attachments.isImage || post.attachments.isVideo ? 0.67 : 0.33
         let gradient = CAGradientLayer()
         gradient.frame = UIScreen.main.bounds
-        gradient.colors = [UIColor.clear.cgColor, UIColor(white: 0.0, alpha: 0.35).cgColor]
+        gradient.colors = [UIColor.clear.cgColor, UIColor(white: 0.0, alpha: intensity).cgColor]
         gradient.locations = [0.0, 1.0]
-        gradient.startPoint = CGPoint(x: 0.0, y: 0.4)
+        gradient.startPoint = CGPoint(x: 0.0, y: 0.5)
         gradient.endPoint = CGPoint(x: 0.0, y: 1.0)
         gradientNode.view.layer.addSublayer(gradient)
         gradientNode.isUserInteractionEnabled = false
@@ -205,7 +206,6 @@ class PostContentNode:ASDisplayNode {
         spinnerNode.activityIndicatorView.activityIndicatorViewStyle = .white
         spinnerNode.startAnimating()
     
-
     }
     
     func temporaryUnblock() {

@@ -52,6 +52,10 @@ open class WindowViewController: UIViewController
     override open var preferredStatusBarStyle: UIStatusBarStyle {
         return config.preferredStatusBarStyle ?? super.preferredStatusBarStyle
     }
+    
+    open override var prefersStatusBarHidden: Bool {
+        return config.prefersStatusBarHidden ?? super.prefersStatusBarHidden
+    }
 }
 
 extension WindowViewController {

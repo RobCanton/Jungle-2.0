@@ -94,14 +94,16 @@ class CameraHUDView:UIView {
     var selectedGroup:Group?
     
     var messageWrapper = SwiftMessages()
+    var deviceInsets:UIEdgeInsets!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         
         translatesAutoresizingMaskIntoConstraints = false
-        insetsLayoutMarginsFromSafeArea = false
-        preservesSuperviewLayoutMargins = false
+        insetsLayoutMarginsFromSafeArea = true
+        preservesSuperviewLayoutMargins = true
         
+        deviceInsets = UIApplication.deviceInsets
         textMax = frame.height * 0.4
         
         stickersOverlay = UIView()
@@ -163,7 +165,7 @@ class CameraHUDView:UIView {
         textViewPlaceholder.translatesAutoresizingMaskIntoConstraints = false
         textViewPlaceholder.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24 + 32 + 6).isActive = true
         textViewPlaceholder.isUserInteractionEnabled = false
-        textViewPlaceholder.topAnchor.constraint(equalTo: topAnchor, constant: 72).isActive = true
+        textViewPlaceholder.topAnchor.constraint(equalTo: topAnchor, constant: 44 + deviceInsets.top + 8).isActive = true
         
         stickersView = StickersView(frame: bounds)
         addSubview(stickersView)
@@ -198,7 +200,7 @@ class CameraHUDView:UIView {
         addSubview(modeScrollBar)
         modeScrollBar.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
         modeScrollBar.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
-        modeScrollBar.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        modeScrollBar.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor).isActive = true
         modeScrollBar.heightAnchor.constraint(equalToConstant: 52.0).isActive = true
         modeScrollBar.delegate = self
         
@@ -219,7 +221,7 @@ class CameraHUDView:UIView {
         textViewLeadingAnchor = textView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 0)
         textViewLeadingAnchor.isActive = true
         textView.isUserInteractionEnabled = false
-        textView.topAnchor.constraint(equalTo: topAnchor, constant: 64.0).isActive = true
+        textView.topAnchor.constraint(equalTo: topAnchor, constant: 44 + deviceInsets.top).isActive = true
         textView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         textViewHeightAnchor = textView.heightAnchor.constraint(equalToConstant: 29.5)
         textViewHeightAnchor.isActive = true
@@ -237,7 +239,6 @@ class CameraHUDView:UIView {
         addSubview(flashButton)
         flashButton.translatesAutoresizingMaskIntoConstraints = false
         flashButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 0).isActive = true
-        flashButton.topAnchor.constraint(equalTo: topAnchor, constant: 0).isActive = true
         flashButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
         flashButton.heightAnchor.constraint(equalToConstant: 64).isActive = true
         flashButton.applyShadow(radius: 6.0, opacity: 0.3, offset: .zero, color: .black, shouldRasterize: false)
@@ -259,9 +260,9 @@ class CameraHUDView:UIView {
         
         addSubview(optionsTable)
         optionsTable.translatesAutoresizingMaskIntoConstraints = false
-        optionsTable.topAnchor.constraint(equalTo: topAnchor, constant: 64.0).isActive = true
+        optionsTable.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 64.0).isActive = true
         optionsTable.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16).isActive = true
-        optionsTable.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        optionsTable.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor).isActive = true
         optionsTable.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16).isActive = true
         
         closeButton = DynamicButton(style: .caretDown)
@@ -270,7 +271,7 @@ class CameraHUDView:UIView {
         addSubview(closeButton)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24).isActive = true
-        closeButton.topAnchor.constraint(equalTo: topAnchor, constant: 24).isActive = true
+        closeButton.topAnchor.constraint(equalTo: topAnchor, constant: deviceInsets.top).isActive = true
         closeButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
         closeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
         closeButton.tintColor = UIColor.white
@@ -280,12 +281,14 @@ class CameraHUDView:UIView {
         nextButton.backgroundColor = accentColor
         nextButton.titleLabel?.font = Fonts.semiBold(ofSize: 14)
         
+        flashButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor).isActive = true
+        
         anonSwitch = AnonSwitch(frame:.zero)
         
         addSubview(anonSwitch)
         anonSwitch.translatesAutoresizingMaskIntoConstraints = false
         anonSwitch.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20).isActive = true
-        anonSwitch.topAnchor.constraint(equalTo: topAnchor, constant: 64.0 + 4).isActive = true
+        anonSwitch.topAnchor.constraint(equalTo: topAnchor, constant: 44 + deviceInsets.top + 8).isActive = true
         anonSwitch.widthAnchor.constraint(equalToConstant: 32).isActive = true
         anonSwitch.heightAnchor.constraint(equalToConstant: 32).isActive = true
         anonSwitch.layer.cornerRadius = 16
@@ -322,8 +325,8 @@ class CameraHUDView:UIView {
         postButton.setTitle("Next", for: .normal)
         postButton.titleLabel?.font = Fonts.bold(ofSize: 14)
         postButton.setTitleColor(UIColor.white, for: .normal)
-        postButton.setTitleColor(UIColor.lightGray, for: .disabled)
-        postButton.backgroundColor = accentColor
+        postButton.backgroundColor = UIColor.gray
+        postButton.isEnabled = false
         addSubview(postButton)
         postButton.translatesAutoresizingMaskIntoConstraints = false
         postButton.contentEdgeInsets = UIEdgeInsetsMake(8, 16, 8, 16)
@@ -369,7 +372,7 @@ class CameraHUDView:UIView {
         effectsBar.heightAnchor.constraint(equalToConstant: 84.0 * 2).isActive = true
         effectsBar.delegate = self
         
-        recordButtonBottomAnchor = recordButton.bottomAnchor.constraint(equalTo: effectsBar.topAnchor, constant: -72)
+        recordButtonBottomAnchor = recordButton.bottomAnchor.constraint(equalTo: effectsBar.topAnchor, constant: -72 - deviceInsets.bottom)
         recordButtonBottomAnchor.isActive = true
         
         closeButton.addTarget(self, action: #selector(handleClose), for: .touchUpInside)
@@ -631,7 +634,6 @@ class CameraHUDView:UIView {
     }
     
     func editingState() {
-        //modePagerView.isHidden = true
         closeButton.isHidden = false
         stickerButton.isHidden = false
         stickersOverlay.isHidden = false
@@ -650,7 +652,7 @@ class CameraHUDView:UIView {
         
         modePagerView.isHidden = true
         modeScrollBar.isHidden = true
-        //hideCaptionBar()
+    
     }
     
     func writingState(forward:Bool) {
@@ -660,6 +662,7 @@ class CameraHUDView:UIView {
             textView.becomeFirstResponder()
             
             postButton.alpha = 0.0
+            validateWriting()
             
             UIView.animate(withDuration: 0.3, animations: {
                 self.flashButton.alpha = 0.0
@@ -691,10 +694,9 @@ class CameraHUDView:UIView {
     
     func optionsState(forward:Bool) {
         if forward {
-            
             textView.resignFirstResponder()
-            postButton.backgroundColor = UIColor.lightGray
             postButton.setTitle("Post", for: .normal)
+            validateOptions()
             UIView.animate(withDuration: 0.25, animations: {
                 self.textView.alpha = 0.0
                 self.anonSwitch.alpha = 0.0
@@ -703,14 +705,35 @@ class CameraHUDView:UIView {
             })
         } else {
             textView.becomeFirstResponder()
-            postButton.backgroundColor = accentColor
             postButton.setTitle("Next", for: .normal)
+            validateWriting()
             UIView.animate(withDuration: 0.25, animations: {
                 self.textView.alpha = 1.0
                 self.modeScrollBar.alpha = 1.0
                 self.anonSwitch.alpha = 1.0
                 self.optionsTable.alpha = 0.0
             })
+        }
+    }
+    
+    func validateWriting() {
+        if textView.text.isEmpty {
+            postButton.isEnabled = false
+            postButton.backgroundColor = UIColor.gray
+        } else {
+            postButton.isEnabled = true
+            postButton.backgroundColor = accentColor
+        }
+    }
+    
+    func validateOptions() {
+        
+        if selectedGroup == nil {
+            postButton.isEnabled = false
+            postButton.backgroundColor = UIColor.gray
+        } else {
+            postButton.isEnabled = true
+            postButton.backgroundColor = accentColor
         }
     }
     
@@ -780,8 +803,8 @@ class CameraHUDView:UIView {
     func setEffectsBar(open:Bool) {
         effectsBarIsOpen = open
         if effectsBarIsOpen {
-            guard let image = delegate?.getCurrentImage() else { return }
-            effectsBar.setImage(image)
+            //guard let image = delegate?.getCurrentImage() else { return }
+            effectsBar.setImage(CIImage(image: UIImage(named:"girl-pixel")!)!)
             let c1 = CGPoint(x: 0.23, y: 1)
             let c2 = CGPoint(x: 0.32, y: 1)
             let animator = UIViewPropertyAnimator(duration: 0.65, controlPoint1: c1, controlPoint2: c2, animations: {
@@ -796,7 +819,7 @@ class CameraHUDView:UIView {
             let c1 = CGPoint(x: 0.23, y: 1)
             let c2 = CGPoint(x: 0.32, y: 1)
             let animator = UIViewPropertyAnimator(duration: 0.65, controlPoint1: c1, controlPoint2: c2, animations: {
-                self.recordButtonBottomAnchor.constant = -72
+                self.recordButtonBottomAnchor.constant = -72 - self.deviceInsets.bottom
                 self.effectsBar.setBarPosition(.closed, animated: false)
                 self.layoutIfNeeded()
             })
@@ -890,7 +913,9 @@ extension CameraHUDView:UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         let hasText = textView.text.count > 0
         textViewPlaceholder.isHidden = hasText
-        postButton.isEnabled = hasText
+        
+        validateWriting()
+        
         let height = textView.sizeThatFits(CGSize(width: textView.bounds.width, height: CGFloat.infinity)).height
         
         textView.isUserInteractionEnabled = true
@@ -967,8 +992,7 @@ extension CameraHUDView: TabScrollDelegate {
 extension CameraHUDView:OptionsDelgate {
     func didSelectGroup(_ group: Group?) {
         selectedGroup = group
-        postButton.isEnabled = group != nil
-        postButton.backgroundColor = group != nil ? accentColor : UIColor.lightGray
+        validateOptions()
     }
     
     func didSelectNewGroup() {
@@ -986,8 +1010,10 @@ extension CameraHUDView:OptionsDelgate {
         config.presentationContext = .window(windowLevel: UIWindowLevelNormal)
         config.duration = .forever
         config.presentationStyle = .bottom
-        config.dimMode = .gray(interactive: true)
+        config.prefersStatusBarHidden = true
+        config.dimMode = .gray(interactive: true  )
         config.interactiveHide = true
+
         
         messageWrapper.show(config: config, view: messageView)
         createGroupView.willAppear()

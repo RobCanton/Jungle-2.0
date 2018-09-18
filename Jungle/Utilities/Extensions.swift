@@ -427,6 +427,15 @@ extension FloatingPoint {
 }
 
 extension UIApplication {
+    
+    static var edgeToEdgeInsets:UIEdgeInsets {
+        if let insets = shared.keyWindow?.safeAreaInsets {
+            if insets.top > 0.0 {
+                return insets
+            }
+        }
+        return UIEdgeInsets.zero
+    }
     static var deviceInsets:UIEdgeInsets {
         if let insets = shared.keyWindow?.safeAreaInsets {
             if insets.top > 0.0 {

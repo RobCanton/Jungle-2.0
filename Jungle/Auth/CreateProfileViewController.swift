@@ -81,6 +81,7 @@ class CreateProfileViewController:UIViewController {
         skipButton = UIButton(type: .custom)
         skipButton.setTitle("Skip", for: .normal)
         skipButton.setTitleColor(UIColor.white, for: .normal)
+        skipButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .disabled)
         skipButton.titleLabel?.font = Fonts.bold(ofSize: 17.0)
         titleView.addSubview(skipButton)
         skipButton.translatesAutoresizingMaskIntoConstraints = false
@@ -278,6 +279,7 @@ class CreateProfileViewController:UIViewController {
         
         view.isUserInteractionEnabled = false
         toggleSubmitButton(enabled: false)
+        skipButton.isEnabled = false
         submitButton.setTitle("Creating...", for: .normal)
         
         UserService.uploadProfileImage(avatar, quality: .high) { _ in
@@ -325,6 +327,7 @@ class CreateProfileViewController:UIViewController {
         
         toggleSubmitButton(enabled: true)
         submitButton.setTitle("Create Profile", for: .normal)
+        skipButton.isEnabled = true
     }
     
     @objc func handleSkip() {

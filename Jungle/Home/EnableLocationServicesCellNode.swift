@@ -10,18 +10,18 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 
-class EnableLocationServicesCellNode:ASCellNode {
+class NoticeCellNode:ASCellNode {
     var titleNode = ASTextNode()
     var buttonNode = ASButtonNode()
     var buttonContainerNode = ASDisplayNode()
     var handleTap: (()->())?
     
-    override init() {
+    required init(msg:String, buttonTitle:String) {
         super.init()
         automaticallyManagesSubnodes = true
         let centerParagraph = NSMutableParagraphStyle()
         centerParagraph.alignment = .center
-        titleNode.attributedText = NSAttributedString(string: "Enable location services to see posts near you",
+        titleNode.attributedText = NSAttributedString(string: msg,
                                                       attributes: [
                                                         NSAttributedStringKey.font: Fonts.regular(ofSize: 16.0),
                                                         NSAttributedStringKey.foregroundColor: UIColor.darkGray,
@@ -29,7 +29,7 @@ class EnableLocationServicesCellNode:ASCellNode {
                                                         ])
         titleNode.textContainerInset = UIEdgeInsetsMake(0, 44, 0, 44)
         
-        let buttonTitle = NSAttributedString(string: "Authorize GPS",
+        let buttonTitle = NSAttributedString(string: buttonTitle,
                                             attributes: [
                                                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 18.0),
                                                 NSAttributedStringKey.foregroundColor: UIColor.white,

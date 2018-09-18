@@ -270,6 +270,8 @@ open class SwiftMessages {
          */
         public var preferredStatusBarStyle: UIStatusBarStyle?
         
+        public var prefersStatusBarHidden: Bool?
+        
         /**
          If a view controller is created to host the message view, should the view 
          controller auto rotate?  The default is 'true', meaning it should auto

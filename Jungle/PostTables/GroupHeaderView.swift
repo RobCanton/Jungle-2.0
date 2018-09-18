@@ -37,7 +37,8 @@ class GroupHeaderView:UIView {
     var centerAdjustment:CGFloat = 0
     var topInset:CGFloat = 0
     
-    var bg:ASNetworkImageNode!
+    var bannerView:UIView!
+    var bannerImageNode:ASNetworkImageNode!
     
     weak var group:Group?
     
@@ -53,7 +54,7 @@ class GroupHeaderView:UIView {
         pastelView.endPastelPoint = .bottomLeft
         
         pastelView.animationDuration = 10
-        addSubview(pastelView)
+        self.insertSubview(pastelView, at: 0)
         pastelView.translatesAutoresizingMaskIntoConstraints = false
         pastelView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
         pastelView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
@@ -152,7 +153,7 @@ class GroupHeaderView:UIView {
         descLabel.numberOfLines = 0
         descLabel.textAlignment = .center
         descLabel.font = Fonts.light(ofSize: 14.0)
-        descLabel.text = "Melrose has school on Monday Wednesday Thursday Saturday and all of these days. She can't make it to Wonderland because of her busy schedule."
+        descLabel.text = "M"
         descLabel.textColor = UIColor.white
         contentView.addSubview(descLabel)
         descLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -162,9 +163,7 @@ class GroupHeaderView:UIView {
         descLabel.heightAnchor.constraint(equalToConstant: descHeight).isActive = true
         
         joinButton = UIButton(type: .custom)
-        joinButton.setTitle("Join Group", for: .normal)
-        joinButton.titleLabel?.font = Fonts.bold(ofSize: 16.0)
-        joinButton.setTitleColor(UIColor.white, for: .normal)
+
         joinButton.layer.cornerRadius = 32/2
         joinButton.layer.borderColor = UIColor.white.cgColor
         joinButton.layer.borderWidth = 1.5
@@ -194,14 +193,25 @@ class GroupHeaderView:UIView {
         joinSpinner.hidesWhenStopped = true
         joinSpinner.stopAnimating()
         
-        bg = ASNetworkImageNode()
-        insertSubview(bg.view, at: 0)
-        bg.view.translatesAutoresizingMaskIntoConstraints = false
-        bg.view.topAnchor.constraint(equalTo: topAnchor).isActive = true
-        bg.view.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
-        bg.view.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
-        bg.view.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
-        bg.alpha = 0.7
+        bannerView = UIView()
+        bannerView.backgroundColor = UIColor.black
+        insertSubview(bannerView, at: 0)
+        bannerView.translatesAutoresizingMaskIntoConstraints = false
+        bannerView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        bannerView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        bannerView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        bannerView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        bannerImageNode = ASNetworkImageNode()
+        
+        bannerView.insertSubview(bannerImageNode.view, at: 0)
+        
+        bannerImageNode.view.translatesAutoresizingMaskIntoConstraints = false
+        bannerImageNode.view.topAnchor.constraint(equalTo: bannerView.topAnchor).isActive = true
+        bannerImageNode.view.leadingAnchor.constraint(equalTo: bannerView.leadingAnchor).isActive = true
+        bannerImageNode.view.trailingAnchor.constraint(equalTo: bannerView.trailingAnchor).isActive = true
+        bannerImageNode.view.bottomAnchor.constraint(equalTo: bannerView.bottomAnchor).isActive = true
+        bannerImageNode.alpha = 0.75
+        
         self.layoutIfNeeded()
     }
     
@@ -214,41 +224,77 @@ class GroupHeaderView:UIView {
     func setGroup(_ group:Group) {
         self.group = group
         avatarView.isHidden = true
-        nameTitle.text = group.name
         nameTitle.font = Fonts.bold(ofSize: 20)
-        descLabel.text = group.desc
         avatarImageView.image = nil
         avatarImageView.url = nil
+         
+        let centerParagraph = NSMutableParagraphStyle()
+        centerParagraph.alignment = .center
         
-        bg.url =  group.avatar_high
+//        let imageAttachment =  NSTextAttachment()
+//        imageAttachment.image = UIImage(named:"verified")
+//        //Set bound to reposition
+//        
+//        imageAttachment.bounds = CGRect(x: 0,
+//                                        y: 0,
+//                                        width: 16,
+//                                        height: 16)
+        
+        let nameAttr = NSMutableAttributedString(string: group.name, attributes: [
+            NSAttributedStringKey.font: Fonts.bold(ofSize: 20),
+            NSAttributedStringKey.foregroundColor: UIColor.white,
+            NSAttributedStringKey.paragraphStyle: centerParagraph
+            ])
+        
+        //nameAttr.append(NSAttributedString(attachment: imageAttachment))
+        
+        nameTitle.attributedText = nameAttr
+        descLabel.text = group.desc
+        
+        bannerImageNode.url =  group.avatar_high
         backgroundColor = UIColor.black
-        pastelView.isHidden = true
-        
-        var membersStr:String
-        if group.numMembers == 1 {
-            membersStr = "1 Member"
-        } else {
-            membersStr = "\(group.numMembers) Members"
-        }
-        
-        var postsStr:String
-        if group.numPosts == 1 {
-            postsStr = "1 Post"
-        } else {
-            postsStr = "\(group.numPosts) Posts"
-        }
-        
-        infoLabel.text = "\(membersStr)   \(postsStr)"
+        let gradient = CAGradientLayer()
+        gradient.colors = group.gradientCGColors
+        gradient.locations = [0.0, 1.0]
+        gradient.startPoint = CGPoint(x:0, y:0)
+        gradient.endPoint = CGPoint(x:1, y:1)
+        gradient.frame = UIScreen.main.bounds
+        self.layer.insertSublayer(gradient, at: 0)
+        displayMeta(group)
         
         refreshJoinButton()
+        
+        let notification = Notification.Name.init("group_updated:\(group.id)")
+        NotificationCenter.default.addObserver(self, selector: #selector(groupUpdated), name: notification, object: nil)
+    }
+    
+    @objc func groupUpdated() {
+        print("GROUP UPDATED!")
+        guard let currentGroup = self.group else { return }
+        guard let newGroup = GroupsService.groupsDict[currentGroup.id] else { return }
+        displayMeta(newGroup)
+    }
+    
+    func displayMeta(_ group:Group) {
+        infoLabel.text = group.infoStr
+    }
+    
+    func cleanUp() {
+        NotificationCenter.default.removeObserver(self)
+        self.group = nil
     }
     
     @objc func toggleJoin() {
         guard let group = self.group else { return }
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        let memberRef = database.child("users/groups/\(uid)/\(group.id)")
+
         joinButton.isEnabled = false
-        joinButton.setTitleColor(UIColor.clear, for: .normal)
+        let attrStr = NSMutableAttributedString(string: (joinButton.currentAttributedTitle?.string)!, attributes: [
+            NSAttributedStringKey.foregroundColor: UIColor.clear,
+            NSAttributedStringKey.font: Fonts.bold(ofSize: 16.0)
+            ])
+        
+        joinButton.setAttributedTitle(attrStr, for: .normal)
+        
         joinButton.backgroundColor = UIColor.clear
         joinSpinner.startAnimating()
         
@@ -272,13 +318,25 @@ class GroupHeaderView:UIView {
         joinSpinner.stopAnimating()
         joinButton.isEnabled = true
         if GroupsService.myGroupKeys[group.id] == true {
-            joinButton.setTitle("Joined ✓", for: .normal)
-            joinButton.setTitleColor(UIColor(white: 0.15, alpha: 1.0), for: .normal)
+            let attrStr = NSMutableAttributedString(string: "Joined ✓", attributes: [
+                NSAttributedStringKey.foregroundColor: UIColor(white: 0.15, alpha: 1.0),
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 16.0)
+                ])
+            
+            attrStr.addAttribute(NSAttributedStringKey.font,
+                                 value:  UIFont.boldSystemFont(ofSize: 16.0),
+                                 range: NSRange(location: 7, length: 1))
+            
+            joinButton.setAttributedTitle(attrStr, for: .normal)
             joinButton.backgroundColor = UIColor.white
         } else {
-            joinButton.setTitle("Join Group", for: .normal)
-            joinButton.setTitleColor(UIColor.white, for: .normal)
+            let attrStr = NSMutableAttributedString(string: "Join Group", attributes: [
+                NSAttributedStringKey.foregroundColor: UIColor.white,
+                NSAttributedStringKey.font: Fonts.bold(ofSize: 16.0)
+                ])
+            joinButton.setAttributedTitle(attrStr, for: .normal)
             joinButton.backgroundColor = UIColor.clear
+            
         }
     }
     
@@ -289,15 +347,24 @@ class GroupHeaderView:UIView {
             let scale = 0.75 + 0.25 * progress
             nameTitle.transform = CGAffineTransform(scaleX: scale, y: scale)
             usernameCenterAnchor.constant = topInset/2 + (centerAdjustment-topInset/2) * progress
-            //avatarBottomAnchor.constant = 15 * (1 - progress)
+            
             let alphaProgress = progress * progress
             avatarView.alpha = alphaProgress
             descLabel.alpha = alphaProgress
             joinButton.alpha = alphaProgress
             infoLabel.alpha = alphaProgress
-            bg.alpha = 0.3 + 0.4 * progress
-            self.layoutIfNeeded()
+            bannerView.alpha = progress
+            
+        } else {
+            avatarView.alpha = 1.0
+            descLabel.alpha = 1.0
+            joinButton.alpha = 1.0
+            infoLabel.alpha = 1.0
+            bannerView.alpha = 1.0
+            nameTitle.transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
+            usernameCenterAnchor.constant = topInset/2 + (centerAdjustment-topInset/2)
         }
+        self.layoutIfNeeded()
     }
     
 }

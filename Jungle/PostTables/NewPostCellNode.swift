@@ -55,11 +55,11 @@ class PostCellNode:ASCellNode {
     var postNode:PostNode!
     var dividerNode:ASDisplayNode!
     
-    required init(post:Post, rank:Int?=nil) {
+    required init(post:Post, group:Group, rank:Int?=nil) {
         super.init()
         backgroundColor = UIColor.white
         contentNode = ASDisplayNode()
-        postNode = PostNode(post: post, rank: rank)
+        postNode = PostNode(post: post, group: group, rank: rank)
         automaticallyManagesSubnodes = true
         contentNode.automaticallyManagesSubnodes = true
         contentNode.layoutSpecBlock = { _,_ in
@@ -101,28 +101,30 @@ class PostNode:ASDisplayNode {
     var subnameNode = ASTextNode()
     var subtitleNode = ASTextNode()
     var postTextNode = ActiveTextNode()
-    var timeNode = ASTextNode()
     var moreButton = ASButtonNode()
     
     var likeButton = ASButtonNode()
     var commentButton = ASButtonNode()
     
-    var locationNode = ASTextNode()
+    var timeNode = ASTextNode()
     
     var post:Post?
     var shouldStopObserving = true
     
+    var locationButton = ASButtonNode()
+    
     weak var delegate:PostCellDelegate?
     
     var rank:Int?
-    required init(post:Post, rank:Int?=nil) {
+    required init(post:Post, group:Group, rank:Int?=nil) {
         super.init()
         self.post = post
         self.rank = rank
+        
         backgroundColor = currentTheme.backgroundColor//hexColor(from: "#333742")
         automaticallyManagesSubnodes = true
         postTextNode.maximumNumberOfLines = post.attachments.isImage
-            || post.attachments.isVideo ? 4 : 6
+            || post.attachments.isVideo ? 3 : 6
         postTextNode.tapHandler = { type, value in
             switch type {
             case .hashtag:
@@ -225,17 +227,12 @@ class PostNode:ASDisplayNode {
         subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
         subnameNode.backgroundColor = post.anon.color
         
-        timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
-            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
-            NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
-            ])
-        
         var locationStr = ""
         if let location = post.location {
             locationStr = " • \(location.locationShortStr)"
         }
         
-        let subtitleStr = post.group.name
+        let subtitleStr = group.name
         
         subtitleNode.maximumNumberOfLines = 1
         subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
@@ -274,16 +271,16 @@ class PostNode:ASDisplayNode {
         
         if let rank = rank {
             if rank > 1 {
-                locationNode.attributedText = NSAttributedString(string: "\(rank).", attributes: [
+                timeNode.attributedText = NSAttributedString(string: "\(rank).", attributes: [
                     NSAttributedStringKey.font: Fonts.extraBold(ofSize: 16.0),
                     NSAttributedStringKey.foregroundColor: UIColor(white: 0.35, alpha: 1.0)
                     ])
             } else {
-                locationNode.isHidden = true
+                timeNode.isHidden = true
             }
             
         } else {
-            locationNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
+            timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
                 NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
                 NSAttributedStringKey.foregroundColor: tertiaryColor
                 ])
@@ -292,17 +289,18 @@ class PostNode:ASDisplayNode {
         
         
         
-//        if let location = post.location {
-//            var locationStr = location.country
-////            if let myRegion = gpsService.region, location.countryCode == myRegion.countryCode {
-////                var locationStr = location.
-////            }
-//
-////            locationNode.attributedText = NSAttributedString(string: locationStr, attributes: [
-////                NSAttributedStringKey.font: Fonts.medium(ofSize: 14.0),
-////                NSAttributedStringKey.foregroundColor: currentTheme.secondaryTextColor
-////                ])
-//        }
+        if let location = post.location {
+            let str = NSAttributedString(string: location.locationShortStr, attributes: [
+                                NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
+                                NSAttributedStringKey.foregroundColor: tertiaryColor
+                                ])
+            locationButton.setAttributedTitle(str, for: .normal)
+            locationButton.isHidden = false
+            locationButton.contentSpacing = -4
+            locationButton.setImage(UIImage(named:"pinios"), for: .normal)
+        } else {
+            locationButton.isHidden = true
+        }
         
         avatarImageNode.addTarget(self, action: #selector(handleAvatarTap), forControlEvents: .touchUpInside)
         avatarImageNode.isUserInteractionEnabled = true
@@ -337,9 +335,8 @@ class PostNode:ASDisplayNode {
         ss.children = [likeButton, commentButton]
         ss.spacing = 12.0
         
-        let locationCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: locationNode)
         let actionStack = ASStackLayoutSpec.horizontal()
-        actionStack.children = [ss]
+        actionStack.children = [ss , locationButton]
         actionStack.spacing = 0.0
         actionStack.alignContent = .spaceBetween
         actionStack.justifyContent = .spaceBetween
@@ -350,8 +347,9 @@ class PostNode:ASDisplayNode {
         titleStack.children = [titleNode, subnameCenter]
         titleStack.spacing = 4.0
         
+        let timeCenter = ASCenterLayoutSpec(centeringOptions: .Y, sizingOptions: .minimumY, child: timeNode)
         let headerRow = ASStackLayoutSpec.horizontal()
-        headerRow.children = [titleStack ,locationCenter]
+        headerRow.children = [titleStack ,timeCenter]
         headerRow.spacing = 0.0
         headerRow.alignContent = .spaceBetween
         headerRow.justifyContent = .spaceBetween

@@ -20,6 +20,10 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
         return .lightContent
     }
     
+    func bottomHeight() -> CGFloat {
+        return 0
+    }
+    
     @objc func handlePan(_ sender: UIPanGestureRecognizer) {
         
         let translation = sender.translation(in: view)
@@ -56,35 +60,33 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
     
     var headerView:UserProfileHeaderView!
     
-    let desc = "Melrose has school on Monday Wednesday Thursday Saturday and all of these days. She can't make it to Wonderland because of her busy schedule."
+    let desc = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         
-        let descHeight = UILabel.size(text: desc,
-                                      width: view.bounds.width - 48,
-                                      font: Fonts.light(ofSize: 14.0)).height
+        let descHeight:CGFloat = 0
         
         let descHeightWithPadding = descHeight > 0 ? descHeight + 12 : 0
         view.backgroundColor = UIColor.white
         let topInset = UIApplication.deviceInsets.top
         let bottomheight = descHeightWithPadding + 44
-        let x:CGFloat = 100 + 40 + bottomheight
-        headerView = UserProfileHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: x + 50  + 32 + topInset), topInset: topInset, nameHeight:0, descHeight: descHeightWithPadding, includeAvatar: true)
+        let x:CGFloat = 100 + 50 + bottomheight
+        headerView = UserProfileHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: x + 50 + topInset), topInset: topInset, descHeight: descHeightWithPadding)
         scrollView.parallaxHeader.view = headerView
-        scrollView.parallaxHeader.height = x + 50  + 32 + topInset
+        scrollView.parallaxHeader.height = x + 50 + topInset
         scrollView.parallaxHeader.mode = MXParallaxHeaderMode.fill
-        scrollView.parallaxHeader.minimumHeight = 50 + 32 + topInset
+        scrollView.parallaxHeader.minimumHeight = 50 + topInset
         scrollView.delegate = self
         
         if scrollView.superview == nil {
             view.addSubview(scrollView)
         }
-
+        
         pagerNode.view.frame = CGRect(x: 0, y: 0,
                                       width: view.bounds.width,
-                                      height: view.bounds.height - (50 + 32 + topInset))
+                                      height: view.bounds.height - (50 + topInset + bottomHeight()))
         if pagerNode.view.superview == nil {
             scrollView.addSubview(pagerNode.view)
         }
@@ -101,7 +103,6 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
         
         headerView.titleView.rightButton.addTarget(self, action: #selector(handleMore), for: .touchUpInside)
         
-        headerView.tabScrollView.delegate = self
         
         if let uid = Auth.auth().currentUser?.uid,
             let profile = profile {
@@ -142,7 +143,7 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
     }
     
     func numberOfPages(in pagerNode: ASPagerNode) -> Int {
-        return 2
+        return 1
     }
     
     func pagerNode(_ pagerNode: ASPagerNode, nodeAt index: Int) -> ASCellNode {
@@ -184,17 +185,17 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
             if progress.isNaN {
                 return
             }
-    
+            
             headerView.setProgress(progress)
         } else if scrollView == self.pagerNode.view {
             let offsetX = scrollView.contentOffset.x
             let viewWidth = view.bounds.width
             let progress = offsetX / viewWidth
-            headerView.tabScrollView.setProgress(progress, index: 0)
+            
             //headerView.updateTabScrollPosition(scrollView.contentOffset.x)
         }
     }
-
+    
     @objc func handleMore() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         guard let profile = self.profile else { return }
@@ -235,11 +236,5 @@ class UserProfileViewController:UIViewController, ASPagerDelegate, ASPagerDataSo
         }))
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         self.present(alert, animated: true, completion: nil)
-    }
-}
-
-extension UserProfileViewController: TabScrollDelegate {
-    func tabScrollTo(index: Int) {
-        pagerNode.scrollToPage(at: index, animated: true)
     }
 }

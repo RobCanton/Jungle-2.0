@@ -44,6 +44,11 @@ class SearchTabViewController:JViewController {
     var tabScrollView:DualScrollView!
     
     var anonSwitch:AnonSwitch!
+    var searchResultsVC:SearchPostsTableViewController!
+    
+    var isSearching = false
+    var isDisplayingSearchResults = false
+    var dimView:UIView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,13 +67,13 @@ class SearchTabViewController:JViewController {
         searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         searchBar.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         searchBar.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
-        
-        searchBar.setup()
-        searchBar.textField.isUserInteractionEnabled = false
-        
-        for gesture in searchBar.textBubble.gestureRecognizers ?? [] {
-            searchBar.textBubble.removeGestureRecognizer(gesture)
-        }
+        searchBar.leftButton.setImage(UIImage(named:"back"), for: .normal)
+        searchBar.setup(withDelegate: self)
+//        searchBar.textField.isUserInteractionEnabled = false
+//
+//        for gesture in searchBar.textBubble.gestureRecognizers ?? [] {
+//            searchBar.textBubble.removeGestureRecognizer(gesture)
+//        }
         
         let titleContentView = searchBar.contentView!
         
@@ -88,9 +93,6 @@ class SearchTabViewController:JViewController {
         bgImageView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         bgImageView.heightAnchor.constraint(equalToConstant:  titleViewHeight + 32.0).isActive = true
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(showSearchView))
-        searchBar.textBubble.addGestureRecognizer(tap)
-        
         let postsTableVC = BestPostsTableViewController()
         postsTableVC.view.clipsToBounds = true
         postsTableVC.willMove(toParentViewController: self)
@@ -102,6 +104,30 @@ class SearchTabViewController:JViewController {
         postsTableVC.view.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         postsTableVC.view.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         postsTableVC.view.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        
+        dimView = UIView()
+        dimView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        view.addSubview(dimView)
+        dimView.translatesAutoresizingMaskIntoConstraints = false
+        dimView.topAnchor.constraint(equalTo: searchBar.bottomAnchor).isActive = true
+        dimView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        dimView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        dimView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        dimView.alpha = 0.0
+        
+        searchResultsVC = SearchPostsTableViewController()
+        searchResultsVC.view.clipsToBounds = true
+        searchResultsVC.willMove(toParentViewController: self)
+        self.addChildViewController(searchResultsVC)
+        view.addSubview(searchResultsVC.view)
+        searchResultsVC.didMove(toParentViewController: self)
+        searchResultsVC.view.translatesAutoresizingMaskIntoConstraints = false
+        searchResultsVC.view.topAnchor.constraint(equalTo: searchBar.bottomAnchor).isActive = true
+        searchResultsVC.view.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        searchResultsVC.view.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        searchResultsVC.view.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        searchResultsVC.view.alpha = 0.0
+        
         view.layoutIfNeeded()
         
     }
@@ -134,5 +160,68 @@ class SearchTabViewController:JViewController {
         
         anonSwitch.setProfileImage()
         anonSwitch.setAnonMode(to: UserService.anonMode)
+        
+//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
     }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+}
+
+extension SearchTabViewController: RCSearchBarDelegate {
+    func handleLeftButton() {
+        isSearching = false
+        searchDidEnd()
+        self.searchBar.textField.resignFirstResponder()
+        
+    }
+    
+    func searchDidCancel() {
+        if !isDisplayingSearchResults {
+            handleLeftButton()
+        }
+    }
+    
+    func searchTextDidChange(_ text: String?) {
+        
+    }
+    
+    func searchDidBegin() {
+        isSearching = true
+        
+        UIView.animate(withDuration: 0.3, animations: {
+            self.dimView.alpha = 1.0
+            self.anonSwitch.alpha = 0.0
+        })
+    }
+    
+    func searchDidEnd() {
+        if !isSearching {
+            
+            self.isDisplayingSearchResults = false
+            self.searchBar.handleClearButton()
+            UIView.animate(withDuration: 0.3, animations: {
+                self.dimView.alpha = 0.0
+                self.searchResultsVC.view.alpha = 0.0
+                self.anonSwitch.alpha = 1.0
+                self.searchBar.leftButton.alpha = 0.0
+            })
+        }
+    }
+    
+    func searchTapped(_ text: String) {
+        isDisplayingSearchResults = true
+        UIView.animate(withDuration: 0.3, animations: {
+            self.searchResultsVC.view.alpha = 1.0
+            self.anonSwitch.alpha = 0.0
+            self.searchBar.leftButton.alpha = 1.0
+        })
+        searchResultsVC?.setSearch(text: text)
+    }
+    
+    
 }

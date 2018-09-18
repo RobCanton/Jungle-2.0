@@ -28,7 +28,8 @@ class NearbyPostsTableViewController: PostsTableViewController {
                 cell.delegate = self
                 return cell
             } else {
-                let cell = EnableLocationServicesCellNode()
+                let cell = NoticeCellNode(msg: "Enable location services to see posts near you",
+                                          buttonTitle: "Authorize GPS")
                 cell.handleTap = handleAuthorizeGPSTap
                 let height = UIScreen.main.bounds.height - 49 - 70
                 cell.style.height = ASDimension(unit: .points, value: height)
