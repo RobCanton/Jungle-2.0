@@ -43,7 +43,10 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         self.isUserInteractionEnabled = true
         self.passthroughNonlinkTouches = true
         
-        self.linkAttributeNames = [ActiveTextType.hashtag.rawValue, ActiveTextType.mention.rawValue]
+        self.linkAttributeNames = [
+            ActiveTextType.hashtag.rawValue,
+            ActiveTextType.mention.rawValue,
+            ActiveTextType.link.rawValue]
         let attributedString = NSMutableAttributedString(string: text)
         let count = attributedString.length
         
@@ -88,6 +91,17 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
                 ], range: element.range)
         }
         
+        let linkElements = RegexParser.getElements(from: text, with: RegexParser.urlPattern, range: textRange)
+        
+        for element in linkElements {
+            let range = Range(element.range, in: text)!
+            let str = text.substring(with: range)
+            attrString?.addAttributes([
+                NSAttributedStringKey(rawValue: ActiveTextType.link.rawValue): str,
+                NSAttributedStringKey.foregroundColor: color
+                ], range: element.range)
+        }
+        
         self.attributedText = attrString
     }
     
@@ -96,14 +110,13 @@ class ActiveTextNode:ASTextNode, ASTextNodeDelegate {
         guard let textValue = value as? String else { return }
         switch attribute {
         case ActiveTextType.hashtag.rawValue:
-            let hasthag = textValue.removeWhitespaces()
-            tapHandler?(.hashtag, hasthag)
+            tapHandler?(.hashtag, textValue.removeWhitespaces())
             break
         case ActiveTextType.mention.rawValue:
             tapHandler?(.mention, textValue)
             break
         case ActiveTextType.link.rawValue:
-            tapHandler?(.link, textValue)
+            tapHandler?(.link, textValue.removeWhitespaces())
             break
         default:
             break

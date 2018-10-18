@@ -170,12 +170,8 @@ let fontFamily = FontFamily.nunito
 class Fonts {
     
     static func extraLight(ofSize size: CGFloat) -> UIFont {
-        switch fontFamily {
-        case .none:
-            return UIFont.systemFont(ofSize: size, weight: .light)
-        default:
-            return UIFont(name: "\(fontFamily.rawValue)-ExtraLight", size: size)!
-        }
+        return UIFont.systemFont(ofSize: size, weight: .light)
+
     }
     
     static func light(ofSize size: CGFloat) -> UIFont {
@@ -183,7 +179,7 @@ class Fonts {
         case .none:
             return UIFont.systemFont(ofSize: size, weight: .light)
         default:
-            return UIFont(name: "\(fontFamily.rawValue)-Light", size: size)!
+            return UIFont(name: "Quicksand-Light", size: size)!
         }
     }
     
@@ -192,7 +188,7 @@ class Fonts {
         case .none:
             return UIFont.systemFont(ofSize: size, weight: .regular)
         default:
-            return UIFont(name: "\(fontFamily.rawValue)-Regular", size: size)!
+            return UIFont(name: "Quicksand-Regular", size: size)!
         }
     }
     
@@ -201,7 +197,7 @@ class Fonts {
         case .none:
             return UIFont.systemFont(ofSize: size, weight: .semibold)
         default:
-            return UIFont(name: "\(fontFamily.rawValue)-SemiBold", size: size)!
+            return UIFont(name: "Quicksand-Medium", size: size)!
         }
     }
     
@@ -210,26 +206,18 @@ class Fonts {
         case .none:
             return UIFont.systemFont(ofSize: size, weight: .bold)
         default:
-            return UIFont(name: "\(fontFamily.rawValue)-Bold", size: size)!
+            return UIFont(name: "Quicksand-Bold", size: size)!
         }
     }
     
     static func extraBold(ofSize size: CGFloat) -> UIFont {
-        switch fontFamily {
-        case .none:
-            return UIFont.systemFont(ofSize: size, weight: .bold)
-        default:
-            return UIFont(name: "\(fontFamily.rawValue)-ExtraBold", size: size)!
-        }
+
+        return UIFont.systemFont(ofSize: size, weight: .bold)
+
     }
     
     static func black(ofSize size: CGFloat) -> UIFont {
-        switch fontFamily {
-        case .none:
-            return UIFont.systemFont(ofSize: size, weight: .black)
-        default:
-            return UIFont(name: "\(fontFamily.rawValue)-Black", size: size)!
-        }
+        return UIFont.systemFont(ofSize: size, weight: .black)
     }
 }
 

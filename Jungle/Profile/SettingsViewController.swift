@@ -23,7 +23,7 @@ class SettingsViewController:UIViewController, ASTableDelegate, ASTableDataSourc
     enum OptionKey:String {
         case locationServices = "LOCATION SERVICES"
         case pushNotifications = "PUSH NOTIFICATIONS"
-        case contentMode = "CONTENT MODE"
+        case contentMode = "SAFE MODE"
         case termsOfService = "TERMS OF SERVICE"
         case privacyPolicy = "PRIVACY POLICY"
         case logout = "LOGOUT"

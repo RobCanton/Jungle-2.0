@@ -29,9 +29,10 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
         self.insetsLayoutMarginsFromSafeArea = false
         self.translatesAutoresizingMaskIntoConstraints = false
         
+        let font = Fonts.bold(ofSize: 14.0)//UIFont.systemFont(ofSize: 14.0, weight: .bold)
         title1 = UIButton(type: .custom)
         title1.setTitle("PHOTO", for: .normal)
-        title1.titleLabel?.font = Fonts.extraBold(ofSize: 14.0)
+        title1.titleLabel?.font = font
         title1.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 12)
         title1.sizeToFit()
         title1.alpha = 0.4
@@ -40,7 +41,7 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
         
         title2 = UIButton(type: .custom)
         title2.setTitle("VIDEO", for: .normal)
-        title2.titleLabel?.font = Fonts.extraBold(ofSize: 14.0)
+        title2.titleLabel?.font = font
         title2.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 12)
         title2.sizeToFit()
         
@@ -58,7 +59,7 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
         
         title3 = UIButton(type: .custom)
         title3.setTitle("TEXT", for: .normal)
-        title3.titleLabel?.font = Fonts.extraBold(ofSize: 14.0)
+        title3.titleLabel?.font = font
         title3.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 12)
         title3.sizeToFit()
         title3.alpha = 0.4
@@ -88,7 +89,7 @@ class ModeScrollBar:UIView, UIScrollViewDelegate {
         
         barView.layer.cornerRadius = 28 / 2
         barView.clipsToBounds = true
-        
+        barView.isHidden = true
         self.layoutIfNeeded()
     }
     

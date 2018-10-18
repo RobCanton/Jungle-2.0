@@ -47,7 +47,7 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
     
     var descHeightMinimum:CGFloat = 0.0
     var tagsView:TagsFieldView!
-    let ACCEPTABLE_CHARACTERS = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`~!@#$%^&*()_+-=[]{}\\|;:',.\"/"
+    let ACCEPTABLE_CHARACTERS = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`~!?@#$%^&*()_+-=[]{}\\|;:',.\"/"
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -298,7 +298,7 @@ class CreateGroupView:UIView, UITextViewDelegate, UITextFieldDelegate {
     @objc func handleNext() {
         if state == .info {
             state = .background
-            titleView.titleLabel.text = "Select a background"
+            titleView.titleLabel.text = "Select a Background"
             dynamicButton.setStyle(.caretLeft, animated: true)
             titleField.resignFirstResponder()
             descTextView.resignFirstResponder()

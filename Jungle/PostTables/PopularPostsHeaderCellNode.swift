@@ -187,7 +187,8 @@ class TrendingCellNode:ASCellNode {
             self.textNode.textContainerInset = UIEdgeInsetsMake(8, 8, 32, 8)
             self.textNode.attributedText = NSAttributedString(string: post.text, attributes: [
                 NSAttributedStringKey.foregroundColor: UIColor.white.withAlphaComponent(0.80),
-                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0)
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
+                NSAttributedStringKey.paragraphStyle: paragraphStyle
                 ])
         }
         
@@ -246,7 +247,7 @@ class TrendingCellNode:ASCellNode {
         gradientNode.layer.addSublayer(gradient)
     }
     override func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec {
-        pastelNode.style.width = ASDimension(unit: .points, value: 130)
+        pastelNode.style.width = ASDimension(unit: .points, value: 120)
         pastelNode.style.height = ASDimension(unit: .points, value: 180)
         let centerText = ASCenterLayoutSpec(centeringOptions: .XY, sizingOptions: .minimumXY, child: textNode)
         let imageOverlay = ASOverlayLayoutSpec(child: pastelNode, overlay: imageNode)

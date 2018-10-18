@@ -29,7 +29,7 @@ var storage:StorageReference {
 
 var functions = Functions.functions()
 
-var gpsService = GPSService()
+//var gpsService = GPSService()
 
 let API_ENDPOINT = "https://us-central1-jungle-anonymous.cloudfunctions.net/app"
 

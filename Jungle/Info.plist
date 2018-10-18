@@ -46,33 +46,10 @@
 	<string>Needed to select a profile photo.</string>
 	<key>UIAppFonts</key>
 	<array>
-		<string>KosugiMaru-Regular.ttf</string>
-		<string>NunitoSans-SemiBold.ttf</string>
-		<string>NunitoSans-Regular.ttf</string>
-		<string>NunitoSans-Light.ttf</string>
-		<string>NunitoSans-ExtraLight.ttf</string>
-		<string>NunitoSans-ExtraBold.ttf</string>
-		<string>NunitoSans-Bold.ttf</string>
-		<string>NunitoSans-Black.ttf</string>
-		<string>Nunito-ExtraLight.ttf</string>
-		<string>Nunito-Light.ttf</string>
-		<string>Nunito-Regular.ttf</string>
-		<string>Nunito-Bold.ttf</string>
-		<string>Nunito-SemiBold.ttf</string>
-		<string>Nunito-ExtraBold.ttf</string>
-		<string>Nunito-Black.ttf</string>
-		<string>Asap-Bold.ttf</string>
-		<string>Asap-SemiBold.ttf</string>
-		<string>Asap-Medium.ttf</string>
-		<string>Asap-Regular.ttf</string>
-		<string>Asap-Light.ttf</string>
-		<string>Dosis-Bold.ttf</string>
-		<string>Dosis-SemiBold.ttf</string>
-		<string>Dosis-Medium.ttf</string>
-		<string>Dosis-Regular.ttf</string>
-		<string>Dosis-Light.ttf</string>
-		<string>BalooTammudu-Regular.ttf</string>
-		<string>Mukta-Regular.ttf</string>
+		<string>Quicksand-Light.ttf</string>
+		<string>Quicksand-Regular.ttf</string>
+		<string>Quicksand-Medium.ttf</string>
+		<string>Quicksand-Bold.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

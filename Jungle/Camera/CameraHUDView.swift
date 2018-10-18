@@ -157,7 +157,7 @@ class CameraHUDView:UIView {
         
         textViewPlaceholder = UILabel(frame: CGRect(x: 0, y: 0, width: bounds.width, height: 50))
         textViewPlaceholder.textColor = UIColor.white.withAlphaComponent(0.4)
-        textViewPlaceholder.font = Fonts.light(ofSize: 22)
+        textViewPlaceholder.font = Fonts.regular(ofSize: 22)
         textViewPlaceholder.text = "Write something..."
         textViewPlaceholder.alpha = 0.0
         addSubview(textViewPlaceholder)
@@ -211,7 +211,7 @@ class CameraHUDView:UIView {
         textView.keyboardAppearance = .dark
         textView.tintColor = UIColor.white
         textView.keyboardType = .twitter
-        textView.font = Fonts.light(ofSize: 22)
+        textView.font = Fonts.regular(ofSize: 22)
         textView.delegate = self
         textView.isScrollEnabled = false
         

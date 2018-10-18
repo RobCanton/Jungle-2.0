@@ -387,7 +387,7 @@ extension LightboxViewController: PulleyPrimaryContentControllerDelegate {
         moreButton.alpha = reverseAlpha
         groupButton.alpha = reverseAlpha
         
-        let scale = 1 - 0.05 * progress
+        let scale = 1 - 0.04 * progress
         contentView.clipsToBounds = true
         contentView.layer.cornerRadius = 12 * progress
         contentView.transform = CGAffineTransform(scaleX: scale, y: scale)

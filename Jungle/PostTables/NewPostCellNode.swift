@@ -26,7 +26,7 @@ class PreviewNode:ASDisplayNode {
         }
     
         automaticallyManagesSubnodes = true
-        self.layer.cornerRadius = 3.0
+        self.layer.cornerRadius = 0.0
         self.clipsToBounds = true
         self.imageNode.backgroundColor = currentTheme.highlightedBackgroundColor
     }
@@ -133,6 +133,8 @@ class PostNode:ASDisplayNode {
             case .mention:
                 break
             case .link:
+                print("HANDLE LINK!: \(value)")
+                self.delegate?.postOpen(link: value)
                 break
             }
         }
@@ -227,16 +229,11 @@ class PostNode:ASDisplayNode {
         subnameNode.textContainerInset = UIEdgeInsets(top: 2.0, left: 4.0, bottom: 2.0, right: 4.0)
         subnameNode.backgroundColor = post.anon.color
         
-        var locationStr = ""
-        if let location = post.location {
-            locationStr = " • \(location.locationShortStr)"
-        }
-        
         let subtitleStr = group.name
         
         subtitleNode.maximumNumberOfLines = 1
         subtitleNode.attributedText = NSAttributedString(string: subtitleStr, attributes: [
-            NSAttributedStringKey.font: Fonts.regular(ofSize: 14.0),
+            NSAttributedStringKey.font: Fonts.semiBold(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: tertiaryColor
             ])
         
@@ -251,7 +248,7 @@ class PostNode:ASDisplayNode {
         } else {
             previewNode = PreviewNode()
             
-            postTextNode.setText(text: post.text, withFont: Fonts.light(ofSize: 16.0),
+            postTextNode.setText(text: post.text, withFont: Fonts.regular(ofSize: 16.0),
                                  normalColor: currentTheme.primaryTextColor, activeColor: currentTheme.secondaryAccentColor)
         }
         
@@ -281,17 +278,14 @@ class PostNode:ASDisplayNode {
             
         } else {
             timeNode.attributedText = NSAttributedString(string: post.createdAt.timeSinceNow(), attributes: [
-                NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
+                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
                 NSAttributedStringKey.foregroundColor: tertiaryColor
                 ])
         }
         
-        
-        
-        
         if let location = post.location {
             let str = NSAttributedString(string: location.locationShortStr, attributes: [
-                                NSAttributedStringKey.font: Fonts.regular(ofSize: 13.0),
+                                NSAttributedStringKey.font: Fonts.semiBold(ofSize: 13.0),
                                 NSAttributedStringKey.foregroundColor: tertiaryColor
                                 ])
             locationButton.setAttributedTitle(str, for: .normal)

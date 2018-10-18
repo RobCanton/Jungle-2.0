@@ -23,7 +23,7 @@ class NearbyPostsTableViewController: PostsTableViewController {
     
     override func headerCell(for indexPath: IndexPath) -> ASCellNode {
         if indexPath.row == 0 {
-            if gpsService.isAuthorized() {
+            if LocationAPI.shared.isAuthorized() {
                 let cell = NearbyHeaderCellNode()
                 cell.delegate = self
                 return cell
@@ -42,7 +42,7 @@ class NearbyPostsTableViewController: PostsTableViewController {
     }
     
     func handleAuthorizeGPSTap() {
-        let status = gpsService.authorizationStatus()
+        let status = LocationAPI.shared.authorizationStatus()
         switch status {
         case .authorizedAlways:
             break
@@ -59,7 +59,7 @@ class NearbyPostsTableViewController: PostsTableViewController {
             }
             break
         case .notDetermined:
-            gpsService.requestAuthorization()
+            LocationAPI.shared.requestAuthorization()
             break
         case .restricted:
             break
@@ -69,13 +69,13 @@ class NearbyPostsTableViewController: PostsTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         tableNode.contentInset = .zero
-        if gpsService.isAuthorized() {
+        if LocationAPI.shared.isAuthorized() {
             tableNode.view.isScrollEnabled = true
         } else {
             tableNode.view.isScrollEnabled = false
         }
         
-        NotificationCenter.default.addObserver(self, selector: #selector(handleLocationUpdate), name: GPSService.locationUpdatedNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleLocationUpdate), name: Notification.Name.GPSLocationUpdated, object: nil)
     }
     
     @objc func handleLocationUpdate() {

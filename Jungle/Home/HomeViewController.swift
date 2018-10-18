@@ -156,8 +156,8 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        if gpsService.isAuthorized() {
-            gpsService.startUpdatingLocation()
+        if LocationAPI.shared.isAuthorized() {
+            LocationAPI.shared.startUpdatingLocation()
         }
         
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -291,7 +291,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
     
     func enableLocationTapped() {
         
-        let status = gpsService.authorizationStatus()
+        let status = LocationAPI.shared.authorizationStatus()
         switch status {
         case .authorizedAlways:
             break
@@ -308,7 +308,7 @@ class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UI
             }
             break
         case .notDetermined:
-            gpsService.requestAuthorization()
+            LocationAPI.shared.requestAuthorization()
             break
         case .restricted:
             break

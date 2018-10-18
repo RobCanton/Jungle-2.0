@@ -31,6 +31,7 @@ protocol PostCellDelegate:class {
     func postParentVC() -> UIViewController
     func postOpen(tag:String)
     func postOpen(profile:Profile)
+    func postOpen(link:String)
 }
 
 
@@ -429,12 +430,7 @@ extension FloatingPoint {
 extension UIApplication {
     
     static var edgeToEdgeInsets:UIEdgeInsets {
-        if let insets = shared.keyWindow?.safeAreaInsets {
-            if insets.top > 0.0 {
-                return insets
-            }
-        }
-        return UIEdgeInsets.zero
+        return shared.keyWindow?.safeAreaInsets ?? UIEdgeInsets.zero
     }
     static var deviceInsets:UIEdgeInsets {
         if let insets = shared.keyWindow?.safeAreaInsets {

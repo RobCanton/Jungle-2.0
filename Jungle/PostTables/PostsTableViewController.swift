@@ -263,7 +263,8 @@ extension PostsTableViewController: ASTableDelegate, ASTableDataSource {
         pulleyController.view.clipsToBounds = true
         pulleyController.drawerBackgroundVisualEffectView = nil
         pulleyController.backgroundDimmingOpacity = 0.35
-        pulleyController.drawerTopInset = UIApplication.edgeToEdgeInsets.top > 0 ? 0 : 24
+        let topEdge = UIApplication.edgeToEdgeInsets.top
+        pulleyController.drawerTopInset = topEdge <= 20 ? topEdge : 0
         pulleyController.hidesBottomBarWhenPushed = true
         pulleyController.transitioningDelegate = transitionManager
         
@@ -329,6 +330,15 @@ extension PostsTableViewController: PostCellDelegate {
         vc.interactor = pushTransitionManager.interactor
         vc.transitioningDelegate = pushTransitionManager
         self.present(vc, animated: true, completion: nil)
+    }
+    
+    func postOpen(link: String) {
+        let controller = WebViewController()
+        controller.url = URL(string:link)
+        pushTransitionManager.navBarHeight = nil
+        //controller.interactor = pushTransitionManager.interactor
+        controller.transitioningDelegate = pushTransitionManager
+        self.present(controller, animated: true, completion: nil)
     }
     
     func postOptions(_ post: Post) {

@@ -99,7 +99,7 @@ class GradientSelectorNode:ASDisplayNode, ASCollectionDelegate, ASCollectionData
     
     internal func collectionView(_ collectionView: UICollectionView, layout: MosaicCollectionViewLayout, originalItemSizeAtIndexPath: IndexPath) -> CGSize {
         
-        return CGSize(width: 50, height:50)
+        return CGSize(width: 50, height:80)
     }
     
 }

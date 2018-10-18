@@ -128,7 +128,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        //demoPic = UIImage(named:"cooldude-pixel")!
+        demoPic = UIImage(named:"shado2")!
         view.backgroundColor = UIColor.black
         captureView = FilterCamView(frame: view.bounds)
         captureView.handleEndRecording = stopRecording
@@ -214,7 +214,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         
         regionUpdated()
 
-        NotificationCenter.default.addObserver(self, selector: #selector(regionUpdated), name: GPSService.regionUpdatedNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(regionUpdated), name: Notification.Name.RegionLocationUpdated, object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(willResignActive), name: Notification.Name.UIApplicationWillResignActive, object: nil)
         
@@ -232,8 +232,8 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
     }
     
     @objc func regionUpdated() {
-        location = gpsService.getLastLocation()
-        region = gpsService.region
+        location = LocationAPI.shared.getLastLocation()
+        region = LocationAPI.shared.region
         hudView.optionsTable.region = region
     }
     
@@ -248,7 +248,7 @@ class CameraViewController: UIViewController, CameraHUDProtocol {
         destroyCaptured()
         hudView.observeKeyboard(false)
         
-        NotificationCenter.default.removeObserver(self, name: GPSService.regionUpdatedNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: Notification.Name.RegionLocationUpdated, object: nil)
         
         NotificationCenter.default.removeObserver(self, name: Notification.Name.UIApplicationWillResignActive, object: nil)
          NotificationCenter.default.removeObserver(self, name: Notification.Name.UIApplicationWillEnterForeground, object: nil)

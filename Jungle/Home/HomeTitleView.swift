@@ -60,11 +60,11 @@ class JTitleView:UIView {
         leftButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12).isActive = true
         
         titleLabel = UILabel(frame: .zero)
-        addSubview(titleLabel)
+        contentView.addSubview(titleLabel)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
+        titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 64).isActive = true
         titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
-        titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
+        titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -64).isActive = true
         titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
         titleLabel.textColor = UIColor.white
         titleLabel.textAlignment = .center

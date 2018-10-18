@@ -23,7 +23,7 @@ class PostsTableTitleHeaderNode:ASCellNode {
         paragraphStyle.alignment = .center
         
         titleNode.attributedText = NSAttributedString(string: title, attributes: [
-            NSAttributedStringKey.font: Fonts.extraBold(ofSize: 14.0),
+            NSAttributedStringKey.font: Fonts.bold(ofSize: 14.0),
             NSAttributedStringKey.foregroundColor: UIColor(white: 0.67, alpha: 1.0),
             NSAttributedStringKey.paragraphStyle: paragraphStyle
             ])

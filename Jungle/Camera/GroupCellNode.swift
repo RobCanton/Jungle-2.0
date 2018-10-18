@@ -201,7 +201,7 @@ class MyLocationCellNode:GlassCellNode {
             return ASInsetLayoutSpec(insets: UIEdgeInsetsMake(0, 8, 0, 8), child: overlay)
         }
         
-        if !gpsService.isAuthorized() {
+        if !LocationAPI.shared.isAuthorized() {
             avatarNode.alpha = 0.67
             titleNode.attributedText = NSAttributedString(string: "Location Services Disabled", attributes: [
                 NSAttributedStringKey.font: Fonts.semiBold(ofSize: 18.0),
@@ -252,7 +252,7 @@ class MyLocationCellNode:GlassCellNode {
     
     @objc func handlePress(_ press:UILongPressGestureRecognizer) {
         
-        let isAuthorized = gpsService.isAuthorized()
+        let isAuthorized = LocationAPI.shared.isAuthorized()
         if isAuthorized {
             guard let _ = self.region else { return }
             switch press.state {
@@ -280,7 +280,7 @@ class MyLocationCellNode:GlassCellNode {
                 setHighlighted(true)
                 break
             case .ended:
-                gpsService.requestAuthorization()
+                LocationAPI.shared.requestAuthorization()
                 setHighlighted(false)
                 break
             case .cancelled:

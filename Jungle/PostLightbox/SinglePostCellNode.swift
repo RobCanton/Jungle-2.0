@@ -157,7 +157,7 @@ class ContentOverlayNode:ASControlNode {
         view.addSubview(actionsRow)
         usernameNode.view.applyShadow(radius: 4.0, opacity: 0.1, offset: .zero, color: UIColor.black, shouldRasterize: false)
         actionsRow.translatesAutoresizingMaskIntoConstraints = false
-        actionsRow.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        actionsRow.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         actionsRow.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         actionsRow.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         actionsRow.heightAnchor.constraint(equalToConstant: 64).isActive = true

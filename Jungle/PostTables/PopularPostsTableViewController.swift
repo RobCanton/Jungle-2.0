@@ -69,7 +69,8 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
             pulleyController.view.clipsToBounds = true
             pulleyController.drawerBackgroundVisualEffectView = nil
             pulleyController.backgroundDimmingOpacity = 0.35
-            pulleyController.drawerTopInset = UIApplication.edgeToEdgeInsets.top > 0 ? 0 : 24
+            let topEdge = UIApplication.edgeToEdgeInsets.top
+            pulleyController.drawerTopInset = topEdge <= 20 ? topEdge : 0
             pulleyController.hidesBottomBarWhenPushed = true
             pulleyController.transitioningDelegate = transitionManager
             
@@ -112,7 +113,7 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
                         paths.append(IndexPath(row: i + 1, section: 0))
                     }
                     self.tableNode.performBatchUpdates({
-                        self.tableNode.insertRows(at: paths, with: .automatic)
+                        self.tableNode.insertRows(at: paths, with: .fade)
                     }, completion: nil)
                 }
             }
@@ -169,7 +170,8 @@ class PopularPostsTableViewController: PostsTableViewController, PopularHeaderCe
         pulleyController.view.clipsToBounds = true
         pulleyController.drawerBackgroundVisualEffectView = nil
         pulleyController.backgroundDimmingOpacity = 0.35
-        pulleyController.drawerTopInset = UIApplication.edgeToEdgeInsets.top > 0 ? 0 : 24
+        let topEdge = UIApplication.edgeToEdgeInsets.top
+        pulleyController.drawerTopInset = topEdge <= 20 ? topEdge : 0
         pulleyController.hidesBottomBarWhenPushed = true
         pulleyController.transitioningDelegate = transitionManager
         

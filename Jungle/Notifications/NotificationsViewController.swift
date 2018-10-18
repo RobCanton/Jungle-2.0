@@ -217,7 +217,8 @@ class NotificationsViewController:JViewController, ASTableDelegate, ASTableDataS
             
             pulleyController.drawerBackgroundVisualEffectView = nil
             pulleyController.backgroundDimmingOpacity = 0.35
-            pulleyController.drawerTopInset = 24
+            let topEdge = UIApplication.edgeToEdgeInsets.top
+            pulleyController.drawerTopInset = topEdge <= 20 ? topEdge : 0
             pulleyController.hidesBottomBarWhenPushed = true
             
             pulleyController.transitioningDelegate = transitionManager

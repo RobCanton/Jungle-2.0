@@ -223,6 +223,7 @@ class PostsService {
             } else if let data = result?.data as? [String:Any],
                 let results = data["results"] as? [[String:Any]]{
                 var posts = [Post]()
+                
                 for data in results {
                     if let post = Post.parse(data: data) {
                         posts.append(post)

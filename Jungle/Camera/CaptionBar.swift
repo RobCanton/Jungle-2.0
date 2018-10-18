@@ -108,10 +108,10 @@ class CaptionBar:UIView, ASCollectionDelegate, ASCollectionDataSource {
         
         let cell = collectionNode.nodeForItem(at: indexPath)
         if let locationCellNode = cell as? LocationCellNode {
-            if gpsService.isAuthorized() {
+            if LocationAPI.shared.isAuthorized() {
                 locationCellNode.setHighlighted(true)
             } else {
-                gpsService.requestAuthorization()
+                LocationAPI.shared.requestAuthorization()
                 collectionNode.deselectItem(at: indexPath, animated: true)
             }
             
@@ -151,7 +151,7 @@ class LocationCellNode:ASCellNode {
     required init(region:Region?) {
         super.init()
         
-        let authorized = gpsService.isAuthorized()
+        let authorized = LocationAPI.shared.isAuthorized()
         
         automaticallyManagesSubnodes = true
         backgroundColor = UIColor.black.withAlphaComponent(0.5)

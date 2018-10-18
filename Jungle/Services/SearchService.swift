@@ -72,7 +72,7 @@ class SearchService {
     }
     
     static func searchNearby(proximity:UInt, offset:Int, completion: @escaping(_ posts:[Post])->()) {
-        if let location = gpsService.getLastLocation() {
+        if let location = LocationAPI.shared.getLastLocation() {
             let params = [
                 "length": 15,
                 "offset": offset,
