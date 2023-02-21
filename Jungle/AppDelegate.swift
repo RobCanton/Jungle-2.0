@@ -9,35 +9,306 @@
 import UIKit
 import CoreData
 import Firebase
+import FirebaseFirestore
+import AVFoundation
+import UserNotifications
+import SwiftMessages
+import JGProgressHUD
 
 var firestore:Firestore {
     return Firestore.firestore()
+}
+
+var database:DatabaseReference {
+    return Database.database().reference().child("app")
 }
 
 var storage:StorageReference {
     return Storage.storage().reference()
 }
 
-var gpsService = GPSService()
+var functions = Functions.functions()
+
+//var gpsService = GPSService()
 
 let API_ENDPOINT = "https://us-central1-jungle-anonymous.cloudfunctions.net/app"
 
-let accentColor = hexColor(from: "#77E179")
+let accentColor = hexColor(from: "#00B06F")
+let accentDarkColor = hexColor(from: "#81d891")
+let tagColor = hexColor(from: "#1696e0")
+let lightTagColor = hexColor(from: "#49bcff")
 let redColor = hexColor(from: "FF6B6B")
-let grayColor = UIColor(white: 0.65, alpha: 1.0)
+let grayColor = UIColor(white: 0.75, alpha: 1.0)
+let tertiaryColor = hexColor(from: "a6a6a6")
+let subtitleColor = hexColor(from: "708078")
+let bgColor = hexColor(from: "#eff0e9")
+let likeColor = UIColor(rgb: (255, 102, 102))
+
+
+var safeAreaInsets:UIEdgeInsets = .zero
+
+var anonAlertWrapper = SwiftMessages()
+
+protocol AppProtocol {
+    func openMainView()
+}
+
+var appProtocol:AppProtocol?
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate, AppProtocol {
 
     var window: UIWindow?
-
+    var requirementsLoaded = false
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        appProtocol = self
+        
+        Messaging.messaging().delegate = self
+        
         FirebaseApp.configure()
+        let settings = FirestoreSettings()
+        settings.isPersistenceEnabled = false
+        settings.areTimestampsInSnapshotsEnabled = true
+        
+        createDirectory("captured")
+        createDirectory("user_content")
+        createDirectory("anon_icons")
+        
+        let db = Firestore.firestore()
+        db.settings = settings
+        
+        do {
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+        } catch {
+            print("error")
+        }
+        
+        Emojis.processEmojis()
+        GroupsService.fetchBackgrounds {
+            GroupsService.fetchGroups {
+                self.didRequirementsLoad()
+            }
+        }
+
         return true
     }
+    
+    func didRequirementsLoad() {
+        if requirementsLoaded { return }
+        GroupsService.observeGroups()
+        requirementsLoaded = true
+        if let user = Auth.auth().currentUser {
+            user.getIDTokenForcingRefresh(true, completion: { token, error in
+                if token != nil, error == nil {
+                    self.getUserProfile(uid: user.uid)
+                } else {
+                    do {
+                        try Auth.auth().signOut()
+                    } catch {}
+                    self.showAuthScreen()
+                }
+            })
+        } else {
+            self.showAuthScreen()
+        }
+    }
+    
+    var authListener:AuthStateDidChangeListenerHandle?
+    func listenToAuth() {
+        if let listener = authListener {
+            Auth.auth().removeStateDidChangeListener(listener)
+        }
+        
+        authListener = Auth.auth().addStateDidChangeListener { (auth, user) in
+            
+            if let _ = user {
+                
+            } else {
+                guard let rootVC = self.window?.rootViewController else { return }
+                
+                if rootVC.childViewControllers.count == 0 {
+                    self.showAuthScreen()
+                } else {
+                    self.window?.rootViewController?.dismiss(animated: false, completion: {
+                        self.showAuthScreen()
+                    })
+                }
+                
+            }
+        }
+        
+    }
+    
+    func showAuthScreen() {
+        let controller = EmailViewController()
+        self.window?.rootViewController = controller
+        self.window?.makeKeyAndVisible()
+        if let listener = authListener {
+            Auth.auth().removeStateDidChangeListener(listener)
+        }
+    }
+    
+    func getUserProfile(uid:String) {
+        functions.httpsCallable("userAccount").call { result, error in
+            
+            if let data = result?.data as? [String:Any], error == nil,
+                let type = data["type"] as? String {
+                
+                var locationServices = false
+                var pushNotifications = false
+                var safeContentMode = false
+                
+                var anonMode:Bool?
+                var timeout = UserService.Timeout.init(canPost: false, progress: 0, minsLeft: 0)
+                
+                if let settings = data["settings"] as? [String:Any] {
+                    if let _locationSerivces = settings["locationServices"] as? Bool {
+                        locationServices = _locationSerivces
+                    }
+                    if let _pushNotifications = settings["pushNotifications"] as? Bool {
+                        pushNotifications = _pushNotifications
+                    }
+                    if let _safeContentMode = settings["safeContentMode"] as? Bool {
+                        safeContentMode = _safeContentMode
+                    }
+                    
+                    if let _anonMode = settings["anonMode"] as? Bool {
+                        anonMode = _anonMode
+                    }
+                    
+                    
+                }
+                
+                
+                if let groups = data["groups"] as? [String:Bool] {
+                    GroupsService.myGroupKeys = groups
+                }
+                
+                if let groups = data["groupsCreated"] as? [String:Bool] {
+                    GroupsService.createdGroupKeys = groups
+                }
+                
+                if let groups = data["groupsSkipped"] as? [String:Bool] {
+                    GroupsService.skippedGroupKeys = groups
+                }
+                
+                if let timeoutData = data["timeout"] as? [String:Any] {
+                    timeout = UserService.parseTimeout(timeoutData)
+                }
+                
+                let prompts = Prompts.parse(data)
+                print("USER ACCOUNT: \(data)")
+                let settings = UserSettings(locationServices: locationServices,
+                                            pushNotifications: pushNotifications,
+                                            safeContentMode: safeContentMode)
+                
+                var profile:Profile?
+                var skipCreateProfile = false
+                if let profileData = data["profile"] as? [String:Any] {
+                    skipCreateProfile = profileData["skipCreateProfile"] as? Bool ?? false
+                    profile = Profile.parse(profileData)
+                }
+                
+                UserService.currentUserSettings = settings
+                UserService.currentUser = User(uid: uid, authType: type, profile: profile)
+                UserService.anonMode = anonMode != nil ? anonMode! : profile == nil
+                UserService.timeout = timeout
+                UserService.prompts = prompts
+                
+                if profile != nil || skipCreateProfile {
+                    self.openMainView()
+                } else {
+                    self.openProfileView()
+                }
+                
+                
+            } else {
+                self.showAuthScreen()
+            }
+        }
+    }
+    
+    
+    
+    func openProfileView() {
+        guard let rootVC = window?.rootViewController else { return }
+        let controller = CreateProfileViewController()
+        
+        if rootVC.childViewControllers.count == 0 {
+            self.window?.rootViewController = controller
+            self.window?.makeKeyAndVisible()
+            self.listenToAuth()
+            
+        } else {
+            window?.rootViewController?.dismiss(animated: false, completion: {
+                self.window?.rootViewController = controller
+                self.window?.makeKeyAndVisible()
+                self.listenToAuth()
+            })
+        }
+    }
+    
+    func openMainView() {
+        
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        UserService.observeCurrentUserSettings()
+        nService.clear()
+        nService.initialFetch()
+        
+        if let token = Messaging.messaging().fcmToken {
+            let tokenRef = database.child("users/fcmToken/\(uid)")
+            tokenRef.setValue(token)
+        }
+        
+        guard let rootVC = window?.rootViewController else { return }
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let controller = storyboard.instantiateViewController(withIdentifier: "MainTabBarController") as! MainTabBarController
+        
+        if rootVC.childViewControllers.count == 0 {
+            self.window?.rootViewController = controller
+            self.window?.makeKeyAndVisible()
+            self.listenToAuth()
 
+        } else {
+            window?.rootViewController?.dismiss(animated: false, completion: {
+                self.window?.rootViewController = controller
+                self.window?.makeKeyAndVisible()
+                self.listenToAuth()
+            })
+        }
+    }
+    
+    func registerForPushNotifications() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) {
+            (granted, error) in
+            guard granted else { return }
+            self.getNotificationSettings()
+        }
+    }
+    
+    func getNotificationSettings() {
+        UNUserNotificationCenter.current().getNotificationSettings { (settings) in
+            DispatchQueue.main.async {
+                guard settings.authorizationStatus == .authorized else { return }
+                UIApplication.shared.registerForRemoteNotifications()
+            }
+        }
+    }
+    
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
+    }
+    
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("Failed to register: \(error)")
+    }
+        
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
@@ -106,6 +377,81 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
     }
-
+    
+    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
+        let handled = DynamicLinks.dynamicLinks().handleUniversalLink(userActivity.webpageURL!) { (dynamiclink, error) in
+           
+            guard let top = UIApplication.topViewController() else { return }
+            guard let link = dynamiclink?.url?.absoluteString else { return }
+            guard let email = UserDefaults.standard.string(forKey: "Email") else { return }
+            let hud = JGProgressHUD(style: .dark)
+            hud.textLabel.text = "Authenticating..."
+            hud.show(in: top.view, animated: true)
+            
+            if Auth.auth().isSignIn(withEmailLink: link) {
+               
+                Auth.auth().signIn(withEmail: email, link: link) { auth, error in
+                    if let _ = error {
+                        hud.dismiss(animated: true)
+                        let messageView: MessageView = MessageView.viewFromNib(layout: .centeredView)
+                        messageView.configureBackgroundView(width: 250)
+                        messageView.configureContent(title: "Invalid Login Link", body: "Something's wrong with that link! Please try again.", iconImage: nil, iconText: "😭", buttonImage: nil, buttonTitle: "Okay") { _ in
+                            SwiftMessages.hide()
+                        }
+                        messageView.titleLabel?.font = Fonts.semiBold(ofSize: 18.0)
+                        messageView.bodyLabel?.font = Fonts.regular(ofSize: 16.0)
+                        
+                        messageView.titleLabel?.textColor = UIColor.white
+                        messageView.bodyLabel?.textColor = UIColor.white
+                        
+                        let button = messageView.button!
+                        button.backgroundColor = accentColor
+                        button.titleLabel!.font = Fonts.semiBold(ofSize: 16.0)
+                        button.setTitleColor(UIColor.white, for: .normal)
+                        button.contentEdgeInsets = UIEdgeInsets(top: 12.0, left: 16.0, bottom: 12.0, right: 16.0)
+                        button.sizeToFit()
+                        button.layer.cornerRadius = messageView.button!.bounds.height / 2
+                        button.clipsToBounds = true
+                        
+                        messageView.backgroundView.backgroundColor = UIColor(white: 0.25, alpha: 1.0)
+                        messageView.backgroundView.layer.cornerRadius = 12
+                        
+                        var config = SwiftMessages.defaultConfig
+                        config.presentationStyle = .center
+                        config.duration = .forever
+                        config.dimMode = .gray(interactive: true)
+                       SwiftMessages.show(config: config, view: messageView)
+                    } else if let auth = auth {
+                        UserDefaults.standard.removeObject(forKey: "Email")
+                        hud.textLabel.text = "Authenticated!"
+                        self.getUserProfile(uid: auth.user.uid)
+                    }
+                    
+                }
+            }
+        }
+        
+        return handled
+    }
+    
+    func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+        return true
+    }
 }
 
+extension UIApplication {
+    class func topViewController(controller: UIViewController? = UIApplication.shared.keyWindow?.rootViewController) -> UIViewController? {
+        if let navigationController = controller as? UINavigationController {
+            return topViewController(controller: navigationController.visibleViewController)
+        }
+        if let tabController = controller as? UITabBarController {
+            if let selected = tabController.selectedViewController {
+                return topViewController(controller: selected)
+            }
+        }
+        if let presented = controller?.presentedViewController {
+            return topViewController(controller: presented)
+        }
+        return controller
+    }
+}

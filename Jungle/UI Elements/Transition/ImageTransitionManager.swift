@@ -10,47 +10,40 @@ import Foundation
 import UIKit
 import AVFoundation
 
-class LightboxViewerTransitionManager: NSObject, UIViewControllerTransitioningDelegate  {
+class LightboxTransitionManager: NSObject, UIViewControllerTransitioningDelegate  {
     
-    weak var sourceDelegate:LightboxTransitionSourceDelegate?
-    weak var destinationDelegate:LightboxTransitionDestinationDelegate?
-    
-    
+    var sourceTopView:UIImageView?
+    let interactor = Interactor()
     func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        guard let sourceDelegate = self.sourceDelegate, let destinationDelegate = self.destinationDelegate else { return nil }
-        return LightboxPresentAnimationController(sourceDelegate, destinationDelegate)
+        return LightboxPresentAnimationController()
     }
     
     func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        guard let sourceDelegate = self.sourceDelegate, let destinationDelegate = self.destinationDelegate else { return nil }
-        
-        return LightboxDismissAnimationController(sourceDelegate, destinationDelegate)
+        if interactor.hasStarted {
+            return DismissAnimator()
+        }
+        return LightboxDismissAnimationController()
+    }
+    
+    func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+        return interactor.hasStarted ? interactor : nil
     }
     
 }
 
-/**
- Creates a screenshot image of a from a video asset at given time
- - Parameter video: The video item
- - Parameter at:    The time in the video to screenshot
- - Returns: The a screenshot of the video as a UIImage or nil
- */
-func videoScreenshot(_ video: AVPlayerItem?, at cmTime: CMTime)  -> (UIImage)?
-{
-    guard let asset = video?.asset else { return nil }
-    let imageGenerator = AVAssetImageGenerator(asset: asset)
+
+class DummyTransitionManager: NSObject, UIViewControllerTransitioningDelegate  {
     
-    var timePicture = kCMTimeZero
-    imageGenerator.appliesPreferredTrackTransform = true
-    imageGenerator.requestedTimeToleranceAfter = kCMTimeZero
-    imageGenerator.requestedTimeToleranceBefore = kCMTimeZero
-    var image:UIImage? = nil
-    do {
-        let ref = try imageGenerator.copyCGImage(at: cmTime, actualTime: &timePicture)
-        
-        image = UIImage(cgImage: ref)
-    }catch { }
-    return image
+    override init() {
+        super.init()
+    }
+    
+    func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        return nil
+    }
+    
+    func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        return nil
+    }
+    
 }
-
-

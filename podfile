@@ -7,14 +7,29 @@ target 'Jungle' do
 
 
   # Pods for Jungle
-  pod 'Alamofire', '~> 4.5'
   pod 'Firebase/Core'
   pod 'Firebase/Auth'
   pod 'Firebase/Database'
-  pod 'Firebase/Storage'
-  pod 'Firebase/Firestore' 
+  pod 'Firebase/Storage' 
+  pod 'Firebase/Firestore'
+  pod 'Firebase/Functions'
+  pod 'Firebase/Messaging'
+  pod 'Firebase/DynamicLinks'
   pod 'Texture'
   pod 'SwiftMessages'
-  pod 'AlgoliaSearch-Client-Swift'
-  pod 'ScrollableGraphView', :git => 'https://github.com/barnaclejive/ScrollableGraphView', :branch => 'master'
+  pod 'UICircularProgressRing'
+  pod 'TGPControls'
+  pod "Regift"
+  pod 'Pulley'
+  pod 'WCLShineButton' 
+  pod 'DynamicButton', '~> 5.0.0'
+  pod 'JaneSliderControl'
+  pod 'Differ'
+  pod "Pastel"
+  pod 'JGProgressHUD'
+  pod 'Popover'
+  pod 'MXParallaxHeader'
+  pod 'Fabric', '~> 1.7.9'
+  pod 'Crashlytics', '~> 3.10.5'
+  pod 'Koloda', '~> 4.4'
 end

@@ -11,64 +11,196 @@ import UIKit
 import AsyncDisplayKit
 import Firebase
 import SwiftMessages
+import Popover
+import Koloda
 
-class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, HomeTitleDelegate {
+class JViewController:UIViewController {
+    var shouldHideStatusBar:Bool = false
+    
+    override var prefersStatusBarHidden: Bool {
+        get { return shouldHideStatusBar }
+    }
+    
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if shouldHideStatusBar {
+            self.setNeedsStatusBarAppearanceUpdate()
+            
+            UIView.animate(withDuration: 0.25, animations: {
+                self.shouldHideStatusBar = false
+                self.setNeedsStatusBarAppearanceUpdate()
+            })
+        }
+    }
+}
+
+class HomeViewController:JViewController, ASPagerDelegate, ASPagerDataSource, UIGestureRecognizerDelegate, TabScrollDelegate {
     
     var pagerNode:ASPagerNode!
     var navBar:UIView!
-    var titleView:HomeTitleView!
     
     var sm = SwiftMessages()
     
+    var titleView:HomeTitleView!
     var messageWrapper = SwiftMessages()
+    
+    var anonSwitch:AnonSwitch!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        view.backgroundColor = UIColor.white
         pagerNode = ASPagerNode()
         pagerNode.setDelegate(self)
         pagerNode.setDataSource(self)
-        pagerNode.backgroundColor = nil
+        pagerNode.backgroundColor = hexColor(from: "#EFEFEF")
         view.addSubview(pagerNode.view)
-        let layoutGuide = view.safeAreaLayoutGuide
-       
-        navBar = UIView(frame: CGRect(x: 0, y: 20, width: view.bounds.width, height: 44.0))
-        navBar.backgroundColor = UIColor.red
-        view.addSubview(navBar)
         
-        titleView = UINib(nibName: "HomeTitleView", bundle: nil).instantiate(withOwner: nil, options: nil)[0] as! HomeTitleView
-        titleView.frame = navBar.bounds
-        titleView.layoutIfNeeded()
-        titleView.delegate = self
-        titleView.backgroundColor = UIColor.red
-        navBar.addSubview(titleView)
+        let layoutGuide = view.safeAreaLayoutGuide
+        let topInset = UIApplication.deviceInsets.top
+        let titleViewHeight = 50 + topInset
+        
+        titleView = HomeTitleView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: titleViewHeight), topInset: topInset)
+        view.addSubview(titleView)
+        titleView.translatesAutoresizingMaskIntoConstraints = false
+        titleView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        titleView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
+        titleView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        titleView.heightAnchor.constraint(equalToConstant: titleViewHeight).isActive = true
+        titleView.tabScrollView.delegate = self
+        titleView.rightButton.addTarget(self, action: #selector(handleShowGroupsButton), for: .touchUpInside)
+        
+        let titleContentView = titleView.contentView!
+
+        anonSwitch = AnonSwitch(frame: .zero)
+        titleContentView.addSubview(anonSwitch)
+        anonSwitch.translatesAutoresizingMaskIntoConstraints = false
+        anonSwitch.leadingAnchor.constraint(equalTo: titleContentView.leadingAnchor, constant: 16.0).isActive = true
+        anonSwitch.centerYAnchor.constraint(equalTo: titleContentView.centerYAnchor).isActive = true
+        anonSwitch.widthAnchor.constraint(equalToConstant: 32.0).isActive = true
+        anonSwitch.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
+
         pagerNode.view.translatesAutoresizingMaskIntoConstraints = false
         pagerNode.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
         pagerNode.view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
-        pagerNode.view.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: 44).isActive = true
+        pagerNode.view.topAnchor.constraint(equalTo: titleView.bottomAnchor).isActive = true
         pagerNode.view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
         pagerNode.view.delaysContentTouches = false
+        pagerNode.view.panGestureRecognizer.delaysTouchesBegan = false
         pagerNode.reloadData()
         
     }
     
+    @objc func handleShowGroupsButton() {
+        print("handleShowGroupsButton")
+        
+        let createGroupView = GroupsSwiperView(frame: self.view.bounds)
+        //sortOptionsView.radiusChangedHandler = handleRadiusChange
+        
+        let messageView = BaseView(frame: self.view.bounds)
+        messageView.installContentView(createGroupView)
+        messageView.preferredHeight = self.view.bounds.height
+        
+        createGroupView.closeHandler = {
+            SwiftMessages.hide()
+        }
+        
+        
+        
+        var config = SwiftMessages.defaultConfig
+        config.presentationContext = .window(windowLevel: UIWindowLevelStatusBar)
+        config.duration = .forever
+        config.presentationStyle = .center
+        config.dimMode = .blur(style: .dark, alpha: 1.0, interactive: true)//.gray(interactive: true)
+        config.interactiveHide = false
+        config.preferredStatusBarStyle = .lightContent
+        config.eventListeners.append() { event in
+            if case .didHide = event {
+                print("DID HIDE!")
+                self.reloadIfGroupsChanged()
+            }
+        }
+        
+        SwiftMessages.show(config: config, view: messageView)
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.navigationBar.shadowImage = UIImage()
-        navigationController?.setNavigationBarHidden(true, animated: animated)
-        navigationController?.navigationBar.tintColor = UIColor.gray
-        navigationItem.backBarButtonItem = UIBarButtonItem(image: UIImage(named:"Back"), style: .plain, target: nil, action: nil)
         
+        anonSwitch.setProfileImage()
+        anonSwitch.setAnonMode(to: UserService.anonMode)
+        
+        if ContentSettings.recentlyUpdated {
+            pagerNode.reloadData()
+            ContentSettings.recentlyUpdated = false
+        } else {
+            reloadIfGroupsChanged()
+        }
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleDeletedPost), name: UploadService.deletedNotification, object: nil)
+
+    }
+    
+    func reloadIfGroupsChanged() {
+        if GroupsService.myGroupsDidChange {
+            pagerNode.reloadItems(at: [IndexPath(row:1,section:0)])
+            GroupsService.myGroupsDidChange = false
+        }
+    }
+    
+    @objc func handleDeletedPost(_ notification:Notification) {
         
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        if gpsService.isAuthorized() {
-            gpsService.startUpdatingLocation()
-        } else {
-            authorizeGPS()
+        
+        if LocationAPI.shared.isAuthorized() {
+            LocationAPI.shared.startUpdatingLocation()
+        }
+        
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        
+        if !UserService.prompts.anonSwitch1 {
+            UserService.prompts.save_anonSwitch1()
+            let topInset = UIApplication.deviceInsets.top
+            let text = "Tap here to toggle anonymous mode."
+            let size = UILabel.size(text: text, height: 44, font: Fonts.semiBold(ofSize: 14.0)).width
+            let height = UILabel.size(text: "Hey", width: self.view.bounds.width, font: Fonts.semiBold(ofSize: 14.0)).height
+            let anonSwitch = self.anonSwitch!
+            let startPoint = CGPoint(x: anonSwitch.center.x, y: anonSwitch.center.y + topInset + anonSwitch.bounds.width / 2 + 4)
+            let aView = UIView(frame: CGRect(x: 0, y: 0, width: size + 16, height: height + 24))
+            
+            let label = UILabel(frame: .zero)
+            label.text = text
+            label.font = Fonts.semiBold(ofSize: 14.0)
+            aView.addSubview(label)
+            label.translatesAutoresizingMaskIntoConstraints = false
+            
+            label.leadingAnchor.constraint(equalTo: aView.leadingAnchor, constant: 8).isActive = true
+            label.trailingAnchor.constraint(equalTo: aView.trailingAnchor, constant: -8).isActive = true
+            label.centerYAnchor.constraint(equalTo: aView.centerYAnchor, constant: 4).isActive = true
+            
+            aView.layoutIfNeeded()
+            
+            let popover = Popover()
+            popover.show(aView, point: startPoint)
+        }
+        
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        NotificationCenter.default.removeObserver(self)
+        print("viewDidDisappear!")
+        
+    }
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        get {
+            return .lightContent
         }
     }
     
@@ -76,26 +208,25 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         let cellNode = ASCellNode()
         cellNode.frame = pagerNode.bounds
         cellNode.backgroundColor = index % 2 == 0 ? UIColor.blue : UIColor.yellow
-        
-        var type:PostsTableType!
+        var controller:PostsTableViewController!
         switch index {
         case 0:
-            type = .newest
+            controller = PopularPostsTableViewController()
             break
         case 1:
-            type = .popular
-            break
-        case 2:
-            type = .nearby
+            controller = RecentPostsTableViewController()
+            let rc = controller as! RecentPostsTableViewController
+            rc.openDiscoverGroupsHandler = handleShowGroupsButton
             break
         default:
-            return cellNode
+            controller = NearbyPostsTableViewController()
+            break
         }
-        let controller = PostsTableViewController(type: type)
         controller.willMove(toParentViewController: self)
         self.addChildViewController(controller)
         controller.view.frame = cellNode.bounds
         cellNode.addSubnode(controller.node)
+        controller.didMove(toParentViewController: self)
         let layoutGuide = cellNode.view.safeAreaLayoutGuide
         controller.view.translatesAutoresizingMaskIntoConstraints = false
         controller.view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
@@ -112,22 +243,19 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard scrollView == pagerNode.view else { return }
-        let progress = scrollView.contentOffset.x / scrollView.contentSize.width
-        titleView.setProgress(progress)
+        let offsetX = scrollView.contentOffset.x
+        let viewWidth = view.bounds.width
+        if offsetX < viewWidth {
+            let progress = offsetX / viewWidth
+            titleView.tabScrollView.setProgress(progress, index: 0)
+        } else {
+            let progress = (offsetX - viewWidth) / viewWidth
+            titleView.tabScrollView.setProgress(progress, index: 1)
+        }
     }
     
-    func scrollTo(header: HomeHeader) {
-        switch header {
-        case .home:
-            pagerNode.scrollToPage(at: 0, animated: true)
-            break
-        case .popular:
-            pagerNode.scrollToPage(at: 1, animated: true)
-            break
-        case .nearby:
-            pagerNode.scrollToPage(at: 2, animated: true)
-            break
-        }
+    func tabScrollTo(index: Int) {
+        pagerNode.scrollToPage(at: index, animated: true)
     }
     
     func authorizeGPS() {
@@ -138,7 +266,7 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
             self.messageWrapper.hide()
         }
         messageView.titleLabel?.font = Fonts.semiBold(ofSize: 16.0)
-        messageView.bodyLabel?.font = Fonts.medium(ofSize: 14.0)
+        messageView.bodyLabel?.font = Fonts.regular(ofSize: 14.0)
         
         
         let button = messageView.button!
@@ -157,11 +285,13 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
         config.duration = .forever
         config.dimMode = .color(color: UIColor(white: 0.25, alpha: 1.0), interactive: true)
         self.messageWrapper.show(config: config, view: messageView)
+        
+        
     }
     
     func enableLocationTapped() {
         
-        let status = gpsService.authorizationStatus()
+        let status = LocationAPI.shared.authorizationStatus()
         switch status {
         case .authorizedAlways:
             break
@@ -178,11 +308,14 @@ class HomeViewController:UIViewController, ASPagerDelegate, ASPagerDataSource, H
             }
             break
         case .notDetermined:
-            gpsService.requestAuthorization()
+            LocationAPI.shared.requestAuthorization()
             break
         case .restricted:
             break
         }
     }
+    
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
 }
-
